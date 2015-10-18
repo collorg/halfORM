@@ -5,13 +5,20 @@ import re
 import sys
 import psycopg2, psycopg2.extras
 from configparser import ConfigParser
+from collections import OrderedDict
 
 def init_table(self, **kwargs):
     self.bla = 'blabla'
 
 def repr_table(self):
-    return ('dbname: {dbname}, schemaname: {schemaname},'
-            ' tablename: {tablename}').format(**vars(self.__class__))
+    ret = [('dbname: {dbname}, schemaname: {schemaname},'
+           ' tablename: {tablename}').format(**vars(self.__class__))]
+    for field in self.fields:
+        ret.append('- {}'.format(field))
+    return '\n'.join(ret)
+
+class Field():
+    pass
 
 class TableFactory(type):
     __deja_vu = {}
@@ -56,7 +63,7 @@ class TableFactory(type):
 
     @staticmethod
     def __set_fields(tbl_attr):
-        cur = tbl_attr['conn'].cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur = tbl_attr['conn'].cursor()#cursor_factory=psycopg2.extras.DictCursor)
         ta = tbl_attr
         cur.execute("select column_name from information_schema.columns"
                     " where "
@@ -64,17 +71,23 @@ class TableFactory(type):
                     " table_schema=%s and"
                     " table_name=%s",
                     (ta['dbname'], ta['schemaname'], ta['tablename']))
+        tbl_attr['fields'] = OrderedDict()
         for elt in cur.fetchall():
-            tbl_attr['{}_'.format(elt[0])] = None
+            tbl_attr['fields']['{}_'.format(elt[0])] = Field()
 
 class OidTable(metaclass=TableFactory):
     fqtn = 'dpt_info."collorg.core".oid_table'
+
+class BaseTable(metaclass=TableFactory):
+    fqtn = 'dpt_info."collorg.core".base_table'
 
 if __name__ == '__main__':
     oidt = OidTable()
     print(type(oidt))
     print(vars(oidt.__class__))
     print(oidt)
+    bt = BaseTable()
+    print(bt)
     sys.exit()
     print(table('a."b"."c"'))
     print(Table('"a"."b"."c"'))
