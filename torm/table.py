@@ -8,18 +8,31 @@ from psycopg2.extras import RealDictCursor
 from configparser import ConfigParser
 from collections import OrderedDict
 
+def init_field(self, name):
+    self.__name = name
+
+def repr_field(self):
+    return self.__name
+
+class FieldFactory(type):
+    def __new__(cls, clsname, bases, dct):
+        FF = FieldFactory
+        dct['__init__'] = init_field
+        dct['__repr__'] = repr_field
+        return super(FF, cls).__new__(cls, clsname, bases, dct)
+
+class Field(metaclass=FieldFactory):
+    pass
+
 def init_table(self, **kwargs):
-    self.bla = 'blabla'
+    """Fields init with kwargs"""
 
 def repr_table(self):
     ret = [('dbname: {dbname}, schemaname: {schemaname},'
            ' tablename: {tablename}').format(**vars(self.__class__))]
-    for field in self.fields:
+    for field in self.__fields:
         ret.append('- {}'.format(field))
     return '\n'.join(ret)
-
-class Field():
-    pass
 
 class TableFactory(type):
     __deja_vu = {}
@@ -71,9 +84,11 @@ class TableFactory(type):
                     " where "
                     " table_catalog=%s and table_schema=%s and table_name=%s",
                     (ta['dbname'], ta['schemaname'], ta['tablename']))
-        tbl_attr['fields'] = OrderedDict()
+        tbl_attr['__fields'] = []
         for dct in cur.fetchall():
-            tbl_attr['fields']['{}_'.format(dct['column_name'])] = Field()
+            field_name = "{}_".format(dct['column_name'])
+            tbl_attr[field_name] = Field(field_name)
+            tbl_attr['__fields'].append(tbl_attr[field_name])
 
 class OidTable(metaclass=TableFactory):
     fqtn = 'dpt_info."collorg.core".oid_table'
