@@ -3,7 +3,8 @@
 
 import re
 import sys
-import psycopg2, psycopg2.extras
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from configparser import ConfigParser
 from collections import OrderedDict
 
@@ -40,7 +41,8 @@ class TableFactory(type):
         params = dict(config['database'].items())
         params['dbname'] = dbname
         return psycopg2.connect('dbname={dbname} host={host} user={user} '
-                                'password={password} port={port}'.format(**params))
+                                'password={password} port={port}'.format(**params),
+                                cursor_factory=RealDictCursor)
 
     @staticmethod
     def __split_fqtn(fqtn, tbl_attr):
@@ -63,23 +65,25 @@ class TableFactory(type):
 
     @staticmethod
     def __set_fields(tbl_attr):
-        cur = tbl_attr['conn'].cursor()#cursor_factory=psycopg2.extras.DictCursor)
+        cur = tbl_attr['conn'].cursor()
         ta = tbl_attr
         cur.execute("select column_name from information_schema.columns"
                     " where "
-                    " table_catalog=%s and"
-                    " table_schema=%s and"
-                    " table_name=%s",
+                    " table_catalog=%s and table_schema=%s and table_name=%s",
                     (ta['dbname'], ta['schemaname'], ta['tablename']))
         tbl_attr['fields'] = OrderedDict()
-        for elt in cur.fetchall():
-            tbl_attr['fields']['{}_'.format(elt[0])] = Field()
+        for dct in cur.fetchall():
+            tbl_attr['fields']['{}_'.format(dct['column_name'])] = Field()
 
 class OidTable(metaclass=TableFactory):
     fqtn = 'dpt_info."collorg.core".oid_table'
 
 class BaseTable(metaclass=TableFactory):
     fqtn = 'dpt_info."collorg.core".base_table'
+
+
+class ViewSession(metaclass=TableFactory):
+    fqtn = 'dpt_info."seminaire.view".session'
 
 if __name__ == '__main__':
     oidt = OidTable()
@@ -88,6 +92,8 @@ if __name__ == '__main__':
     print(oidt)
     bt = BaseTable()
     print(bt)
+    vs = ViewSession()
+    print(vs)
     sys.exit()
     print(table('a."b"."c"'))
     print(Table('"a"."b"."c"'))
