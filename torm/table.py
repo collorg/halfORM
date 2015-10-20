@@ -4,6 +4,8 @@
 import re
 import sys
 import psycopg2
+from field_interface import interface as field_interface
+from table_interface import interface as table_interface
 from psycopg2.extras import RealDictCursor
 from configparser import ConfigParser
 from collections import OrderedDict
@@ -147,44 +149,15 @@ class Model():
         for key in self.__metadata:
             print(table(".".join(['"{}"'.format(elt) for elt in key])))
 
-def init_field(self, name, metadata):
-    self.__name = name
-    self.__metadata = metadata
-
-def repr_field(self):
-    md = self.__metadata
-    return "{}: ({}) {}".format(
-        self.__name,
-        md['fieldtype'],
-        md['pkey'] and 'PK' or (
-            '{}{}'.format(md['uniq'] and 'UNIQ ' or '',
-                           md['notnull'] and 'NOT NULL' or '')))
-
 class FieldFactory(type):
     def __new__(cls, clsname, bases, dct):
         FF = FieldFactory
-        dct['__init__'] = init_field
-        dct['__repr__'] = repr_field
+        for fct_name, fct in field_interface.items():
+            dct[fct_name] = fct
         return super(FF, cls).__new__(cls, clsname, bases, dct)
 
 class Field(metaclass=FieldFactory):
     pass
-
-def init_table(self, **kwargs):
-    """Fields init with kwargs"""
-
-def repr_table(self):
-    tks = {'r': 'TABLE', 'v': 'VIEW'}
-    table_kind = tks.get(self.__kind, "UNKNOWN TYPE")
-    ret = [60*'-']
-    ret.append("{}: {}".format(table_kind, self.fqtn))
-    ret.append(('- cluster: {dbname}\n'
-                '- schema:  {schemaname}\n'
-                '- table:   {tablename}').format(**vars(self.__class__)))
-    ret.append('FIELDS:')
-    for field in self.__fields:
-        ret.append('- {}'.format(field))
-    return '\n'.join(ret)
 
 def _normalize_fqtn(fqtn):
     """
@@ -222,8 +195,8 @@ class TableFactory(type):
         TF.__metadata = TF.__deja_vu[dbname]
         tbl_attr['__kind'] = tbl_attr['model'].metadata[tuple(sfqtn)]['tablekind']
         TF.__set_fields(tbl_attr)
-        tbl_attr['__init__'] = init_table
-        tbl_attr['__repr__'] = repr_table
+        for fct_name, fct in table_interface.items():
+            tbl_attr[fct_name] = fct
         return super(TF, cls).__new__(cls, clsname, bases, tbl_attr)
 
     @staticmethod
