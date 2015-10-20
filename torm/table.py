@@ -142,13 +142,31 @@ def repr_table(self):
         ret.append('- {}'.format(field))
     return '\n'.join(ret)
 
+def _normalize_fqtn(fqtn):
+    """
+    fqtn can have the following forms:
+    - 'a.b.c'
+    - '"a"."b"."c"'
+    - '"a"."b1.b2"."c"'
+    - 'a."b1.b2".c'
+    """
+    TF = TableFactory
+    if fqtn.find('"') == -1:
+        sfqtn = fqtn.split('.')
+    else:
+        sfqtn = [elt for elt in TF.re_split_fqtn.split(fqtn) if elt]
+    return '.'.join(['"{}"'.format(elt) for elt in sfqtn]), sfqtn
+
 class TableFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, clsname, bases, dct):
         TF = TableFactory
         tbl_attr = {}
-        TF.__split_fqtn(dct['fqtn'], tbl_attr)
+        tbl_attr['fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
+        attr_names = ['dbname', 'schemaname', 'tablename']
+        for i in range(len(attr_names)):
+            tbl_attr[attr_names[i]] = sfqtn[i]
         dbname = tbl_attr['dbname']
         tbl_attr['conn'] = TF.__connect(dbname)
         if not dbname in TF.__deja_vu:
@@ -170,25 +188,6 @@ class TableFactory(type):
                                 cursor_factory=RealDictCursor)
 
     @staticmethod
-    def __split_fqtn(fqtn, tbl_attr):
-        """
-        fqtn can have the following forms:
-        - 'a.b.c'
-        - '"a"."b"."c"'
-        - '"a"."b1.b2"."c"'
-        - 'a."b1.b2".c'
-        """
-        attr_names = ['dbname', 'schemaname', 'tablename']
-        TF = TableFactory
-        if fqtn.find('"') == -1:
-            sfqtn = fqtn.split('.')
-        else:
-            sfqtn = [elt for elt in TF.re_split_fqtn.split(fqtn) if elt]
-        for i in range(len(attr_names)):
-            tbl_attr[attr_names[i]] = sfqtn[i]
-        tbl_attr['fqtn'] = '.'.join(['"{}"'.format(elt) for elt in sfqtn])
-
-    @staticmethod
     def __set_fields(tbl_attr):
         cur = tbl_attr['conn'].cursor()
         ta = tbl_attr
@@ -201,6 +200,12 @@ class TableFactory(type):
             field_name = "{}_".format(dct['column_name'])
             tbl_attr[field_name] = Field(field_name)
             tbl_attr['__fields'].append(tbl_attr[field_name])
+
+def table(fqtn, **kwargs):
+    fqtn, sfqtn = _normalize_fqtn(fqtn)
+    class_name = "".join([elt.capitalize() for elt in
+                          [elt.replace('.', '_') for elt in sfqtn]])
+    return TableFactory(class_name, (), {'fqtn': fqtn})(**kwargs)
 
 class OidTable(metaclass=TableFactory):
     fqtn = 'dpt_info."collorg.core".oid_table'
@@ -219,3 +224,4 @@ if __name__ == '__main__':
     print(BaseTable())
     print(ViewSession())
     print(PgDatabase())
+    print(table('dpt_info.seminaire.session'))
