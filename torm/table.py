@@ -102,9 +102,7 @@ GROUP BY
     c_fk.relname,
     a_fk.attname
 ORDER BY
-    a.attrelid,
-    c.relkind,
-    a.attnum, n.nspname, c.relname ;
+    n.nspname, c.relname, a.attnum
 """
 
 class Model():
@@ -137,7 +135,7 @@ class Model():
                 table_key = self.__name, dct.pop('schemaname'), dct.pop('tablename')
                 if not table_key in metadata:
                     metadata[table_key] = OrderedDict()
-                    metadata[table_key]['fields'] = {}
+                    metadata[table_key]['fields'] = OrderedDict()
                 metadata[table_key]['tablekind'] = dct.pop('tablekind')
                 field_name = '{}_'.format(dct['fieldname'])
                 metadata[table_key]['fields'][field_name] = dct
@@ -158,21 +156,6 @@ class FieldFactory(type):
 
 class Field(metaclass=FieldFactory):
     pass
-
-def _normalize_fqtn(fqtn):
-    """
-    fqtn can have the following forms:
-    - 'a.b.c'
-    - '"a"."b"."c"'
-    - '"a"."b1.b2"."c"'
-    - 'a."b1.b2".c'
-    """
-    TF = TableFactory
-    if fqtn.find('"') == -1:
-        sfqtn = fqtn.split('.')
-    else:
-        sfqtn = [elt for elt in TF.re_split_fqtn.split(fqtn) if elt]
-    return '.'.join(['"{}"'.format(elt) for elt in sfqtn]), sfqtn
 
 class TableFactory(type):
     __deja_vu = {}
@@ -209,31 +192,23 @@ class TableFactory(type):
                 tbl_attr[field_name] = Field(field_name, metadata)
                 tbl_attr['__fields'].append(tbl_attr[field_name])
 
+def _normalize_fqtn(fqtn):
+    """
+    fqtn can have the following forms:
+    - 'a.b.c'
+    - '"a"."b"."c"'
+    - '"a"."b1.b2"."c"'
+    - 'a."b1.b2".c'
+    """
+    TF = TableFactory
+    if fqtn.find('"') == -1:
+        sfqtn = fqtn.split('.')
+    else:
+        sfqtn = [elt for elt in TF.re_split_fqtn.split(fqtn) if elt]
+    return '.'.join(['"{}"'.format(elt) for elt in sfqtn]), sfqtn
+
 def table(fqtn, **kwargs):
     fqtn, sfqtn = _normalize_fqtn(fqtn)
     class_name = "".join([elt.capitalize() for elt in
                           [elt.replace('.', '_') for elt in sfqtn]])
     return TableFactory(class_name, (), {'fqtn': fqtn})(**kwargs)
-
-class OidTable(metaclass=TableFactory):
-    fqtn = 'dpt_info."collorg.core".oid_table'
-
-class BaseTable(metaclass=TableFactory):
-    fqtn = '"dpt_info"."collorg.core".base_table'
-
-class ViewSession(metaclass=TableFactory):
-    fqtn = 'dpt_info."seminaire.view"."session"'
-
-if __name__ == '__main__':
-    """
-    OidTable()
-    BaseTable()
-    ViewSession()
-    PgDatabase()
-    table('dpt_info.seminaire.session')
-    sys.exit()
-    """
-    print(OidTable())
-    print(BaseTable())
-    print(ViewSession())
-    print(table('dpt_info.seminaire.session'))
