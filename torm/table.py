@@ -122,6 +122,12 @@ class Model():
 
     def cursor(self):
         return self.__conn.cursor()
+    def commit(self):
+        return self.__conn.commit()
+    def rollback(self):
+        return self.__conn.rollback()
+    def close(self):
+        return self.__conn.close()
 
     @property
     def metadata(self):
@@ -161,6 +167,9 @@ class TableFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, clsname, bases, dct):
+        def __call__table(self):
+            return table(self.fqtn)
+
         TF = TableFactory
         tbl_attr = {}
         tbl_attr['fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
@@ -180,17 +189,17 @@ class TableFactory(type):
         TF.__set_fields(tbl_attr)
         for fct_name, fct in table_interface.items():
             tbl_attr[fct_name] = fct
+        tbl_attr['__call__'] = __call__table
         return super(TF, cls).__new__(cls, clsname, bases, tbl_attr)
 
     @staticmethod
     def __set_fields(tbl_attr):
-        with tbl_attr['model'].cursor() as cur:
-            ta = tbl_attr
-            tbl_attr['__fields'] = []
-            for field_name, metadata in ta['model']\
-                .metadata[ta['__sfqtn']]['fields'].items():
-                tbl_attr[field_name] = Field(field_name, metadata)
-                tbl_attr['__fields'].append(tbl_attr[field_name])
+        ta = tbl_attr
+        tbl_attr['__fields'] = []
+        for field_name, metadata in ta['model']\
+            .metadata[ta['__sfqtn']]['fields'].items():
+            tbl_attr[field_name] = Field(field_name, metadata)
+            tbl_attr['__fields'].append(tbl_attr[field_name])
 
 def _normalize_fqtn(fqtn):
     """

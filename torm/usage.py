@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #-*- coding: utf-8 -*-
 
+from datetime import datetime
 from table import table, Model, TableFactory
 
 class OidTable(metaclass=TableFactory):
@@ -32,9 +33,7 @@ if __name__ == '__main__':
         table('dpt_info."collorg.core".base_table')
 
 
-    """Put a constraint on a Field and iterate over the
-    extension.
-    """
+    """Put a constraint on a Field"""
     bt = table('dpt_info."collorg.core".base_table')
     assert bt.cog_fqtn_.is_set is False
     bt.cog_fqtn_.set('collorg.access.access')
@@ -53,7 +52,28 @@ if __name__ == '__main__':
         bt.cog_test_.set(None, 'is')
     assert bt.cog_test_.is_set and bt.cog_test_.value is None
     assert bt.cog_test_.comp == 'is'
+    """Put a constraint via Table constructor"""
+    now = datetime.now()
+    s = table('dpt_info.seminaire.session',
+              cog_oid_=('d%', 'like'),
+              begin_date_=(now, '>'),
+              tba_=False)
+    assert s.cog_oid_.is_set
+    assert s.cog_oid_.value == 'd%'
+    assert s.cog_oid_.comp == 'like'
+    assert s.begin_date_.is_set
+    assert s.begin_date_.value == now
+    assert s.begin_date_.comp == '>'
+    assert s.tba_.is_set
+    assert s.tba_.value is False
+    s2 = s()
+    assert type(s) == type(s)
+#    print(s.__class__, s2.__class__)
+#FAIL    assert s.__class__ == s2.__class__
+    assert s2.is_set is False
+    assert s.tba_.is_set
 
 def TODO():
+    """iterate over the extension."""
     for elt in bt:
         print(elt)
