@@ -105,19 +105,60 @@ ORDER BY
     a.attnum, n.nspname, c.relname ;
 """
 
-class MetaData():
-    @staticmethod
-    def get(tbl_attr):
-        ta = tbl_attr
-        cur = ta['conn'].cursor()
-        cur.execute(sql_db_struct)
-        return cur.fetchall()
+class Model():
+    def __init__(self, dbname):
+        self.__name = dbname
+        self.__conn = self.__connect()
+        self.__metadata = self.get()
 
-def init_field(self, name):
+    def __connect(self):
+        config = ConfigParser()
+        config.read('/etc/torm/{}'.format(self.__name))
+        params = dict(config['database'].items())
+        params['dbname'] = self.__name
+        return psycopg2.connect('dbname={dbname} host={host} user={user} '
+                                'password={password} port={port}'.format(**params),
+                                cursor_factory=RealDictCursor)
+
+    def cursor(self):
+        return self.__conn.cursor()
+
+    @property
+    def metadata(self):
+        return self.__metadata
+
+    def get(self):
+        metadata = OrderedDict()
+        with self.cursor() as cur:
+            cur.execute(sql_db_struct)
+            for dct in cur.fetchall():
+                table_key = self.__name, dct.pop('schemaname'), dct.pop('tablename')
+                if not table_key in metadata:
+                    metadata[table_key] = OrderedDict()
+                    metadata[table_key]['fields'] = {}
+                metadata[table_key]['tablekind'] = dct.pop('tablekind')
+                field_name = '{}_'.format(dct['fieldname'])
+                metadata[table_key]['fields'][field_name] = dct
+        #pp = PrettyPrinter()
+        #pp.pprint(metadata)
+        return metadata
+
+    def check(self):
+        for key in self.__metadata:
+            print(table(".".join(['"{}"'.format(elt) for elt in key])))
+
+def init_field(self, name, metadata):
     self.__name = name
+    self.__metadata = metadata
 
 def repr_field(self):
-    return self.__name
+    md = self.__metadata
+    return "{}: ({}) {}".format(
+        self.__name,
+        md['fieldtype'],
+        md['pkey'] and 'PK' or (
+            '{}{}'.format(md['uniq'] and 'UNIQ ' or '',
+                           md['notnull'] and 'NOT NULL' or '')))
 
 class FieldFactory(type):
     def __new__(cls, clsname, bases, dct):
@@ -133,7 +174,10 @@ def init_table(self, **kwargs):
     """Fields init with kwargs"""
 
 def repr_table(self):
-    ret = ["{}\nFQTN: {}".format(60*'-', self.fqtn)]
+    tks = {'r': 'TABLE', 'v': 'VIEW'}
+    table_kind = tks.get(self.__kind, "UNKNOWN TYPE")
+    ret = [60*'-']
+    ret.append("{}: {}".format(table_kind, self.fqtn))
     ret.append(('- cluster: {dbname}\n'
                 '- schema:  {schemaname}\n'
                 '- table:   {tablename}').format(**vars(self.__class__)))
@@ -164,42 +208,33 @@ class TableFactory(type):
         TF = TableFactory
         tbl_attr = {}
         tbl_attr['fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
+        tbl_attr['__sfqtn'] = tuple(sfqtn)
         attr_names = ['dbname', 'schemaname', 'tablename']
         for i in range(len(attr_names)):
             tbl_attr[attr_names[i]] = sfqtn[i]
         dbname = tbl_attr['dbname']
-        tbl_attr['conn'] = TF.__connect(dbname)
-        if not dbname in TF.__deja_vu:
-            TF.__deja_vu[dbname] = MetaData.get(tbl_attr)
+        if not dbname in TF.__deja_vu.keys():
+            model = Model(dbname)
+            tbl_attr['model'] = model
+            TF.__deja_vu[dbname] = model
+        else:
+            tbl_attr['model'] = TF.__deja_vu[dbname]
         TF.__metadata = TF.__deja_vu[dbname]
+        tbl_attr['__kind'] = tbl_attr['model'].metadata[tuple(sfqtn)]['tablekind']
         TF.__set_fields(tbl_attr)
         tbl_attr['__init__'] = init_table
         tbl_attr['__repr__'] = repr_table
         return super(TF, cls).__new__(cls, clsname, bases, tbl_attr)
 
     @staticmethod
-    def __connect(dbname):
-        config = ConfigParser()
-        config.read('/etc/torm/{}'.format(dbname))
-        params = dict(config['database'].items())
-        params['dbname'] = dbname
-        return psycopg2.connect('dbname={dbname} host={host} user={user} '
-                                'password={password} port={port}'.format(**params),
-                                cursor_factory=RealDictCursor)
-
-    @staticmethod
     def __set_fields(tbl_attr):
-        cur = tbl_attr['conn'].cursor()
-        ta = tbl_attr
-        cur.execute("select column_name from information_schema.columns"
-                    " where "
-                    " table_catalog=%s and table_schema=%s and table_name=%s",
-                    (ta['dbname'], ta['schemaname'], ta['tablename']))
-        tbl_attr['__fields'] = []
-        for dct in cur.fetchall():
-            field_name = "{}_".format(dct['column_name'])
-            tbl_attr[field_name] = Field(field_name)
-            tbl_attr['__fields'].append(tbl_attr[field_name])
+        with tbl_attr['model'].cursor() as cur:
+            ta = tbl_attr
+            tbl_attr['__fields'] = []
+            for field_name, metadata in ta['model']\
+                .metadata[ta['__sfqtn']]['fields'].items():
+                tbl_attr[field_name] = Field(field_name, metadata)
+                tbl_attr['__fields'].append(tbl_attr[field_name])
 
 def table(fqtn, **kwargs):
     fqtn, sfqtn = _normalize_fqtn(fqtn)
@@ -216,12 +251,16 @@ class BaseTable(metaclass=TableFactory):
 class ViewSession(metaclass=TableFactory):
     fqtn = 'dpt_info."seminaire.view"."session"'
 
-class PgDatabase(metaclass=TableFactory):
-    fqtn = 'dpt_info.pg_catalog.pg_database'
-
 if __name__ == '__main__':
+    """
+    OidTable()
+    BaseTable()
+    ViewSession()
+    PgDatabase()
+    table('dpt_info.seminaire.session')
+    sys.exit()
+    """
     print(OidTable())
     print(BaseTable())
     print(ViewSession())
-    print(PgDatabase())
     print(table('dpt_info.seminaire.session'))
