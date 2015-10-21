@@ -1,5 +1,6 @@
 def __init__(self, name, metadata):
     self.__name = name
+    self.__sql_name = name[:-1]
     self.__metadata = metadata
     self.__is_set = False
     self.__value = None
@@ -12,6 +13,14 @@ def __repr__(self):
             '{}{}'.format(
                 md['uniq'] and 'UNIQ ' or '',
                 md['notnull'] and 'NOT NULL' or '')))
+
+@property
+def py_name(self):
+    return self.__name
+
+@property
+def sql_name(self):
+    return self.__sql_name
 
 @property
 def is_set(self):
@@ -48,4 +57,6 @@ interface = {
     'set': set,
     'value': value,
     'comp': comp,
+    'py_name': py_name,
+    'sql_name': sql_name,
 }

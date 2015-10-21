@@ -148,11 +148,18 @@ class FieldFactory(type):
 class Field(metaclass=FieldFactory):
     pass
 
+class Table():
+    pass
+
 class TableFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, clsname, bases, dct):
         def __call__table(self):
+            """__call__ method for the Table class
+
+            Can't move this method in table_interface module
+            """
             return table(self.fqtn)
 
         TF = TableFactory
@@ -175,7 +182,7 @@ class TableFactory(type):
         for fct_name, fct in table_interface.items():
             tbl_attr[fct_name] = fct
         tbl_attr['__call__'] = __call__table
-        return super(TF, cls).__new__(cls, clsname, bases, tbl_attr)
+        return super(TF, cls).__new__(cls, 'Table', bases, tbl_attr)
 
     @staticmethod
     def __set_fields(tbl_attr):
@@ -202,7 +209,10 @@ def _normalize_fqtn(fqtn):
     return '.'.join(['"{}"'.format(elt) for elt in sfqtn]), sfqtn
 
 def table(fqtn, **kwargs):
+    return TableFactory('Table', (), {'fqtn': fqtn})(**kwargs)
+
+def gen_class_name(fqtn):
     fqtn, sfqtn = _normalize_fqtn(fqtn)
     class_name = "".join([elt.capitalize() for elt in
                           [elt.replace('.', '_') for elt in sfqtn]])
-    return TableFactory(class_name, (), {'fqtn': fqtn})(**kwargs)
+    return class_name

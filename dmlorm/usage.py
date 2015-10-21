@@ -2,15 +2,15 @@
 #-*- coding: utf-8 -*-
 
 from datetime import datetime
-from table import table, Model, TableFactory
+import model
 
-class OidTable(metaclass=TableFactory):
+class OidTable(metaclass=model.TableFactory):
     fqtn = 'dpt_info."collorg.core".oid_table'
 
-class BaseTable(metaclass=TableFactory):
+class BaseTable(metaclass=model.TableFactory):
     fqtn = '"dpt_info"."collorg.core".base_table'
 
-class ViewSession(metaclass=TableFactory):
+class ViewSession(metaclass=model.TableFactory):
     fqtn = 'dpt_info."seminaire.view"."session"'
 
 if __name__ == '__main__':
@@ -25,16 +25,16 @@ if __name__ == '__main__':
     print(OidTable())
     print(BaseTable())
     print(ViewSession())
-    print(table('dpt_info.seminaire.session'))
-    Model('dpt_info').check()
+    print(model.table('dpt_info.seminaire.session'))
+    model.Model('dpt_info').check()
 
     """profiling"""
     for i in range(1000):
-        table('dpt_info."collorg.core".base_table')
+        model.table('dpt_info."collorg.core".base_table')
 
 
     """Put a constraint on a Field"""
-    bt = table('dpt_info."collorg.core".base_table')
+    bt = model.table('dpt_info."collorg.core".base_table')
     assert bt.cog_fqtn_.is_set is False
     bt.cog_fqtn_.set('collorg.access.access')
     assert bt.cog_fqtn_.is_set is True
@@ -54,26 +54,29 @@ if __name__ == '__main__':
     assert bt.cog_test_.comp == 'is'
     """Put a constraint via Table constructor"""
     now = datetime.now()
-    s = table('dpt_info.seminaire.session',
+    s = model.table('dpt_info.seminaire.session',
               cog_oid_=('d%', 'like'),
-              begin_date_=(now, '>'),
+              begin_date_=(now, '<'),
               tba_=False)
     assert s.cog_oid_.is_set
     assert s.cog_oid_.value == 'd%'
     assert s.cog_oid_.comp == 'like'
     assert s.begin_date_.is_set
     assert s.begin_date_.value == now
-    assert s.begin_date_.comp == '>'
+    assert s.begin_date_.comp == '<'
     assert s.tba_.is_set
     assert s.tba_.value is False
     s2 = s()
-    assert type(s) == type(s)
+    print(type(s), type(s2))
+    print(id(s.__class__), id(s2.__class__))
 #    print(s.__class__, s2.__class__)
-#FAIL    assert s.__class__ == s2.__class__
+#FAILS    assert s.__class__ == s2.__class__
+#FAILS TO    assert type(s) == type(s2)
     assert s2.is_set is False
     assert s.tba_.is_set
+    """iterate over the extension."""
+    for elt in s.select():
+        print(elt)
 
 def TODO():
-    """iterate over the extension."""
-    for elt in bt:
-        print(elt)
+    pass

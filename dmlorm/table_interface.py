@@ -1,4 +1,5 @@
 def __init__(self, **kwargs):
+    self.__cursor = self.model.cursor()
     for field_name, value in kwargs.items():
         self.__class__.__dict__[field_name].set(value)
 
@@ -24,11 +25,31 @@ def is_set(self):
     return False
 
 def select(self):
-    raise NotImplementedError
+    """First naive implementation of select"""
+    set_fields = []
+    for field in self.__fields:
+        if field.is_set:
+            set_fields.append(field)
+    where_clause = [
+        '{} {} %s'.format(field.sql_name, field.comp) for field in set_fields]
+    if where_clause:
+        where_clause = 'where {}'.format(" and ".join(where_clause))
+    values = tuple(field.value for field in set_fields)
+    print(values)
+    self.__cursor.execute(
+        "select * from {} {}".format(self.fqtn, where_clause), values)
+    return self
+
+def __iter__(self):
+    for elt in self.__cursor.fetchall():
+        celt = {'{}_'.format(key):value for key, value in elt.items()}
+        yield celt
 
 interface = {
     '__init__': __init__,
     '__repr__': __repr__,
+    '__iter__': __iter__,
     'select': select,
     'is_set': is_set,
+    'select': select,
 }
