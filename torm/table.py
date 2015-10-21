@@ -32,11 +32,7 @@ SELECT
     cn_fk.conname AS fkeyname,
     cn_fk.conkey AS keynum,
     cn_fk.confrelid AS fkeytableid,
-    cn_fk.confkey AS fkeynum,
-    -- mettre le nom de la clef référencée en clair
-    n_fk.nspname AS fk_schemaname,
-    c_fk.relname AS fk_tablename,
-    a_fk.attname AS fk_fieldname
+    cn_fk.confkey AS fkeynum
 FROM
     pg_class c -- table
     LEFT JOIN pg_description tdesc ON
@@ -65,14 +61,6 @@ FROM
     cn_fk.contype = 'f' AND
     cn_fk.conrelid = a.attrelid AND
     a.attnum = ANY( cn_fk.conkey )
-    -- les réf. clef étrangères en clair
-    LEFT JOIN pg_class c_fk ON
-    c_fk.oid = cn_fk.confrelid
-    LEFT JOIN pg_namespace n_fk ON
-    n_fk.oid = c_fk.relnamespace
-    LEFT JOIN pg_attribute a_fk ON
-    a_fk.attrelid = c_fk.oid AND
-    a_fk.attnum = cn_fk.confkey[idx( cn_fk.conkey, a.attnum )]
 WHERE
     n.nspname <> 'pg_catalog'::name AND
     n.nspname <> 'information_schema'::name AND
@@ -97,10 +85,7 @@ GROUP BY
     cn_fk.conname,
     cn_fk.conkey,
     cn_fk.confrelid,
-    cn_fk.confkey,
-    n_fk.nspname,
-    c_fk.relname,
-    a_fk.attname
+    cn_fk.confkey
 ORDER BY
     n.nspname, c.relname, a.attnum
 """
