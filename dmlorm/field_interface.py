@@ -15,7 +15,7 @@ def __repr__(self):
                 md['notnull'] and 'NOT NULL' or '')))
 
 @property
-def py_name(self):
+def name(self):
     return self.__name
 
 @property
@@ -55,8 +55,8 @@ interface = {
     'is_set': is_set,
     'get': get,
     'set': set,
+    'name': name,
     'value': value,
     'comp': comp,
-    'py_name': py_name,
     'sql_name': sql_name,
 }

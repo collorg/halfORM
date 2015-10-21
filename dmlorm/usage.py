@@ -77,6 +77,11 @@ if __name__ == '__main__':
     """iterate over the extension."""
     for elt in s.select():
         print(elt)
+    for field in s.fields:
+        print(field.name)
+    x = s(**elt)
+    for f in x.fields:
+        assert f.is_set
 
 def TODO():
     pass

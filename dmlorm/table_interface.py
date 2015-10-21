@@ -24,6 +24,11 @@ def is_set(self):
             return True
     return False
 
+@property
+def fields(self):
+    for field in self.__fields:
+        yield field
+
 def select(self):
     """First naive implementation of select"""
     set_fields = []
@@ -45,11 +50,15 @@ def __iter__(self):
         celt = {'{}_'.format(key):value for key, value in elt.items()}
         yield celt
 
+def __getitem__(self, key):
+    return self.__cursor.fetchall()[key]
+
 interface = {
     '__init__': __init__,
     '__repr__': __repr__,
     '__iter__': __iter__,
-    'select': select,
+    '__getitem__': __getitem__,
     'is_set': is_set,
     'select': select,
+    'fields': fields,
 }

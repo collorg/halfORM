@@ -155,12 +155,12 @@ class TableFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, clsname, bases, dct):
-        def __call__table(self):
-            """__call__ method for the Table class
+        def __call__(self, **kwargs):
+            """__call__ method for the class Table
 
             Can't move this method in table_interface module
             """
-            return table(self.fqtn)
+            return table(self.fqtn, **kwargs)
 
         TF = TableFactory
         tbl_attr = {}
@@ -181,7 +181,7 @@ class TableFactory(type):
         TF.__set_fields(tbl_attr)
         for fct_name, fct in table_interface.items():
             tbl_attr[fct_name] = fct
-        tbl_attr['__call__'] = __call__table
+        tbl_attr['__call__'] = __call__
         return super(TF, cls).__new__(cls, 'Table', bases, tbl_attr)
 
     @staticmethod
