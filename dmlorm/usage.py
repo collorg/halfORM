@@ -82,6 +82,16 @@ if __name__ == '__main__':
     x = s(**elt)
     for f in x.fields:
         assert f.is_set
+    n = s()
+    for elt in n.select(cog_oid_=('d%', 'like')):
+        print(elt['cog_oid_'])
+    for elt in n.select(cog_oid_=('d%', 'like')):
+        t = s(**elt)
+        print(t.cog_oid_.value)
+    for elt in n.select('cog_oid_', cog_oid_=('d%', 'like')):
+        print(elt)
+    for elt in n.select('cog_oid_', 'cog_fqtn_', cog_oid_=('d%', 'like')):
+        print(elt)
 
 def TODO():
     pass

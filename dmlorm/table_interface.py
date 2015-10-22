@@ -1,7 +1,7 @@
 def __init__(self, **kwargs):
     self.__cursor = self.model.cursor()
-    for field_name, value in kwargs.items():
-        self.__class__.__dict__[field_name].set(value)
+    dct = self.__class__.__dict__
+    [dct[field_name].set(value)for field_name, value in kwargs.items()]
 
 def __repr__(self):
     tks = {'r': 'TABLE', 'v': 'VIEW'}
@@ -12,8 +12,13 @@ def __repr__(self):
                 '- schema:  {schemaname}\n'
                 '- table:   {tablename}').format(**vars(self.__class__)))
     ret.append('FIELDS:')
+    mx_fld_n_len = 0
     for field in self.__fields:
-        ret.append('- {}'.format(field))
+        if len(field.name) > mx_fld_n_len:
+            mx_fld_n_len = len(field.name)
+    for field in self.__fields:
+        ret.append('- {}:{}{}'.format(
+            field.name, ' ' * (mx_fld_n_len + 1 - len(field.name)), field))
     return '\n'.join(ret)
 
 @property
@@ -29,20 +34,27 @@ def fields(self):
     for field in self.__fields:
         yield field
 
-def select(self):
-    """First naive implementation of select"""
+def select(self, *args, **kwargs):
+    """Better, still naive implementation of select
+
+    - args are fields names
+    - kwargs is of the form {<field name>:<value>}
+    """
+    dct = self.__class__.__dict__
+    [dct[field_name].set(value)for field_name, value in kwargs.items()]
     set_fields = []
-    for field in self.__fields:
-        if field.is_set:
-            set_fields.append(field)
+    [set_fields.append(field) for field in self.__fields if field.is_set]
+    what = '*'
+    if args:
+        what = ', '.join(
+            [dct[field_name].sql_name for field_name in args])
     where_clause = [
         '{} {} %s'.format(field.sql_name, field.comp) for field in set_fields]
     if where_clause:
         where_clause = 'where {}'.format(" and ".join(where_clause))
     values = tuple(field.value for field in set_fields)
-    print(values)
     self.__cursor.execute(
-        "select * from {} {}".format(self.fqtn, where_clause), values)
+        "select {} from {} {}".format(what, self.fqtn, where_clause), values)
     return self
 
 def __iter__(self):
