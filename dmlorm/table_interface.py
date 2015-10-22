@@ -38,7 +38,7 @@ def select(self, *args, **kwargs):
     """Better, still naive implementation of select
 
     - args are fields names
-    - kwargs is of the form {<field name>:<value>}
+    - kwargs is a dict of the form {[<field name>:<value>]}
     """
     dct = self.__class__.__dict__
     [dct[field_name].set(value)for field_name, value in kwargs.items()]
