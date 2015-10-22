@@ -1,6 +1,5 @@
 def __init__(self, name, metadata):
     self.__name = name
-    self.__sql_name = name[:-1]
     self.__metadata = metadata
     self.__is_set = False
     self.__value = None
@@ -10,16 +9,12 @@ def __repr__(self):
     md = self.__metadata
     return "({}) {}".format(
         md['fieldtype'], md['pkey'] and 'PK' or ('{}{}'.format(
-            md['uniq'] and 'UNIQ ' or '',
+            md['uniq'] and 'UNIQUE ' or '',
             md['notnull'] and 'NOT NULL' or '')))
 
 @property
 def name(self):
     return self.__name
-
-@property
-def sql_name(self):
-    return self.__sql_name
 
 @property
 def is_set(self):
@@ -57,5 +52,4 @@ interface = {
     'name': name,
     'value': value,
     'comp': comp,
-    'sql_name': sql_name,
 }

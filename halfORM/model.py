@@ -4,8 +4,8 @@
 import re
 import sys
 import psycopg2
-from field_interface import interface as field_interface
-from table_interface import interface as table_interface
+from .field_interface import interface as field_interface
+from .table_interface import interface as table_interface
 from psycopg2.extras import RealDictCursor
 from configparser import ConfigParser
 from collections import OrderedDict
@@ -98,12 +98,13 @@ class Model():
 
     def __connect(self):
         config = ConfigParser()
-        config.read('/etc/torm/{}'.format(self.__name))
+        config.read('/etc/halfORM/{}'.format(self.__name))
         params = dict(config['database'].items())
         params['dbname'] = self.__name
-        return psycopg2.connect('dbname={dbname} host={host} user={user} '
-                                'password={password} port={port}'.format(**params),
-                                cursor_factory=RealDictCursor)
+        return psycopg2.connect(
+            'dbname={dbname} host={host} user={user} '
+            'password={password} port={port}'.format(**params),
+            cursor_factory=RealDictCursor)
 
     def cursor(self):
         return self.__conn.cursor()
@@ -128,13 +129,12 @@ class Model():
                     metadata[table_key] = OrderedDict()
                     metadata[table_key]['fields'] = OrderedDict()
                 metadata[table_key]['tablekind'] = dct.pop('tablekind')
-                field_name = '{}_'.format(dct['fieldname'])
-                metadata[table_key]['fields'][field_name] = dct
+                metadata[table_key]['fields'][dct['fieldname']] = dct
         #pp = PrettyPrinter()
         #pp.pprint(metadata)
         return metadata
 
-    def check(self):
+    def desc(self):
         for key in self.__metadata:
             print(table(".".join(['"{}"'.format(elt) for elt in key])))
 
@@ -177,7 +177,8 @@ class TableFactory(type):
         else:
             tbl_attr['model'] = TF.__deja_vu[dbname]
         TF.__metadata = TF.__deja_vu[dbname]
-        tbl_attr['__kind'] = tbl_attr['model'].metadata[tuple(sfqtn)]['tablekind']
+        tbl_attr['__kind'] = (
+            tbl_attr['model'].metadata[tuple(sfqtn)]['tablekind'])
         TF.__set_fields(tbl_attr)
         for fct_name, fct in table_interface.items():
             tbl_attr[fct_name] = fct
@@ -185,13 +186,13 @@ class TableFactory(type):
         return super(TF, cls).__new__(cls, 'Table', bases, tbl_attr)
 
     @staticmethod
-    def __set_fields(tbl_attr):
-        ta = tbl_attr
-        tbl_attr['__fields'] = []
-        for field_name, metadata in ta['model']\
-            .metadata[ta['__sfqtn']]['fields'].items():
-            tbl_attr[field_name] = Field(field_name, metadata)
-            tbl_attr['__fields'].append(tbl_attr[field_name])
+    def __set_fields(ta):
+        """ta: table attributes dictionary."""
+        ta['__fields'] = []
+        for field_name, metadata in ta['model'].metadata[
+                ta['__sfqtn']]['fields'].items():
+            ta[field_name] = Field(field_name, metadata)
+            ta['__fields'].append(ta[field_name])
 
 def _normalize_fqtn(fqtn):
     """

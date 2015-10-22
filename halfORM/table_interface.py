@@ -1,5 +1,6 @@
 def __init__(self, **kwargs):
     self.__cursor = self.model.cursor()
+    self.__cons_fields = []
     dct = self.__class__.__dict__
     [dct[field_name].set(value)for field_name, value in kwargs.items()]
 
@@ -34,6 +35,11 @@ def fields(self):
     for field in self.__fields:
         yield field
 
+def __where(self, set_fields):
+    where_clause = [
+        '{} {} %s'.format(field.name, field.comp) for field in set_fields]
+    return 'where {}'.format(" and ".join(where_clause))
+
 def select(self, *args, **kwargs):
     """Better, still naive implementation of select
 
@@ -42,16 +48,13 @@ def select(self, *args, **kwargs):
     """
     dct = self.__class__.__dict__
     [dct[field_name].set(value)for field_name, value in kwargs.items()]
-    set_fields = []
-    [set_fields.append(field) for field in self.__fields if field.is_set]
     what = '*'
     if args:
-        what = ', '.join(
-            [dct[field_name].sql_name for field_name in args])
-    where_clause = [
-        '{} {} %s'.format(field.sql_name, field.comp) for field in set_fields]
-    if where_clause:
-        where_clause = 'where {}'.format(" and ".join(where_clause))
+        what = ', '.join([dct[field_name].name for field_name in args])
+    set_fields = []
+    [set_fields.append(field) for field in self.__fields if field.is_set]
+    if set_fields:
+        where = self.__where(set_fields)
     values = tuple(field.value for field in set_fields)
     self.__cursor.execute(
         "select {} from {} {}".format(what, self.fqtn, where_clause), values)
@@ -59,8 +62,7 @@ def select(self, *args, **kwargs):
 
 def __iter__(self):
     for elt in self.__cursor.fetchall():
-        celt = {'{}_'.format(key):value for key, value in elt.items()}
-        yield celt
+        yield elt
 
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
@@ -71,6 +73,7 @@ interface = {
     '__iter__': __iter__,
     '__getitem__': __getitem__,
     'is_set': is_set,
+    '__where': __where,
     'select': select,
     'fields': fields,
 }
