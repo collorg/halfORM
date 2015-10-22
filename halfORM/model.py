@@ -11,6 +11,14 @@ from configparser import ConfigParser
 from collections import OrderedDict
 from pprint import PrettyPrinter
 
+# This method can't be moved in table_interface module
+def __call__(self, **kwargs):
+    """__call__ method for the class Table
+    """
+    return table(self.__fqtn, **kwargs)
+
+table_interface.update({'__call__': __call__})
+
 sql_db_struct = """
 SELECT
     a.attrelid AS tableid,
@@ -124,7 +132,8 @@ class Model():
         with self.cursor() as cur:
             cur.execute(sql_db_struct)
             for dct in cur.fetchall():
-                table_key = self.__name, dct.pop('schemaname'), dct.pop('tablename')
+                table_key = (
+                    self.__name, dct.pop('schemaname'), dct.pop('tablename'))
                 if not table_key in metadata:
                     metadata[table_key] = OrderedDict()
                     metadata[table_key]['fields'] = OrderedDict()
@@ -155,16 +164,9 @@ class TableFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, clsname, bases, dct):
-        def __call__(self, **kwargs):
-            """__call__ method for the class Table
-
-            Can't move this method in table_interface module
-            """
-            return table(self.fqtn, **kwargs)
-
         TF = TableFactory
         tbl_attr = {}
-        tbl_attr['fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
+        tbl_attr['__fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
         tbl_attr['__sfqtn'] = tuple(sfqtn)
         attr_names = ['dbname', 'schemaname', 'tablename']
         for i in range(len(attr_names)):
@@ -182,7 +184,6 @@ class TableFactory(type):
         TF.__set_fields(tbl_attr)
         for fct_name, fct in table_interface.items():
             tbl_attr[fct_name] = fct
-        tbl_attr['__call__'] = __call__
         return super(TF, cls).__new__(cls, 'Table', bases, tbl_attr)
 
     @staticmethod

@@ -32,9 +32,14 @@ if __name__ == '__main__':
     for i in range(1000):
         table('dpt_info."collorg.core".base_table')
 
-
-    """Put a constraint on a Field"""
+    """request with no constraint."""
+    bt = table('dpt_info."collorg.core".data_type')
+    count = 0
+    for elt in bt.select():
+        count += 1
+    print(count)
     bt = table('dpt_info."collorg.core".base_table')
+    """Put a constraint on a Field"""
     assert bt.cog_fqtn.is_set is False
     bt.cog_fqtn.set('collorg.access.access')
     assert bt.cog_fqtn.is_set is True
@@ -92,6 +97,15 @@ if __name__ == '__main__':
         print(elt)
     for elt in n.select('cog_oid', 'cog_fqtn', cog_oid=('d%', 'like')):
         print(elt)
+    u = s(cog_oid=('d%', 'like'))
+    avant = u.count()
+    print(avant)
+    u.update(cog_test=True)
+#    u.model.commit()
+    v = s(cog_test=True)
+    assert v.count() == avant
+    v.update(cog_test=False)
+#    v.model.commit()
 
 def TODO():
     pass
