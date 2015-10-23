@@ -3,3 +3,6 @@
 \#*
 .#*
 tmp
+build/
+dist/
+halfORM.egg-info/
