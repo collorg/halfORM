@@ -48,6 +48,10 @@ def __repr__(self):
     return '\n'.join(ret)
 
 @property
+def fqtn(self):
+    return self.__fqtn
+
+@property
 def is_set(self):
     """return True if one field at least is set"""
     for field in self.__fields:
@@ -172,6 +176,7 @@ table_interface = {
     '__iter__': __iter__,
     '__getitem__': __getitem__,
     'fields': fields,
+    'fqtn': fqtn,
     'is_set': is_set,
     '__where': __where,
     'insert': insert,

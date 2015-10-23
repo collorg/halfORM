@@ -27,8 +27,6 @@ from configparser import ConfigParser
 from collections import OrderedDict
 from pprint import PrettyPrinter
 
-table_class_name = 'Relation'
-
 sql_db_struct = """
 SELECT
     a.attrelid AS tableid,
@@ -187,13 +185,14 @@ class FieldFactory(type):
 class Field(metaclass=FieldFactory):
     pass
 
-class Table():
+class Relation():
     pass
 
 class TableFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, clsname, bases, dct):
+        bases = tuple(list(bases) + [Relation])
         from .relation_interface import table_interface, view_interface
         TF = TableFactory
         tbl_attr = {}
@@ -223,7 +222,7 @@ class TableFactory(type):
         for fct_name, fct in rel_interfaces[kind].items():
             tbl_attr[fct_name] = fct
         return super(TF, cls).__new__(
-            cls, rel_class_names[kind], bases, tbl_attr)
+            cls, rel_class_names[kind], (bases), tbl_attr)
 
     @staticmethod
     def __set_fields(ta):

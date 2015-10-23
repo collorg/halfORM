@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 from datetime import datetime
-from halfORM.model import TableFactory, table, Model
+from halfORM.model import TableFactory, table, Model, Relation
 
 class OidTable(metaclass=TableFactory):
     fqtn = 'dpt_info."collorg.core".oid_table'
@@ -74,7 +74,8 @@ if __name__ == '__main__':
     s2 = s()
     print(type(s), type(s2))
     print(id(s.__class__), id(s2.__class__))
-#    print(s.__class__, s2.__class__)
+    assert isinstance(s, Relation)
+    print(s.__class__, s2.__class__)
 #FAILS    assert s.__class__ == s2.__class__
 #FAILS TOO    assert type(s) == type(s2)
     assert s2.is_set is False
