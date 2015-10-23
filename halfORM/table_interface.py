@@ -102,6 +102,37 @@ def update(self, no_clause=False, **kwargs):
         "update {} set {} {}".format(self.__fqtn, what, where),
         tuple(new_values + values))
 
+def __what_to_insert(self):
+    fields_names = []
+    values = ()
+    set_fields = [field for field in self.__fields if field.is_set]
+    if set_fields:
+        fields_names = [field.name for field in set_fields]
+        values = [field.value for field in set_fields]
+    return ", ".join(fields_names), values
+
+def insert(self, **kwargs):
+    dct = self.__class__.__dict__
+    [dct[field_name].set(value)for field_name, value in kwargs.items()]
+    fields_names, values = self.__what_to_insert()
+    what_to_insert = ", ".join(["%s" for i in range(len(values))])
+    self.__cursor.execute(
+        "insert into {} ({}) values ({})".format(
+            self.__fqtn, fields_names, what_to_insert),
+        tuple(values))
+
+def delete(self, no_clause=False, **kwargs):
+    """
+    kwargs is {[field name:value]}
+    The object self must be set unless no_clause is false.
+    """
+    assert self.is_set or no_clause
+    dct = self.__class__.__dict__
+    [dct[field_name].set(value)for field_name, value in kwargs.items()]
+    where, values = self.__where()
+    self.__cursor.execute(
+        "delete from {} {}".format(self.__fqtn, where), tuple(values))
+
 def __iter__(self):
     for elt in self.__cursor.fetchall():
         yield elt
@@ -117,8 +148,11 @@ interface = {
     'fields': fields,
     'is_set': is_set,
     '__where': __where,
+    'insert': insert,
+    '__what_to_insert': __what_to_insert,
     'select': select,
     'count': count,
     'update': update,
     '__update': __update,
+    'delete': delete,
 }

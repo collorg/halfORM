@@ -18,6 +18,7 @@ def __call__(self, **kwargs):
     return table(self.__fqtn, **kwargs)
 
 table_interface.update({'__call__': __call__})
+table_class_name = 'Relation'
 
 sql_db_struct = """
 SELECT
@@ -184,7 +185,7 @@ class TableFactory(type):
         TF.__set_fields(tbl_attr)
         for fct_name, fct in table_interface.items():
             tbl_attr[fct_name] = fct
-        return super(TF, cls).__new__(cls, 'Table', bases, tbl_attr)
+        return super(TF, cls).__new__(cls, table_class_name, bases, tbl_attr)
 
     @staticmethod
     def __set_fields(ta):
