@@ -23,7 +23,7 @@ import re
 import sys
 import psycopg2
 from .field_interface import interface as field_interface
-from .table_interface import interface as table_interface
+from .relation_interface import table_interface, view_interface
 from psycopg2.extras import RealDictCursor
 from configparser import ConfigParser
 from collections import OrderedDict
@@ -200,10 +200,14 @@ class TableFactory(type):
         TF.__metadata = TF.__deja_vu[dbname]
         tbl_attr['__kind'] = (
             tbl_attr['model'].metadata[tuple(sfqtn)]['tablekind'])
+        kind = tbl_attr['__kind']
+        rel_interfaces = {'r': table_interface, 'v': view_interface}
+        rel_class_names = {'r': 'Table', 'v': 'View'}
         TF.__set_fields(tbl_attr)
-        for fct_name, fct in table_interface.items():
+        for fct_name, fct in rel_interfaces[kind].items():
             tbl_attr[fct_name] = fct
-        return super(TF, cls).__new__(cls, table_class_name, bases, tbl_attr)
+        return super(TF, cls).__new__(
+            cls, rel_class_names[kind], bases, tbl_attr)
 
     @staticmethod
     def __set_fields(ta):

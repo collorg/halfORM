@@ -158,7 +158,7 @@ def __iter__(self):
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
 
-interface = {
+table_interface = {
     '__init__': __init__,
     '__repr__': __repr__,
     '__iter__': __iter__,
@@ -173,4 +173,16 @@ interface = {
     'update': update,
     '__update': __update,
     'delete': delete,
+}
+
+view_interface = {
+    '__init__': __init__,
+    '__repr__': __repr__,
+    '__iter__': __iter__,
+    '__getitem__': __getitem__,
+    'fields': fields,
+    'is_set': is_set,
+    '__where': __where,
+    'select': select,
+    'count': count,
 }
