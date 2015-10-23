@@ -22,20 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re
 import sys
 import psycopg2
-from .field_interface import interface as field_interface
-from .relation_interface import table_interface, view_interface
 from psycopg2.extras import RealDictCursor
 from configparser import ConfigParser
 from collections import OrderedDict
 from pprint import PrettyPrinter
 
-# This method can't be moved in table_interface module
-def __call__(self, **kwargs):
-    """__call__ method for the class Table
-    """
-    return table(self.__fqtn, **kwargs)
-
-table_interface.update({'__call__': __call__})
 table_class_name = 'Relation'
 
 sql_db_struct = """
@@ -187,6 +178,7 @@ class Model():
 
 class FieldFactory(type):
     def __new__(cls, clsname, bases, dct):
+        from .field_interface import interface as field_interface
         FF = FieldFactory
         for fct_name, fct in field_interface.items():
             dct[fct_name] = fct
@@ -202,6 +194,7 @@ class TableFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, clsname, bases, dct):
+        from .relation_interface import table_interface, view_interface
         TF = TableFactory
         tbl_attr = {}
         tbl_attr['__fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])

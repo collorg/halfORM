@@ -16,11 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from .model import table
+
 def __init__(self, **kwargs):
     self.__cursor = self.model.cursor
     self.__cons_fields = []
     dct = self.__class__.__dict__
     [dct[field_name].set(value)for field_name, value in kwargs.items()]
+
+def __call__(self, **kwargs):
+    """__call__ method for the class Table
+    """
+    return table(self.__fqtn, **kwargs)
 
 def __repr__(self):
     tks = {'r': 'TABLE', 'v': 'VIEW'}
@@ -160,6 +167,7 @@ def __getitem__(self, key):
 
 table_interface = {
     '__init__': __init__,
+    '__call__': __call__,
     '__repr__': __repr__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
