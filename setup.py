@@ -10,7 +10,7 @@ setup(
     name='halfORM',
     version='0.0.1',
     description=" A simple ORM in Python only dealing with DML part of SQL.",
-    long_description=read('README.rst'),
+    long_description=read('README.md'),
     keywords='',
     author='Joël Maïzi',
     author_email='joel.maizi@collorg.org',
