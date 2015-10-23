@@ -118,22 +118,33 @@ ORDER BY
 """
 
 class Model():
-    def __init__(self, dbname):
-        self.__name = dbname
+    def __init__(self, dbname, config_file_path='/etc/halfORM/'):
+        print('Model.__init__')
+        self.__dbname = dbname
+        self.__config_file_path = config_file_path
         self.__conn = self.__connect()
+        self.__cursor = self.__conn.cursor()
         self.__metadata = self.get()
 
     def __connect(self):
         config = ConfigParser()
-        config.read('/etc/halfORM/{}'.format(self.__name))
+        config.read('{}/{}'.format(self.__config_file_path, self.__dbname))
         params = dict(config['database'].items())
-        params['dbname'] = self.__name
+        params['dbname'] = self.__dbname
         return psycopg2.connect(
             'dbname={dbname} host={host} user={user} '
             'password={password} port={port}'.format(**params),
             cursor_factory=RealDictCursor)
 
+    @property
+    def dbname(self):
+        return self.__dbname
+
+    @property
     def cursor(self):
+        return self.__cursor
+
+    def new_cursor(self):
         return self.__conn.cursor()
     def commit(self):
         return self.__conn.commit()
@@ -148,11 +159,11 @@ class Model():
 
     def get(self):
         metadata = OrderedDict()
-        with self.cursor() as cur:
+        with self.new_cursor() as cur:
             cur.execute(sql_db_struct)
             for dct in cur.fetchall():
                 table_key = (
-                    self.__name, dct.pop('schemaname'), dct.pop('tablename'))
+                    self.__dbname, dct.pop('schemaname'), dct.pop('tablename'))
                 if not table_key in metadata:
                     metadata[table_key] = OrderedDict()
                     metadata[table_key]['fields'] = OrderedDict()
@@ -161,6 +172,14 @@ class Model():
         #pp = PrettyPrinter()
         #pp.pprint(metadata)
         return metadata
+
+    def relation(self, qtn, **kwargs):
+        """qtn is the <schema>.<table> name of the relation"""
+        schema, table = qtn.rsplit('.', 1)
+        fqtn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
+        fqtn, _ = _normalize_fqtn(fqtn)
+        return TableFactory(
+            'Table', (), {'fqtn': fqtn, 'model': self})(**kwargs)
 
     def desc(self):
         for key in self.__metadata:
@@ -186,6 +205,10 @@ class TableFactory(type):
         TF = TableFactory
         tbl_attr = {}
         tbl_attr['__fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
+        if dct.get('model'):
+            model = dct['model']
+            tbl_attr['model'] = model
+            TF.__deja_vu[model.dbname] = model
         tbl_attr['__sfqtn'] = tuple(sfqtn)
         attr_names = ['dbname', 'schemaname', 'tablename']
         for i in range(len(attr_names)):

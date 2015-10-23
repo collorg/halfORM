@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 def __init__(self, **kwargs):
-    self.__cursor = self.model.cursor()
+    self.__cursor = self.model.cursor
     self.__cons_fields = []
     dct = self.__class__.__dict__
     [dct[field_name].set(value)for field_name, value in kwargs.items()]

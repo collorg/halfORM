@@ -110,8 +110,10 @@ if __name__ == '__main__':
     i = table('dpt_info."collorg.core".oid_table', cog_oid='ab', cog_fqtn='cd')
     i.insert()
     assert i.count() == 1
+    i.model.commit()
     i.delete()
     assert i.count() == 0
+    i.model.commit()
 
 def TODO():
     pass
