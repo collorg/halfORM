@@ -43,6 +43,8 @@ def __repr__(self):
     for field in self.__fields:
         ret.append('- {}:{}{}'.format(
             field.name, ' ' * (mx_fld_n_len + 1 - len(field.name)), field))
+    for fkey in self.__fkeys:
+        ret.append(str(fkey))
     return '\n'.join(ret)
 
 @property

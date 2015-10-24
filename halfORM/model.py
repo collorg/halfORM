@@ -68,14 +68,17 @@ class Model():
         from .pg_metaview import request
         metadata = {}
         byname = metadata['byname'] = OrderedDict()
-        byid = metadata['byid'] = OrderedDict()
+        byid = metadata['byid'] = {}
         with self.new_cursor() as cur:
             cur.execute(request)
             for dct in cur.fetchall():
                 table_key = (
                     self.__dbname, dct.pop('schemaname'), dct.pop('tablename'))
+                tableid = dct.pop('tableid')
                 if not table_key in byname:
-                    byid[dct['tableid']] = table_key
+                    byid[tableid] = {}
+                    byid[tableid]['sfqtn'] = table_key
+                    byid[tableid]['fields'] = {}
                     byname[table_key] = OrderedDict()
                     byname[table_key]['fields'] = OrderedDict()
                     byname[table_key]['fields_by_num'] = OrderedDict()
@@ -85,6 +88,7 @@ class Model():
                 byname[table_key]['tablekind'] = tablekind
                 byname[table_key]['fields'][fieldname] = dct
                 byname[table_key]['fields_by_num'][fieldnum] = dct
+                byid[tableid]['fields'][fieldnum] = fieldname
         #pp = PrettyPrinter()
         #pp.pprint(metadata)
         return metadata
@@ -108,6 +112,19 @@ class FieldFactory(type):
         for fct_name, fct in field_interface.items():
             dct[fct_name] = fct
         return super(FF, cls).__new__(cls, clsname, bases, dct)
+
+class Fkey():
+    def __init__(self, fk_name, fk_sfqtn, fk_names, fields):
+        self.__name = fk_name
+        self.__fk_fqtn = ".".join(['"{}"'.format(elt) for elt in fk_sfqtn])
+        self.__fk_names = fk_names
+        self.__fields = fields
+
+    def __repr__(self):
+        fields = '({})'.format(', '.join(self.__fields))
+        return "FK {}: {}->{}({})".format(
+            self.__name,
+            fields, self.__fk_fqtn, ', '.join(self.__fk_names))
 
 class Field(metaclass=FieldFactory):
     pass
@@ -153,8 +170,21 @@ class TableFactory(type):
     def __set_fields(ta):
         """ta: table attributes dictionary."""
         ta['__fields'] = []
-        for field_name, metadata in ta['model'].metadata['byname'][
+        ta['__fkeys'] = []
+        dbm = ta['model'].metadata
+        for field_name, metadata in dbm['byname'][
                 ta['__sfqtn']]['fields'].items():
+            fkeyname = metadata.get('fkeyname')
+            if fkeyname and not fkeyname in ta:
+                ft = dbm['byid'][metadata['fkeytableid']]
+                ft_sfqtn = ft['sfqtn']
+                fields_names = [ft['fields'][elt]
+                                   for elt in metadata['fkeynum']]
+                ft_fields_names = [ft['fields'][elt]
+                                   for elt in metadata['fkeynum']]
+                ta[fkeyname] = Fkey(
+                    fkeyname, ft_sfqtn, ft_fields_names, fields_names)
+                ta['__fkeys'].append(ta[fkeyname])
             ta[field_name] = Field(field_name, metadata)
             ta['__fields'].append(ta[field_name])
 
