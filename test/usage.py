@@ -2,7 +2,8 @@
 #-*- coding: utf-8 -*-
 
 from datetime import datetime
-from halfORM.model import TableFactory, table, Model, Relation
+from halfORM.model import TableFactory, table, Model
+from halfORM.relation_interface import Relation
 
 class OidTable(metaclass=TableFactory):
     fqtn = 'dpt_info."collorg.core".oid_table'

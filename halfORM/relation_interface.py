@@ -199,3 +199,6 @@ view_interface = {
     'select': select,
     'count': count,
 }
+
+class Relation():
+    pass

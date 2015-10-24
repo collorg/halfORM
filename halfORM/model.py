@@ -185,15 +185,13 @@ class FieldFactory(type):
 class Field(metaclass=FieldFactory):
     pass
 
-class Relation():
-    pass
-
 class TableFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, clsname, bases, dct):
+        from .relation_interface import (
+            table_interface, view_interface, Relation)
         bases = tuple(list(bases) + [Relation])
-        from .relation_interface import table_interface, view_interface
         TF = TableFactory
         tbl_attr = {}
         tbl_attr['__fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
