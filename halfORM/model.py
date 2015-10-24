@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 #-*- coding: utf-8 -*-
 
-__version__ = "0.0.1"
-__author__ = "Joël Maïzi <joel.maizi@lirmm.fr>"
 __copyright__ = "Copyright (c) 2015 Joël Maïzi"
 __license__ = """
 This program is free software: you can redistribute it and/or modify
@@ -29,7 +27,6 @@ from pprint import PrettyPrinter
 
 class Model():
     def __init__(self, dbname, config_file_path='/etc/halfORM/'):
-        print('Model.__init__')
         self.__dbname = dbname
         self.__config_file_path = config_file_path
         self.__conn = self.__connect()
@@ -69,17 +66,25 @@ class Model():
 
     def get(self):
         from .pg_metaview import request
-        metadata = OrderedDict()
+        metadata = {}
+        byname = metadata['byname'] = OrderedDict()
+        byid = metadata['byid'] = OrderedDict()
         with self.new_cursor() as cur:
             cur.execute(request)
             for dct in cur.fetchall():
                 table_key = (
                     self.__dbname, dct.pop('schemaname'), dct.pop('tablename'))
-                if not table_key in metadata:
-                    metadata[table_key] = OrderedDict()
-                    metadata[table_key]['fields'] = OrderedDict()
-                metadata[table_key]['tablekind'] = dct.pop('tablekind')
-                metadata[table_key]['fields'][dct['fieldname']] = dct
+                if not table_key in byname:
+                    byid[dct['tableid']] = table_key
+                    byname[table_key] = OrderedDict()
+                    byname[table_key]['fields'] = OrderedDict()
+                    byname[table_key]['fields_by_num'] = OrderedDict()
+                fieldname = dct.pop('fieldname')
+                fieldnum = dct['fieldnum']
+                tablekind = dct.pop('tablekind')
+                byname[table_key]['tablekind'] = tablekind
+                byname[table_key]['fields'][fieldname] = dct
+                byname[table_key]['fields_by_num'][fieldnum] = dct
         #pp = PrettyPrinter()
         #pp.pprint(metadata)
         return metadata
@@ -93,7 +98,7 @@ class Model():
             'Table', (), {'fqtn': fqtn, 'model': self})(**kwargs)
 
     def desc(self):
-        for key in self.__metadata:
+        for key in self.__metadata['byname']:
             print(table(".".join(['"{}"'.format(elt) for elt in key])))
 
 class FieldFactory(type):
@@ -134,7 +139,7 @@ class TableFactory(type):
             tbl_attr['model'] = TF.__deja_vu[dbname]
         TF.__metadata = TF.__deja_vu[dbname]
         tbl_attr['__kind'] = (
-            tbl_attr['model'].metadata[tuple(sfqtn)]['tablekind'])
+            tbl_attr['model'].metadata['byname'][tuple(sfqtn)]['tablekind'])
         kind = tbl_attr['__kind']
         rel_interfaces = {'r': table_interface, 'v': view_interface}
         rel_class_names = {'r': 'Table', 'v': 'View'}
@@ -148,7 +153,7 @@ class TableFactory(type):
     def __set_fields(ta):
         """ta: table attributes dictionary."""
         ta['__fields'] = []
-        for field_name, metadata in ta['model'].metadata[
+        for field_name, metadata in ta['model'].metadata['byname'][
                 ta['__sfqtn']]['fields'].items():
             ta[field_name] = Field(field_name, metadata)
             ta['__fields'].append(ta[field_name])

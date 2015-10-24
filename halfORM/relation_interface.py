@@ -1,5 +1,3 @@
-__version__ = "0.0.1"
-__author__ = "Joël Maïzi <joel.maizi@lirmm.fr>"
 __copyright__ = "Copyright (c) 2015 Joël Maïzi"
 __license__ = """
 This program is free software: you can redistribute it and/or modify
