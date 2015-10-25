@@ -27,6 +27,19 @@ def __call__(self, **kwargs):
     """
     return relation(self.__fqtn, **kwargs)
 
+def __str__(self):
+    import json, datetime
+    def handler(obj):
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
+        #elif isinstance(obj, ...):
+        #    return ...
+        else:
+            raise TypeError(
+                'Object of type {} with value of '
+                '{} is not JSON serializable'.format(type(obj), repr(obj)))
+    return json.dumps([elt for elt in self.select()], default=handler)
+
 def __repr__(self):
     tks = {'r': 'TABLE', 'v': 'VIEW'}
     table_kind = tks.get(self.__kind, "UNKNOWN TYPE")
@@ -127,9 +140,10 @@ def update(self, no_clause=False, **kwargs):
     assert self.is_set or no_clause
     where, values = self.__where()
     what, new_values = self.__update(**kwargs)
-    self.__cursor.execute(
-        "update {} set {} {}".format(self.__fqtn, what, where),
-        tuple(new_values + values))
+    query = "update {} set {} {}".format(self.__fqtn, what, where)
+    print(query, tuple(new_values + values))
+    self.__cursor.execute(query, tuple(new_values + values))
+    print(self.__cursor)
 
 def __what_to_insert(self):
     fields_names = []
@@ -172,6 +186,7 @@ def __getitem__(self, key):
 table_interface = {
     '__init__': __init__,
     '__call__': __call__,
+    '__str__': __str__,
     '__repr__': __repr__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
@@ -190,6 +205,7 @@ table_interface = {
 
 view_interface = {
     '__init__': __init__,
+    '__str__': __str__,
     '__repr__': __repr__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
