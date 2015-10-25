@@ -21,7 +21,7 @@ To drop halftest database and user when you're done with the tests:
 try:
     halftest = Model('halftest', path)
 except Exception as err:
-#    sys.stderr.write('{}\n'.format(err))
+    sys.stderr.write('{}\n'.format(err))
     sys.stderr.write(README.format(path))
     sys.exit(1)
     

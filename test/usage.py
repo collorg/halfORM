@@ -103,20 +103,18 @@ if __name__ == '__main__':
     avant = u.count()
     print(avant)
     u.update(cog_test=True)
-#    u.model.commit()
     v = s(cog_oid=('d%', 'like'), cog_test=True)
     assert v.count() == avant
     v.update(cog_test=False)
-#    v.model.commit()
 
     i = relation(
         'dpt_info."collorg.core".oid_table', cog_oid='ab', cog_fqtn='cd')
     i.insert()
     assert i.count() == 1
-    i.model.commit()
+    i.model.connection.commit()
     i.delete()
     assert i.count() == 0
-    i.model.commit()
+    i.model.connection.commit()
 
 def TODO():
     pass
