@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from .model import relation
 
 def __init__(self, **kwargs):
-    self.__cursor = self.model.cursor
+    self.__cursor = self.model.connection.cursor()
     self.__cons_fields = []
     dct = self.__class__.__dict__
     [dct[field_name].set(value)for field_name, value in kwargs.items()]
@@ -155,9 +155,9 @@ def delete(self, no_clause=False, **kwargs):
     kwargs is {[field name:value]}
     The object self must be set unless no_clause is false.
     """
-    assert self.is_set or no_clause
     dct = self.__class__.__dict__
     [dct[field_name].set(value)for field_name, value in kwargs.items()]
+    assert self.is_set or no_clause
     where, values = self.__where()
     self.__cursor.execute(
         "delete from {} {}".format(self.__fqtn, where), tuple(values))

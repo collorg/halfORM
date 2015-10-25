@@ -29,20 +29,21 @@ from halfORM import model_errors
 from pprint import PrettyPrinter
 
 class Model():
-    def __init__(self, dbname, config_file_path='/etc/halfORM/'):
+    def __init__(self, dbname, config_file_path=['/etc/halfORM/', '.']):
         self.__dbname = dbname
         self.__config_file_path = config_file_path
         self.__conn = self.__connect()
+        self.__conn.autocommit = True
         self.__cursor = self.__conn.cursor()
-        self.__metadata = self.get()
+        self.__metadata = self.__get_metadata()
 
     def __connect(self):
-        config_file_name = (
-            '{}/{}'.format(self.__config_file_path, self.__dbname))
         config = ConfigParser()
-        ok = config.read(config_file_name)
+        candidates = ['{}/{}'.format(elt, self.__dbname)
+                      for elt in self.__config_file_path]
+        ok = config.read(candidates)
         if not ok:
-            raise model_errors.MissingConfigFile(config_file_name)
+            raise model_errors.MissingConfigFile(self.__dbname)
         params = dict(config['database'].items())
         params['dbname'] = self.__dbname
         return psycopg2.connect(
@@ -55,28 +56,19 @@ class Model():
         return self.__dbname
 
     @property
-    def cursor(self):
-        return self.__cursor
-
-    def new_cursor(self):
-        return self.__conn.cursor()
-    def commit(self):
-        return self.__conn.commit()
-    def rollback(self):
-        return self.__conn.rollback()
-    def close(self):
-        return self.__conn.close()
+    def connection(self):
+        return self.__conn
 
     @property
     def metadata(self):
         return self.__metadata
 
-    def get(self):
+    def __get_metadata(self):
         from .pg_metaview import request
         metadata = {}
         byname = metadata['byname'] = OrderedDict()
         byid = metadata['byid'] = {}
-        with self.new_cursor() as cur:
+        with self.connection.cursor() as cur:
             cur.execute(request)
             for dct in cur.fetchall():
                 table_key = (

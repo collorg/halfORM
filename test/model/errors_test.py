@@ -13,14 +13,13 @@ class Test(TestCase):
         pass
 
     def missing_config_file_test(self):
-        """Missing config file test."""
         self.assertRaises(
             model_errors.MissingConfigFile, model.Model, "missing")
 
     def unknown_relation_test(self):
-        """Unknown relation test."""
         self.assertRaises(
-            model_errors.UnknownRelation, halftest.relation, "public.unknown")
+            model_errors.UnknownRelation,
+            halftest.relation, "blog.unknown")
 
 
 

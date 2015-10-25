@@ -3,9 +3,42 @@ create database halftest owner halftest;
 
 \c halftest halftest
 
-create table personne( nom text, prenom text, date_naiss date, primary key(nom, prenom, date_naiss));
+create schema blog;
+create table blog.person(
+    first_name text,
+	last_name text,
+	birth_date date,
+	primary key(first_name, last_name, birth_date)
+);
+create sequence blog.id_post;
 
-create table billet( texte text, nom text, prenom text, date_naiss date);
+create table blog.post(
+	id int default nextval('blog.id_post') unique not null,
+    title text,
+    content text,
+    a_first_name text,
+	a_last_name text,
+	a_birth_date date,
+    primary key(id, a_first_name, a_last_name, a_birth_date)
+);
+alter table blog.post add constraint "author"
+    foreign key(a_first_name, a_last_name, a_birth_date)
+    references blog.person(first_name, last_name, birth_date);
 
-alter table billet add constraint "auteur" foreign key(nom, prenom, date_naiss) references personne;
+create sequence blog.id_comment;
 
+create table blog.comment(
+	id int default nextval('blog.id_comment') unique not null,
+    content text,
+	id_post int, 
+    a_first_name text,
+	a_last_name text,
+	a_birth_date date,
+    primary key(id, id_post, a_first_name, a_last_name, a_birth_date)
+);
+alter table blog.comment add constraint "author"
+    foreign key(a_first_name, a_last_name, a_birth_date)
+    references blog.person(first_name, last_name, birth_date);
+alter table blog.comment add constraint "post"
+    foreign key(id_post)
+    references blog.post(id)

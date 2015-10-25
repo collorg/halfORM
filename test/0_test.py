@@ -10,10 +10,9 @@ class Test(TestCase):
         pass
 
     def setUp(self):
-        self.pers = halftest.relation("public.personne")
-        self.billet = halftest.relation("public.billet")
+        self.pers = halftest.relation("blog.person")
+        self.post = halftest.relation("blog.post")
 
     def select_count_0_test(self):
-        """database is empty"""
         self.assertEqual(self.pers.count(), 0)
-        self.assertEqual(self.billet.count(), 0)
+        self.assertEqual(self.post.count(), 0)
