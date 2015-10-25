@@ -122,7 +122,7 @@ class Fkey():
 
     def __repr__(self):
         fields = '({})'.format(', '.join(self.__fields))
-        return "FK {}: {}->{}({})".format(
+        return "FK {}: {}\n \u21B3 {}({})".format(
             self.__name,
             fields, self.__fk_fqtn, ', '.join(self.__fk_names))
 
