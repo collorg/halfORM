@@ -1,0 +1,5 @@
+[database]
+user = halftest
+password = halftest
+host = localhost
+port = 5432

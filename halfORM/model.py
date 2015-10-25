@@ -25,6 +25,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from configparser import ConfigParser
 from collections import OrderedDict
+from halfORM import model_errors
 from pprint import PrettyPrinter
 
 class Model():
@@ -36,8 +37,12 @@ class Model():
         self.__metadata = self.get()
 
     def __connect(self):
+        config_file_name = (
+            '{}/{}'.format(self.__config_file_path, self.__dbname))
         config = ConfigParser()
-        config.read('{}/{}'.format(self.__config_file_path, self.__dbname))
+        ok = config.read(config_file_name)
+        if not ok:
+            raise model_errors.MissingConfigFile(config_file_name)
         params = dict(config['database'].items())
         params['dbname'] = self.__dbname
         return psycopg2.connect(
@@ -134,10 +139,16 @@ class Field(metaclass=FieldFactory):
 class RelationFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
-    def __new__(cls, clsname, bases, dct):
+    def __new__(cls, classname, bases, dct):
+        def _gen_class_name(rel_kind, sfqtn):
+            class_name = "".join([elt.capitalize() for elt in
+                                  [elt.replace('.', '') for elt in sfqtn]])
+            return "{}_{}".format(rel_kind, class_name)
+
         from .relation_interface import (
             table_interface, view_interface, Relation)
-        bases = tuple(list(bases) + [Relation])
+        #TODO get bases from table inheritance
+        bases = (Relation,)
         TF = RelationFactory
         tbl_attr = {}
         tbl_attr['__fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
@@ -157,16 +168,19 @@ class RelationFactory(type):
         else:
             tbl_attr['model'] = TF.__deja_vu[dbname]
         TF.__metadata = TF.__deja_vu[dbname]
-        tbl_attr['__kind'] = (
-            tbl_attr['model'].metadata['byname'][tuple(sfqtn)]['tablekind'])
+        try:
+            tbl_attr['__kind'] = (
+                tbl_attr['model'].metadata['byname'][tuple(sfqtn)]['tablekind'])
+        except KeyError:
+            raise model_errors.UnknownRelation(sfqtn)
         kind = tbl_attr['__kind']
         rel_interfaces = {'r': table_interface, 'v': view_interface}
         rel_class_names = {'r': 'Table', 'v': 'View'}
         TF.__set_fields(tbl_attr)
         for fct_name, fct in rel_interfaces[kind].items():
             tbl_attr[fct_name] = fct
-        return super(TF, cls).__new__(
-            cls, rel_class_names[kind], (bases), tbl_attr)
+        class_name = _gen_class_name(rel_class_names[kind], sfqtn)
+        return super(TF, cls).__new__(cls, class_name, (bases), tbl_attr)
 
     @staticmethod
     def __set_fields(ta):
@@ -206,10 +220,5 @@ def _normalize_fqtn(fqtn):
     return '.'.join(['"{}"'.format(elt) for elt in sfqtn]), sfqtn
 
 def relation(fqtn, **kwargs):
-    return RelationFactory('Table', (), {'fqtn': fqtn})(**kwargs)
+    return RelationFactory(None, None, {'fqtn': fqtn})(**kwargs)
 
-def gen_class_name(fqtn):
-    fqtn, sfqtn = _normalize_fqtn(fqtn)
-    class_name = "".join([elt.capitalize() for elt in
-                          [elt.replace('.', '_') for elt in sfqtn]])
-    return class_name
