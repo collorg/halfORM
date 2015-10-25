@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+__all__ = ["Model", "relation"]
+
 import re
 import sys
 import psycopg2
@@ -98,12 +100,12 @@ class Model():
         schema, table = qtn.rsplit('.', 1)
         fqtn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
         fqtn, _ = _normalize_fqtn(fqtn)
-        return TableFactory(
+        return RelationFactory(
             'Table', (), {'fqtn': fqtn, 'model': self})(**kwargs)
 
     def desc(self):
         for key in self.__metadata['byname']:
-            print(table(".".join(['"{}"'.format(elt) for elt in key])))
+            print(relation(".".join(['"{}"'.format(elt) for elt in key])))
 
 class FieldFactory(type):
     def __new__(cls, clsname, bases, dct):
@@ -129,14 +131,14 @@ class Fkey():
 class Field(metaclass=FieldFactory):
     pass
 
-class TableFactory(type):
+class RelationFactory(type):
     __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, clsname, bases, dct):
         from .relation_interface import (
             table_interface, view_interface, Relation)
         bases = tuple(list(bases) + [Relation])
-        TF = TableFactory
+        TF = RelationFactory
         tbl_attr = {}
         tbl_attr['__fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
         if dct.get('model'):
@@ -196,15 +198,15 @@ def _normalize_fqtn(fqtn):
     - '"a"."b1.b2"."c"'
     - 'a."b1.b2".c'
     """
-    TF = TableFactory
+    TF = RelationFactory
     if fqtn.find('"') == -1:
         sfqtn = fqtn.split('.')
     else:
         sfqtn = [elt for elt in TF.re_split_fqtn.split(fqtn) if elt]
     return '.'.join(['"{}"'.format(elt) for elt in sfqtn]), sfqtn
 
-def table(fqtn, **kwargs):
-    return TableFactory('Table', (), {'fqtn': fqtn})(**kwargs)
+def relation(fqtn, **kwargs):
+    return RelationFactory('Table', (), {'fqtn': fqtn})(**kwargs)
 
 def gen_class_name(fqtn):
     fqtn, sfqtn = _normalize_fqtn(fqtn)

@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from .model import table
+from .model import relation
 
 def __init__(self, **kwargs):
     self.__cursor = self.model.cursor
@@ -25,7 +25,7 @@ def __init__(self, **kwargs):
 def __call__(self, **kwargs):
     """__call__ method for the class Table
     """
-    return table(self.__fqtn, **kwargs)
+    return relation(self.__fqtn, **kwargs)
 
 def __repr__(self):
     tks = {'r': 'TABLE', 'v': 'VIEW'}

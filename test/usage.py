@@ -2,16 +2,16 @@
 #-*- coding: utf-8 -*-
 
 from datetime import datetime
-from halfORM.model import TableFactory, table, Model
+from halfORM.model import RelationFactory, relation, Model
 from halfORM.relation_interface import Relation
 
-class OidTable(metaclass=TableFactory):
+class OidTable(metaclass=RelationFactory):
     fqtn = 'dpt_info."collorg.core".oid_table'
 
-class BaseTable(metaclass=TableFactory):
+class BaseTable(metaclass=RelationFactory):
     fqtn = '"dpt_info"."collorg.core".base_table'
 
-class ViewSession(metaclass=TableFactory):
+class ViewSession(metaclass=RelationFactory):
     fqtn = 'dpt_info."seminaire.view"."session"'
 
 if __name__ == '__main__':
@@ -20,26 +20,26 @@ if __name__ == '__main__':
     BaseTable()
     ViewSession()
     PgDatabase()
-    table('dpt_info.seminaire.session')
+    relation('dpt_info.seminaire.session')
     sys.exit()
     """
     print(OidTable())
     print(BaseTable())
     print(ViewSession())
-    print(table('dpt_info.seminaire.session'))
+    print(relation('dpt_info.seminaire.session'))
     Model('dpt_info').desc()
 
     """profiling"""
     for i in range(1000):
-        table('dpt_info."collorg.core".base_table')
+        relation('dpt_info."collorg.core".base_table')
 
     """request with no constraint."""
-    bt = table('dpt_info."collorg.core".data_type')
+    bt = relation('dpt_info."collorg.core".data_type')
     count = 0
     for elt in bt.select():
         count += 1
     print(count)
-    bt = table('dpt_info."collorg.core".base_table')
+    bt = relation('dpt_info."collorg.core".base_table')
     """Put a constraint on a Field"""
     assert bt.cog_fqtn.is_set is False
     bt.cog_fqtn.set('collorg.access.access')
@@ -60,10 +60,10 @@ if __name__ == '__main__':
     assert bt.cog_test.comp == 'is'
     """Put a constraint via Table constructor"""
     now = datetime.now()
-    s = table('dpt_info.seminaire.session',
-              cog_oid=('d%', 'like'),
-              begin_date=(now, '<'),
-              tba=False)
+    s = relation('dpt_info.seminaire.session',
+                 cog_oid=('d%', 'like'),
+                 begin_date=(now, '<'),
+                 tba=False)
     assert s.cog_oid.is_set
     assert s.cog_oid.value == 'd%'
     assert s.cog_oid.comp == 'like'
@@ -109,7 +109,8 @@ if __name__ == '__main__':
     v.update(cog_test=False)
 #    v.model.commit()
 
-    i = table('dpt_info."collorg.core".oid_table', cog_oid='ab', cog_fqtn='cd')
+    i = relation(
+        'dpt_info."collorg.core".oid_table', cog_oid='ab', cog_fqtn='cd')
     i.insert()
     assert i.count() == 1
     i.model.commit()
