@@ -29,25 +29,38 @@ from halfORM import model_errors
 from pprint import PrettyPrinter
 
 class Model():
-    def __init__(self, dbname, config_file_path=['/etc/halfORM/', '.']):
-        self.__dbname = dbname
-        self.__config_file_path = config_file_path
-        self.__conn = self.__connect()
+    __deja_vu = {}
+    __metadata = {}
+    def __init__(self, config_file=None, dbname=None):
+        assert bool(config_file) != bool(dbname)
+        if dbname:
+            self = self.__deja_vu[dbname]
+            self.__dbname = dbname
+            return
+        config = ConfigParser()
+        ok = config.read(config_file)
+        if not ok:
+            raise model_errors.MissingConfigFile(config_file)
+        params = dict(config['database'].items())
+        needed_params = {'name', 'host', 'user', 'password', 'port'}
+        self.__dbname = params['name']
+        missing_params = needed_params.symmetric_difference(set(params.keys()))
+        if missing_params:
+            raise model_errors.MalformedConfigFile(
+                self.__config_file_name, missing_params)
+        self.__conn = self.__connect(**params)
         self.__conn.autocommit = True
         self.__cursor = self.__conn.cursor()
-        self.__metadata = self.__get_metadata()
+        self.__metadata[self.__dbname] = self.__get_metadata()
+        self.__deja_vu[self.__dbname] = self
 
-    def __connect(self):
-        config = ConfigParser()
-        candidates = ['{}/{}'.format(elt, self.__dbname)
-                      for elt in self.__config_file_path]
-        ok = config.read(candidates)
-        if not ok:
-            raise model_errors.MissingConfigFile(self.__dbname)
-        params = dict(config['database'].items())
-        params['dbname'] = self.__dbname
+    @staticmethod
+    def deja_vu(dbname):
+        return Model.__deja_vu.get(dbname)
+
+    def __connect(self, **params):
         return psycopg2.connect(
-            'dbname={dbname} host={host} user={user} '
+            'dbname={name} host={host} user={user} '
             'password={password} port={port}'.format(**params),
             cursor_factory=RealDictCursor)
 
@@ -61,7 +74,7 @@ class Model():
 
     @property
     def metadata(self):
-        return self.__metadata
+        return self.__metadata[self.__dbname]
 
     def __get_metadata(self):
         from .pg_metaview import request
@@ -101,7 +114,7 @@ class Model():
             'Table', (), {'fqtn': fqtn, 'model': self})(**kwargs)
 
     def desc(self):
-        for key in self.__metadata['byname']:
+        for key in self.__metadata[self.__dbname]['byname']:
             print(relation(".".join(['"{}"'.format(elt) for elt in key])))
 
 class FieldFactory(type):
@@ -121,7 +134,7 @@ class Fkey():
 
     def __repr__(self):
         fields = '({})'.format(', '.join(self.__fields))
-        return "FK {}: {}\n \u21B3 {}({})".format(
+        return "FK {}: {}\n   \u21B3 {}({})".format(
             self.__name,
             fields, self.__fk_fqtn, ', '.join(self.__fk_names))
 
@@ -129,7 +142,6 @@ class Field(metaclass=FieldFactory):
     pass
 
 class RelationFactory(type):
-    __deja_vu = {}
     re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, classname, bases, dct):
         def _gen_class_name(rel_kind, sfqtn):
@@ -147,19 +159,14 @@ class RelationFactory(type):
         if dct.get('model'):
             model = dct['model']
             tbl_attr['model'] = model
-            TF.__deja_vu[model.dbname] = model
         tbl_attr['__sfqtn'] = tuple(sfqtn)
         attr_names = ['dbname', 'schemaname', 'tablename']
         for i in range(len(attr_names)):
             tbl_attr[attr_names[i]] = sfqtn[i]
         dbname = tbl_attr['dbname']
-        if not dbname in TF.__deja_vu.keys():
-            model = Model(dbname)
-            tbl_attr['model'] = model
-            TF.__deja_vu[dbname] = model
-        else:
-            tbl_attr['model'] = TF.__deja_vu[dbname]
-        TF.__metadata = TF.__deja_vu[dbname]
+        tbl_attr['model'] = Model.deja_vu(dbname)
+        if not tbl_attr['model']:
+            tbl_attr['model'] = Model(dbname)
         try:
             tbl_attr['__kind'] = (
                 tbl_attr['model'].metadata['byname'][tuple(sfqtn)]['tablekind'])

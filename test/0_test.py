@@ -10,7 +10,7 @@ class Test(TestCase):
         pass
 
     def setUp(self):
-        self.pers = halftest.relation("blog.person")
+        self.pers = halftest.relation("actor.person")
         self.post = halftest.relation("blog.post")
 
     def select_count_0_test(self):

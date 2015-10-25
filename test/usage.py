@@ -5,6 +5,8 @@ from datetime import datetime
 from halfORM.model import RelationFactory, relation, Model
 from halfORM.relation_interface import Relation
 
+dpt_info = Model(config_file='/etc/halfORM/dpt_info')
+
 class OidTable(metaclass=RelationFactory):
     fqtn = 'dpt_info."collorg.core".oid_table'
 
@@ -27,7 +29,7 @@ if __name__ == '__main__':
     print(BaseTable())
     print(ViewSession())
     print(relation('dpt_info.seminaire.session'))
-    Model('dpt_info').desc()
+    dpt_info.desc()
 
     """profiling"""
     for i in range(1000):

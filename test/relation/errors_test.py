@@ -11,7 +11,7 @@ class Test(TestCase):
         pass
 
     def setUp(self):
-        self.pers = halftest.relation("blog.person")
+        self.pers = halftest.relation("actor.person")
 
     def unknown_field_test(self):
         """Unknonw field test"""
@@ -19,4 +19,4 @@ class Test(TestCase):
             self.pers.unknown
         self.assertEqual(
             cm.exception.args[0],
-            "'Table_HalftestBlogPerson' object has no attribute 'unknown'")
+            "'Table_HalftestActorPerson' object has no attribute 'unknown'")

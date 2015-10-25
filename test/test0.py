@@ -4,4 +4,5 @@
 import sys
 from halfORM import model
 
-db = model.Model(sys.argv[1]).desc()
+filename = sys.argv[1]
+db = model.Model(filename).desc()
