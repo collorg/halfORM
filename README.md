@@ -1,15 +1,38 @@
-# halfORM
+# halfORM (looking for contributors)
 
-halfORM is an attempt to make a really simple ORM (Python/PostgreSQL), easy to learn (full documentation must be at most 10 pages).
+halfORM is an attempt to make a really simple ORM (Python/PostgreSQL), easy to learn (full documentation should be at most 10 pages) and hopefully less than a 1000 lines of Python code when it is done (today 2015-10-26, it's less than 600 lines).
+
+This project has just begun a Week ago (2015-10-18) and I'd really like some contributors to help me out with it. So you are most welcome if you are interested...
 
 ## Why half?
-Because halfORM only deals with de data manipulation part of the SQL language. So all the CREATE part has been left to SQL or whatever software you use define the structure of your database.
+Because halfORM only deals with the data manipulation part of the SQL language (DML) making it much easier to learn and to write. All the CREATE part (data definition language) has been left to SQL or whatever software used to define the structure of the database.
 
-## Use case
-- You already have a PostgreSQL database and you want to see it's structure, extract some of your data in JSON, ...
+## TODO
+- Get contributors
+- Fix the API
+- Port it to MySQL (I need someone with knowledge in MySQL)
+- Add foreign key management
+- Generate packages from the database structure
+- Draw a navigational graph of the database
+- PostgreSQL specific :
+  - Deal with inheritance
+  - Deal with FDW
 
-## Example: The database
-The following SQL code is the definition the halfORM test database ```halftest```.
+## Use cases
+- Prototype in Python without investing too much in learning a complex ORM,
+- You already have a PostgreSQL database and you want to see it's structure,
+- Easily request your data in JSON,
+- ...
+
+## Example: The ```halftest``` database
+The following SQL code is the definition the halfORM test database ```halftest```. It defines:
+- two schemas:
+ - ```actor```
+ - ```blog```
+- three tables:
+ - ```actor.peson```
+ - ```blog.post```
+ - ```blog.comment``` 
 
 ### actor.person
 ```sql
@@ -61,7 +84,7 @@ alter table blog.comment add constraint "post"
 	on update cascade on delete cascade;
 ```
 
-Considering the config file ```test/halftest.ini```:
+To access the database, we have a config file, here ```test/halftest.ini```:
 ```
 [database]
 name = halftest
@@ -70,15 +93,18 @@ password = halftest
 host = localhost
 port = 5432
 ```
-## Example: some scripts
-The follwoing script instanciate a model object corresponding to the ```halftest``` database:
+## Example: some scripts to illustrate the use of the API as it is currently implemented
+The follwoing script instanciate a model object corresponding to the ```halftest``` database. :
 ```python
 from halfORM.model import Model
 
-halftest = Model('test/halftest.ini')
+halftest = Model(config_file='test/halftest.ini')
+```
+Let us look at the structure by using the ```desc``` method
+```python
 halftest.desc()
 ```
-It produces this output:
+It iterates over every *relational object* of the database and prints it's representation:
 ```
 ------------------------------------------------------------
 TABLE: "halftest"."actor"."person"
@@ -120,55 +146,102 @@ FIELDS:
 FK author: (first_name, last_name, birth_date)
    ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
 ```
+To instanciate a Relation object, just use the ```Model.relation(QRN)``` method.
+```QRN``` is the "qualified relation name" here ```actor.person```.
+```python
+person = halftest.relation("actor.person")
+```
+With a Relation object, you can use 4 methods if it is of type Table:
+- ```insert```
+- ```select```
+- ```update```
+- ```delete```
+
+If it is a relation of type View, you can only use the ```select``` method. 
 ### Insert
 
 ```python
-person = halftest.relation("actor.person")
-
 person.insert(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
 person.insert(last_name='Fricotin', first_name='Bibi', birth_date='1924-10-05')
 person.insert(last_name='Maltese', first_name='Corto', birth_date='1975-01-07')
-
-print(person())
-[{"first_name": "Gaston", "last_name": "Lagaffe", "birth_date": "1957-02-28"},
-  {"first_name": "Bibi", "last_name": "Fricotin", "birth_date": "1924-10-05"},
-  {"first_name": "Corto", "last_name": "Maltese", "birth_date": "1975-01-07"}]
-
 person.insert(last_name='Talon', first_name='Achile', birth_date='1963-11-07')
 person.insert(last_name='Jourdan', first_name='Gil', birth_date='1956-09-20')
 
 print(person)
+```
+Note that the intention is still attached to the person object and you only get the last inserted tuple:
+```
 [{"first_name": "Gil", "last_name": "Jourdan", "birth_date": "1956-09-20"}]
-
+```
+To get all the inserted persons, call a new person:
+```python
 print(person())
+```
+
+```
 [{"first_name": "Gaston", "last_name": "Lagaffe", "birth_date": "1957-02-28"},
   {"first_name": "Bibi", "last_name": "Fricotin", "birth_date": "1924-10-05"},
   {"first_name": "Corto", "last_name": "Maltese", "birth_date": "1975-01-07"},
   {"first_name": "Achile", "last_name": "Talon", "birth_date": "1963-11-07"},
   {"first_name": "Gil", "last_name": "Jourdan", "birth_date": "1956-09-20"}]
-
-
 ```
 
 ### Select
+You can easily filter to get any subset:
 ```python
 person = person(last_name=('_a%', 'like'))
 print(person)
+```
+
+```
 [{"last_name": "Lagaffe", "first_name": "Gaston", "birth_date": "1957-02-28"},
   {"last_name": "Maltese", "first_name": "Corto", "birth_date": "1975-01-07"},
   {"last_name": "Talon", "first_name": "Achile", "birth_date": "1963-11-07"}]
 ```
+You can also get a subset of the attributes:
+```python
+for dct in person.select('last_name', last_name=('_a%', 'like')):
+     print(dct)
+```
+
+```
+{'last_name': 'Lagaffe'}
+{'last_name': 'Maltese'}
+{'last_name': 'Talon'}
+
+```
 
 ### Update
+In this example, we update all the persons having an ```a``` in the second letter of the last name.
 ```python
 halftest.connection.autocommit = False
-for p in person.select(last_name=('_a%', 'like')):
-    pers = person(**p)
-    pers.update(last_name=p['last_name'].upper())
+for dct in person.select(last_name=('_a%', 'like')):
+    pers = person(**dct)
+    pers.update(last_name=dct['last_name'].upper())
 halftest.connection.commit()
-print(person())
+halftest.connection.autocommit = False
+```
+To speed up things (not really necessary in this example), we turn autocommit to False before iterating over the tuples to update.
+```python
+print(person(last_name=('_A%*', 'like')))
 ```
 
-### Delete
-```python
 ```
+[{"birth_date": "1957-02-28", "first_name": "Gaston", "last_name": "LAGAFFE"},
+  {"birth_date": "1975-01-07", "first_name": "Corto", "last_name": "MALTESE"},
+  {"birth_date": "1963-11-07", "first_name": "Achile", "last_name": "TALON"}]
+```
+
+
+### Delete
+We finally remove every inserted tuples. Notice that we use the ```no_clause``` argument with a ```True``` value. The ```delete``` would have been rejected otherwise:
+```python
+person().delete(no_clause=True)
+print(person())
+```
+Well, there is not much left after this it the ```actor.person``` table.
+```
+[]
+```
+## Interested?
+Fork me on Github: https://github.com/collorg/halfORM
