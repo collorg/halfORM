@@ -31,7 +31,7 @@ The following SQL code is the definition the halfORM test database ```halftest``
  - ```actor```
  - ```blog```
 - three tables:
- - ```actor.peson```
+ - ```actor.person```
  - ```blog.post```
  - ```blog.comment``` 
 
@@ -94,8 +94,8 @@ password = halftest
 host = localhost
 port = 5432
 ```
-## Example: some scripts to illustrate the use of the API as it is currently implemented
-The follwoing script instanciate a model object corresponding to the ```halftest``` database. :
+## Example: some scripts to illustrate the use of the API as it currently is implemented
+The following script instanciate a model object corresponding to the ```halftest``` database:
 ```python
 from halfORM.model import Model
 
