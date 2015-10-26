@@ -25,4 +25,14 @@ assert person(first_name=('_o__o', 'like')).count() == 1
 for p in person.get():
     assert p.count() == 1
 
+a_count = person(last_name=('_a%', 'like')).count()
+
+halftest.connection.autocommit = False
+for pers in person().get(last_name=('_a%', 'like')):
+    pers.update(last_name=pers.last_name.value.upper())
+halftest.connection.commit()
+halftest.connection.autocommit = False
+
+assert person(last_name=('_A%', 'like')).count() == a_count
+
 person().delete(no_clause=True)

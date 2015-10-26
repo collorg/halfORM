@@ -232,6 +232,18 @@ halftest.connection.autocommit = False
 To speed up things (not really necessary in this example), we turn ```autocommit``` to ```False``` before iterating over the tuples to update. We finally ```commit``` outside the for loop and turn ```autocommit``` back to ```False```.
 
 Note: the ```Model.connection``` object is a ```psycopg2``` connection.
+
+A better way to write this is by using the ```Relation.get``` method instead
+of the ```select``` as it directly yields ```person``` objects:
+
+```python
+halftest.connection.autocommit = False
+for pers in person().get(last_name=('_a%', 'like')):
+    pers.update(last_name=pers.last_name.value.upper())
+halftest.connection.commit()
+halftest.connection.autocommit = False
+```
+
 ```python
 print(person(last_name=('_A%*', 'like')))
 ```
