@@ -10,13 +10,14 @@ Because halfORM only deals with the data manipulation part of the SQL language (
 ## TODO
 - Get contributors
 - Fix the API
+- doc doc doc and test test test
 - Port it to MySQL (I need someone with knowledge in MySQL)
 - Add foreign key management
 - Generate packages from the database structure
 - Draw a navigational graph of the database
 - PostgreSQL specific :
   - Deal with inheritance
-  - Deal with FDW
+  - Deal with FDW (not much to do here I suppose)
 
 ## Use cases
 - Prototype in Python without investing too much in learning a complex ORM,
@@ -115,6 +116,8 @@ FIELDS:
 - first_name: (text) PK
 - last_name:  (text) PK
 - birth_date: (date) PK
+```
+```
 ------------------------------------------------------------
 TABLE: "halftest"."blog"."comment"
 - cluster: halftest
@@ -131,6 +134,9 @@ FK post: (id)
    ↳ "halftest"."blog"."post"(id)
 FK author: (first_name, last_name, birth_date)
    ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+```
+Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halftest"."actor"."person"(first_name, last_name, birth_date)```
+```
 ------------------------------------------------------------
 TABLE: "halftest"."blog"."post"
 - cluster: halftest
@@ -151,13 +157,13 @@ To instanciate a Relation object, just use the ```Model.relation(QRN)``` method.
 ```python
 person = halftest.relation("actor.person")
 ```
-With a Relation object, you can use 4 methods if it is of type Table:
+With a Relation object, you can use 4 methods if it is of type ```Table```:
 - ```insert```
 - ```select```
 - ```update```
 - ```delete```
 
-If it is a relation of type View, you can only use the ```select``` method. 
+If the type of the relation is ```View```, only the ```select``` method is present. 
 ### Insert
 
 ```python
@@ -212,7 +218,7 @@ for dct in person.select('last_name', last_name=('_a%', 'like')):
 ```
 
 ### Update
-In this example, we update all the persons having an ```a``` in the second letter of the last name.
+In this example, we upper case the last name all the persons in which the second letter is an ```a```:
 ```python
 halftest.connection.autocommit = False
 for dct in person.select(last_name=('_a%', 'like')):
