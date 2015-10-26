@@ -1,6 +1,6 @@
 # halfORM (looking for contributors)
 
-halfORM is an attempt to make a really simple ORM (Python/PostgreSQL), easy to learn (full documentation should be at most 10 pages) and hopefully less than a 1000 lines of Python code when it is done (today 2015-10-26, it's less than 600 lines).
+halfORM is an attempt to make a really simple ORM (fully written in Python3), easy to learn (full documentation should be at most 10 pages) and hopefully less than a 1000 lines of Python3 code when it is done. Today, 2015-10-26, it's less than 600 lines.
 
 This project has just begun a Week ago (2015-10-18) and I'd really like some contributors to help me out with it. So you are most welcome if you are interested...
 
@@ -227,7 +227,9 @@ for dct in person.select(last_name=('_a%', 'like')):
 halftest.connection.commit()
 halftest.connection.autocommit = False
 ```
-To speed up things (not really necessary in this example), we turn autocommit to False before iterating over the tuples to update.
+To speed up things (not really necessary in this example), we turn ```autocommit``` to ```False``` before iterating over the tuples to update. We finally ```commit``` outside the for loop and turn ```autocommit``` back to ```False```.
+
+Note: the ```Model.connection``` object is a ```psycopg2``` connection.
 ```python
 print(person(last_name=('_A%*', 'like')))
 ```
