@@ -29,9 +29,19 @@ from halfORM import model_errors
 from pprint import PrettyPrinter
 
 class Model():
+    """Model class
+
+    The model establishes a connection to the database and allows to
+    generate a Relation object using model.relation(QRN) method.
+    """
     __deja_vu = {}
     __metadata = {}
     def __init__(self, config_file=None, dbname=None):
+        """Model constructor
+
+        Use @config_file in your scripts. The @dbname parameter is
+        reserved to the RelationFactory metaclass.
+        """
         assert bool(config_file) != bool(dbname)
         if dbname:
             self = self.__deja_vu[dbname]
@@ -56,9 +66,15 @@ class Model():
 
     @staticmethod
     def deja_vu(dbname):
+        """Returns None if the database hasn't been loaded yet.
+        Otherwise, it returns the Model object already loaded.
+        The Model object is shared between all the relations in the
+        database. The Model object is loaded only once for a given database.
+        """
         return Model.__deja_vu.get(dbname)
 
     def __connect(self, **params):
+        """Returns the pyscopg2 connection object."""
         return psycopg2.connect(
             'dbname={name} host={host} user={user} '
             'password={password} port={port}'.format(**params),
@@ -66,17 +82,29 @@ class Model():
 
     @property
     def dbname(self):
+        """
+        property. Returns the database name.
+        """
         return self.__dbname
 
     @property
     def connection(self):
+        """
+        Property. Returns the psycopg2 connection attached to the Model object.
+        """
         return self.__conn
 
     @property
     def metadata(self):
+        """Returns the metadata of the database.
+        Uses the Model.__metadata class dictionary.
+        """
         return self.__metadata[self.__dbname]
 
     def __get_metadata(self):
+        """Loads the metadata by querying the request in the pg_metaview
+        module.
+        """
         from .pg_metaview import request
         metadata = {}
         byname = metadata['byname'] = OrderedDict()
@@ -106,7 +134,11 @@ class Model():
         return metadata
 
     def relation(self, qtn, **kwargs):
-        """qtn is the <schema>.<table> name of the relation"""
+        """Instanciate an object of Relation, using the RelationFactory class.
+
+        @qtn is the <schema>.<table> name of the relation
+        @kwargs is a dictionary {field_name:value}
+        """
         schema, table = qtn.rsplit('.', 1)
         fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
         fqrn, _ = _normalize_fqrn(fqrn)
@@ -128,6 +160,8 @@ class Model():
             print(relation(fqrn).desc())
 
 class FieldFactory(type):
+    """FieldFactory metaclass
+    """
     def __new__(cls, clsname, bases, dct):
         from .field_interface import interface as field_interface
         FF = FieldFactory
@@ -136,6 +170,8 @@ class FieldFactory(type):
         return super(FF, cls).__new__(cls, clsname, bases, dct)
 
 class Fkey():
+    """Foreign key class
+    """
     def __init__(self, fk_name, fk_sfqrn, fk_names, fields):
         self.__name = fk_name
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
@@ -143,6 +179,8 @@ class Fkey():
         self.__fields = fields
 
     def __repr__(self):
+        """Representation of a foreing key
+        """
         fields = '({})'.format(', '.join(self.__fields))
         return "FK {}: {}\n   \u21B3 {}({})".format(
             self.__name,
@@ -152,6 +190,8 @@ class Field(metaclass=FieldFactory):
     pass
 
 class RelationFactory(type):
+    """RelationFactory Metaclass
+    """
     re_split_fqrn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, classname, bases, dct):
         def _gen_class_name(rel_kind, sfqrn):
@@ -233,10 +273,16 @@ def _normalize_qrn(qrn):
     qrn is the qualified relation name (<schema name>.<talbe name>)
     A schema name can have any number of dots in it.
     A table name can't have a dot in it.
-    returns "<schema name>"."<table name>"
+    returns "<schema name>"."<relation name>"
     """
     return '.'.join(['"{}"'.format(elt) for elt in qrn.rsplit('.', 1)])
 
 def relation(fqrn, **kwargs):
+    """This function is used to instanciate a Relation object using
+    its FQRN (Fully qualified relation name):
+    <database name>.<schema name>.<relation name>.
+    If the <schema name> comprises a dot it must be enclosed in double
+    quotes. Dots are not allowed in <database name> and <relation name>.
+    """
     return RelationFactory(None, None, {'fqrn': fqrn})(**kwargs)
 

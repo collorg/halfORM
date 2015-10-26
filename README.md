@@ -1,23 +1,23 @@
 # halfORM (looking for contributors)
 
-halfORM is an attempt to make a really simple ORM (fully written in Python3), easy to learn (full documentation should be at most 10 pages) and hopefully less than a 1000 lines of Python3 code when it is done. Today, 2015-10-26, it's less than 600 lines.
+halfORM is an attempt to make a really simple ORM (fully written in Python3), easy to learn (full documentation should be at most 10 pages) and hopefully less than a 1000 lines of Python3 code when it is done.
 
-This project has just begun a Week ago (2015-10-18) and I'd really like some contributors to help me out with it. So you are most welcome if you are interested...
+This project has just started a week ago (2015-10-18) and I'd really like some contributors to help me out with it. So if you think you can contribute in any way, you are most welcome.
 
 ## Why half?
 Because halfORM only deals with the data manipulation part of the SQL language (DML) making it much easier to learn and to write. All the CREATE part (data definition language) has been left to SQL or whatever software used to define the structure of the database.
 
 ## TODO
-- Get contributors
-- Fix the API
-- doc doc doc and test test test
-- Port it to MySQL (I need someone with knowledge in MySQL)
-- Add foreign key management
-- Generate packages from the database structure
-- Draw a navigational graph of the database
+- Gather a community to develop this project,
+- Fix the API (this project state is pre-alpha),
+- doc doc doc and test test test,
+- Port it to MySQL (I need someone with knowledge in MySQL),
+- Add foreign key management,
+- Generate packages from the database structure,
+- Draw a navigational graph of the database structure,
 - PostgreSQL specific :
-  - Deal with inheritance
-  - Deal with FDW (not much to do here I suppose)
+  - Deal with inheritance,
+  - Deal with FDW (not much to do here I suppose).
 
 ## Use cases
 - Prototype in Python without investing too much in learning a complex ORM,
