@@ -89,7 +89,7 @@ class Model():
                 tableid = dct.pop('tableid')
                 if not table_key in byname:
                     byid[tableid] = {}
-                    byid[tableid]['sfqtn'] = table_key
+                    byid[tableid]['sfqrn'] = table_key
                     byid[tableid]['fields'] = {}
                     byname[table_key] = OrderedDict()
                     byname[table_key]['fields'] = OrderedDict()
@@ -108,14 +108,24 @@ class Model():
     def relation(self, qtn, **kwargs):
         """qtn is the <schema>.<table> name of the relation"""
         schema, table = qtn.rsplit('.', 1)
-        fqtn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
-        fqtn, _ = _normalize_fqtn(fqtn)
+        fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
+        fqrn, _ = _normalize_fqrn(fqrn)
         return RelationFactory(
-            'Table', (), {'fqtn': fqtn, 'model': self})(**kwargs)
+            'Table', (), {'fqrn': fqrn, 'model': self})(**kwargs)
 
-    def desc(self):
-        for key in self.__metadata[self.__dbname]['byname']:
-            print(relation(".".join(['"{}"'.format(elt) for elt in key])))
+    def desc(self, qrn=None):
+        """Prints the description of the relations of the model
+
+        If an qualified relation name (<schema name>.<table name>) is
+        passed, prints only the description of the corresponding relation.
+        """
+        if not qrn:
+            for key in self.__metadata[self.__dbname]['byname']:
+                fqrn = ".".join(['"{}"'.format(elt) for elt in key])
+                print(relation(fqrn).desc())
+        else:
+            fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn))
+            print(relation(fqrn).desc())
 
 class FieldFactory(type):
     def __new__(cls, clsname, bases, dct):
@@ -126,9 +136,9 @@ class FieldFactory(type):
         return super(FF, cls).__new__(cls, clsname, bases, dct)
 
 class Fkey():
-    def __init__(self, fk_name, fk_sfqtn, fk_names, fields):
+    def __init__(self, fk_name, fk_sfqrn, fk_names, fields):
         self.__name = fk_name
-        self.__fk_fqtn = ".".join(['"{}"'.format(elt) for elt in fk_sfqtn])
+        self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
         self.__fk_names = fk_names
         self.__fields = fields
 
@@ -136,17 +146,17 @@ class Fkey():
         fields = '({})'.format(', '.join(self.__fields))
         return "FK {}: {}\n   \u21B3 {}({})".format(
             self.__name,
-            fields, self.__fk_fqtn, ', '.join(self.__fk_names))
+            fields, self.__fk_fqrn, ', '.join(self.__fk_names))
 
 class Field(metaclass=FieldFactory):
     pass
 
 class RelationFactory(type):
-    re_split_fqtn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
+    re_split_fqrn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(cls, classname, bases, dct):
-        def _gen_class_name(rel_kind, sfqtn):
+        def _gen_class_name(rel_kind, sfqrn):
             class_name = "".join([elt.capitalize() for elt in
-                                  [elt.replace('.', '') for elt in sfqtn]])
+                                  [elt.replace('.', '') for elt in sfqrn]])
             return "{}_{}".format(rel_kind, class_name)
 
         from .relation_interface import (
@@ -155,30 +165,30 @@ class RelationFactory(type):
         bases = (Relation,)
         TF = RelationFactory
         tbl_attr = {}
-        tbl_attr['__fqtn'], sfqtn = _normalize_fqtn(dct['fqtn'])
+        tbl_attr['__fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
         if dct.get('model'):
             model = dct['model']
             tbl_attr['model'] = model
-        tbl_attr['__sfqtn'] = tuple(sfqtn)
+        tbl_attr['__sfqrn'] = tuple(sfqrn)
         attr_names = ['dbname', 'schemaname', 'tablename']
         for i in range(len(attr_names)):
-            tbl_attr[attr_names[i]] = sfqtn[i]
+            tbl_attr[attr_names[i]] = sfqrn[i]
         dbname = tbl_attr['dbname']
         tbl_attr['model'] = Model.deja_vu(dbname)
         if not tbl_attr['model']:
             tbl_attr['model'] = Model(dbname)
         try:
             tbl_attr['__kind'] = (
-                tbl_attr['model'].metadata['byname'][tuple(sfqtn)]['tablekind'])
+                tbl_attr['model'].metadata['byname'][tuple(sfqrn)]['tablekind'])
         except KeyError:
-            raise model_errors.UnknownRelation(sfqtn)
+            raise model_errors.UnknownRelation(sfqrn)
         kind = tbl_attr['__kind']
         rel_interfaces = {'r': table_interface, 'v': view_interface}
         rel_class_names = {'r': 'Table', 'v': 'View'}
         TF.__set_fields(tbl_attr)
         for fct_name, fct in rel_interfaces[kind].items():
             tbl_attr[fct_name] = fct
-        class_name = _gen_class_name(rel_class_names[kind], sfqtn)
+        class_name = _gen_class_name(rel_class_names[kind], sfqrn)
         return super(TF, cls).__new__(cls, class_name, (bases), tbl_attr)
 
     @staticmethod
@@ -188,36 +198,45 @@ class RelationFactory(type):
         ta['__fkeys'] = []
         dbm = ta['model'].metadata
         for field_name, metadata in dbm['byname'][
-                ta['__sfqtn']]['fields'].items():
+                ta['__sfqrn']]['fields'].items():
             fkeyname = metadata.get('fkeyname')
             if fkeyname and not fkeyname in ta:
                 ft = dbm['byid'][metadata['fkeytableid']]
-                ft_sfqtn = ft['sfqtn']
+                ft_sfqrn = ft['sfqrn']
                 fields_names = [ft['fields'][elt]
                                    for elt in metadata['fkeynum']]
                 ft_fields_names = [ft['fields'][elt]
                                    for elt in metadata['fkeynum']]
                 ta[fkeyname] = Fkey(
-                    fkeyname, ft_sfqtn, ft_fields_names, fields_names)
+                    fkeyname, ft_sfqrn, ft_fields_names, fields_names)
                 ta['__fkeys'].append(ta[fkeyname])
             ta[field_name] = Field(field_name, metadata)
             ta['__fields'].append(ta[field_name])
 
-def _normalize_fqtn(fqtn):
+def _normalize_fqrn(fqrn):
     """
-    fqtn can have the following forms:
+    fqrn can have the following forms:
     - 'a.b.c'
     - '"a"."b"."c"'
     - '"a"."b1.b2"."c"'
     - 'a."b1.b2".c'
     """
     TF = RelationFactory
-    if fqtn.find('"') == -1:
-        sfqtn = fqtn.split('.')
+    if fqrn.find('"') == -1:
+        sfqrn = fqrn.split('.')
     else:
-        sfqtn = [elt for elt in TF.re_split_fqtn.split(fqtn) if elt]
-    return '.'.join(['"{}"'.format(elt) for elt in sfqtn]), sfqtn
+        sfqrn = [elt for elt in TF.re_split_fqrn.split(fqrn) if elt]
+    return '.'.join(['"{}"'.format(elt) for elt in sfqrn]), sfqrn
 
-def relation(fqtn, **kwargs):
-    return RelationFactory(None, None, {'fqtn': fqtn})(**kwargs)
+def _normalize_qrn(qrn):
+    """
+    qrn is the qualified relation name (<schema name>.<talbe name>)
+    A schema name can have any number of dots in it.
+    A table name can't have a dot in it.
+    returns "<schema name>"."<table name>"
+    """
+    return '.'.join(['"{}"'.format(elt) for elt in qrn.rsplit('.', 1)])
+
+def relation(fqrn, **kwargs):
+    return RelationFactory(None, None, {'fqrn': fqrn})(**kwargs)
 

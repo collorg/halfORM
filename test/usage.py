@@ -8,13 +8,13 @@ from halfORM.relation_interface import Relation
 dpt_info = Model(config_file='/etc/halfORM/dpt_info')
 
 class OidTable(metaclass=RelationFactory):
-    fqtn = 'dpt_info."collorg.core".oid_table'
+    fqrn = 'dpt_info."collorg.core".oid_table'
 
 class BaseTable(metaclass=RelationFactory):
-    fqtn = '"dpt_info"."collorg.core".base_table'
+    fqrn = '"dpt_info"."collorg.core".base_table'
 
 class ViewSession(metaclass=RelationFactory):
-    fqtn = 'dpt_info."seminaire.view"."session"'
+    fqrn = 'dpt_info."seminaire.view"."session"'
 
 if __name__ == '__main__':
     """
@@ -25,10 +25,10 @@ if __name__ == '__main__':
     relation('dpt_info.seminaire.session')
     sys.exit()
     """
-    print(OidTable())
-    print(BaseTable())
-    print(ViewSession())
-    print(relation('dpt_info.seminaire.session'))
+#    print(OidTable())
+#    print(BaseTable())
+#    print(ViewSession())
+#    print(relation('dpt_info.seminaire.session'))
     dpt_info.desc()
 
     """profiling"""

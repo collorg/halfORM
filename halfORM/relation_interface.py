@@ -25,7 +25,7 @@ def __init__(self, **kwargs):
 def __call__(self, **kwargs):
     """__call__ method for the class Table
     """
-    return relation(self.__fqtn, **kwargs)
+    return relation(self.__fqrn, **kwargs)
 
 def __str__(self):
     import json, datetime
@@ -44,7 +44,7 @@ def __repr__(self):
     tks = {'r': 'TABLE', 'v': 'VIEW'}
     table_kind = tks.get(self.__kind, "UNKNOWN TYPE")
     ret = [60*'-']
-    ret.append("{}: {}".format(table_kind, self.__fqtn))
+    ret.append("{}: {}".format(table_kind, self.__fqrn))
     ret.append(('- cluster: {dbname}\n'
                 '- schema:  {schemaname}\n'
                 '- table:   {tablename}').format(**vars(self.__class__)))
@@ -60,9 +60,12 @@ def __repr__(self):
         ret.append(str(fkey))
     return '\n'.join(ret)
 
+def desc(self):
+    return repr(self)
+
 @property
-def fqtn(self):
-    return self.__fqtn
+def fqrn(self):
+    return self.__fqrn
 
 @property
 def is_set(self):
@@ -102,7 +105,7 @@ def select(self, *args, **kwargs):
         what = ', '.join([dct[field_name].name for field_name in args])
     where, values = self.__where()
     self.__cursor.execute(
-        "select {} from {} {}".format(what, self.__fqtn, where), tuple(values))
+        "select {} from {} {}".format(what, self.__fqrn, where), tuple(values))
     return self
 
 def count(self, *args, **kwargs):
@@ -119,7 +122,7 @@ def count(self, *args, **kwargs):
     where, values = self.__where()
     self.__cursor.execute(
         "select count({}) from {} {}".format(
-            what, self.__fqtn, where), tuple(values))
+            what, self.__fqrn, where), tuple(values))
     return self.__cursor.fetchone()['count']
 
 def __update(self, **kwargs):
@@ -140,10 +143,9 @@ def update(self, no_clause=False, **kwargs):
     assert self.is_set or no_clause
     where, values = self.__where()
     what, new_values = self.__update(**kwargs)
-    query = "update {} set {} {}".format(self.__fqtn, what, where)
-    print(query, tuple(new_values + values))
+    query = "update {} set {} {}".format(self.__fqrn, what, where)
+#    print(query, tuple(new_values + values))
     self.__cursor.execute(query, tuple(new_values + values))
-    print(self.__cursor)
 
 def __what_to_insert(self):
     fields_names = []
@@ -161,7 +163,7 @@ def insert(self, **kwargs):
     what_to_insert = ", ".join(["%s" for i in range(len(values))])
     self.__cursor.execute(
         "insert into {} ({}) values ({})".format(
-            self.__fqtn, fields_names, what_to_insert),
+            self.__fqrn, fields_names, what_to_insert),
         tuple(values))
 
 def delete(self, no_clause=False, **kwargs):
@@ -174,7 +176,7 @@ def delete(self, no_clause=False, **kwargs):
     assert self.is_set or no_clause
     where, values = self.__where()
     self.__cursor.execute(
-        "delete from {} {}".format(self.__fqtn, where), tuple(values))
+        "delete from {} {}".format(self.__fqrn, where), tuple(values))
 
 def __iter__(self):
     for elt in self.__cursor.fetchall():
@@ -187,11 +189,12 @@ table_interface = {
     '__init__': __init__,
     '__call__': __call__,
     '__str__': __str__,
-    '__repr__': __repr__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
+    '__repr__': __repr__,
+    'desc': desc,
     'fields': fields,
-    'fqtn': fqtn,
+    'fqrn': fqrn,
     'is_set': is_set,
     '__where': __where,
     'insert': insert,
@@ -206,9 +209,10 @@ table_interface = {
 view_interface = {
     '__init__': __init__,
     '__str__': __str__,
-    '__repr__': __repr__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
+    '__repr__': __repr__,
+    'desc': desc,
     'fields': fields,
     'is_set': is_set,
     '__where': __where,

@@ -20,7 +20,7 @@ class UnknownDatabase(Exception):
             dbname))
 
 class UnknownRelation(Exception):
-    def __init__(self, sfqtn):
-        self.sfqtn = sfqtn
+    def __init__(self, sfqrn):
+        self.sfqrn = sfqrn
         Exception.__init__(self, 'Unknown relation exception: {}'.format(
-            sfqtn))
+            sfqrn))
