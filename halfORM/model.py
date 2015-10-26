@@ -113,7 +113,8 @@ class Model():
             cur.execute(request)
             for dct in cur.fetchall():
                 table_key = (
-                    self.__dbname, dct.pop('schemaname'), dct.pop('tablename'))
+                    self.__dbname,
+                    dct.pop('schemaname'), dct.pop('relationname'))
                 tableid = dct.pop('tableid')
                 if not table_key in byname:
                     byid[tableid] = {}
@@ -210,21 +211,22 @@ class RelationFactory(type):
             model = dct['model']
             tbl_attr['model'] = model
         tbl_attr['__sfqrn'] = tuple(sfqrn)
-        attr_names = ['dbname', 'schemaname', 'tablename']
+        attr_names = ['dbname', 'schemaname', 'relationname']
         for i in range(len(attr_names)):
             tbl_attr[attr_names[i]] = sfqrn[i]
         dbname = tbl_attr['dbname']
         tbl_attr['model'] = Model.deja_vu(dbname)
         if not tbl_attr['model']:
             tbl_attr['model'] = Model(dbname)
+        rel_class_names = {'r': 'Table', 'v': 'View'}
         try:
-            tbl_attr['__kind'] = (
-                tbl_attr['model'].metadata['byname'][tuple(sfqrn)]['tablekind'])
+            kind = (
+                tbl_attr['model'].metadata['byname']
+                [tuple(sfqrn)]['tablekind'])
+            tbl_attr['__kind'] = rel_class_names[kind]
         except KeyError:
             raise model_errors.UnknownRelation(sfqrn)
-        kind = tbl_attr['__kind']
         rel_interfaces = {'r': table_interface, 'v': view_interface}
-        rel_class_names = {'r': 'Table', 'v': 'View'}
         TF.__set_fields(tbl_attr)
         for fct_name, fct in rel_interfaces[kind].items():
             tbl_attr[fct_name] = fct

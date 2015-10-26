@@ -94,7 +94,8 @@ password = halftest
 host = localhost
 port = 5432
 ```
-## Example: some scripts to illustrate the use of the API as it currently is implemented
+## API Examples
+#### Some scripts snippets to illustrate the current implementation of the API.
 The following script instanciate a model object corresponding to the ```halftest``` database:
 ```python
 from halfORM.model import Model
@@ -104,8 +105,9 @@ halftest = Model(config_file='test/halftest.ini')
 Let us look at the structure by using the ```desc``` method
 ```python
 halftest.desc()
+halftest.desc("blog.comment")
 ```
-It iterates over every *relational object* of the database and prints it's representation:
+It iterates over every *relational object* of the database and prints it's representation. The expression ```halftest.desc("blog.comment")``` displays only the representation of the ```blog.comment``` table. Here is the output of ```halftest.desc()```:
 ```
 ------------------------------------------------------------
 TABLE: "halftest"."actor"."person"
@@ -163,9 +165,9 @@ With a Relation object, you can use 4 methods if it is of type ```Table```:
 - ```update```
 - ```delete```
 
-If the type of the relation is ```View```, only the ```select``` method is present. 
+If the type of the relation is ```View```, only the ```select``` method is present.
 ### Insert
-
+To insert a tuple in the relation, just use the ```insert``` method as show bellow:
 ```python
 person.insert(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
 person.insert(last_name='Fricotin', first_name='Bibi', birth_date='1924-10-05')

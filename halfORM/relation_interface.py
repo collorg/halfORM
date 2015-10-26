@@ -23,11 +23,15 @@ def __init__(self, **kwargs):
     [dct[field_name].set(value)for field_name, value in kwargs.items()]
 
 def __call__(self, **kwargs):
-    """__call__ method for the class Table
+    """__call__ method for the class Relation
+
+    Instanciate a new object with all fields unset.
     """
     return relation(self.__fqrn, **kwargs)
 
 def __str__(self):
+    """XXX TEST Should be called json
+    """
     import json, datetime
     def handler(obj):
         if hasattr(obj, 'isoformat'):
@@ -41,13 +45,12 @@ def __str__(self):
     return json.dumps([elt for elt in self.select()], default=handler)
 
 def __repr__(self):
-    tks = {'r': 'TABLE', 'v': 'VIEW'}
-    table_kind = tks.get(self.__kind, "UNKNOWN TYPE")
+    rel_kind = self.__kind
     ret = [60*'-']
-    ret.append("{}: {}".format(table_kind, self.__fqrn))
+    ret.append("{}: {}".format(rel_kind, self.__fqrn))
     ret.append(('- cluster: {dbname}\n'
                 '- schema:  {schemaname}\n'
-                '- table:   {tablename}').format(**vars(self.__class__)))
+                '- {__kind}:   {relationname}').format(**vars(self.__class__)))
     ret.append('FIELDS:')
     mx_fld_n_len = 0
     for field in self.__fields:
@@ -57,7 +60,7 @@ def __repr__(self):
         ret.append('- {}:{}{}'.format(
             field.name, ' ' * (mx_fld_n_len + 1 - len(field.name)), field))
     for fkey in self.__fkeys:
-        ret.append(str(fkey))
+        ret.append(repr(fkey))
     return '\n'.join(ret)
 
 def desc(self):
@@ -93,10 +96,10 @@ def __where(self):
     return where_clause, values
 
 def select(self, *args, **kwargs):
-    """Better, still naive implementation of select
+    """Generator. Yiels result of query on dictionary form.
 
-    - args are fields names
-    - kwargs is a dict of the form {[<field name>:<value>]}
+    - @args are fields names to restrict the returned attributes
+    - @kwargs is a dict of the form {[<field name>:<value>]}
     """
     dct = self.__class__.__dict__
     [dct[field_name].set(value)for field_name, value in kwargs.items()]
@@ -106,7 +109,8 @@ def select(self, *args, **kwargs):
     where, values = self.__where()
     self.__cursor.execute(
         "select {} from {} {}".format(what, self.__fqrn, where), tuple(values))
-    return self
+    for elt in self.__cursor.fetchall():
+        yield elt
 
 def count(self, *args, **kwargs):
     """Better, still naive implementation of select
@@ -178,9 +182,13 @@ def delete(self, no_clause=False, **kwargs):
     self.__cursor.execute(
         "delete from {} {}".format(self.__fqrn, where), tuple(values))
 
-def __iter__(self):
-    for elt in self.__cursor.fetchall():
+def get(self, **kwargs):
+    for dct in self.select(**kwargs):
+        elt = self(**dct)
         yield elt
+
+def __iter__(self):
+    raise NotImplementedError
 
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
@@ -204,6 +212,7 @@ table_interface = {
     'update': update,
     '__update': __update,
     'delete': delete,
+    'get': get,
 }
 
 view_interface = {
@@ -218,6 +227,7 @@ view_interface = {
     '__where': __where,
     'select': select,
     'count': count,
+    'get': get,
 }
 
 class Relation():

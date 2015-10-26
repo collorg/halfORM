@@ -4,7 +4,7 @@ SELECT
     array_agg( i.inhseqno::TEXT || ':' || i.inhparent::TEXT ) AS inherits,
     c.relkind AS tablekind,
     n.nspname AS schemaname,
-    c.relname AS tablename,
+    c.relname AS relationname,
     tdesc.description AS tabledescription,
     a.attname AS fieldname,
     a.attnum AS fieldnum,
