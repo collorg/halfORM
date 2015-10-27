@@ -161,11 +161,11 @@ person = halftest.relation("actor.person")
 ```
 With a Relation object, you can use 4 methods if it is of type ```Table```:
 - ```insert```
-- ```select```
+- ```select``` or ```get```
 - ```update```
 - ```delete```
 
-If the type of the relation is ```View```, only the ```select``` method is present.
+If the type of the relation is ```View```, only the ```select``` and ```get``` methods are present.
 ### Insert
 To insert a tuple in the relation, just use the ```insert``` method as show bellow:
 ```python
