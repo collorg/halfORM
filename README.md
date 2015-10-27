@@ -249,7 +249,7 @@ update_a(person)
 ```
 
 ```python
-print(person(last_name=('_A%*', 'like')))
+print(person(last_name=('_A%*', 'like')).json())
 ```
 
 ```
@@ -263,7 +263,8 @@ print(person(last_name=('_A%*', 'like')))
 We finally remove every inserted tuples. Notice that we use the ```no_clause``` argument with a ```True``` value. The ```delete``` would have been rejected otherwise:
 ```python
 person().delete(no_clause=True)
-print(person())
+
+print(person().json())
 ```
 Well, there is not much left after this it the ```actor.person``` table.
 ```

@@ -1,4 +1,8 @@
-request = """
+"""This module provides the SQL request to extract the metadata of a
+PostgreSQL database.
+"""
+
+REQUEST = """
 SELECT
     a.attrelid AS tableid,
     array_agg( i.inhseqno::TEXT || ':' || i.inhparent::TEXT ) AS inherits,

@@ -1,6 +1,35 @@
 #!/usr/bin/env python3
 #-*- coding: utf-8 -*-
 
+"""This module provides Model, RelationFactory and table
+
+The Model class allows to load the model of a database:
+- model = Model(config_file='<config file name>')
+ - model.desc() displays information on the structure of
+   the database.
+ - model.relation(<QRN>)
+   see relation_interface module for available methods on
+
+The table function allows you to directly instanciate a Relation object
+- table(<FQRN>)
+
+The RelationFactory can be used to create classes to manipulate the relations
+of the database:
+```
+class MyClass(metaclass=RelationFactory):
+    fqrn = '<FQRN>'
+```
+
+About QRN and FQRN:
+- FQRN stands for: Fully Qualified Relation Name. It is composed of:
+  <database name>.<schema name>.<table name>.
+  Only the schema name can have dots in it. In this case, it must be written
+  <database name>."<schema name>".<table name>
+- QRN is the Qualified Relation Name. Same as the FQRN without the database
+  name. Double quotes can be ommited even if there are dots in the schema name.
+
+"""
+
 __copyright__ = "Copyright (c) 2015 Joël Maïzi"
 __license__ = """
 This program is free software: you can redistribute it and/or modify
@@ -20,13 +49,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 __all__ = ["Model", "relation"]
 
 import re
-import sys
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from configparser import ConfigParser
 from collections import OrderedDict
 from halfORM import model_errors
-from pprint import PrettyPrinter
+#from pprint import PrettyPrinter
 
 class Model():
     """Model class
@@ -48,16 +76,14 @@ class Model():
             self.__dbname = dbname
             return
         config = ConfigParser()
-        ok = config.read(config_file)
-        if not ok:
+        if not config.read(config_file):
             raise model_errors.MissingConfigFile(config_file)
         params = dict(config['database'].items())
         needed_params = {'name', 'host', 'user', 'password', 'port'}
         self.__dbname = params['name']
         missing_params = needed_params.symmetric_difference(set(params.keys()))
         if missing_params:
-            raise model_errors.MalformedConfigFile(
-                self.__config_file_name, missing_params)
+            raise model_errors.MalformedConfigFile(config_file, missing_params)
         self.__conn = self.__connect(**params)
         self.__conn.autocommit = True
         self.__cursor = self.__conn.cursor()
@@ -105,12 +131,12 @@ class Model():
         """Loads the metadata by querying the request in the pg_metaview
         module.
         """
-        from .pg_metaview import request
+        from .pg_metaview import REQUEST
         metadata = {}
         byname = metadata['byname'] = OrderedDict()
         byid = metadata['byid'] = {}
         with self.connection.cursor() as cur:
-            cur.execute(request)
+            cur.execute(REQUEST)
             for dct in cur.fetchall():
                 table_key = (
                     self.__dbname,
@@ -163,29 +189,12 @@ class Model():
 class FieldFactory(type):
     """FieldFactory metaclass
     """
-    def __new__(cls, clsname, bases, dct):
+    def __new__(mcs, clsname, bases, dct):
         from .field_interface import interface as field_interface
-        FF = FieldFactory
+        ff_ = FieldFactory
         for fct_name, fct in field_interface.items():
             dct[fct_name] = fct
-        return super(FF, cls).__new__(cls, clsname, bases, dct)
-
-class Fkey():
-    """Foreign key class
-    """
-    def __init__(self, fk_name, fk_sfqrn, fk_names, fields):
-        self.__name = fk_name
-        self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
-        self.__fk_names = fk_names
-        self.__fields = fields
-
-    def __repr__(self):
-        """Representation of a foreing key
-        """
-        fields = '({})'.format(', '.join(self.__fields))
-        return "FK {}: {}\n   \u21B3 {}({})".format(
-            self.__name,
-            fields, self.__fk_fqrn, ', '.join(self.__fk_names))
+        return super(ff_, mcs).__new__(mcs, clsname, bases, dct)
 
 class Field(metaclass=FieldFactory):
     pass
@@ -194,8 +203,9 @@ class RelationFactory(type):
     """RelationFactory Metaclass
     """
     re_split_fqrn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
-    def __new__(cls, classname, bases, dct):
+    def __new__(mcs, class_name, bases, dct):
         def _gen_class_name(rel_kind, sfqrn):
+            """Generates class name from relation kind and FQRN tuple"""
             class_name = "".join([elt.capitalize() for elt in
                                   [elt.replace('.', '') for elt in sfqrn]])
             return "{}_{}".format(rel_kind, class_name)
@@ -204,7 +214,7 @@ class RelationFactory(type):
             table_interface, view_interface, Relation)
         #TODO get bases from table inheritance
         bases = (Relation,)
-        TF = RelationFactory
+        rf_ = RelationFactory
         tbl_attr = {}
         tbl_attr['__fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
         if dct.get('model'):
@@ -227,33 +237,34 @@ class RelationFactory(type):
         except KeyError:
             raise model_errors.UnknownRelation(sfqrn)
         rel_interfaces = {'r': table_interface, 'v': view_interface}
-        TF.__set_fields(tbl_attr)
+        rf_.__set_fields(tbl_attr)
         for fct_name, fct in rel_interfaces[kind].items():
             tbl_attr[fct_name] = fct
         class_name = _gen_class_name(rel_class_names[kind], sfqrn)
-        return super(TF, cls).__new__(cls, class_name, (bases), tbl_attr)
+        return super(rf_, mcs).__new__(mcs, class_name, (bases), tbl_attr)
 
     @staticmethod
-    def __set_fields(ta):
-        """ta: table attributes dictionary."""
-        ta['__fields'] = []
-        ta['__fkeys'] = []
-        dbm = ta['model'].metadata
+    def __set_fields(ta_):
+        """ta_: table attributes dictionary."""
+        from .fkey import FKey
+        ta_['__fields'] = []
+        ta_['__fkeys'] = []
+        dbm = ta_['model'].metadata
         for field_name, metadata in dbm['byname'][
-                ta['__sfqrn']]['fields'].items():
+                ta_['__sfqrn']]['fields'].items():
             fkeyname = metadata.get('fkeyname')
-            if fkeyname and not fkeyname in ta:
-                ft = dbm['byid'][metadata['fkeytableid']]
-                ft_sfqrn = ft['sfqrn']
-                fields_names = [ft['fields'][elt]
+            if fkeyname and not fkeyname in ta_:
+                ft_ = dbm['byid'][metadata['fkeytableid']]
+                ft_sfqrn = ft_['sfqrn']
+                fields_names = [ft_['fields'][elt]
+                                for elt in metadata['fkeynum']]
+                ft_fields_names = [ft_['fields'][elt]
                                    for elt in metadata['fkeynum']]
-                ft_fields_names = [ft['fields'][elt]
-                                   for elt in metadata['fkeynum']]
-                ta[fkeyname] = Fkey(
+                ta_[fkeyname] = FKey(
                     fkeyname, ft_sfqrn, ft_fields_names, fields_names)
-                ta['__fkeys'].append(ta[fkeyname])
-            ta[field_name] = Field(field_name, metadata)
-            ta['__fields'].append(ta[field_name])
+                ta_['__fkeys'].append(ta_[fkeyname])
+            ta_[field_name] = Field(field_name, metadata)
+            ta_['__fields'].append(ta_[field_name])
 
 def _normalize_fqrn(fqrn):
     """
@@ -263,11 +274,11 @@ def _normalize_fqrn(fqrn):
     - '"a"."b1.b2"."c"'
     - 'a."b1.b2".c'
     """
-    TF = RelationFactory
+    rf_ = RelationFactory
     if fqrn.find('"') == -1:
         sfqrn = fqrn.split('.')
     else:
-        sfqrn = [elt for elt in TF.re_split_fqrn.split(fqrn) if elt]
+        sfqrn = [elt for elt in rf_.re_split_fqrn.split(fqrn) if elt]
     return '.'.join(['"{}"'.format(elt) for elt in sfqrn]), sfqrn
 
 def _normalize_qrn(qrn):

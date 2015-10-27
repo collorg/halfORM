@@ -197,7 +197,6 @@ def transaction(func):
     """func is a method of a Model object"""
     def wrapper(relation, *args, **kwargs):
         res = None
-        err = None
         try:
             relation.model.connection.autocommit = False
             res = func(relation, *args, **kwargs)
