@@ -29,13 +29,14 @@ def __call__(self, **kwargs):
     """
     return relation(self.__fqrn, **kwargs)
 
-def __str__(self):
-    """XXX TEST Should be called json
+def json(self):
+    """TEST
     """
-    import json, datetime
+    import json, datetime, time
     def handler(obj):
-        if hasattr(obj, 'isoformat'):
-            return obj.isoformat()
+        if hasattr(obj, 'timetuple'):
+            # retruns # seconds since the epoch
+            return int(time.mktime(obj.timetuple()))
         #elif isinstance(obj, ...):
         #    return ...
         else:
@@ -195,11 +196,11 @@ def __getitem__(self, key):
 table_interface = {
     '__init__': __init__,
     '__call__': __call__,
-    '__str__': __str__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
     '__repr__': __repr__,
     'desc': desc,
+    'json': json,
     'fields': fields,
     'fqrn': fqrn,
     'is_set': is_set,
@@ -216,11 +217,11 @@ table_interface = {
 
 view_interface = {
     '__init__': __init__,
-    '__str__': __str__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
     '__repr__': __repr__,
     'desc': desc,
+    'json': json,
     'fields': fields,
     'is_set': is_set,
     '__where': __where,

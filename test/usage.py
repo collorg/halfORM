@@ -29,7 +29,7 @@ if __name__ == '__main__':
 #    print(BaseTable())
 #    print(ViewSession())
 #    print(relation('dpt_info.seminaire.session'))
-    dpt_info.desc()
+#    dpt_info.desc()
 
     """profiling"""
     for i in range(1000):
@@ -84,19 +84,18 @@ if __name__ == '__main__':
     assert s2.is_set is False
     assert s.tba.is_set
     """iterate over the extension."""
-    for elt in s.select():
-        print(elt)
+    print(s.json())
     for field in s.fields:
         print(field.name)
-    x = s(**elt)
-    for f in x.fields:
-        assert f.is_set
     n = s()
     for elt in n(cog_oid=('d%', 'like')).select():
         print(elt['cog_oid'])
+    t = None
     for elt in n(cog_oid=('d%', 'like')).select():
         t = s(**elt)
         print(t.cog_oid.value)
+    for f in t.fields:
+        assert f.is_set
     for elt in n(cog_oid=('d%', 'like')).select('cog_oid'):
         print(elt)
     for elt in n(cog_oid=('d%', 'like')).select('cog_oid', 'cog_fqtn'):

@@ -208,7 +208,7 @@ print(person)
 ```
 You can also get a subset of the attributes:
 ```python
-for dct in personlast_name=('_a%', 'like')).select('last_name'):
+for dct in person(last_name=('_a%', 'like')).select('last_name'):
      print(dct)
 ```
 
@@ -223,7 +223,7 @@ for dct in personlast_name=('_a%', 'like')).select('last_name'):
 In this example, we upper case the last name all the persons in which the second letter is an ```a```:
 ```python
 halftest.connection.autocommit = False
-for dct in personlast_name=('_a%', 'like')).select():
+for dct in person(last_name=('_a%', 'like')).select():
     pers = person(**dct)
     pers.update(last_name=dct['last_name'].upper())
 halftest.connection.commit()
@@ -238,7 +238,7 @@ of the ```select``` as it directly yields ```person``` objects:
 
 ```python
 halftest.connection.autocommit = False
-for pers in person().get(last_name=('_a%', 'like')):
+for pers in person(last_name=('_a%', 'like')).get():
     pers.update(last_name=pers.last_name.value.upper())
 halftest.connection.commit()
 halftest.connection.autocommit = False
