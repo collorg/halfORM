@@ -27,10 +27,10 @@ class Test(TestCase):
             last_name = 'n{}'.format(chr(ord('a') + i))
             first_name = 'p{}'.format(i)
             birth_date = date.today()
-            self.pers.insert(
+            self.pers(
                 last_name=last_name,
                 first_name=first_name,
-                birth_date=birth_date)
+                birth_date=birth_date).insert()
         halftest.connection.commit()
         halftest.connection.autocommit = True
         self.assertEqual(pers().count(), 26)

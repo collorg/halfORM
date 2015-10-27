@@ -169,21 +169,13 @@ If the type of the relation is ```View```, only the ```select``` and ```get``` m
 ### Insert
 To insert a tuple in the relation, just use the ```insert``` method as show bellow:
 ```python
-person.insert(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
-person.insert(last_name='Fricotin', first_name='Bibi', birth_date='1924-10-05')
-person.insert(last_name='Maltese', first_name='Corto', birth_date='1975-01-07')
-person.insert(last_name='Talon', first_name='Achile', birth_date='1963-11-07')
-person.insert(last_name='Jourdan', first_name='Gil', birth_date='1956-09-20')
+person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
+person(last_name='Fricotin', first_name='Bibi', birth_date='1924-10-05').insert()
+person(last_name='Maltese', first_name='Corto', birth_date='1975-01-07').insert()
+person(last_name='Talon', first_name='Achile', birth_date='1963-11-07').insert()
+person(last_name='Jourdan', first_name='Gil', birth_date='1956-09-20').insert()
 
-print(person)
-```
-Note that the intention is still attached to the person object and you only get the last inserted tuple:
-```
-[{"first_name": "Gil", "last_name": "Jourdan", "birth_date": "1956-09-20"}]
-```
-To get all the inserted persons, call a new person:
-```python
-print(person())
+print(person.json())
 ```
 
 ```
@@ -198,7 +190,7 @@ print(person())
 You can easily filter to get any subset:
 ```python
 person = person(last_name=('_a%', 'like'))
-print(person)
+print(person.json())
 ```
 
 ```
@@ -242,6 +234,17 @@ for pers in person(last_name=('_a%', 'like')).get():
     pers.update(last_name=pers.last_name.value.upper())
 halftest.connection.commit()
 halftest.connection.autocommit = False
+```
+
+And finally, the ```Relation.transaction``` can be used to deal with transactions:
+
+```python
+@person.transaction
+def update_a(person):
+    for pers in person(last_name=('_a%', 'like')).get():
+        pers.update(last_name=pers.last_name.value.upper())
+
+update_a(person)
 ```
 
 ```python

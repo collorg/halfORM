@@ -14,6 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import sys
 from .model import relation
 
 def __init__(self, **kwargs):
@@ -160,9 +161,7 @@ def __what_to_insert(self):
         values = [field.value for field in set_fields]
     return ", ".join(fields_names), values
 
-def insert(self, **kwargs):
-    dct = self.__class__.__dict__
-    [dct[field_name].set(value)for field_name, value in kwargs.items()]
+def insert(self):
     fields_names, values = self.__what_to_insert()
     what_to_insert = ", ".join(["%s" for i in range(len(values))])
     self.__cursor.execute(
@@ -193,6 +192,26 @@ def __iter__(self):
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
 
+@staticmethod
+def transaction(func):
+    """func is a method of a Model object"""
+    def wrapper(relation, *args, **kwargs):
+        res = None
+        err = None
+        try:
+            relation.model.connection.autocommit = False
+            res = func(relation, *args, **kwargs)
+            relation.model.connection.commit()
+            relation.model.connection.autocommit = True
+        except Exception as err:
+            sys.stderr.write(
+                "Transaction error: {}\nRolling back!\n".format(err))
+            relation.model.connection.rollback()
+            relation.model.connection.autocommit = True
+            raise err
+        return res
+    return wrapper
+
 table_interface = {
     '__init__': __init__,
     '__call__': __call__,
@@ -213,6 +232,7 @@ table_interface = {
     '__update': __update,
     'delete': delete,
     'get': get,
+    'transaction': transaction
 }
 
 view_interface = {
