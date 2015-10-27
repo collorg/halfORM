@@ -23,10 +23,14 @@ def __init__(self, name, metadata):
 
 def __repr__(self):
     md = self.__metadata
-    return "({}) {}".format(
+    repr = "({}) {}".format(
         md['fieldtype'], md['pkey'] and 'PK' or ('{}{}'.format(
             md['uniq'] and 'UNIQUE ' or '',
             md['notnull'] and 'NOT NULL' or '')))
+    if self.__is_set:
+        repr = "{} ({} {} {})".format(
+            repr, self.__name, self.__comp, self.__value)
+    return repr
 
 @property
 def name(self):

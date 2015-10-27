@@ -179,11 +179,12 @@ print(person.json())
 ```
 
 ```
-[{"first_name": "Gaston", "last_name": "Lagaffe", "birth_date": "1957-02-28"},
-  {"first_name": "Bibi", "last_name": "Fricotin", "birth_date": "1924-10-05"},
-  {"first_name": "Corto", "last_name": "Maltese", "birth_date": "1975-01-07"},
-  {"first_name": "Achile", "last_name": "Talon", "birth_date": "1963-11-07"},
-  {"first_name": "Gil", "last_name": "Jourdan", "birth_date": "1956-09-20"}]
+[{"last_name": "Lagaffe", "first_name": "Gaston", "birth_date": -405219600},
+  {"last_name": "Fricotin", "first_name": "Bibi", "birth_date": -1427673600},
+  {"last_name": "Maltese", "first_name": "Corto", "birth_date": 158281200},
+  {"last_name": "Talon", "first_name": "Achile", "birth_date": -194144400},
+  {"last_name": "Jourdan", "first_name": "Gil", "birth_date": -419130000}]
+
 ```
 
 ### Select
@@ -194,9 +195,9 @@ print(person.json())
 ```
 
 ```
-[{"last_name": "Lagaffe", "first_name": "Gaston", "birth_date": "1957-02-28"},
-  {"last_name": "Maltese", "first_name": "Corto", "birth_date": "1975-01-07"},
-  {"last_name": "Talon", "first_name": "Achile", "birth_date": "1963-11-07"}]
+[{"last_name": "Lagaffe", "first_name": "Gaston", "birth_date": -405219600},
+  {"last_name": "Maltese", "first_name": "Corto", "birth_date": 158281200},
+  {"last_name": "Talon", "first_name": "Achile", "birth_date": -194144400}]
 ```
 You can also get a subset of the attributes:
 ```python

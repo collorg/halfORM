@@ -35,9 +35,12 @@ def insert(person):
         birth_date='1956-09-20').insert()
 insert(person)
 
+print(person.json())
 assert person.count() == 5
 
-assert person(first_name=('_o__o', 'like')).count() == 1
+oo = person(first_name=('_o__o', 'like'))
+print(oo)
+assert oo.count() == 1
 
 for p in person.get():
     assert p.count() == 1
