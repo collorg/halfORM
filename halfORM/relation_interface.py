@@ -99,10 +99,9 @@ def select(self, *args, **kwargs):
     """Generator. Yiels result of query on dictionary form.
 
     - @args are fields names to restrict the returned attributes
-    - @kwargs is a dict of the form {[<field name>:<value>]}
+    - @kwargs: limit, order by, distinct... options
     """
     dct = self.__class__.__dict__
-    [dct[field_name].set(value)for field_name, value in kwargs.items()]
     what = '*'
     if args:
         what = ', '.join([dct[field_name].name for field_name in args])
@@ -115,11 +114,11 @@ def select(self, *args, **kwargs):
 def count(self, *args, **kwargs):
     """Better, still naive implementation of select
 
-    - args are fields names
-    - kwargs is a dict of the form {[<field name>:<value>]}
+    - @args are fields names to restrict the returned attributes
+    - @kwargs: limit, distinct, ...
+
     """
     dct = self.__class__.__dict__
-    [dct[field_name].set(value)for field_name, value in kwargs.items()]
     what = '*'
     if args:
         what = ', '.join([dct[field_name].name for field_name in args])

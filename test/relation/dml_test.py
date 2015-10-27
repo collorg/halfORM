@@ -9,13 +9,15 @@ from ..init import halftest
 from halfORM import relation_errors, model
 
 class Test(TestCase):
+    def setUp(self):
+        self.pers = halftest.relation("actor.person")
+        self.pers.delete(no_clause=True)
+        self.post = halftest.relation("blog.post")
+        self.pers.delete(no_clause=True)
+
     def tearDown(self):
         halftest.connection.autocommit = True
         self.pers().delete(last_name=('%', 'like'))
-
-    def setUp(self):
-        self.pers = halftest.relation("actor.person")
-        self.post = halftest.relation("blog.post")
 
     def insertion_test(self):
         """Insertion test"""

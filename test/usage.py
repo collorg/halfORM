@@ -92,14 +92,14 @@ if __name__ == '__main__':
     for f in x.fields:
         assert f.is_set
     n = s()
-    for elt in n.select(cog_oid=('d%', 'like')):
+    for elt in n(cog_oid=('d%', 'like')).select():
         print(elt['cog_oid'])
-    for elt in n.select(cog_oid=('d%', 'like')):
+    for elt in n(cog_oid=('d%', 'like')).select():
         t = s(**elt)
         print(t.cog_oid.value)
-    for elt in n.select('cog_oid', cog_oid=('d%', 'like')):
+    for elt in n(cog_oid=('d%', 'like')).select('cog_oid'):
         print(elt)
-    for elt in n.select('cog_oid', 'cog_fqtn', cog_oid=('d%', 'like')):
+    for elt in n(cog_oid=('d%', 'like')).select('cog_oid', 'cog_fqtn'):
         print(elt)
     u = s(cog_oid=('d%', 'like'))
     avant = u.count()
