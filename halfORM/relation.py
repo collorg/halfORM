@@ -14,8 +14,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+"""
+
+The relation function allows you to directly instanciate a Relation object
+- relation(<FQRN>)
+
+The RelationFactory can be used to create classes to manipulate the relations
+of the database:
+```
+class MyClass(metaclass=RelationFactory):
+    fqrn = '<FQRN>'
+```
+
+About QRN and FQRN:
+- FQRN stands for: Fully Qualified Relation Name. It is composed of:
+  <database name>.<schema name>.<table name>.
+  Only the schema name can have dots in it. In this case, it must be written
+  <database name>."<schema name>".<table name>
+- QRN is the Qualified Relation Name. Same as the FQRN without the database
+  name. Double quotes can be ommited even if there are dots in the schema name.
+
+"""
+
+import re
 import sys
-from .model import relation
 from halfORM import relation_errors
 
 def __init__(self, **kwargs):
@@ -262,3 +284,102 @@ view_interface = {
 
 class Relation():
     pass
+
+class RelationFactory(type):
+    """RelationFactory Metaclass
+    """
+    re_split_fqrn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
+    def __new__(mcs, class_name, bases, dct):
+        from halfORM import model, model_errors
+        def _gen_class_name(rel_kind, sfqrn):
+            """Generates class name from relation kind and FQRN tuple"""
+            class_name = "".join([elt.capitalize() for elt in
+                                  [elt.replace('.', '') for elt in sfqrn]])
+            return "{}_{}".format(rel_kind, class_name)
+
+        #TODO get bases from table inheritance
+        bases = (Relation,)
+        rf_ = RelationFactory
+        tbl_attr = {}
+        tbl_attr['__fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
+        if dct.get('model'):
+            tbl_attr['model'] = dct['model']
+        tbl_attr['__sfqrn'] = tuple(sfqrn)
+        attr_names = ['dbname', 'schemaname', 'relationname']
+        for i in range(len(attr_names)):
+            tbl_attr[attr_names[i]] = sfqrn[i]
+        dbname = tbl_attr['dbname']
+        tbl_attr['model'] = model.Model.deja_vu(dbname)
+        if not tbl_attr['model']:
+            tbl_attr['model'] = model.Model(dbname)
+        rel_class_names = {'r': 'Table', 'v': 'View'}
+        try:
+            kind = (
+                tbl_attr['model'].metadata['byname']
+                [tuple(sfqrn)]['tablekind'])
+            tbl_attr['__kind'] = rel_class_names[kind]
+        except KeyError:
+            raise model_errors.UnknownRelation(sfqrn)
+        rel_interfaces = {'r': table_interface, 'v': view_interface}
+        rf_.__set_fields(tbl_attr)
+        for fct_name, fct in rel_interfaces[kind].items():
+            tbl_attr[fct_name] = fct
+        class_name = _gen_class_name(rel_class_names[kind], sfqrn)
+        return super(rf_, mcs).__new__(mcs, class_name, (bases), tbl_attr)
+
+    @staticmethod
+    def __set_fields(ta_):
+        """ta_: table attributes dictionary."""
+        from .field import Field
+        from .fkey import FKey
+        ta_['__fields'] = []
+        ta_['__fkeys'] = []
+        dbm = ta_['model'].metadata
+        for field_name, metadata in dbm['byname'][
+                ta_['__sfqrn']]['fields'].items():
+            fkeyname = metadata.get('fkeyname')
+            if fkeyname and not fkeyname in ta_:
+                ft_ = dbm['byid'][metadata['fkeytableid']]
+                ft_sfqrn = ft_['sfqrn']
+                fields_names = [ft_['fields'][elt]
+                                for elt in metadata['fkeynum']]
+                ft_fields_names = [ft_['fields'][elt]
+                                   for elt in metadata['fkeynum']]
+                ta_[fkeyname] = FKey(
+                    fkeyname, ft_sfqrn, ft_fields_names, fields_names)
+                ta_['__fkeys'].append(ta_[fkeyname])
+            ta_[field_name] = Field(field_name, metadata)
+            ta_['__fields'].append(ta_[field_name])
+
+def relation(fqrn, **kwargs):
+    """This function is used to instanciate a Relation object using
+    its FQRN (Fully qualified relation name):
+    <database name>.<schema name>.<relation name>.
+    If the <schema name> comprises a dot it must be enclosed in double
+    quotes. Dots are not allowed in <database name> and <relation name>.
+    """
+    return RelationFactory(None, None, {'fqrn': fqrn})(**kwargs)
+
+def _normalize_fqrn(fqrn):
+    """
+    fqrn can have the following forms:
+    - 'a.b.c'
+    - '"a"."b"."c"'
+    - '"a"."b1.b2"."c"'
+    - 'a."b1.b2".c'
+    """
+    rf_ = RelationFactory
+    if fqrn.find('"') == -1:
+        sfqrn = fqrn.split('.')
+    else:
+        sfqrn = [elt for elt in rf_.re_split_fqrn.split(fqrn) if elt]
+    return '.'.join(['"{}"'.format(elt) for elt in sfqrn]), sfqrn
+
+def _normalize_qrn(qrn):
+    """
+    qrn is the qualified relation name (<schema name>.<talbe name>)
+    A schema name can have any number of dots in it.
+    A table name can't have a dot in it.
+    returns "<schema name>"."<relation name>"
+    """
+    return '.'.join(['"{}"'.format(elt) for elt in qrn.rsplit('.', 1)])

@@ -2,8 +2,8 @@
 #-*- coding: utf-8 -*-
 
 from datetime import datetime
-from halfORM.model import RelationFactory, relation, Model
-from halfORM.relation_interface import Relation
+from halfORM.model import Model
+from halfORM.relation import RelationFactory, Relation, relation
 
 dpt_info = Model(config_file='/etc/halfORM/dpt_info')
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     relation('dpt_info.seminaire.session')
     sys.exit()
     """
-#    print(OidTable())
+    print(OidTable().desc())
 #    print(BaseTable())
 #    print(ViewSession())
 #    print(relation('dpt_info.seminaire.session'))

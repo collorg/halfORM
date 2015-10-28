@@ -6,9 +6,17 @@ class FKey():
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
         self.__fk_names = fk_names
         self.__fields = fields
+        self.__is_set = False
+        self.__foreign = None
+
+    def set(self, value):
+        if value.isinstance(Relation):
+            assert self.__fk_fqrn == relation.fqrn
+        self.__foreign = value
+        self.__is_set = True
 
     def __repr__(self):
-        """Representation of a foreing key
+        """Representation of a foreign key
         """
         fields = '({})'.format(', '.join(self.__fields))
         return "FK {}: {}\n   \u21B3 {}({})".format(
