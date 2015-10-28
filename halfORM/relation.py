@@ -36,9 +36,11 @@ About QRN and FQRN:
 
 """
 
-import re
 import sys
 from halfORM import relation_errors
+
+#### THE following METHODS are included in Relation class according to
+#### relation type (Table or View). See table_interface and view_interface.
 
 def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
@@ -242,7 +244,11 @@ def transaction(func):
         return res
     return wrapper
 
+#### END of Relation methods definition
+
 table_interface = {
+    # shared with view_interface
+
     '__init__': __init__,
     '__call__': __call__,
     '__iter__': __iter__,
@@ -254,26 +260,31 @@ table_interface = {
     'fqrn': fqrn,
     'is_set': is_set,
     '__where': __where,
-    'insert': insert,
-    '__what_to_insert': __what_to_insert,
     'select': select,
     'count': count,
+    'get': get,
+    'getone': getone,
+
+    # specific table
+
+    'insert': insert,
+    '__what_to_insert': __what_to_insert,
     'update': update,
     '__update': __update,
     'delete': delete,
-    'get': get,
-    'getone': getone,
     'transaction': transaction
 }
 
 view_interface = {
     '__init__': __init__,
+    '__call__': __call__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
     '__repr__': __repr__,
     'desc': desc,
     'json': json,
     'fields': fields,
+    'fqrn': fqrn,
     'is_set': is_set,
     '__where': __where,
     'select': select,
@@ -288,7 +299,6 @@ class Relation():
 class RelationFactory(type):
     """RelationFactory Metaclass
     """
-    re_split_fqrn = re.compile(r'\"\.\"|\"\.|\.\"|^\"|\"$')
     def __new__(mcs, class_name, bases, dct):
         from halfORM import model, model_errors
         def _gen_class_name(rel_kind, sfqrn):
@@ -362,18 +372,15 @@ def relation(fqrn, **kwargs):
 
 def _normalize_fqrn(fqrn):
     """
-    fqrn can have the following forms:
-    - 'a.b.c'
-    - '"a"."b"."c"'
-    - '"a"."b1.b2"."c"'
-    - 'a."b1.b2".c'
+    Transform <db name>.<schema name>.<table name> in
+    "<db name>"."<schema name>"."<table name>".
+    Dots are allowed only in the schema name.
     """
-    rf_ = RelationFactory
-    if fqrn.find('"') == -1:
-        sfqrn = fqrn.split('.')
-    else:
-        sfqrn = [elt for elt in rf_.re_split_fqrn.split(fqrn) if elt]
-    return '.'.join(['"{}"'.format(elt) for elt in sfqrn]), sfqrn
+    fqrn = fqrn.replace('"', '')
+    dbname, schema_table = fqrn.split('.', 1)
+    schemaname, tablename = schema_table.rsplit('.', 1)
+    sfqrn = (dbname, schemaname, tablename)
+    return '"{}"."{}"."{}"'.format(*sfqrn), sfqrn
 
 def _normalize_qrn(qrn):
     """
