@@ -32,6 +32,9 @@ def __repr__(self):
             repr, self.__name, self.__comp, self.__value)
     return repr
 
+def __str__(self):
+    return str(self.value)
+
 @property
 def name(self):
     return self.__name
@@ -66,6 +69,7 @@ def comp(self):
 interface = {
     '__init__': __init__,
     '__repr__': __repr__,
+    '__str__': __str__,
     'is_set': is_set,
     'get': get,
     'set': set,

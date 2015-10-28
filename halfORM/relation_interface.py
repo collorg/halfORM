@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 from .model import relation
+from halfORM import relation_errors
 
 def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
@@ -60,7 +61,9 @@ def __repr__(self):
             mx_fld_n_len = len(field.name)
     for field in self.__fields:
         ret.append('- {}:{}{}'.format(
-            field.name, ' ' * (mx_fld_n_len + 1 - len(field.name)), field))
+            field.name,
+            ' ' * (mx_fld_n_len + 1 - len(field.name)),
+            repr(field)))
     for fkey in self.__fkeys:
         ret.append(repr(fkey))
     return '\n'.join(ret)
@@ -186,6 +189,12 @@ def get(self, **kwargs):
         elt = self(**dct)
         yield elt
 
+def getone(self, **kwargs):
+    count = self.count()
+    if count != 1:
+        raise relation_errors.ExpectedOneError(self, count)
+    return list(self.get())[0]
+
 def __iter__(self):
     raise NotImplementedError
 
@@ -231,6 +240,7 @@ table_interface = {
     '__update': __update,
     'delete': delete,
     'get': get,
+    'getone': getone,
     'transaction': transaction
 }
 
@@ -247,6 +257,7 @@ view_interface = {
     'select': select,
     'count': count,
     'get': get,
+    'getone': getone,
 }
 
 class Relation():
