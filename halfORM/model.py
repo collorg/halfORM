@@ -186,19 +186,6 @@ class Model():
             fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn))
             print(relation(fqrn).desc())
 
-class FieldFactory(type):
-    """FieldFactory metaclass
-    """
-    def __new__(mcs, clsname, bases, dct):
-        from .field_interface import interface as field_interface
-        ff_ = FieldFactory
-        for fct_name, fct in field_interface.items():
-            dct[fct_name] = fct
-        return super(ff_, mcs).__new__(mcs, clsname, bases, dct)
-
-class Field(metaclass=FieldFactory):
-    pass
-
 class RelationFactory(type):
     """RelationFactory Metaclass
     """
@@ -246,6 +233,7 @@ class RelationFactory(type):
     @staticmethod
     def __set_fields(ta_):
         """ta_: table attributes dictionary."""
+        from .field import Field
         from .fkey import FKey
         ta_['__fields'] = []
         ta_['__fkeys'] = []
