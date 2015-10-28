@@ -25,8 +25,9 @@ Because halfORM only deals with the data manipulation part of the SQL language (
 - Easily request your data in JSON,
 - ...
 
-## Example: The ```halftest``` database
-The following SQL code is the definition the halfORM test database ```halftest```. It defines:
+## The ```halftest``` database ([SQL code](test/sql/halftest.sql))
+
+The ```halftest``` defines:
 - two schemas:
  - ```actor```
  - ```blog```
@@ -35,65 +36,8 @@ The following SQL code is the definition the halfORM test database ```halftest``
  - ```blog.post```
  - ```blog.comment``` 
 
-### actor.person
-```sql
-create schema actor;
-create table actor.person(
-    first_name text,
-    last_name text,
-    birth_date date,
-    primary key(first_name, last_name, birth_date)
-);
-```
-### blog.post
-```sql
-create schema blog;
-create sequence blog.id_post;
-create table blog.post(
-    id int default nextval('blog.id_post') unique not null,
-    title text,
-    content text,
-    a_first_name text,
-    a_last_name text,
-    a_birth_date date,
-    primary key(id)
-);
-alter table blog.post add constraint "author"
-    foreign key(a_first_name, a_last_name, a_birth_date)
-    references actor.person(first_name, last_name, birth_date)
-	on update cascade on delete cascade;
-```
-## blog.comment
-```sql
-create sequence blog.id_comment;
-create table blog.comment(
-    id int default nextval('blog.id_comment') unique not null,
-    content text,
-    id_post int,
-    a_first_name text,
-    a_last_name text,
-    a_birth_date date,
-    primary key(id)
-);
-alter table blog.comment add constraint "author"
-    foreign key(a_first_name, a_last_name, a_birth_date)
-    references actor.person(first_name, last_name, birth_date)
-	on update cascade on delete cascade;
-alter table blog.comment add constraint "post"
-    foreign key(id_post)
-    references blog.post
-	on update cascade on delete cascade;
-```
+To access the database, we need a config file ([test/halftest.ini](test/halftest.ini))
 
-To access the database, we have a config file, here ```test/halftest.ini```:
-```
-[database]
-name = halftest
-user = halftest
-password = halftest
-host = localhost
-port = 5432
-```
 ## API Examples
 #### Some scripts snippets to illustrate the current implementation of the API.
 The following script instanciate a model object corresponding to the ```halftest``` database:
@@ -107,18 +51,8 @@ Let us look at the structure by using the ```desc``` method
 halftest.desc()
 halftest.desc("blog.comment")
 ```
-It iterates over every *relational object* of the database and prints it's representation. The expression ```halftest.desc("blog.comment")``` displays only the representation of the ```blog.comment``` table. Here is the output of ```halftest.desc()```:
-```
-------------------------------------------------------------
-TABLE: "halftest"."actor"."person"
-- cluster: halftest
-- schema:  actor
-- table:   person
-FIELDS:
-- first_name: (text) PK
-- last_name:  (text) PK
-- birth_date: (date) PK
-```
+It iterates over every *relational object* of the database and prints it's representation. The expression ```halftest.desc("blog.comment")``` displays only the representation of the ```blog.comment``` table.
+
 ```
 ------------------------------------------------------------
 TABLE: "halftest"."blog"."comment"
@@ -138,22 +72,7 @@ FK author: (first_name, last_name, birth_date)
    ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
 ```
 Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halftest"."actor"."person"(first_name, last_name, birth_date)```
-```
-------------------------------------------------------------
-TABLE: "halftest"."blog"."post"
-- cluster: halftest
-- schema:  blog
-- table:   post
-FIELDS:
-- id:           (int4) PK
-- title:        (text) 
-- content:      (text) 
-- a_first_name: (text) 
-- a_last_name:  (text) 
-- a_birth_date: (date) 
-FK author: (first_name, last_name, birth_date)
-   ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
-```
+
 To instanciate a Relation object, just use the ```Model.relation(QRN)``` method.
 ```QRN``` is the "qualified relation name" here ```actor.person```.
 ```python
@@ -212,6 +131,68 @@ for dct in person(last_name=('_a%', 'like')).select('last_name'):
 
 ```
 
+#### Playing with foreign keys
+We want to see the comments made by *Gaston* on *Corto*'s posts.
+```python
+gaston = person(first_name=("gaston", "ilike"))
+corto = person(first_name=("corto", "ilike"))
+post_corto = halftest.relation("blog.post", author=corto)
+comment = halftest.relation("blog.comment", author=gaston, post=post_corto)
+
+print(comment)
+```
+The representation of the request can be displayed just by printing the comment object:
+```
+------------------------------------------------------------
+Table: "halftest"."blog"."comment"
+- cluster: halftest
+- schema:  blog
+- Table:   comment
+FIELDS:
+- id:           (int4) PK
+- content:      (text) 
+- id_post:      (int4) 
+- a_first_name: (text) 
+- a_last_name:  (text) 
+- a_birth_date: (date) 
+FK post: (id)
+   ↳ "halftest"."blog"."post"(id)
+      ------------------------------------------------------------
+      Table: "halftest"."blog"."post"
+      - cluster: halftest
+      - schema:  blog
+      - Table:   post
+      FIELDS:
+      - id:           (int4) PK
+      - title:        (text) 
+      - content:      (text) 
+      - a_first_name: (text) 
+      - a_last_name:  (text) 
+      - a_birth_date: (date) 
+      FK author: (first_name, last_name, birth_date)
+         ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+            ------------------------------------------------------------
+            Table: "halftest"."actor"."person"
+            - cluster: halftest
+            - schema:  actor
+            - Table:   person
+            FIELDS:
+            - first_name: (text) PK (first_name ilike corto)
+            - last_name:  (text) PK
+            - birth_date: (date) PK
+FK author: (first_name, last_name, birth_date)
+   ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+      ------------------------------------------------------------
+      Table: "halftest"."actor"."person"
+      - cluster: halftest
+      - schema:  actor
+      - Table:   person
+      FIELDS:
+      - first_name: (text) PK (first_name ilike gaston)
+      - last_name:  (text) PK
+      - birth_date: (date) PK
+```
+
 ### Update
 In this example, we upper case the last name all the persons in which the second letter is an ```a```:
 ```python
@@ -257,7 +238,6 @@ print(person(last_name=('_A%*', 'like')).json())
   {"birth_date": "1975-01-07", "first_name": "Corto", "last_name": "MALTESE"},
   {"birth_date": "1963-11-07", "first_name": "Achile", "last_name": "TALON"}]
 ```
-
 
 ### Delete
 We finally remove every inserted tuples. Notice that we use the ```no_clause``` argument with a ```True``` value. The ```delete``` would have been rejected otherwise:

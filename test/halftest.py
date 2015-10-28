@@ -74,4 +74,11 @@ except Exception as err:
 print(_A.json())
 print(person().json())
 
+gaston = person(first_name=("gaston", "ilike"))
+corto = person(first_name=("corto", "ilike"))
+post_corto = halftest.relation("blog.post", author=corto)
+comment = halftest.relation("blog.comment", author=gaston, post=post_corto)
+
+print(comment)
+
 person().delete(no_clause=True)

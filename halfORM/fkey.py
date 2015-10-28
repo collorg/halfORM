@@ -7,19 +7,27 @@ class FKey():
         self.__fk_names = fk_names
         self.__fields = fields
         self.__is_set = False
-        self.__foreign = None
+        self.__value = None
 
     def set(self, value):
-        if value.isinstance(Relation):
-            assert self.__fk_fqrn == relation.fqrn
-        self.__foreign = value
+        from halfORM.relation import Relation
+        if isinstance(value, Relation):
+            assert self.__fk_fqrn == value.fqrn
+        self.__value = value
         self.__is_set = True
 
     def __repr__(self):
         """Representation of a foreign key
         """
         fields = '({})'.format(', '.join(self.__fields))
-        return "FK {}: {}\n   \u21B3 {}({})".format(
+        repr = "FK {}: {}\n   \u21B3 {}({})".format(
             self.__name,
             fields, self.__fk_fqrn, ', '.join(self.__fk_names))
+        if self.__is_set:
+            repr_value = str(self.__value)
+            res = []
+            for line in repr_value.split('\n'):
+                res.append('      {}'.format(line))
+            repr = '{}\n{}'.format(repr, '\n'.join(res))
+        return repr
 
