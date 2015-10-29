@@ -55,23 +55,21 @@ It iterates over every *relational object* of the database and prints it's repre
 
 ```
 ------------------------------------------------------------
-TABLE: "halftest"."blog"."comment"
+Table: "halftest"."blog"."comment"
 - cluster: halftest
 - schema:  blog
-- table:   comment
+- Table:   comment
 FIELDS:
-- id:           (int4) PK
-- content:      (text) 
-- id_post:      (int4) 
-- a_first_name: (text) 
-- a_last_name:  (text) 
-- a_birth_date: (date) 
-FK post: (id)
+- id:        (int4) PK
+- content:   (text) 
+- post_id:   (int4) 
+- author_id: (int4) 
+FK post: (post_id)
    ↳ "halftest"."blog"."post"(id)
-FK author: (first_name, last_name, birth_date)
-   ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+FK author: (author_id)
+   ↳ "halftest"."actor"."person"(id)
 ```
-Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halftest"."actor"."person"(first_name, last_name, birth_date)```
+Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halftest"."actor"."person"(id)```
 
 To instanciate a Relation object, just use the ```Model.relation(QRN)``` method.
 ```QRN``` is the "qualified relation name" here ```actor.person```.
@@ -98,12 +96,11 @@ print(person.json())
 ```
 
 ```json
-[{"last_name": "Lagaffe", "first_name": "Gaston", "birth_date": -405219600},
-  {"last_name": "Fricotin", "first_name": "Bibi", "birth_date": -1427673600},
-  {"last_name": "Maltese", "first_name": "Corto", "birth_date": 158281200},
-  {"last_name": "Talon", "first_name": "Achile", "birth_date": -194144400},
-  {"last_name": "Jourdan", "first_name": "Gil", "birth_date": -419130000}]
-
+[{"birth_date": -405219600, "id": 37, "last_name": "Lagaffe", "first_name": "Gaston"},
+  {"birth_date": -1427673600, "id": 38, "last_name": "Fricotin", "first_name": "Bibi"},
+  {"birth_date": 158281200, "id": 39, "last_name": "Maltese", "first_name": "Corto"},
+  {"birth_date": -194144400, "id": 40, "last_name": "Talon", "first_name": "Achile"},
+  {"birth_date": -419130000, "id": 41, "last_name": "Jourdan", "first_name": "Gil"}]
 ```
 
 ### Select
@@ -113,10 +110,10 @@ person = person(last_name=('_a%', 'like'))
 print(person.json())
 ```
 
-```
-[{"last_name": "Lagaffe", "first_name": "Gaston", "birth_date": -405219600},
-  {"last_name": "Maltese", "first_name": "Corto", "birth_date": 158281200},
-  {"last_name": "Talon", "first_name": "Achile", "birth_date": -194144400}]
+```json
+[{"birth_date": -405219600, "id": 37, "last_name": "Lagaffe", "first_name": "Gaston"},
+  {"birth_date": 158281200, "id": 39, "last_name": "Maltese", "first_name": "Corto"},
+  {"birth_date": -194144400, "id": 40, "last_name": "Talon", "first_name": "Achile"}]
 ```
 You can also get a subset of the attributes:
 ```python
@@ -152,13 +149,11 @@ Table: "halftest"."blog"."comment"
 - schema:  blog
 - Table:   comment
 FIELDS:
-- id:           (int4) PK
-- content:      (text)  (content ilike %m'enfin%)
-- id_post:      (int4) 
-- a_first_name: (text) 
-- a_last_name:  (text) 
-- a_birth_date: (date) 
-FK post: (id)
+- id:        (int4) PK
+- content:   (text)  (content ilike %m'enfin%)
+- post_id:   (int4) 
+- author_id: (int4) 
+FK post: (post_id)
    ↳ "halftest"."blog"."post"(id)
       ------------------------------------------------------------
       Table: "halftest"."blog"."post"
@@ -166,13 +161,13 @@ FK post: (id)
       - schema:  blog
       - Table:   post
       FIELDS:
-      - id:           (int4) PK
-      - title:        (text) 
-      - content:      (text) 
-      - a_first_name: (text) 
-      - a_last_name:  (text) 
-      - a_birth_date: (date) 
-      FK author: (first_name, last_name, birth_date)
+      - id:                (int4) PK
+      - title:             (text) 
+      - content:           (text) 
+      - author_first_name: (text) 
+      - author_last_name:  (text) 
+      - author_birth_date: (date) 
+      FK author: (author_first_name, author_last_name, author_birth_date)
          ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
             ------------------------------------------------------------
             Table: "halftest"."actor"."person"
@@ -180,17 +175,19 @@ FK post: (id)
             - schema:  actor
             - Table:   person
             FIELDS:
+            - id:         (int4) UNIQUE NOT NULL
             - first_name: (text) PK (first_name ilike corto)
             - last_name:  (text) PK
             - birth_date: (date) PK
-FK author: (first_name, last_name, birth_date)
-   ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+FK author: (author_id)
+   ↳ "halftest"."actor"."person"(id)
       ------------------------------------------------------------
       Table: "halftest"."actor"."person"
       - cluster: halftest
       - schema:  actor
       - Table:   person
       FIELDS:
+      - id:         (int4) UNIQUE NOT NULL
       - first_name: (text) PK (first_name ilike gaston)
       - last_name:  (text) PK
       - birth_date: (date) PK
@@ -211,7 +208,7 @@ To speed up things (not really necessary in this example), we turn ```autocommit
 Note: the ```Model.connection``` object is a ```psycopg2``` connection.
 
 A better way to write this is by using the ```Relation.get``` method instead
-of the ```select``` as it directly yields ```person``` type objects:
+of the ```select``` as it directly yields "persons" objects:
 
 ```python
 halftest.connection.autocommit = False
@@ -237,9 +234,9 @@ print(person(last_name=('_A%*', 'like')).json())
 ```
 
 ```json
-[{"birth_date": "1957-02-28", "first_name": "Gaston", "last_name": "LAGAFFE"},
-  {"birth_date": "1975-01-07", "first_name": "Corto", "last_name": "MALTESE"},
-  {"birth_date": "1963-11-07", "first_name": "Achile", "last_name": "TALON"}]
+[{"birth_date": -405219600, "id": 37, "last_name": "LAGAFFE", "first_name": "Gaston"},
+  {"birth_date": 158281200, "id": 39, "last_name": "MALTESE", "first_name": "Corto"},
+  {"birth_date": -194144400, "id": 40, "last_name": "TALON", "first_name": "Achile"}]
 ```
 
 ### Delete

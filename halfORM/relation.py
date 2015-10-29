@@ -329,21 +329,24 @@ class RelationFactory(type):
         ta_['__fields'] = []
         ta_['__fkeys'] = []
         dbm = ta_['model'].metadata
+        fields = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
+        for field_name, metadata in dbm['byname'][
+                ta_['__sfqrn']]['fields'].items():
+            ta_[field_name] = Field(field_name, metadata)
+            ta_['__fields'].append(ta_[field_name])
         for field_name, metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
             fkeyname = metadata.get('fkeyname')
             if fkeyname and not fkeyname in ta_:
                 ft_ = dbm['byid'][metadata['fkeytableid']]
                 ft_sfqrn = ft_['sfqrn']
-                fields_names = [ft_['fields'][elt]
-                                for elt in metadata['fkeynum']]
+                fields_names = [fields[elt-1]
+                                for elt in metadata['keynum']]
                 ft_fields_names = [ft_['fields'][elt]
                                    for elt in metadata['fkeynum']]
                 ta_[fkeyname] = FKey(
                     fkeyname, ft_sfqrn, ft_fields_names, fields_names)
                 ta_['__fkeys'].append(ta_[fkeyname])
-            ta_[field_name] = Field(field_name, metadata)
-            ta_['__fields'].append(ta_[field_name])
 
 def relation(fqrn, **kwargs):
     """This function is used to instanciate a Relation object using
