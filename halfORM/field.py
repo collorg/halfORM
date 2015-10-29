@@ -1,3 +1,5 @@
+"""This module provides the Field class."""
+
 __copyright__ = "Copyright (c) 2015 Joël Maïzi"
 __license__ = """
 This program is free software: you can redistribute it and/or modify
@@ -15,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 class Field():
+    """The class Field is for Relation internal usage. It is called by
+    the RelationFactory metaclass for each field in the relation considered.
+    """
     __slots__ = [
         '__name', '__metadata', '__is_set', '__value', '__comp'
     ]
@@ -26,31 +31,35 @@ class Field():
         self.__comp = '='
 
     def __repr__(self):
-        md = self.__metadata
-        repr = "({}) {}".format(
-            md['fieldtype'], md['pkey'] and 'PK' or ('{}{}'.format(
-                md['uniq'] and 'UNIQUE ' or '',
-                md['notnull'] and 'NOT NULL' or '')))
+        md_ = self.__metadata
+        repr_ = "({}) {}".format(
+            md_['fieldtype'], md_['pkey'] and 'PK' or ('{}{}'.format(
+                md_['uniq'] and 'UNIQUE ' or '',
+                md_['notnull'] and 'NOT NULL' or '')))
         if self.__is_set:
-            repr = "{} ({} {} {})".format(
-                repr, self.__name, self.__comp, self.__value)
-        return repr
+            repr_ = "{} ({} {} {})".format(
+                repr_, self.__name, self.__comp, self.__value)
+        return repr_
 
     def __str__(self):
         return str(self.value)
 
     @property
     def name(self):
+        """This property returns the name of the field."""
         return self.__name
 
     @property
     def is_set(self):
+        "This property returns a boolean indicating if the field is set of not."
         return self.__is_set
 
     def get(self):
+        "Returns the value of the field object"
         return self.__value
 
     def set(self, value, comp=None):
+        """Sets the value (and the comparator) associated with the field."""
         if type(value) is tuple:
             assert len(value) == 2
             value, comp = value
@@ -68,4 +77,5 @@ class Field():
 
     @property
     def comp(self):
+        "This property returns the comparator associated with the value."
         return self.__comp

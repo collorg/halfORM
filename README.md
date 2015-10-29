@@ -230,7 +230,7 @@ update_a(person)
 ```
 
 ```python
-print(person(last_name=('_A%*', 'like')).json())
+print(person(last_name=('_A%', 'like')).json())
 ```
 
 ```json

@@ -1,3 +1,5 @@
+"""This module provides the FKey class."""
+
 class FKey():
     """Foreign key class
     """
@@ -10,9 +12,13 @@ class FKey():
         self.__value = None
 
     def set(self, value):
+        """Sets the value associated with the foreign key.
+
+        The value must be and object of type Relation having the
+        same FQRN as referenced by self.__fk_fqrn.
+        """
         from halfORM.relation import Relation
-        if isinstance(value, Relation):
-            assert self.__fk_fqrn == value.fqrn
+        assert isinstance(value, Relation) and self.__fk_fqrn == value.fqrn
         self.__value = value
         self.__is_set = True
 
@@ -20,7 +26,7 @@ class FKey():
         """Representation of a foreign key
         """
         fields = '({})'.format(', '.join(self.__fields))
-        repr = "FK {}: {}\n   \u21B3 {}({})".format(
+        repr_ = "FK {}: {}\n   \u21B3 {}({})".format(
             self.__name,
             fields, self.__fk_fqrn, ', '.join(self.__fk_names))
         if self.__is_set:
@@ -28,6 +34,6 @@ class FKey():
             res = []
             for line in repr_value.split('\n'):
                 res.append('      {}'.format(line))
-            repr = '{}\n{}'.format(repr, '\n'.join(res))
-        return repr
+            repr_ = '{}\n{}'.format(repr_, '\n'.join(res))
+        return repr_
 

@@ -1,3 +1,24 @@
+"""This module provides: relation, RelationFactory
+
+The relation function allows you to directly instanciate a Relation object
+- relation(<FQRN>)
+
+The RelationFactory can be used to create classes to manipulate the relations
+of the database:
+```
+class MyClass(metaclass=RelationFactory):
+    fqrn = '<FQRN>'
+```
+
+About QRN and FQRN:
+- FQRN stands for: Fully Qualified Relation Name. It is composed of:
+  <database name>.<schema name>.<table name>.
+  Only the schema name can have dots in it.
+- QRN is the Qualified Relation Name. Same as the FQRN without the database
+  name. Double quotes can be ommited even if there are dots in the schema name.
+
+"""
+
 __copyright__ = "Copyright (c) 2015 Joël Maïzi"
 __license__ = """
 This program is free software: you can redistribute it and/or modify
@@ -14,28 +35,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-"""
-
-The relation function allows you to directly instanciate a Relation object
-- relation(<FQRN>)
-
-The RelationFactory can be used to create classes to manipulate the relations
-of the database:
-```
-class MyClass(metaclass=RelationFactory):
-    fqrn = '<FQRN>'
-```
-
-About QRN and FQRN:
-- FQRN stands for: Fully Qualified Relation Name. It is composed of:
-  <database name>.<schema name>.<table name>.
-  Only the schema name can have dots in it. In this case, it must be written
-  <database name>."<schema name>".<table name>
-- QRN is the Qualified Relation Name. Same as the FQRN without the database
-  name. Double quotes can be ommited even if there are dots in the schema name.
-
-"""
-
 import sys
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
@@ -47,7 +46,7 @@ def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
     self.__cons_fields = []
     dct = self.__class__.__dict__
-    [dct[field_name].set(value)for field_name, value in kwargs.items()]
+    [dct[field_name].set(value) for field_name, value in kwargs.items()]
 
 def __call__(self, **kwargs):
     """__call__ method for the class Relation
@@ -56,10 +55,10 @@ def __call__(self, **kwargs):
     """
     return relation(self.__fqrn, **kwargs)
 
-def json(self):
-    """TEST
+def json(self, **kwargs):
+    """Returns a JSON representation of the set returned by the select query.
     """
-    import json, datetime, time
+    import json as js_, datetime, time
     def handler(obj):
         if hasattr(obj, 'timetuple'):
             # retruns # seconds since the epoch
@@ -70,7 +69,7 @@ def json(self):
             raise TypeError(
                 'Object of type {} with value of '
                 '{} is not JSON serializable'.format(type(obj), repr(obj)))
-    return json.dumps([elt for elt in self.select()], default=handler)
+    return js_.dumps([elt for elt in self.select(**kwargs)], default=handler)
 
 def __repr__(self):
     rel_kind = self.__kind
@@ -113,10 +112,13 @@ def fields(self):
     for field in self.__fields:
         yield field
 
+def __get_set_fields(self):
+    return [field for field in self.__fields if field.is_set]
+
 def __where(self):
     where = ''
     values = ()
-    set_fields = [field for field in self.__fields if field.is_set]
+    set_fields = self.__get_set_fields()
     where_clause = ''
     if set_fields:
         where_clause = [
@@ -183,7 +185,7 @@ def update(self, no_clause=False, **kwargs):
 def __what_to_insert(self):
     fields_names = []
     values = ()
-    set_fields = [field for field in self.__fields if field.is_set]
+    set_fields = self.__get_set_fields()
     if set_fields:
         fields_names = [field.name for field in set_fields]
         values = [field.value for field in set_fields]
@@ -237,6 +239,7 @@ table_interface = {
     '__call__': __call__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
+    '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
     'desc': desc,
     'json': json,
@@ -264,6 +267,7 @@ view_interface = {
     '__call__': __call__,
     '__iter__': __iter__,
     '__getitem__': __getitem__,
+    '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
     'desc': desc,
     'json': json,
