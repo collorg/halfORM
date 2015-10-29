@@ -12,7 +12,7 @@ person = halftest.relation("actor.person")
 person.delete(no_clause=True)
 
 @person.transaction
-def insert(person):
+def insert0(person):
     person(
         last_name='Lagaffe',
         first_name='Gaston',
@@ -21,6 +21,9 @@ def insert(person):
         last_name='Fricotin',
         first_name='Bibi',
         birth_date='1924-10-05').insert()
+@person.transaction
+def insert1(person):
+    insert0(person)
     person(
         last_name='Maltese',
         first_name='Corto',
@@ -29,11 +32,14 @@ def insert(person):
         last_name='Talon',
         first_name='Achile',
         birth_date='1963-11-07').insert()
+def insert2(person):
+    insert1(person)
     person(
         last_name='Jourdan',
         first_name='Gil',
         birth_date='1956-09-20').insert()
-insert(person)
+# TEST NESTED TRANSACTIONS
+insert2(person)
 
 print(person.json())
 assert len(person) == 5
@@ -64,6 +70,7 @@ print(_A.json())
 @person.transaction
 def update_rb(person):
     for pers in _A.get():
+        print(pers.json())
         pers.update(first_name='A', last_name='A', birth_date='1970-01-01')
 
 try:
@@ -72,13 +79,14 @@ except Exception as err:
     pass
 
 print(_A.json())
-print(person().json())
 
 gaston = person(first_name=("gaston", "ilike"))
 corto = person(first_name=("corto", "ilike"))
-post_corto = halftest.relation("blog.post", author=corto)
-comment = halftest.relation("blog.comment", author=gaston, post=post_corto)
+corto_post = halftest.relation("blog.post", author=corto)
+gaston_comment_on_corto_post = halftest.relation(
+    "blog.comment",
+    content=("%m'enfin%", "ilike"), author=gaston, post=corto_post)
 
-print(comment)
+print(gaston_comment_on_corto_post)
 
 person().delete(no_clause=True)

@@ -97,7 +97,7 @@ person(last_name='Jourdan', first_name='Gil', birth_date='1956-09-20').insert()
 print(person.json())
 ```
 
-```
+```json
 [{"last_name": "Lagaffe", "first_name": "Gaston", "birth_date": -405219600},
   {"last_name": "Fricotin", "first_name": "Bibi", "birth_date": -1427673600},
   {"last_name": "Maltese", "first_name": "Corto", "birth_date": 158281200},
@@ -124,7 +124,7 @@ for dct in person(last_name=('_a%', 'like')).select('last_name'):
      print(dct)
 ```
 
-```
+```python
 {'last_name': 'Lagaffe'}
 {'last_name': 'Maltese'}
 {'last_name': 'Talon'}
@@ -132,16 +132,19 @@ for dct in person(last_name=('_a%', 'like')).select('last_name'):
 ```
 
 #### Playing with foreign keys
-We want to see the comments made by *Gaston* on *Corto*'s posts.
+We want to see *Gaston*'s comments containing "m'enfin" on *Corto*'s posts.
 ```python
 gaston = person(first_name=("gaston", "ilike"))
 corto = person(first_name=("corto", "ilike"))
-post_corto = halftest.relation("blog.post", author=corto)
-comment = halftest.relation("blog.comment", author=gaston, post=post_corto)
-
-print(comment)
+corto_post = halftest.relation("blog.post", author=corto)
+gaston_comment_on_corto_post = halftest.relation(
+    "blog.comment", text=("%m'enfin%", "ilike"), author=gaston, post=corto_post)
 ```
+
 The representation of the request can be displayed just by printing the comment object:
+```python
+print(gaston_comment_on_corto_post)
+```
 ```
 ------------------------------------------------------------
 Table: "halftest"."blog"."comment"
@@ -150,7 +153,7 @@ Table: "halftest"."blog"."comment"
 - Table:   comment
 FIELDS:
 - id:           (int4) PK
-- content:      (text) 
+- content:      (text)  (content ilike %m'enfin%)
 - id_post:      (int4) 
 - a_first_name: (text) 
 - a_last_name:  (text) 
@@ -208,7 +211,7 @@ To speed up things (not really necessary in this example), we turn ```autocommit
 Note: the ```Model.connection``` object is a ```psycopg2``` connection.
 
 A better way to write this is by using the ```Relation.get``` method instead
-of the ```select``` as it directly yields ```person``` objects:
+of the ```select``` as it directly yields ```person``` type objects:
 
 ```python
 halftest.connection.autocommit = False
@@ -233,7 +236,7 @@ update_a(person)
 print(person(last_name=('_A%*', 'like')).json())
 ```
 
-```
+```json
 [{"birth_date": "1957-02-28", "first_name": "Gaston", "last_name": "LAGAFFE"},
   {"birth_date": "1975-01-07", "first_name": "Corto", "last_name": "MALTESE"},
   {"birth_date": "1963-11-07", "first_name": "Achile", "last_name": "TALON"}]

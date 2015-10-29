@@ -38,6 +38,7 @@ About QRN and FQRN:
 
 import sys
 from halfORM import relation_errors
+from halfORM.transaction import Transaction
 
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See table_interface and view_interface.
@@ -225,24 +226,7 @@ def __iter__(self):
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
 
-@staticmethod
-def transaction(func):
-    """func is a method of a Model object"""
-    def wrapper(relation, *args, **kwargs):
-        res = None
-        try:
-            relation.model.connection.autocommit = False
-            res = func(relation, *args, **kwargs)
-            relation.model.connection.commit()
-            relation.model.connection.autocommit = True
-        except Exception as err:
-            sys.stderr.write(
-                "Transaction error: {}\nRolling back!\n".format(err))
-            relation.model.connection.rollback()
-            relation.model.connection.autocommit = True
-            raise err
-        return res
-    return wrapper
+transaction = Transaction
 
 #### END of Relation methods definition
 
