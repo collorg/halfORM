@@ -33,14 +33,12 @@ class Test(TestCase):
                 birth_date=birth_date).insert()
         halftest.connection.commit()
         halftest.connection.autocommit = True
-        self.assertEqual(pers().count(), 26)
+        self.assertEqual(len(pers()), 26)
 
     def __update_test(self):
-        pers = self.pers()
-        count = pers.last_name.set('a%', 'like')
-        pers.last_name.set('a%', 'like')
-        self.assertEqual(pers.count(), 10)
+        pers = self.pers(last_name=('a%', 'like'))
+        self.assertEqual(len(pers), 10)
         pers.update(last_name=pers.last_name.uppercase())
-        self.assertEqual(pers.count(), 0)
-        self.assertEqual(pers.count(last_name=('A%', 'like')), 10)
+        self.assertEqual(len(pers), 0)
+        self.assertEqual(len(pers(last_name=('A%', 'like'))), 10)
 

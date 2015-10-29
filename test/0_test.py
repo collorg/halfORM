@@ -14,5 +14,5 @@ class Test(TestCase):
         self.post = halftest.relation("blog.post")
 
     def select_count_0_test(self):
-        self.assertEqual(self.pers.count(), 0)
-        self.assertEqual(self.post.count(), 0)
+        self.assertEqual(len(self.pers), 0)
+        self.assertEqual(len(self.post), 0)

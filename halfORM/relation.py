@@ -140,7 +140,7 @@ def select(self, *args, **kwargs):
     for elt in self.__cursor.fetchall():
         yield elt
 
-def count(self, *args, **kwargs):
+def __len__(self, *args, **kwargs):
     """Better, still naive implementation of select
 
     - @args are fields names to restrict the returned attributes
@@ -214,7 +214,7 @@ def get(self, **kwargs):
         yield elt
 
 def getone(self, **kwargs):
-    count = self.count()
+    count = len(self)
     if count != 1:
         raise relation_errors.ExpectedOneError(self, count)
     return list(self.get())[0]
@@ -261,7 +261,7 @@ table_interface = {
     'is_set': is_set,
     '__where': __where,
     'select': select,
-    'count': count,
+    '__len__': __len__,
     'get': get,
     'getone': getone,
 
@@ -288,7 +288,7 @@ view_interface = {
     'is_set': is_set,
     '__where': __where,
     'select': select,
-    'count': count,
+    '__len__': __len__,
     'get': get,
     'getone': getone,
 }

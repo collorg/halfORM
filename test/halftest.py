@@ -36,17 +36,17 @@ def insert(person):
 insert(person)
 
 print(person.json())
-assert person.count() == 5
+assert len(person) == 5
 
 oo = person(first_name=('_o__o', 'like'))
 print(oo)
-assert oo.count() == 1
+assert len(oo) == 1
 
 for p in person.get():
-    assert p.count() == 1
+    assert len(p) == 1
 
 _a = person(last_name=('_a%', 'like'))
-a_count = _a.count()
+a_count = len(_a)
 print(_a.json())
 
 @person.transaction
@@ -57,7 +57,7 @@ def update(person):
 update(person)
 
 _A = person(last_name=('_A%', 'like'))
-assert _A.count() == a_count
+assert len(_A) == a_count
 
 print(_A.json())
 

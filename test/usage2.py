@@ -10,10 +10,10 @@ oidt = dpt_info.relation(
     cog_oid=('e%', 'like'), cog_fqtn='seminaire.session')
 for elt in oidt.select('cog_oid'):
     print(elt)
-print(oidt.count())
+print(len(oidt))
 oidt.update(cog_fqtn='perdu')
 dpt_info.connection.commit()
-print(oidt.count())
+print(len(oidt))
 oidt2 = oidt(cog_fqtn='perdu')
 for elt in oidt2.select():
     print(elt)
@@ -22,4 +22,4 @@ oidt2.update(cog_fqtn='seminaire.session')
 dpt_info.connection.commit()
 # One model shared by all the tables...
 print(id(dpt_info), id(oidt.model), id(oidt2.model))
-print(oidt2.count())
+print(len(oidt2))

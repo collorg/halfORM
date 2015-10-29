@@ -101,20 +101,20 @@ if __name__ == '__main__':
     for elt in n(cog_oid=('d%', 'like')).select('cog_oid', 'cog_fqtn'):
         print(elt)
     u = s(cog_oid=('d%', 'like'))
-    avant = u.count()
+    avant = len(u)
     print(avant)
     u.update(cog_test=True)
     v = s(cog_oid=('d%', 'like'), cog_test=True)
-    assert v.count() == avant
+    assert len(v) == avant
     v.update(cog_test=False)
 
     i = relation(
         'dpt_info."collorg.core".oid_table', cog_oid='ab', cog_fqtn='cd')
     i.insert()
-    assert i.count() == 1
+    assert len(i) == 1
     i.model.connection.commit()
     i.delete()
-    assert i.count() == 0
+    assert len(i) == 0
     i.model.connection.commit()
 
 def TODO():
