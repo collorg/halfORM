@@ -54,20 +54,21 @@ halftest.desc("blog.comment")
 It iterates over every *relational object* of the database and prints it's representation. The expression ```halftest.desc("blog.comment")``` displays only the representation of the ```blog.comment``` table.
 
 ```
-------------------------------------------------------------
-Table: "halftest"."blog"."comment"
-- cluster: halftest
-- schema:  blog
-- Table:   comment
+============================================================
+TABLE: "halftest"."blog"."comment"
+DESCRIPTION:
+The table blog.comment contains all the comments
+made by a person on a post.
 FIELDS:
 - id:        (int4) PK
 - content:   (text) 
 - post_id:   (int4) 
 - author_id: (int4) 
-FK post: (post_id)
-   ↳ "halftest"."blog"."post"(id)
-FK author: (author_id)
-   ↳ "halftest"."actor"."person"(id)
+FOREIGN KEYS:
+- post: (post_id)
+  ↳ "halftest"."blog"."post"(id)
+- author: (author_id)
+  ↳ "halftest"."actor"."person"(id)
 ```
 Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halftest"."actor"."person"(id)```
 
@@ -131,8 +132,8 @@ for dct in person(last_name=('_a%', 'like')).select('last_name'):
 #### Playing with foreign keys
 We want to see *Gaston*'s comments containing "m'enfin" on *Corto*'s posts.
 ```python
-gaston = person(first_name=("gaston", "ilike"))
-corto = person(first_name=("corto", "ilike"))
+gaston = person(first_name="Gaston")
+corto = person(first_name="Corto")
 corto_post = halftest.relation("blog.post", author=corto)
 gaston_comment_on_corto_post = halftest.relation(
     "blog.comment", text=("%m'enfin%", "ilike"), author=gaston, post=corto_post)
@@ -143,54 +144,54 @@ The representation of the request can be displayed just by printing the comment 
 print(gaston_comment_on_corto_post)
 ```
 ```
-------------------------------------------------------------
-Table: "halftest"."blog"."comment"
-- cluster: halftest
-- schema:  blog
-- Table:   comment
+============================================================
+TABLE: "halftest"."blog"."comment"
+DESCRIPTION:
+The table blog.comment contains all the comments
+made by a person on a post.
 FIELDS:
 - id:        (int4) PK
 - content:   (text)  (content ilike %m'enfin%)
 - post_id:   (int4) 
 - author_id: (int4) 
-FK post: (post_id)
-   ↳ "halftest"."blog"."post"(id)
-      ------------------------------------------------------------
-      Table: "halftest"."blog"."post"
-      - cluster: halftest
-      - schema:  blog
-      - Table:   post
-      FIELDS:
-      - id:                (int4) PK
-      - title:             (text) 
-      - content:           (text) 
-      - author_first_name: (text) 
-      - author_last_name:  (text) 
-      - author_birth_date: (date) 
-      FK author: (author_first_name, author_last_name, author_birth_date)
-         ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
-            ------------------------------------------------------------
-            Table: "halftest"."actor"."person"
-            - cluster: halftest
-            - schema:  actor
-            - Table:   person
-            FIELDS:
-            - id:         (int4) UNIQUE NOT NULL
-            - first_name: (text) PK (first_name ilike corto)
-            - last_name:  (text) PK
-            - birth_date: (date) PK
-FK author: (author_id)
-   ↳ "halftest"."actor"."person"(id)
-      ------------------------------------------------------------
-      Table: "halftest"."actor"."person"
-      - cluster: halftest
-      - schema:  actor
-      - Table:   person
-      FIELDS:
-      - id:         (int4) UNIQUE NOT NULL
-      - first_name: (text) PK (first_name ilike gaston)
-      - last_name:  (text) PK
-      - birth_date: (date) PK
+FOREIGN KEYS:
+- post: (post_id)
+  ↳ "halftest"."blog"."post"(id)
+     ============================================================
+     TABLE: "halftest"."blog"."post"
+     DESCRIPTION:
+     The table blog.post contains all the post
+     made by a person in the blogging system.
+     FIELDS:
+     - id:                (int4) PK
+     - title:             (text) 
+     - content:           (text) 
+     - author_first_name: (text) 
+     - author_last_name:  (text) 
+     - author_birth_date: (date) 
+     FOREIGN KEY:
+     - author: (author_first_name, author_last_name, author_birth_date)
+       ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+          ============================================================
+          TABLE: "halftest"."actor"."person"
+          DESCRIPTION:
+          The table actor.person contains the persons of the blogging system.
+          FIELDS:
+          - id:         (int4) UNIQUE NOT NULL
+          - first_name: (text) PK (first_name = Corto)
+          - last_name:  (text) PK
+          - birth_date: (date) PK
+- author: (author_id)
+  ↳ "halftest"."actor"."person"(id)
+     ============================================================
+     TABLE: "halftest"."actor"."person"
+     DESCRIPTION:
+     The table actor.person contains the persons of the blogging system.
+     FIELDS:
+     - id:         (int4) UNIQUE NOT NULL
+     - first_name: (text) PK (first_name = Gaston)
+     - last_name:  (text) PK
+     - birth_date: (date) PK
 ```
 
 ### Update

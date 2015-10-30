@@ -73,11 +73,13 @@ def json(self, **kwargs):
 
 def __repr__(self):
     rel_kind = self.__kind
-    ret = [60*'-']
-    ret.append("{}: {}".format(rel_kind, self.__fqrn))
-    ret.append(('- cluster: {dbname}\n'
-                '- schema:  {schemaname}\n'
-                '- {__kind}:   {relationname}').format(**vars(self.__class__)))
+    ret = [60 * '=']
+    ret.append("{}: {}".format(rel_kind.upper(), self.__fqrn))
+    if self.__metadata['description']:
+        ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
+#    ret.append(('- cluster: {dbname}\n'
+#                '- schema:  {schemaname}\n'
+#                '- {__kind}:   {relationname}').format(**vars(self.__class__)))
     ret.append('FIELDS:')
     mx_fld_n_len = 0
     for field in self.__fields:
@@ -88,12 +90,12 @@ def __repr__(self):
             field.name,
             ' ' * (mx_fld_n_len + 1 - len(field.name)),
             repr(field)))
-    for fkey in self.__fkeys:
-        ret.append(repr(fkey))
+    if self.__fkeys:
+        plur = len(self.__fkeys) > 1 and  'S' or ''
+        ret.append('FOREIGN KEY{}:'.format(plur))
+        for fkey in self.__fkeys:
+            ret.append(repr(fkey))
     return '\n'.join(ret)
-
-def desc(self):
-    return repr(self)
 
 @property
 def fqrn(self):
@@ -241,7 +243,6 @@ table_interface = {
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
-    'desc': desc,
     'json': json,
     'fields': fields,
     'fqrn': fqrn,
@@ -269,7 +270,6 @@ view_interface = {
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
-    'desc': desc,
     'json': json,
     'fields': fields,
     'fqrn': fqrn,
@@ -300,9 +300,6 @@ class RelationFactory(type):
         rf_ = RelationFactory
         tbl_attr = {}
         tbl_attr['__fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
-        if dct.get('model'):
-            tbl_attr['model'] = dct['model']
-        tbl_attr['__sfqrn'] = tuple(sfqrn)
         attr_names = ['dbname', 'schemaname', 'relationname']
         for i in range(len(attr_names)):
             tbl_attr[attr_names[i]] = sfqrn[i]
@@ -310,14 +307,17 @@ class RelationFactory(type):
         tbl_attr['model'] = model.Model.deja_vu(dbname)
         if not tbl_attr['model']:
             tbl_attr['model'] = model.Model(dbname)
-        rel_class_names = {'r': 'Table', 'v': 'View'}
         try:
-            kind = (
-                tbl_attr['model'].metadata['byname']
-                [tuple(sfqrn)]['tablekind'])
-            tbl_attr['__kind'] = rel_class_names[kind]
+            metadata = tbl_attr['model'].metadata['byname'][tuple(sfqrn)]
         except KeyError:
             raise model_errors.UnknownRelation(sfqrn)
+        tbl_attr['__metadata'] = metadata
+        if dct.get('model'):
+            tbl_attr['model'] = dct['model']
+        tbl_attr['__sfqrn'] = tuple(sfqrn)
+        rel_class_names = {'r': 'Table', 'v': 'View'}
+        kind = metadata['tablekind']
+        tbl_attr['__kind'] = rel_class_names[kind]
         rel_interfaces = {'r': table_interface, 'v': view_interface}
         rf_.__set_fields(tbl_attr)
         for fct_name, fct in rel_interfaces[kind].items():
@@ -334,20 +334,20 @@ class RelationFactory(type):
         ta_['__fkeys'] = []
         dbm = ta_['model'].metadata
         fields = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
-        for field_name, metadata in dbm['byname'][
+        for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
-            ta_[field_name] = Field(field_name, metadata)
+            ta_[field_name] = Field(field_name, f_metadata)
             ta_['__fields'].append(ta_[field_name])
-        for field_name, metadata in dbm['byname'][
+        for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
-            fkeyname = metadata.get('fkeyname')
+            fkeyname = f_metadata.get('fkeyname')
             if fkeyname and not fkeyname in ta_:
-                ft_ = dbm['byid'][metadata['fkeytableid']]
+                ft_ = dbm['byid'][f_metadata['fkeytableid']]
                 ft_sfqrn = ft_['sfqrn']
                 fields_names = [fields[elt-1]
-                                for elt in metadata['keynum']]
+                                for elt in f_metadata['keynum']]
                 ft_fields_names = [ft_['fields'][elt]
-                                   for elt in metadata['fkeynum']]
+                                   for elt in f_metadata['fkeynum']]
                 ta_[fkeyname] = FKey(
                     fkeyname, ft_sfqrn, ft_fields_names, fields_names)
                 ta_['__fkeys'].append(ta_[fkeyname])

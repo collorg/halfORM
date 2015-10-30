@@ -66,7 +66,7 @@ class Model():
             self.__dbname = dbname
             return
         config = ConfigParser()
-        if not config.read(config_file):
+        if not config.read([config_file, '/etc/halfORM/{}'.format(config_file)]):
             raise model_errors.MissingConfigFile(config_file)
         params = dict(config['database'].items())
         needed_params = {'name', 'host', 'user', 'password', 'port'}
@@ -132,11 +132,13 @@ class Model():
                     self.__dbname,
                     dct.pop('schemaname'), dct.pop('relationname'))
                 tableid = dct.pop('tableid')
+                description = dct.pop('tabledescription')
                 if not table_key in byname:
                     byid[tableid] = {}
                     byid[tableid]['sfqrn'] = table_key
                     byid[tableid]['fields'] = {}
                     byname[table_key] = OrderedDict()
+                    byname[table_key]['description'] = description
                     byname[table_key]['fields'] = OrderedDict()
                     byname[table_key]['fields_by_num'] = OrderedDict()
                 fieldname = dct.pop('fieldname')
@@ -172,8 +174,8 @@ class Model():
         if not qrn:
             for key in self.__metadata[self.__dbname]['byname']:
                 fqrn = ".".join(['"{}"'.format(elt) for elt in key])
-                print(relation(fqrn).desc())
+                print(relation(fqrn))
         else:
             fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn))
-            print(relation(fqrn).desc())
+            print(relation(fqrn))
 

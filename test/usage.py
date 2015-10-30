@@ -25,7 +25,7 @@ if __name__ == '__main__':
     relation('dpt_info.seminaire.session')
     sys.exit()
     """
-    print(OidTable().desc())
+    print(OidTable())
 #    print(BaseTable())
 #    print(ViewSession())
 #    print(relation('dpt_info.seminaire.session'))

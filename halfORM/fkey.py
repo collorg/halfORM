@@ -26,14 +26,14 @@ class FKey():
         """Representation of a foreign key
         """
         fields = '({})'.format(', '.join(self.__fields))
-        repr_ = "FK {}: {}\n   \u21B3 {}({})".format(
+        repr_ = "- {}: {}\n  \u21B3 {}({})".format(
             self.__name,
             fields, self.__fk_fqrn, ', '.join(self.__fk_names))
         if self.__is_set:
             repr_value = str(self.__value)
             res = []
             for line in repr_value.split('\n'):
-                res.append('      {}'.format(line))
+                res.append('     {}'.format(line))
             repr_ = '{}\n{}'.format(repr_, '\n'.join(res))
         return repr_
 

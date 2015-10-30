@@ -80,8 +80,8 @@ except Exception as err:
 
 print(_A.json())
 
-gaston = person(first_name=("gaston", "ilike"))
-corto = person(first_name=("corto", "ilike"))
+gaston = person(first_name="Gaston")
+corto = person(first_name="Corto")
 corto_post = halftest.relation("blog.post", author=corto)
 gaston_comment_on_corto_post = halftest.relation(
     "blog.comment",
