@@ -9,7 +9,7 @@ halftest = Model('{}/halftest.ini'.format(dirname))
 person = halftest.relation("actor.person")
 
 # just in case
-person.delete(no_clause=True)
+#person.delete(no_clause=True)
 
 @person.transaction
 def insert0(person):
@@ -81,12 +81,17 @@ except Exception as err:
 print(_A.json())
 
 gaston = person(first_name="Gaston")
-corto = person(first_name="Corto")
+corto = person(first_name="Corto").getone()
 corto_post = halftest.relation("blog.post", author=corto)
 gaston_comment_on_corto_post = halftest.relation(
     "blog.comment",
     content=("%m'enfin%", "ilike"), author=gaston, post=corto_post)
 
 print(gaston_comment_on_corto_post)
+print('AVANT')
+print("autocommit {}".format(gaston.model.connection.autocommit))
+corto_post.select()
+gaston_comment_on_corto_post.select()
+print('APRÈS')
 
-person().delete(no_clause=True)
+#person().delete(no_clause=True)

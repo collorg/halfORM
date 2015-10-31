@@ -22,6 +22,11 @@ class FKey():
         self.__value = value
         self.__is_set = True
 
+    @property
+    def is_set(self):
+        """Returns True is the foreign key is set."""
+        return self.__is_set
+
     def __repr__(self):
         """Representation of a foreign key
         """

@@ -66,7 +66,8 @@ class Model():
             self.__dbname = dbname
             return
         config = ConfigParser()
-        if not config.read([config_file, '/etc/halfORM/{}'.format(config_file)]):
+        if not config.read(
+                [config_file, '/etc/halfORM/{}'.format(config_file)]):
             raise model_errors.MissingConfigFile(config_file)
         params = dict(config['database'].items())
         needed_params = {'name', 'host', 'user', 'password', 'port'}
@@ -74,7 +75,8 @@ class Model():
         missing_params = needed_params.symmetric_difference(set(params.keys()))
         if missing_params:
             raise model_errors.MalformedConfigFile(config_file, missing_params)
-        self.__conn = self.__connect(**params)
+        self.__conn = None
+        self.__connect(**params)
         self.__conn.autocommit = True
         self.__cursor = self.__conn.cursor()
         self.__metadata[self.__dbname] = self.__get_metadata()
@@ -91,7 +93,7 @@ class Model():
 
     def __connect(self, **params):
         """Returns the pyscopg2 connection object."""
-        return psycopg2.connect(
+        self.__conn = psycopg2.connect(
             'dbname={name} host={host} user={user} '
             'password={password} port={port}'.format(**params),
             cursor_factory=RealDictCursor)

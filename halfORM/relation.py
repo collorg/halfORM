@@ -1,3 +1,5 @@
+# pylint: disable=protected-access
+
 """This module provides: relation, RelationFactory
 
 The relation function allows you to directly instanciate a Relation object
@@ -58,7 +60,7 @@ def __call__(self, **kwargs):
 def json(self, **kwargs):
     """Returns a JSON representation of the set returned by the select query.
     """
-    import json as js_, datetime, time
+    import json as js_, time
     def handler(obj):
         if hasattr(obj, 'timetuple'):
             # retruns # seconds since the epoch
@@ -99,6 +101,7 @@ def __repr__(self):
 
 @property
 def fqrn(self):
+    """Returns the FQRN (fully qualified relation name)"""
     return self.__fqrn
 
 @property
@@ -111,64 +114,89 @@ def is_set(self):
 
 @property
 def fields(self):
+    """Yields the fields of the relation."""
     for field in self.__fields:
         yield field
 
 def __get_set_fields(self):
+    """Retruns a list containing only the fields that are set."""
     return [field for field in self.__fields if field.is_set]
 
-def __where(self):
-    where = ''
+def __get_set_fkeys(self):
+    """Retruns a list containing only the foreign keys that are set."""
+    return [fkey for fkey in self.__fkeys if fkey.is_set]
+
+def __select_args(self, *args, **kwargs):
+    """Returns the what, where and values needed to construct the queries.
+    """
+    dct = self.__class__.__dict__
+    what = '*'
+    if args:
+        what = ', '.join([dct[field_name].name for field_name in args])
     values = ()
     set_fields = self.__get_set_fields()
-    where_clause = ''
+    where = ''
     if set_fields:
-        where_clause = [
+        where = [
             '{} {} %s'.format(field.name, field.comp) for field in set_fields]
-        where_clause = 'where {}'.format(" and ".join(where_clause))
+        where = 'where {}'.format(" and ".join(where))
         values = [field.value for field in set_fields]
-    return where_clause, values
+    set_fkeys = self.__get_set_fkeys()
+    if set_fkeys:
+        for key in set_fkeys:
+            print(repr(key))
+    return what, where, values
 
 def select(self, *args, **kwargs):
-    """Generator. Yiels result of query on dictionary form.
+    """Generator. Yiels the result of the query as a dictionary.
 
     - @args are fields names to restrict the returned attributes
     - @kwargs: limit, order by, distinct... options
     """
-    dct = self.__class__.__dict__
-    what = '*'
-    if args:
-        what = ', '.join([dct[field_name].name for field_name in args])
-    where, values = self.__where()
-    self.__cursor.execute(
-        "select {} from {} {}".format(what, self.__fqrn, where), tuple(values))
+    query_template = "select {} from {} {}"
+    what, where, values = self.__select_args(*args, **kwargs)
+    query = query_template.format(what, self.__fqrn, where)
+    self.__cursor.execute(query, tuple(values))
     for elt in self.__cursor.fetchall():
         yield elt
 
-def __len__(self, *args, **kwargs):
-    """Better, still naive implementation of select
+def get(self, **kwargs):
+    """Yields instanciated Relation objects instead of dict."""
+    for dct in self.select(**kwargs):
+        elt = self(**dct)
+        yield elt
 
-    - @args are fields names to restrict the returned attributes
-    - @kwargs: limit, distinct, ...
+def getone(self, **kwargs):
+    """Returns the Relation object extracted.
 
+    Raises an exception if no or more than one element is found.
     """
-    dct = self.__class__.__dict__
-    what = '*'
-    if args:
-        what = ', '.join([dct[field_name].name for field_name in args])
-    where, values = self.__where()
-    self.__cursor.execute(
-        "select count({}) from {} {}".format(
-            what, self.__fqrn, where), tuple(values))
+    count = len(self)
+    if count != 1:
+        raise relation_errors.ExpectedOneError(self, count)
+    return list(self.get())[0]
+
+def __len__(self, *args, **kwargs):
+    """Retruns the number of tuples matching the intention in the relation.
+
+    See select for arguments.
+    """
+    query_template = "select count({}) from {} {}"
+    what, where, values = self.__select_args(*args, **kwargs)
+    query = query_template.format(what, self.__fqrn, where)
+    self.__cursor.execute(query, tuple(values))
     return self.__cursor.fetchone()['count']
 
-def __update(self, **kwargs):
-    what = []
+def __update_args(self, **kwargs):
+    """Returns the what, where an values for the update query."""
+    what_fields = []
     new_values = []
+    _, where, values = self.__select_args(**kwargs)
     for field_name, new_value in kwargs.items():
-        what.append(field_name)
+        what_fields.append(field_name)
         new_values.append(new_value)
-    return ", ".join(["{} = %s".format(elt) for elt in what]), new_values
+    what = ", ".join(["{} = %s".format(elt) for elt in what_fields])
+    return what, where, new_values + values
 
 def update(self, no_clause=False, **kwargs):
     """
@@ -178,11 +206,11 @@ def update(self, no_clause=False, **kwargs):
     if not kwargs:
         return # no new value update. Should we raise an error here?
     assert self.is_set or no_clause
-    where, values = self.__where()
-    what, new_values = self.__update(**kwargs)
-    query = "update {} set {} {}".format(self.__fqrn, what, where)
-#    print(query, tuple(new_values + values))
-    self.__cursor.execute(query, tuple(new_values + values))
+
+    query_template = "update {} set {} {}"
+    what, where, values = self.__update_args(**kwargs)
+    query = query_template.format(self.__fqrn, what, where)
+    self.__cursor.execute(query, tuple(values))
 
 def __what_to_insert(self):
     fields_names = []
@@ -194,12 +222,11 @@ def __what_to_insert(self):
     return ", ".join(fields_names), values
 
 def insert(self):
+    query_template = "insert into {} ({}) values ({})"
     fields_names, values = self.__what_to_insert()
     what_to_insert = ", ".join(["%s" for i in range(len(values))])
-    self.__cursor.execute(
-        "insert into {} ({}) values ({})".format(
-            self.__fqrn, fields_names, what_to_insert),
-        tuple(values))
+    query = query_template.format(self.__fqrn, fields_names, what_to_insert)
+    self.__cursor.execute(query, tuple(values))
 
 def delete(self, no_clause=False, **kwargs):
     """
@@ -207,28 +234,22 @@ def delete(self, no_clause=False, **kwargs):
     The object self must be set unless no_clause is false.
     """
     dct = self.__class__.__dict__
-    [dct[field_name].set(value)for field_name, value in kwargs.items()]
+    [dct[field_name].set(value) for field_name, value in kwargs.items()]
     assert self.is_set or no_clause
-    where, values = self.__where()
-    self.__cursor.execute(
-        "delete from {} {}".format(self.__fqrn, where), tuple(values))
-
-def get(self, **kwargs):
-    for dct in self.select(**kwargs):
-        elt = self(**dct)
-        yield elt
-
-def getone(self, **kwargs):
-    count = len(self)
-    if count != 1:
-        raise relation_errors.ExpectedOneError(self, count)
-    return list(self.get())[0]
+    query_template = "delete from {} {}"
+    _, where, values = self.__select_args(**kwargs)
+    query = query_template.format(self.__fqrn, where)
+    self.__cursor.execute(query, tuple(values))
 
 def __iter__(self):
     raise NotImplementedError
 
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
+
+def none(self, *args, **kwargs):
+    """Returns None. Overwrites the __get_set_fkeys for views"""
+    return None
 
 transaction = Transaction
 
@@ -242,12 +263,13 @@ table_interface = {
     '__iter__': __iter__,
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
+    '__get_set_fkeys': __get_set_fkeys,
     '__repr__': __repr__,
     'json': json,
     'fields': fields,
     'fqrn': fqrn,
     'is_set': is_set,
-    '__where': __where,
+    '__select_args': __select_args,
     'select': select,
     '__len__': __len__,
     'get': get,
@@ -258,7 +280,7 @@ table_interface = {
     'insert': insert,
     '__what_to_insert': __what_to_insert,
     'update': update,
-    '__update': __update,
+    '__update_args': __update_args,
     'delete': delete,
     'transaction': transaction
 }
@@ -269,12 +291,13 @@ view_interface = {
     '__iter__': __iter__,
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
+    '__get_set_fkeys': none,
     '__repr__': __repr__,
     'json': json,
     'fields': fields,
     'fqrn': fqrn,
     'is_set': is_set,
-    '__where': __where,
+    '__select_args': __select_args,
     'select': select,
     '__len__': __len__,
     'get': get,
