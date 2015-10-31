@@ -28,13 +28,12 @@ Because halfORM only deals with the data manipulation part of the SQL language (
 ## The ```halftest``` database ([SQL code](test/sql/halftest.sql))
 
 The ```halftest``` defines:
-- two schemas:
- - ```actor```
- - ```blog```
 - three tables:
  - ```actor.person```
  - ```blog.post```
- - ```blog.comment``` 
+ - ```blog.comment```
+- one view:
+ - ```blog.view.post_comment
 
 To access the database, we need a config file ([test/halftest.ini](test/halftest.ini))
 
@@ -54,7 +53,6 @@ halftest.desc("blog.comment")
 It iterates over every *relational object* of the database and prints it's representation. The expression ```halftest.desc("blog.comment")``` displays only the representation of the ```blog.comment``` table.
 
 ```
-============================================================
 TABLE: "halftest"."blog"."comment"
 DESCRIPTION:
 The table blog.comment contains all the comments
@@ -144,7 +142,6 @@ The representation of the request can be displayed just by printing the comment 
 print(gaston_comment_on_corto_post)
 ```
 ```
-============================================================
 TABLE: "halftest"."blog"."comment"
 DESCRIPTION:
 The table blog.comment contains all the comments
@@ -157,7 +154,6 @@ FIELDS:
 FOREIGN KEYS:
 - post: (post_id)
   ↳ "halftest"."blog"."post"(id)
-     ============================================================
      TABLE: "halftest"."blog"."post"
      DESCRIPTION:
      The table blog.post contains all the post
@@ -172,18 +168,16 @@ FOREIGN KEYS:
      FOREIGN KEY:
      - author: (author_first_name, author_last_name, author_birth_date)
        ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
-          ============================================================
           TABLE: "halftest"."actor"."person"
           DESCRIPTION:
           The table actor.person contains the persons of the blogging system.
           FIELDS:
-          - id:         (int4) UNIQUE NOT NULL
+          - id:         (int4) UNIQUE NOT NULL (id = 545)
           - first_name: (text) PK (first_name = Corto)
-          - last_name:  (text) PK
-          - birth_date: (date) PK
+          - last_name:  (text) PK (last_name = MALTESE)
+          - birth_date: (date) PK (birth_date = 1975-01-07)
 - author: (author_id)
   ↳ "halftest"."actor"."person"(id)
-     ============================================================
      TABLE: "halftest"."actor"."person"
      DESCRIPTION:
      The table actor.person contains the persons of the blogging system.

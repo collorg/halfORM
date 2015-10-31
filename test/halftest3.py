@@ -11,5 +11,5 @@ corto = halftest.relation("actor.person", first_name="Corto")
 post = halftest.relation("blog.post")
 #post.title.value = 'Vaudou pour Monsieur le Président'
 post.author.set(corto)
-post.select()
-print(len(post))
+for p in post.select():
+    print(p)

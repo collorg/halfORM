@@ -75,7 +75,7 @@ def json(self, **kwargs):
 
 def __repr__(self):
     rel_kind = self.__kind
-    ret = [60 * '=']
+    ret = []#[60 * '=']
     ret.append("{}: {}".format(rel_kind.upper(), self.__fqrn))
     if self.__metadata['description']:
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
@@ -126,25 +126,39 @@ def __get_set_fkeys(self):
     """Retruns a list containing only the foreign keys that are set."""
     return [fkey for fkey in self.__fkeys if fkey.is_set]
 
+@property
+def __from(self):
+    """Returns FQRN aliased by r{id}."""
+    join = ''
+    values = []
+    set_fkeys = self.__get_set_fkeys()
+    if set_fkeys:
+        for key in set_fkeys:
+            join, values = key.join(self)
+    return "{} as r{} {}".format(self.__fqrn, id(self), join), values
+
 def __select_args(self, *args, **kwargs):
     """Returns the what, where and values needed to construct the queries.
     """
+    id_ = 'r{}'.format(id(self))
+    def praf(field_name):
+        """Returns field_name prefixed with relation alias."""
+        if kwargs['__query'] == 'select':
+            return '{}.{}'.format(id_, field_name)
+        return field_name
     dct = self.__class__.__dict__
-    what = '*'
+    what = praf('*')
     if args:
-        what = ', '.join([dct[field_name].name for field_name in args])
-    values = ()
+        what = ', '.join([praf(dct[field_name].name) for field_name in args])
+    values = []
     set_fields = self.__get_set_fields()
     where = ''
     if set_fields:
         where = [
-            '{} {} %s'.format(field.name, field.comp) for field in set_fields]
+            '{} {} %s'.format(
+                praf(field.name), field.comp) for field in set_fields]
         where = 'where {}'.format(" and ".join(where))
         values = [field.value for field in set_fields]
-    set_fkeys = self.__get_set_fkeys()
-    if set_fkeys:
-        for key in set_fkeys:
-            print(repr(key))
     return what, where, values
 
 def select(self, *args, **kwargs):
@@ -154,9 +168,11 @@ def select(self, *args, **kwargs):
     - @kwargs: limit, order by, distinct... options
     """
     query_template = "select {} from {} {}"
-    what, where, values = self.__select_args(*args, **kwargs)
-    query = query_template.format(what, self.__fqrn, where)
-    self.__cursor.execute(query, tuple(values))
+    what, where, values = self.__select_args(*args, __query='select', **kwargs)
+    from_, join_values = self.__from
+    query = query_template.format(what, from_, where)
+    print(values, join_values)
+    self.__cursor.execute(query, tuple(values + join_values))
     for elt in self.__cursor.fetchall():
         yield elt
 
@@ -182,16 +198,17 @@ def __len__(self, *args, **kwargs):
     See select for arguments.
     """
     query_template = "select count({}) from {} {}"
-    what, where, values = self.__select_args(*args, **kwargs)
-    query = query_template.format(what, self.__fqrn, where)
-    self.__cursor.execute(query, tuple(values))
+    what, where, values = self.__select_args(*args, __query='select', **kwargs)
+    from_, join_values = self.__from
+    query = query_template.format(what, from_, where)
+    self.__cursor.execute(query, tuple(values + join_values))
     return self.__cursor.fetchone()['count']
 
 def __update_args(self, **kwargs):
     """Returns the what, where an values for the update query."""
     what_fields = []
     new_values = []
-    _, where, values = self.__select_args(**kwargs)
+    _, where, values = self.__select_args(__query='update')
     for field_name, new_value in kwargs.items():
         what_fields.append(field_name)
         new_values.append(new_value)
@@ -237,7 +254,7 @@ def delete(self, no_clause=False, **kwargs):
     [dct[field_name].set(value) for field_name, value in kwargs.items()]
     assert self.is_set or no_clause
     query_template = "delete from {} {}"
-    _, where, values = self.__select_args(**kwargs)
+    _, where, values = self.__select_args(__query='delete')
     query = query_template.format(self.__fqrn, where)
     self.__cursor.execute(query, tuple(values))
 
@@ -267,6 +284,7 @@ table_interface = {
     '__repr__': __repr__,
     'json': json,
     'fields': fields,
+    '__from': __from,
     'fqrn': fqrn,
     'is_set': is_set,
     '__select_args': __select_args,
@@ -295,6 +313,7 @@ view_interface = {
     '__repr__': __repr__,
     'json': json,
     'fields': fields,
+    '__from': __from,
     'fqrn': fqrn,
     'is_set': is_set,
     '__select_args': __select_args,
