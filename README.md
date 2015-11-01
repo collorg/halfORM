@@ -1,23 +1,20 @@
-# halfORM (looking for contributors)
+# halfORM
 
-halfORM is an attempt to make a really simple ORM (fully written in Python3), easy to learn (full documentation should be at most 10 pages) and hopefully less than a 1000 lines of Python3 code when it is done.
+halfORM is a really simple ORM (fully written in Python3), easy to learn (full documentation should be at most 10 pages) and hopefully less than a 1000 lines of Python3 code when it is done.
 
-This project has just started a week ago (2015-10-18) and I'd really like some contributors to help me out with it. So if you think you can contribute in any way, you are most welcome.
+This project has just started (2015-10-18) and is in pre-alpha development stage. If you think you can contribute in any way, you are most welcome.
 
 ## Why half?
 Because halfORM only deals with the data manipulation part of the SQL language (DML) making it much easier to learn and to write. All the CREATE part (data definition language) has been left to SQL or whatever software used to define the structure of the database.
 
 ## TODO
-- Gather a community to develop this project,
-- Fix the API (this project state is pre-alpha),
+- Fix the API (**THIS PROJECT DEVELOPMENT STATE IS PRE-ALPHA**),
 - doc doc doc and test test test,
-- Port it to MySQL (I need someone with knowledge in MySQL),
-- Add foreign key management,
-- Generate packages from the database structure,
-- Draw a navigational graph of the database structure,
+- Port it to MySQL,
+- Generate packages from the database,
+- Generate a browsable graph of the database structure,
 - PostgreSQL specific :
   - Deal with inheritance,
-  - Deal with FDW (not much to do here I suppose).
 
 ## Use cases
 - Prototype in Python without investing too much in learning a complex ORM,
@@ -37,20 +34,24 @@ The ```halftest``` defines:
 
 To access the database, we need a config file ([test/halftest.ini](test/halftest.ini))
 
-## API Examples
-#### Some scripts snippets to illustrate the current implementation of the API.
-The following script instanciate a model object corresponding to the ```halftest``` database:
+## API Examples (Everything you need to know to program with halfORM in five minutes)
+Some scripts snippets to illustrate the current implementation of the API.
+## The Method class:
+The first thing you need is a model object to play with your database. Let us play with the ```halftest``` database:
 ```python
 from halfORM.model import Model
 
 halftest = Model(config_file='test/halftest.ini')
 ```
-Let us look at the structure by using the ```desc``` method
+Two methods are available:
+- ```desc``` to display the struct of the database or of a relation in the database.
+- ```relation``` to instanciate a Relation object and play with this relation.
+
 ```python
 halftest.desc()
 halftest.desc("blog.comment")
 ```
-It iterates over every *relational object* of the database and prints it's representation. The expression ```halftest.desc("blog.comment")``` displays only the representation of the ```blog.comment``` table.
+Without argument, the ```desc``` method iterates over every *relational object* of the database and prints it's representation. The expression ```halftest.desc("blog.comment")``` displays only the representation of the ```blog.comment``` table as bellow:
 
 ```
 TABLE: "halftest"."blog"."comment"
@@ -70,14 +71,17 @@ FOREIGN KEYS:
 ```
 Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halftest"."actor"."person"(id)```
 
+## The Relation class:
+
 To instanciate a Relation object, just use the ```Model.relation(QRN)``` method.
 ```QRN``` is the "qualified relation name" here ```actor.person```.
 ```python
 person = halftest.relation("actor.person")
 ```
-With a Relation object, you can use 4 methods if it is of type ```Table```:
+With a Relation object, you can use the following methods if it is of type ```Table```:
 - ```insert```
-- ```select```, ```get``` and ```getone```
+- ```select```, ```json```, ```get``` and ```getone```
+- ```join```
 - ```update```
 - ```delete```
 
@@ -85,25 +89,20 @@ If the type of the relation is ```View```, only the ```select```, ```get``` and 
 ### Insert
 To insert a tuple in the relation, just use the ```insert``` method as show bellow:
 ```python
-person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
-person(last_name='Fricotin', first_name='Bibi', birth_date='1924-10-05').insert()
-person(last_name='Maltese', first_name='Corto', birth_date='1975-01-07').insert()
-person(last_name='Talon', first_name='Achile', birth_date='1963-11-07').insert()
-person(last_name='Jourdan', first_name='Gil', birth_date='1956-09-20').insert()
+@person.transaction
+def insert_many(person):
+    person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
+    person(last_name='Fricotin', first_name='Bibi', birth_date='1924-10-05').insert()
+    person(last_name='Maltese', first_name='Corto', birth_date='1975-01-07').insert()
+    person(last_name='Talon', first_name='Achile', birth_date='1963-11-07').insert()
+    person(last_name='Jourdan', first_name='Gil', birth_date='1956-09-20').insert()
 
-print(person.json())
+insert_many(person)
 ```
+You can put a transaction on any function/method using the ```Relation.transaction``` decorator.
 
-```json
-[{"birth_date": -405219600, "id": 37, "last_name": "Lagaffe", "first_name": "Gaston"},
-  {"birth_date": -1427673600, "id": 38, "last_name": "Fricotin", "first_name": "Bibi"},
-  {"birth_date": 158281200, "id": 39, "last_name": "Maltese", "first_name": "Corto"},
-  {"birth_date": -194144400, "id": 40, "last_name": "Talon", "first_name": "Achile"},
-  {"birth_date": -419130000, "id": 41, "last_name": "Jourdan", "first_name": "Gil"}]
-```
-
-### Select
-You can easily filter to get any subset:
+### Select/Json
+```Select``` is a generator. Without any argument, it returns all the datas in the relation in a list of dictionaries. You can easily filter to get any subset:
 ```python
 person = person(last_name=('_a%', 'like'))
 print(person.json())
@@ -127,7 +126,7 @@ for dct in person(last_name=('_a%', 'like')).select('last_name'):
 
 ```
 
-#### Playing with foreign keys
+### Playing with foreign keys
 We want to see *Gaston*'s comments containing "m'enfin" on *Corto*'s posts.
 ```python
 gaston = person(first_name="Gaston")
@@ -187,33 +186,14 @@ FOREIGN KEYS:
      - last_name:  (text) PK
      - birth_date: (date) PK
 ```
-
+### Join
+The ```Relation.join``` method can be used to propagate constraints through relations:
+```python
+gaston_comment_on_corto_post = gaston.join(corto_post).join(comment)
+```
+The method can only join relations that are directly linked by foreign keys whatever the direction of the link is.
 ### Update
-In this example, we upper case the last name all the persons in which the second letter is an ```a```:
-```python
-halftest.connection.autocommit = False
-for dct in person(last_name=('_a%', 'like')).select():
-    pers = person(**dct)
-    pers.update(last_name=dct['last_name'].upper())
-halftest.connection.commit()
-halftest.connection.autocommit = False
-```
-To speed up things (not really necessary in this example), we turn ```autocommit``` to ```False``` before iterating over the tuples to update. We finally ```commit``` outside the for loop and turn ```autocommit``` back to ```False```.
-
-Note: the ```Model.connection``` object is a ```psycopg2``` connection.
-
-A better way to write this is by using the ```Relation.get``` method instead
-of the ```select``` as it directly yields "persons" objects:
-
-```python
-halftest.connection.autocommit = False
-for pers in person(last_name=('_a%', 'like')).get():
-    pers.update(last_name=pers.last_name.value.upper())
-halftest.connection.commit()
-halftest.connection.autocommit = False
-```
-
-And finally, the ```Relation.transaction``` can be used to deal with transactions:
+In this example, we upper case the last name of all the persons for which the second letter is an ```a```:
 
 ```python
 @person.transaction
@@ -223,6 +203,7 @@ def update_a(person):
 
 update_a(person)
 ```
+Again, we put insure the atomicity using the ```Relation.transaction``` decorator.
 
 ```python
 print(person(last_name=('_A%', 'like')).json())
@@ -241,9 +222,10 @@ person().delete(no_clause=True)
 
 print(person().json())
 ```
-Well, there is not much left after this it the ```actor.person``` table.
+Well, there is not much left after this in the ```actor.person``` table.
 ```
 []
 ```
+That's it! You've learn pretty much everything there is to know...
 ## Interested?
 Fork me on Github: https://github.com/collorg/halfORM

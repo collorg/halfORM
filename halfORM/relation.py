@@ -68,13 +68,10 @@ def json(self, **kwargs):
 
 def __repr__(self):
     rel_kind = self.__kind
-    ret = []#[60 * '=']
+    ret = []
     ret.append("{}: {}".format(rel_kind.upper(), self.__fqrn))
     if self.__metadata['description']:
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
-#    ret.append(('- cluster: {dbname}\n'
-#                '- schema:  {schemaname}\n'
-#                '- {__kind}:   {relationname}').format(**vars(self.__class__)))
     ret.append('FIELDS:')
     mx_fld_n_len = 0
     for field in self.__fields:
