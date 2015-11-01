@@ -14,43 +14,65 @@ class FKey():
         self.__fk_names = fk_names
         self.__fields = fields
         self.__is_set = False
-        self.__value = None
+        self.__to = None
+        self.__from = None
 
-    def set(self, value):
+    def set(self, from_, to_):
         """Sets the value associated with the foreign key.
 
         The value must be and object of type Relation having the
         same FQRN as referenced by self.__fk_fqrn.
         """
         from halfORM.relation import Relation
-        assert isinstance(value, Relation) and self.__fk_fqrn == value.fqrn
-        self.__value = value
+        if not isinstance(to_, Relation):
+            raise Exception("Expecting a Relation")
+        if not self.__fk_fqrn == to_.fqrn:
+            raise Exception(
+                "Relations must be of the same type\n{} != {}".format(
+                    self.__fk_fqrn, to_.fqrn))
+        self.__from = from_
+        self.__to = to_
         self.__is_set = True
+
+    @property
+    def name(self):
+        """Returns the name of the foreign key."""
+        return self.__name
+
+    @property
+    def frel(self):
+        """Returns the foreign relation associated with the fkey if any."""
+        return self.__to
 
     @property
     def is_set(self):
         """Returns True is the foreign key is set."""
         return self.__is_set
 
-    def join(self, from_):
+    @property
+    def fk_fqrn(self):
+        """Returns the FQRN of the relation pointed to."""
+        return self.__fk_fqrn
+
+    def join_query(self):
         """Returns the join_query, join_values of a foreign key.
         """
-        to_ = self.__value
+        from_ = self.__from
+        to_ = self.__to
         to_id = 'r{}'.format(id(to_))
         from_fields = ['r{}.{}'.format(id(from_), name)
                        for name in self.__fields]
         to_fields = ['{}.{}'.format(to_id, name) for name in self.__fk_names]
-        to_what = '{} as {}'.format(to_.fqrn, to_id)
         bounds = ' and '.join(['{} = {}'.format(a, b) for
-                               a, b in zip(from_fields, to_fields)])
+                               a, b in zip(to_fields, from_fields)])
         constraints_query = ' and '.join(
-            ['{}.{} = %s'.format(to_id, field.name)
+            ['{}.{} {} %s'.format(to_id, field.name, field.comp)
              for field in to_.fields if field.is_set])
         constraints_values = [
             field.value for field in to_.fields if field.is_set]
         if constraints_query:
             bounds = ' and '.join([bounds, constraints_query])
-        return "join {} on {}".format(to_what, bounds), constraints_values
+        return str(bounds), constraints_values
 
     def __repr__(self):
         """Representation of a foreign key
@@ -60,7 +82,7 @@ class FKey():
             self.__name,
             fields, self.__fk_fqrn, ', '.join(self.__fk_names))
         if self.__is_set:
-            repr_value = str(self.__value)
+            repr_value = str(self.__to)
             res = []
             for line in repr_value.split('\n'):
                 res.append('     {}'.format(line))

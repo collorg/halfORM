@@ -3,6 +3,7 @@
 """This module provides: relation, RelationFactory
 
 The relation function allows you to directly instanciate a Relation object
+given its fully qualified relation name:
 - relation(<FQRN>)
 
 The RelationFactory can be used to create classes to manipulate the relations
@@ -17,27 +18,13 @@ About QRN and FQRN:
   <database name>.<schema name>.<table name>.
   Only the schema name can have dots in it.
 - QRN is the Qualified Relation Name. Same as the FQRN without the database
-  name. Double quotes can be ommited even if there are dots in the schema name.
+  name.
 
+Double quotes can be ommited even if there are dots in the schema name for
+both FQRN and QRN. The _normalize_fqrn and _normalize_qrn functions add
+the double quotes.
 """
 
-__copyright__ = "Copyright (c) 2015 Joël Maïzi"
-__license__ = """
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-import sys
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
@@ -47,8 +34,13 @@ from halfORM.transaction import Transaction
 def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
     self.__cons_fields = []
-    dct = self.__class__.__dict__
-    [dct[field_name].set(value) for field_name, value in kwargs.items()]
+    attr = self.__getattribute__
+    _ = [attr(field_name).set(value) for field_name, value in kwargs.items()]
+    self.__deja_vu_join = []
+    self.__joined_to = []
+    self.__in_join = [(self, None)]
+    self.__sql_query = []
+    self.__sql_values = []
 
 def __call__(self, **kwargs):
     """__call__ method for the class Relation
@@ -62,8 +54,9 @@ def json(self, **kwargs):
     """
     import json as js_, time
     def handler(obj):
+        """Replacement of default handler for json.dumps."""
         if hasattr(obj, 'timetuple'):
-            # retruns # seconds since the epoch
+            # seconds since the epoch
             return int(time.mktime(obj.timetuple()))
         #elif isinstance(obj, ...):
         #    return ...
@@ -122,20 +115,57 @@ def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
     return [field for field in self.__fields if field.is_set]
 
-def __get_set_fkeys(self):
-    """Retruns a list containing only the foreign keys that are set."""
-    return [fkey for fkey in self.__fkeys if fkey.is_set]
+def join(self, frel, fkey_name=None):
+    """Returns the foreign relation constained by self.
+    """
+    def __join_match_fkeys(self, fqrn, fkey_name):
+        """Returns the list of keys matchin fqrn."""
+        if not fkey_name:
+            return [fkey for fkey in self.__fkeys if fkey.fk_fqrn == fqrn]
+        else:
+            return [fkey for fkey in self.__fkeys if fkey.name == fkey_name]
 
-@property
-def __from(self):
-    """Returns FQRN aliased by r{id}."""
-    join = ''
-    values = []
-    set_fkeys = self.__get_set_fkeys()
-    if set_fkeys:
-        for key in set_fkeys:
-            join, values = key.join(self)
-    return "{} as r{} {}".format(self.__fqrn, id(self), join), values
+    # Search for direct or reversed keys to join on.
+    fkeys_dir = __join_match_fkeys(self, frel.fqrn, fkey_name)
+    fkeys_rev = __join_match_fkeys(frel, self.fqrn, fkey_name)
+    if fkeys_dir and fkeys_rev:
+        raise Exception("Cycle")
+    elif len(fkeys_rev) == 0 and len(fkeys_dir) != 1:
+        raise Exception("More than one direct fkey matching")
+    elif len(fkeys_dir) == 0 and len(fkeys_rev) != 1:
+        raise Exception("More than one reverse fkey matching")
+    if fkeys_dir:
+        fkey = self.__getattribute__(fkeys_dir[0].name)
+        fkey.set(self, frel)
+    else:
+        fkey = fkeys_rev[0]
+        fkey.set(frel, self)
+    frel.__joined_to.insert(0, (self, fkey))
+    frel.__in_join = self.__in_join
+    frel.__in_join.append((self, fkey))
+    return frel
+
+def __from(self, orig_rel=None, deja_vu=None):
+    """Constructs the __sql_query and gets the __sql_values for self."""
+    def __sql_id(rel):
+        """Returns the FQRN as alias for the sql query."""
+        return "{} as r{}".format(rel.fqrn, id(rel))
+
+    if deja_vu is None:
+        orig_rel = self
+        self.__sql_query = [__sql_id(self)]
+        deja_vu = [(self, None)]
+    for elt, fkey in self.__joined_to:
+        if (elt, fkey) in deja_vu or elt is orig_rel:
+            sys.stderr.write("déjà vu in from! {}\n".format(elt.fqrn))
+            continue
+        deja_vu.append((elt, fkey))
+
+        elt.__from(orig_rel, deja_vu)
+        elt.__sql_query, elt.__sql_values = fkey.join_query()
+        orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(elt)))
+        orig_rel.__sql_query.insert(2, elt.__sql_query)
+        orig_rel.__sql_values = (elt.__sql_values + orig_rel.__sql_values)
 
 def __select_args(self, *args, **kwargs):
     """Returns the what, where and values needed to construct the queries.
@@ -146,10 +176,10 @@ def __select_args(self, *args, **kwargs):
         if kwargs['__query'] == 'select':
             return '{}.{}'.format(id_, field_name)
         return field_name
-    dct = self.__class__.__dict__
+    attr = self.__getattribute__
     what = praf('*')
     if args:
-        what = ', '.join([praf(dct[field_name].name) for field_name in args])
+        what = ', '.join([praf(attr(field_name).name) for field_name in args])
     values = []
     set_fields = self.__get_set_fields()
     where = ''
@@ -169,20 +199,23 @@ def select(self, *args, **kwargs):
     """
     query_template = "select {} from {} {}"
     what, where, values = self.__select_args(*args, __query='select', **kwargs)
-    from_, join_values = self.__from
-    query = query_template.format(what, from_, where)
-    print(values, join_values)
-    self.__cursor.execute(query, tuple(values + join_values))
+    self.__from()
+    query = query_template.format(what, ' '.join(self.__sql_query), where)
+    try:
+        self.__cursor.execute(query, tuple(self.__sql_values + values))
+    except Exception as err:
+        print(self.__cursor.mogrify(
+            query, tuple(self.__sql_values + values)).decode('utf-8'))
+        raise err
     for elt in self.__cursor.fetchall():
         yield elt
 
 def get(self, **kwargs):
     """Yields instanciated Relation objects instead of dict."""
     for dct in self.select(**kwargs):
-        elt = self(**dct)
-        yield elt
+        yield self(**dct)
 
-def getone(self, **kwargs):
+def getone(self):
     """Returns the Relation object extracted.
 
     Raises an exception if no or more than one element is found.
@@ -199,9 +232,14 @@ def __len__(self, *args, **kwargs):
     """
     query_template = "select count({}) from {} {}"
     what, where, values = self.__select_args(*args, __query='select', **kwargs)
-    from_, join_values = self.__from
-    query = query_template.format(what, from_, where)
-    self.__cursor.execute(query, tuple(values + join_values))
+    self.__from()
+    query = query_template.format(what, ' '.join(self.__sql_query), where)
+    try:
+        self.__cursor.execute(query, tuple(self.__sql_values + values))
+    except Exception as err:
+        print(self.__cursor.mogrify(
+            query, tuple(self.__sql_values + values)).decode('utf-8'))
+        raise err
     return self.__cursor.fetchone()['count']
 
 def __update_args(self, **kwargs):
@@ -230,6 +268,7 @@ def update(self, no_clause=False, **kwargs):
     self.__cursor.execute(query, tuple(values))
 
 def __what_to_insert(self):
+    """Returns the field names and values to be inserted."""
     fields_names = []
     values = ()
     set_fields = self.__get_set_fields()
@@ -239,6 +278,7 @@ def __what_to_insert(self):
     return ", ".join(fields_names), values
 
 def insert(self):
+    """Insert a new tuple into the Relation."""
     query_template = "insert into {} ({}) values ({})"
     fields_names, values = self.__what_to_insert()
     what_to_insert = ", ".join(["%s" for i in range(len(values))])
@@ -246,41 +286,32 @@ def insert(self):
     self.__cursor.execute(query, tuple(values))
 
 def delete(self, no_clause=False, **kwargs):
-    """
+    """Removes a set of tuples from the relation.
     kwargs is {[field name:value]}
-    The object self must be set unless no_clause is false.
+    To empty the relation, no_clause must be set to True.
     """
-    dct = self.__class__.__dict__
-    [dct[field_name].set(value) for field_name, value in kwargs.items()]
+    attr = self.__getattribute__
+    _ = [attr(field_name).set(value) for field_name, value in kwargs.items()]
     assert self.is_set or no_clause
     query_template = "delete from {} {}"
     _, where, values = self.__select_args(__query='delete')
     query = query_template.format(self.__fqrn, where)
     self.__cursor.execute(query, tuple(values))
 
-def __iter__(self):
-    raise NotImplementedError
-
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
-
-def none(self, *args, **kwargs):
-    """Returns None. Overwrites the __get_set_fkeys for views"""
-    return None
 
 transaction = Transaction
 
 #### END of Relation methods definition
 
-table_interface = {
+TABLE_INTERFACE = {
     # shared with view_interface
 
     '__init__': __init__,
     '__call__': __call__,
-    '__iter__': __iter__,
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
-    '__get_set_fkeys': __get_set_fkeys,
     '__repr__': __repr__,
     'json': json,
     'fields': fields,
@@ -300,16 +331,15 @@ table_interface = {
     'update': update,
     '__update_args': __update_args,
     'delete': delete,
-    'transaction': transaction
+    'transaction': transaction,
+    'join': join,
 }
 
-view_interface = {
+VIEW_INTERFACE = {
     '__init__': __init__,
     '__call__': __call__,
-    '__iter__': __iter__,
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
-    '__get_set_fkeys': none,
     '__repr__': __repr__,
     'json': json,
     'fields': fields,
@@ -324,6 +354,7 @@ view_interface = {
 }
 
 class Relation():
+    """Base class of Table and View classes (see RelationFactory)."""
     pass
 
 class RelationFactory(type):
@@ -360,7 +391,7 @@ class RelationFactory(type):
         rel_class_names = {'r': 'Table', 'v': 'View'}
         kind = metadata['tablekind']
         tbl_attr['__kind'] = rel_class_names[kind]
-        rel_interfaces = {'r': table_interface, 'v': view_interface}
+        rel_interfaces = {'r': TABLE_INTERFACE, 'v': VIEW_INTERFACE}
         rf_.__set_fields(tbl_attr)
         for fct_name, fct in rel_interfaces[kind].items():
             tbl_attr[fct_name] = fct
@@ -375,7 +406,7 @@ class RelationFactory(type):
         ta_['__fields'] = []
         ta_['__fkeys'] = []
         dbm = ta_['model'].metadata
-        fields = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
+        flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
             ta_[field_name] = Field(field_name, f_metadata)
@@ -386,7 +417,7 @@ class RelationFactory(type):
             if fkeyname and not fkeyname in ta_:
                 ft_ = dbm['byid'][f_metadata['fkeytableid']]
                 ft_sfqrn = ft_['sfqrn']
-                fields_names = [fields[elt-1]
+                fields_names = [flds[elt-1]
                                 for elt in f_metadata['keynum']]
                 ft_fields_names = [ft_['fields'][elt]
                                    for elt in f_metadata['fkeynum']]
@@ -394,14 +425,14 @@ class RelationFactory(type):
                     fkeyname, ft_sfqrn, ft_fields_names, fields_names)
                 ta_['__fkeys'].append(ta_[fkeyname])
 
-def relation(fqrn, **kwargs):
+def relation(_fqrn, **kwargs):
     """This function is used to instanciate a Relation object using
     its FQRN (Fully qualified relation name):
     <database name>.<schema name>.<relation name>.
     If the <schema name> comprises a dot it must be enclosed in double
     quotes. Dots are not allowed in <database name> and <relation name>.
     """
-    return RelationFactory(None, None, {'fqrn': fqrn})(**kwargs)
+    return RelationFactory(None, None, {'fqrn': _fqrn})(**kwargs)
 
 def _normalize_fqrn(fqrn):
     """

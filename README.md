@@ -33,7 +33,7 @@ The ```halftest``` defines:
  - ```blog.post```
  - ```blog.comment```
 - one view:
- - ```blog.view.post_comment
+ - ```blog.view.post_comment```
 
 To access the database, we need a config file ([test/halftest.ini](test/halftest.ini))
 
