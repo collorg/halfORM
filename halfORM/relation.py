@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 # pylint: disable=protected-access
 
 """This module provides: relation, RelationFactory
