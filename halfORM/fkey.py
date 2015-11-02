@@ -46,6 +46,11 @@ class FKey():
         return self.__name
 
     @property
+    def from_(self):
+        """Returns the origin of the fkey."""
+        return self.__from
+
+    @property
     def frel(self):
         """Returns the foreign relation associated with the fkey if any."""
         return self.__to
@@ -66,6 +71,7 @@ class FKey():
         if from_ is None:
             from_ = self.__from
         to_ = self.__to
+        assert id(from_) != id(to_)
         to_id = 'r{}'.format(id(to_))
         from_id = 'r{}'.format(id(from_))
         from_fields = ['{}.{}'.format(from_id, name)

@@ -162,9 +162,11 @@ def __get_from(self, orig_rel=None, deja_vu=None):
             sys.stderr.write("déjà vu in from! {}\n".format(elt.fqrn))
             continue
         deja_vu.append((elt, fkey))
-
-        #elt.__get_from(orig_rel, deja_vu)
-        elt.__sql_query, elt.__sql_values = fkey.join_query(elt)
+        from_ = elt
+        if fkey.frel is elt:
+            from_ = fkey.from_
+        elt.__get_from(orig_rel, deja_vu)
+        elt.__sql_query, elt.__sql_values = fkey.join_query(from_)
         orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(elt)))
         orig_rel.__sql_query.insert(2, elt.__sql_query)
         if orig_rel != elt:
