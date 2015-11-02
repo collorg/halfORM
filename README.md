@@ -44,7 +44,7 @@ from halfORM.model import Model
 halftest = Model(config_file='test/halftest.ini')
 ```
 Two methods are available:
-- ```desc``` to display the struct of the database or of a relation in the database.
+- ```desc``` to display the structure of the database or of a relation in the database.
 - ```relation``` to instanciate a Relation object and play with this relation.
 
 ```python
@@ -203,7 +203,7 @@ def update_a(person):
 
 update_a(person)
 ```
-Again, we put insure the atomicity using the ```Relation.transaction``` decorator.
+Again, we insure the atomicity of the transaction using the ```Relation.transaction``` decorator.
 
 ```python
 print(person(last_name=('_A%', 'like')).json())
@@ -226,6 +226,6 @@ Well, there is not much left after this in the ```actor.person``` table.
 ```
 []
 ```
-That's it! You've learn pretty much everything there is to know...
+That's it! You've learn pretty much everything there is to know to begin to use halfORM for testing purpose only (**THIS PROJECT IS STILL PRE-ALPHA**).
 ## Interested?
 Fork me on Github: https://github.com/collorg/halfORM

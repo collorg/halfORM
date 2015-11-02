@@ -25,11 +25,12 @@ both FQRN and QRN. The _normalize_fqrn and _normalize_qrn functions add
 the double quotes.
 """
 
+import sys
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
 #### THE following METHODS are included in Relation class according to
-#### relation type (Table or View). See table_interface and view_interface.
+#### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
 def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
@@ -118,10 +119,13 @@ def join(self, frel, fkey_name=None):
     def __join_match_fkeys(self, fqrn, fkey_name):
         """Returns the list of keys matchin fqrn."""
         if not fkey_name:
-            return [fkey for fkey in self.__fkeys if fkey.fk_fqrn == fqrn]
+            ret_val = [fkey for fkey in self.__fkeys if fkey.fk_fqrn == fqrn]
+            return ret_val
         else:
             return [fkey for fkey in self.__fkeys if fkey.name == fkey_name]
-
+    if isinstance(frel, str):
+        # Assume frel is a QRN
+        frel = self.model.relation(frel)
     # Search for direct or reversed keys to join on.
     fkeys_dir = __join_match_fkeys(self, frel.fqrn, fkey_name)
     fkeys_rev = __join_match_fkeys(frel, self.fqrn, fkey_name)
@@ -142,7 +146,7 @@ def join(self, frel, fkey_name=None):
     frel.__in_join.append((self, fkey))
     return frel
 
-def __from(self, orig_rel=None, deja_vu=None):
+def __get_from(self, orig_rel=None, deja_vu=None):
     """Constructs the __sql_query and gets the __sql_values for self."""
     def __sql_id(rel):
         """Returns the FQRN as alias for the sql query."""
@@ -158,11 +162,12 @@ def __from(self, orig_rel=None, deja_vu=None):
             continue
         deja_vu.append((elt, fkey))
 
-        elt.__from(orig_rel, deja_vu)
-        elt.__sql_query, elt.__sql_values = fkey.join_query()
+        #elt.__get_from(orig_rel, deja_vu)
+        elt.__sql_query, elt.__sql_values = fkey.join_query(elt)
         orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(elt)))
         orig_rel.__sql_query.insert(2, elt.__sql_query)
-        orig_rel.__sql_values = (elt.__sql_values + orig_rel.__sql_values)
+        if orig_rel != elt:
+            orig_rel.__sql_values = (elt.__sql_values + orig_rel.__sql_values)
 
 def __select_args(self, *args, **kwargs):
     """Returns the what, where and values needed to construct the queries.
@@ -188,16 +193,22 @@ def __select_args(self, *args, **kwargs):
         values = [field.value for field in set_fields]
     return what, where, values
 
+def __get_query(self, query_template, *args, **kwargs):
+    self.__sql_values = []
+    what, where, values = self.__select_args(*args, __query='select', **kwargs)
+    self.__get_from()
+    return (
+        query_template.format(what, ' '.join(self.__sql_query), where), values)
+
 def select(self, *args, **kwargs):
     """Generator. Yiels the result of the query as a dictionary.
 
     - @args are fields names to restrict the returned attributes
     - @kwargs: limit, order by, distinct... options
     """
+    self.__sql_values = []
     query_template = "select {} from {} {}"
-    what, where, values = self.__select_args(*args, __query='select', **kwargs)
-    self.__from()
-    query = query_template.format(what, ' '.join(self.__sql_query), where)
+    query, values = self.__get_query(query_template, *args, **kwargs)
     try:
         self.__cursor.execute(query, tuple(self.__sql_values + values))
     except Exception as err:
@@ -228,9 +239,7 @@ def __len__(self, *args, **kwargs):
     See select for arguments.
     """
     query_template = "select count({}) from {} {}"
-    what, where, values = self.__select_args(*args, __query='select', **kwargs)
-    self.__from()
-    query = query_template.format(what, ' '.join(self.__sql_query), where)
+    query, values = self.__get_query(query_template, *args, **kwargs)
     try:
         self.__cursor.execute(query, tuple(self.__sql_values + values))
     except Exception as err:
@@ -312,7 +321,8 @@ TABLE_INTERFACE = {
     '__repr__': __repr__,
     'json': json,
     'fields': fields,
-    '__from': __from,
+    '__get_from': __get_from,
+    '__get_query': __get_query,
     'fqrn': fqrn,
     'is_set': is_set,
     '__select_args': __select_args,
@@ -340,7 +350,8 @@ VIEW_INTERFACE = {
     '__repr__': __repr__,
     'json': json,
     'fields': fields,
-    '__from': __from,
+    '__get_from': __get_from,
+    '__get_query': __get_query,
     'fqrn': fqrn,
     'is_set': is_set,
     '__select_args': __select_args,

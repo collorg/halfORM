@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #-*- coding: utf-8 -*-
 
-"""This module provides Model, RelationFactory and table
+"""This module provides the Model class.
 
 The Model class allows to load the model of a database:
 - model = Model(config_file='<config file name>')
