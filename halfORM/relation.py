@@ -36,8 +36,7 @@ from halfORM.transaction import Transaction
 def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
     self.__cons_fields = []
-    attr = self.__getattribute__
-    _ = [attr(field_name).set(value) for field_name, value in kwargs.items()]
+    _ = [self.__setattr__(field_name, value) for field_name, value in kwargs.items()]
     self.__deja_vu_join = []
     self.__joined_to = []
     self.__in_join = [(self, None)]
@@ -77,12 +76,12 @@ def __repr__(self):
     ret.append('FIELDS:')
     mx_fld_n_len = 0
     for field in self.__fields:
-        if len(field.name) > mx_fld_n_len:
-            mx_fld_n_len = len(field.name)
+        if len(field.name()) > mx_fld_n_len:
+            mx_fld_n_len = len(field.name())
     for field in self.__fields:
         ret.append('- {}:{}{}'.format(
-            field.name,
-            ' ' * (mx_fld_n_len + 1 - len(field.name)),
+            field.name(),
+            ' ' * (mx_fld_n_len + 1 - len(field.name())),
             repr(field)))
     if self.__fkeys:
         plur = len(self.__fkeys) > 1 and  'S' or ''
@@ -100,7 +99,7 @@ def fqrn(self):
 def is_set(self):
     """return True if one field at least is set"""
     for field in self.__fields:
-        if field.is_set:
+        if field.is_set():
             return True
     return False
 
@@ -112,7 +111,7 @@ def fields(self):
 
 def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
-    return [field for field in self.__fields if field.is_set]
+    return [field for field in self.__fields if field.is_set()]
 
 def join(self, frel, fkey_name=None):
     """Returns the foreign relation constained by self.
@@ -185,18 +184,17 @@ def __select_args(self, *args, **kwargs):
     what = praf('*')
     if args:
         what = ', '.join([praf(attr(field_name).name) for field_name in args])
-    values = []
     set_fields = self.__get_set_fields()
     where = ''
     if set_fields:
         where = [
             '{} {} %s'.format(
-                praf(field.name), field.comp) for field in set_fields]
+                praf(field.name()), field.comp()) for field in set_fields]
         where = 'where {}'.format(" and ".join(where))
-        values = [field.value for field in set_fields]
-    return what, where, values
+    return what, where, set_fields
 
 def __get_query(self, query_template, *args, **kwargs):
+    """Prepare the SQL query to be executed."""
     self.__sql_values = []
     what, where, values = self.__select_args(*args, __query='select', **kwargs)
     self.__get_from()
@@ -279,12 +277,10 @@ def update(self, no_clause=False, **kwargs):
 def __what_to_insert(self):
     """Returns the field names and values to be inserted."""
     fields_names = []
-    values = ()
     set_fields = self.__get_set_fields()
     if set_fields:
-        fields_names = [field.name for field in set_fields]
-        values = [field.value for field in set_fields]
-    return ", ".join(fields_names), values
+        fields_names = [field.name() for field in set_fields]
+    return ", ".join(fields_names), set_fields
 
 def insert(self):
     """Insert a new tuple into the Relation."""
@@ -299,8 +295,7 @@ def delete(self, no_clause=False, **kwargs):
     kwargs is {[field name:value]}
     To empty the relation, no_clause must be set to True.
     """
-    attr = self.__getattribute__
-    _ = [attr(field_name).set(value) for field_name, value in kwargs.items()]
+    _ = [self.__setattr__(field_name, value) for field_name, value in kwargs.items()]
     assert self.is_set or no_clause
     query_template = "delete from {} {}"
     _, where, values = self.__select_args(__query='delete')

@@ -58,7 +58,7 @@ print(_a.json())
 @person.transaction
 def update(person):
     for pers in _a.get():
-        pers.update(last_name=pers.last_name.value.upper())
+        pers.update(last_name=pers.last_name.upper())
 
 update(person)
 

@@ -80,15 +80,15 @@ class FKey():
         bounds = ' and '.join(['{} = {}'.format(a, b) for
                                a, b in zip(to_fields, from_fields)])
         constraints_to_query = [
-            '{}.{} {} %s'.format(to_id, field.name, field.comp)
-            for field in to_.fields if field.is_set]
+            '{}.{} {} %s'.format(to_id, field.name(), field.comp())
+            for field in to_.fields if field.is_set()]
         constraints_to_values = [
-            field.value for field in to_.fields if field.is_set]
+            field for field in to_.fields if field.is_set()]
         constraints_from_query = [
-            '{}.{} {} %s'.format(from_id, field.name, field.comp)
-            for field in from_.fields if field.is_set]
+            '{}.{} {} %s'.format(from_id, field.name(), field.comp())
+            for field in from_.fields if field.is_set()]
         constraints_from_values = [
-            field.value for field in from_.fields if field.is_set]
+            field for field in from_.fields if field.is_set()]
         constraints_query = ' and '.join(
             constraints_to_query + constraints_from_query)
         constraints_values = constraints_to_values + constraints_from_values

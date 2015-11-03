@@ -199,7 +199,7 @@ In this example, we upper case the last name of all the persons for which the se
 @person.transaction
 def update_a(person):
     for pers in person(last_name=('_a%', 'like')).get():
-        pers.update(last_name=pers.last_name.value.upper())
+        pers.update(last_name=pers.last_name.upper())
 
 update_a(person)
 ```

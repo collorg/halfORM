@@ -1,4 +1,9 @@
+#-*- coding: utf-8 -*-
+# pylint: disable=protected-access
+
 """This module provides the Field class."""
+
+from psycopg2.extensions import register_adapter, adapt
 
 class Field():
     """The class Field is for Relation internal usage. It is called by
@@ -26,24 +31,23 @@ class Field():
         return repr_
 
     def __str__(self):
-        return str(self.value)
+        return str(self.__value)
 
-    @property
     def name(self):
         """This property returns the name of the field."""
         return self.__name
 
-    @property
     def is_set(self):
         "This property returns a boolean indicating if the field is set of not."
         return self.__is_set
 
-    def get(self):
+    def __get__(self, obj, objtype):
         "Returns the value of the field object"
         return self.__value
 
-    def set(self, value, comp=None):
+    def __set__(self, obj, value):
         """Sets the value (and the comparator) associated with the field."""
+        comp = None
         if isinstance(value, tuple):
             assert len(value) == 2
             value, comp = value
@@ -57,9 +61,12 @@ class Field():
         self.__value = value
         self.__comp = comp
 
-    value = property(get, set)
-
-    @property
     def comp(self):
         "This property returns the comparator associated with the value."
         return self.__comp
+
+    def _psycopg_adapter(self):
+        """Return the SQL representation of self.__value"""
+        return adapt(self.__value)
+
+register_adapter(Field, Field._psycopg_adapter)

@@ -43,7 +43,7 @@ if __name__ == '__main__':
     print(count)
     bt = relation('dpt_info."collorg.core".base_table')
     """Put a constraint on a Field"""
-    assert bt.cog_fqtn.is_set is False
+    assert bt.cog_fqtn.is_set() is False
     bt.cog_fqtn.set('collorg.access.access')
     assert bt.cog_fqtn.is_set is True
     assert bt.cog_fqtn.get() is bt.cog_fqtn.value
