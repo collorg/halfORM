@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
+from random import randint
+import psycopg2
 import sys
 from unittest import TestCase
 from datetime import date
@@ -8,37 +10,67 @@ from datetime import date
 from ..init import halftest
 from halfORM import relation_errors, model
 
+def name(letter, integer):
+    return '{}{}'.format(letter, chr(ord('a') + integer))
+
 class Test(TestCase):
     def setUp(self):
+        self.today = date.today()
         self.pers = halftest.relation("actor.person")
         self.pers.delete(no_clause=True)
         self.post = halftest.relation("blog.post")
         self.pers.delete(no_clause=True)
 
+        @self.pers.transaction
+        def insert_pers(pers):
+            for n in 'abcdef':
+                for i in range(10):
+                    last_name = name(n, i)
+                    first_name = name(n, i)
+                    birth_date = self.today
+                    self.pers(
+                        last_name=last_name,
+                        first_name=first_name,
+                        birth_date=birth_date).insert()
+
+        insert_pers(self.pers)
+
     def tearDown(self):
-        halftest.connection.autocommit = True
         self.pers().delete(last_name=('%', 'like'))
+        self.assertEqual(len(self.pers()), 0)
 
-    def insertion_test(self):
-        """Insertion test"""
-        pers = self.pers
-        halftest.connection.autocommit = False
-        for i in range(26):
-            last_name = 'n{}'.format(chr(ord('a') + i))
-            first_name = 'p{}'.format(i)
-            birth_date = date.today()
-            self.pers(
-                last_name=last_name,
-                first_name=first_name,
-                birth_date=birth_date).insert()
-        halftest.connection.commit()
-        halftest.connection.autocommit = True
-        self.assertEqual(len(pers()), 26)
+    def count_test(self):
+        self.assertEqual(len(self.pers()), 60)
 
-    def __update_test(self):
+    def update_test(self):
         pers = self.pers(last_name=('a%', 'like'))
         self.assertEqual(len(pers), 10)
-        pers.update(last_name=pers.last_name.uppercase())
+        pers.update(last_name=pers.last_name.upper())
         self.assertEqual(len(pers), 0)
         self.assertEqual(len(pers(last_name=('A%', 'like'))), 10)
 
+    def expected_one_error_test_0(self):
+        pers = self.pers(last_name='B152')
+        self.assertRaises(
+            relation_errors.ExpectedOneError, pers.getone)
+
+    def expected_one_error_test_many(self):
+        pers = self.pers(last_name=('%', 'like'))
+        self.assertRaises(
+            relation_errors.ExpectedOneError, pers.getone)
+
+    def insert_error_test(self):
+        pers = self.pers(last_name='ba').getone()
+        self.assertRaises(
+            psycopg2.IntegrityError, pers.insert)
+
+    def select_test(self):
+        n = 'abcdef'[randint(0, 5)]
+        p = chr(ord('a') + range(10)[randint(0, 9)])
+        pers = self.pers
+        pers.last_name = ('{}%'.format(n), 'ilike')
+        pers.first_name = ('%{}'.format(p), 'ilike')
+        pers.birth_date = self.today
+        self.assertEqual(len(pers), 1)
+        for dct in pers.select():
+            self.pers(**dct).getone()

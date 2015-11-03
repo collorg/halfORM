@@ -180,10 +180,9 @@ def __select_args(self, *args, **kwargs):
         if kwargs['__query'] == 'select':
             return '{}.{}'.format(id_, field_name)
         return field_name
-    attr = self.__getattribute__
     what = praf('*')
     if args:
-        what = ', '.join([praf(attr(field_name).name) for field_name in args])
+        what = ', '.join([praf(field_name) for field_name in args])
     set_fields = self.__get_set_fields()
     where = ''
     if set_fields:
