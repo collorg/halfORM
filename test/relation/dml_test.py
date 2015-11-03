@@ -21,7 +21,7 @@ class Test(TestCase):
         self.post = halftest.relation("blog.post")
         self.pers.delete(no_clause=True)
 
-        @self.pers.transaction
+        @self.pers.Transaction
         def insert_pers(pers):
             for n in 'abcdef':
                 for i in range(10):

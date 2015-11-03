@@ -1,3 +1,6 @@
+#-*- coding: utf-8 -*-
+# pylint: disable=too-few-public-methods
+
 """This module provides the Transaction class."""
 
 import sys
@@ -6,7 +9,7 @@ class Transaction():
     """The Transaction class is intended to be used as a class attribute of
     relation.Relation class:
 
-    Relation.transaction = Transaction
+    Relation.Transaction = Transaction
 
     The Relation.transaction can be used as a decorator of any method of a
     sub class of Relation class or any function receiving a Relation object
@@ -16,7 +19,7 @@ class Transaction():
 
     ```python
     gaston = halftest.relation("actor.person", first_name="Gaston")
-    @gaston.transaction
+    @gaston.Transaction
     def do_something(person):
         #... code to be done
     do_somethin(person)
@@ -27,10 +30,10 @@ class Transaction():
     Functions decorated by a transaction can be nested:
 
     ```python
-    @gaston.transaction
+    @gaston.Transaction
     def second(gaston):
         # ... do something else
-    @gaston.transaction
+    @gaston.Transaction
     def first(gaston):
         # ... do something
         second(gaston)

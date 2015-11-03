@@ -11,7 +11,7 @@ person = halftest.relation("actor.person")
 # just in case
 #person.delete(no_clause=True)
 
-@person.transaction
+@person.Transaction
 def insert0(person):
     person(
         last_name='Lagaffe',
@@ -21,7 +21,7 @@ def insert0(person):
         last_name='Fricotin',
         first_name='Bibi',
         birth_date='1924-10-05').insert()
-@person.transaction
+@person.Transaction
 def insert1(person):
     insert0(person)
     person(
@@ -55,7 +55,7 @@ _a = person(last_name=('_a%', 'like'))
 a_count = len(_a)
 print(_a.json())
 
-@person.transaction
+@person.Transaction
 def update(person):
     for pers in _a.get():
         pers.update(last_name=pers.last_name.upper())
@@ -67,7 +67,7 @@ assert len(_A) == a_count
 
 print(_A.json())
 
-@person.transaction
+@person.Transaction
 def update_rb(person):
     for pers in _A.get():
         print(pers.json())

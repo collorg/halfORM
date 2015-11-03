@@ -116,10 +116,10 @@ def __get_set_fields(self):
 def join(self, frel, fkey_name=None):
     """Returns the foreign relation constained by self.
     """
-    def __join_match_fkeys(self, fqrn, fkey_name):
-        """Returns the list of keys matchin fqrn."""
+    def __join_match_fkeys(self, _fqrn, fkey_name):
+        """Returns the list of keys matchin _fqrn."""
         if not fkey_name:
-            ret_val = [fkey for fkey in self.__fkeys if fkey.fk_fqrn == fqrn]
+            ret_val = [fkey for fkey in self.__fkeys if fkey.fk_fqrn == _fqrn]
             return ret_val
         else:
             return [fkey for fkey in self.__fkeys if fkey.name == fkey_name]
@@ -304,8 +304,6 @@ def delete(self, no_clause=False, **kwargs):
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
 
-transaction = Transaction
-
 #### END of Relation methods definition
 
 TABLE_INTERFACE = {
@@ -335,7 +333,7 @@ TABLE_INTERFACE = {
     'update': update,
     '__update_args': __update_args,
     'delete': delete,
-    'transaction': transaction,
+    'Transaction': Transaction,
     'join': join,
 }
 
@@ -439,14 +437,14 @@ def relation(_fqrn, **kwargs):
     """
     return RelationFactory(None, None, {'fqrn': _fqrn})(**kwargs)
 
-def _normalize_fqrn(fqrn):
+def _normalize_fqrn(_fqrn):
     """
     Transform <db name>.<schema name>.<table name> in
     "<db name>"."<schema name>"."<table name>".
     Dots are allowed only in the schema name.
     """
-    fqrn = fqrn.replace('"', '')
-    dbname, schema_table = fqrn.split('.', 1)
+    _fqrn = _fqrn.replace('"', '')
+    dbname, schema_table = _fqrn.split('.', 1)
     schemaname, tablename = schema_table.rsplit('.', 1)
     sfqrn = (dbname, schemaname, tablename)
     return '"{}"."{}"."{}"'.format(*sfqrn), sfqrn

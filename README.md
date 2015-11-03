@@ -89,7 +89,7 @@ If the type of the relation is ```View```, only the ```select```, ```get``` and 
 ### Insert
 To insert a tuple in the relation, just use the ```insert``` method as show bellow:
 ```python
-@person.transaction
+@person.Transaction
 def insert_many(person):
     person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
     person(last_name='Fricotin', first_name='Bibi', birth_date='1924-10-05').insert()
@@ -99,7 +99,7 @@ def insert_many(person):
 
 insert_many(person)
 ```
-You can put a transaction on any function/method using the ```Relation.transaction``` decorator.
+You can put a transaction on any function/method using the ```Relation.Transaction``` decorator.
 
 ### Select/Json
 ```Select``` is a generator. Without any argument, it returns all the datas in the relation in a list of dictionaries. You can easily filter to get any subset:
@@ -196,14 +196,14 @@ The method can only join relations that are directly linked by foreign keys what
 In this example, we upper case the last name of all the persons for which the second letter is an ```a```:
 
 ```python
-@person.transaction
+@person.Transaction
 def update_a(person):
     for pers in person(last_name=('_a%', 'like')).get():
         pers.update(last_name=pers.last_name.upper())
 
 update_a(person)
 ```
-Again, we insure the atomicity of the transaction using the ```Relation.transaction``` decorator.
+Again, we insure the atomicity of the transaction using the ```Relation.Transaction``` decorator.
 
 ```python
 print(person(last_name=('_A%', 'like')).json())
