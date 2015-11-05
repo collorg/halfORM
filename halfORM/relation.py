@@ -30,6 +30,10 @@ import sys
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
+class Relation():
+    """Base class of Table and View classes (see RelationFactory)."""
+    pass
+
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
@@ -42,6 +46,7 @@ def __init__(self, **kwargs):
     self.__in_join = [(self, None)]
     self.__sql_query = []
     self.__sql_values = []
+    [field._Field__set_relation(self) for field in self.__fields]
 
 def __call__(self, **kwargs):
     """__call__ method for the class Relation
@@ -184,12 +189,27 @@ def __select_args(self, *args, **kwargs):
     if args:
         what = ', '.join([praf(field_name) for field_name in args])
     set_fields = self.__get_set_fields()
-    where = ''
-    if set_fields:
-        where = [
-            '{} {} %s'.format(
-                praf(field.name()), field.comp()) for field in set_fields]
+    values = set_fields
+    where = []
+    idx = 0
+    for field in set_fields:
+        placeholder = '%s'
+        if isinstance(field.value, field.__class__):
+            if id(field.value.relation) == id(self):
+                raise Exception("Field assigned to itself!")
+            values.pop(idx) # we remove field from values
+            squery, svalues = field.value.relation.__get_query(
+                "select {} from {} {}", field.value.name())
+            placeholder = "({})".format(squery)
+            svalues.reverse()
+            [values.insert(idx, e) for e in svalues]
+        where.append('{} {} {}'.format(
+            praf(field.name()), field.comp(), placeholder))
+        idx += 1
+    if where:
         where = 'where {}'.format(" and ".join(where))
+    else:
+        where = ''
     return what, where, set_fields
 
 def __get_query(self, query_template, *args, **kwargs):
@@ -243,6 +263,9 @@ def __len__(self, *args, **kwargs):
     try:
         self.__cursor.execute(query, tuple(self.__sql_values + values))
     except Exception as err:
+        print(query)
+        print(self.__sql_values)
+        print(values)
         print(self.__cursor.mogrify(
             query, tuple(self.__sql_values + values)).decode('utf-8'))
         raise err
@@ -355,10 +378,6 @@ VIEW_INTERFACE = {
     'get': get,
     'getone': getone,
 }
-
-class Relation():
-    """Base class of Table and View classes (see RelationFactory)."""
-    pass
 
 class RelationFactory(type):
     """RelationFactory Metaclass

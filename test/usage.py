@@ -36,43 +36,44 @@ if __name__ == '__main__':
         relation('dpt_info."collorg.core".base_table')
 
     """request with no constraint."""
-    bt = relation('dpt_info."collorg.core".data_type')
+    bt = dpt_info.relation('"collorg.core".data_type')
     count = 0
     for elt in bt.select():
         count += 1
     print(count)
-    bt = relation('dpt_info."collorg.core".base_table')
+    bt = dpt_info.relation('"collorg.core".base_table')
+    print(type(bt.cog_signature))
+    print(bt)
     """Put a constraint on a Field"""
     assert bt.cog_fqtn.is_set() is False
-    bt.cog_fqtn.set('collorg.access.access')
-    assert bt.cog_fqtn.is_set is True
-    assert bt.cog_fqtn.get() is bt.cog_fqtn.value
-    assert bt.cog_oid.is_set is False
-    bt.cog_oid.value = 'd%', 'like'
-    assert bt.cog_oid.is_set is True
+    bt.cog_fqtn = 'collorg.access.access'
+    assert bt.cog_fqtn.is_set() is True
+    assert bt.cog_oid.is_set() is False
+    bt.cog_oid = 'd%', 'like'
+    assert bt.cog_oid.is_set() is True
     assert bt.cog_oid.value == 'd%'
-    assert bt.cog_oid.comp == 'like'
-    bt.cog_test.value = None, 'is not'
+    assert bt.cog_oid.comp() == 'like'
+    bt.cog_test = None, 'is not'
     try:
-        bt.cog_test.set(None, '!=')
+        bt.cog_test = (None, '!=')
         assert False
     except:
-        bt.cog_test.set(None, 'is')
-    assert bt.cog_test.is_set and bt.cog_test.value is None
-    assert bt.cog_test.comp == 'is'
+        bt.cog_test = (None, 'is')
+    assert bt.cog_test.is_set() and bt.cog_test.value is None
+    assert bt.cog_test.comp() == 'is'
     """Put a constraint via Table constructor"""
     now = datetime.now()
     s = relation('dpt_info.seminaire.session',
                  cog_oid=('d%', 'like'),
                  begin_date=(now, '<'),
                  tba=False)
-    assert s.cog_oid.is_set
+    assert s.cog_oid.is_set()
     assert s.cog_oid.value == 'd%'
-    assert s.cog_oid.comp == 'like'
-    assert s.begin_date.is_set
+    assert s.cog_oid.comp() == 'like'
+    assert s.begin_date.is_set()
     assert s.begin_date.value == now
-    assert s.begin_date.comp == '<'
-    assert s.tba.is_set
+    assert s.begin_date.comp() == '<'
+    assert s.tba.is_set()
     assert s.tba.value is False
     s2 = s()
     print(type(s), type(s2))
@@ -82,7 +83,7 @@ if __name__ == '__main__':
 #FAILS    assert s.__class__ == s2.__class__
 #FAILS TOO    assert type(s) == type(s2)
     assert s2.is_set is False
-    assert s.tba.is_set
+    assert s.tba.is_set()
     """iterate over the extension."""
     print(s.json())
     for field in s.fields:
@@ -95,7 +96,7 @@ if __name__ == '__main__':
         t = s(**elt)
         print(t.cog_oid.value)
     for f in t.fields:
-        assert f.is_set
+        assert f.is_set()
     for elt in n(cog_oid=('d%', 'like')).select('cog_oid'):
         print(elt)
     for elt in n(cog_oid=('d%', 'like')).select('cog_oid', 'cog_fqtn'):

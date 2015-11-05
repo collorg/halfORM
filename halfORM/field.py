@@ -10,10 +10,11 @@ class Field():
     the RelationFactory metaclass for each field in the relation considered.
     """
     __slots__ = [
-        '__name', '__metadata', '__is_set', '__value', '__comp'
+        '__name', '__metadata', '__is_set', '__value', '__comp', '__relation'
     ]
     def __init__(self, name, metadata):
         self.__name = name
+        self.__relation = None
         self.__metadata = metadata
         self.__is_set = False
         self.__value = None
@@ -41,13 +42,15 @@ class Field():
         "This property returns a boolean indicating if the field is set of not."
         return self.__is_set
 
-    def __get__(self, obj, objtype):
+    @property
+    def value(self):
         "Returns the value of the field object"
         return self.__value
 
     def __set__(self, obj, value):
         """Sets the value (and the comparator) associated with the field."""
         comp = None
+        is_field = value.__class__ == self.__class__
         if isinstance(value, tuple):
             assert len(value) == 2
             value, comp = value
@@ -56,7 +59,10 @@ class Field():
         if value is None:
             assert comp == 'is' or comp == 'is not'
         elif comp is None:
-            comp = '='
+            if not is_field:
+                comp = '='
+            else:
+                comp = 'in'
         self.__is_set = True
         self.__value = value
         self.__comp = comp
@@ -64,6 +70,14 @@ class Field():
     def comp(self):
         "This property returns the comparator associated with the value."
         return self.__comp
+
+    @property
+    def relation(self):
+        """Returns the relation for which self is an attribute."""
+        return self.__relation
+    def __set_relation(self, relation):
+        """Sets the relation for which self is an attribute."""
+        self.__relation = relation
 
     def _psycopg_adapter(self):
         """Return the SQL representation of self.__value"""

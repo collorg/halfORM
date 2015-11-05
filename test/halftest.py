@@ -7,7 +7,7 @@ from halfORM.model import Model
 dirname = os.path.dirname(__file__)
 halftest = Model('{}/halftest.ini'.format(dirname))
 person = halftest.relation("actor.person")
-
+print(type(person.last_name))
 # just in case
 #person.delete(no_clause=True)
 
@@ -58,7 +58,7 @@ print(_a.json())
 @person.Transaction
 def update(person):
     for pers in _a.get():
-        pers.update(last_name=pers.last_name.upper())
+        pers.update(last_name=pers.last_name.value.upper())
 
 update(person)
 

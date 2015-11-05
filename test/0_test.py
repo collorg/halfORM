@@ -11,7 +11,9 @@ class Test(TestCase):
 
     def setUp(self):
         self.pers = halftest.relation("actor.person")
+        self.pers.delete(no_clause=True)
         self.post = halftest.relation("blog.post")
+        self.post.delete(no_clause=True)
 
     def select_count_0_test(self):
         self.assertEqual(len(self.pers), 0)
