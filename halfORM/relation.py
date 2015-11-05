@@ -263,9 +263,6 @@ def __len__(self, *args, **kwargs):
     try:
         self.__cursor.execute(query, tuple(self.__sql_values + values))
     except Exception as err:
-        print(query)
-        print(self.__sql_values)
-        print(values)
         print(self.__cursor.mogrify(
             query, tuple(self.__sql_values + values)).decode('utf-8'))
         raise err
