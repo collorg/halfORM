@@ -433,6 +433,8 @@ class RelationFactory(type):
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
             fkeyname = f_metadata.get('fkeyname')
+            if fkeyname in ta_ and isinstance(ta_[fkeyname], Field):
+                fkeyname = '{}_fkey'.format(fkeyname)
             if fkeyname and not fkeyname in ta_:
                 ft_ = dbm['byid'][f_metadata['fkeytableid']]
                 ft_sfqrn = ft_['sfqrn']
