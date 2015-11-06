@@ -6,6 +6,17 @@ from halfORM.model import Model
 
 dirname = os.path.dirname(__file__)
 halftest = Model('{}/halftest.ini'.format(dirname))
+
+person = halftest.relation("actor.person")
+print(person)
+person.delete(no_clause=True)
+post = halftest.relation("blog.post")
+print(post)
+post.delete(no_clause=True)
+comment = halftest.relation("blog.comment")
+print(comment)
+comment.delete(no_clause=True)
+
 person = halftest.relation("actor.person")
 print(type(person.last_name))
 # just in case
@@ -95,3 +106,17 @@ gaston_comment_on_corto_post.select()
 print('APRÈS')
 
 #person().delete(no_clause=True)
+
+corto = halftest.relation("actor.person", first_name="Corto").getone()
+post = halftest.relation("blog.post")
+post.author = corto
+post.title = 'Vaudou pour Monsieur le Président'
+post.content = """Vaudou pour Monsieur le Président, qui se déroule à la Barbade (Antilles), puis sur l’île de Port-ducal (introuvable sur les cartes, mais que Pratt situe au sud-ouest de la Guadeloupe)."""
+if len(post) == 0:
+    post.insert()
+
+post = post(title=('Vaudou%', 'like'))
+#post.title.value = 'Vaudou pour Monsieur le Président'
+post.author_fkey.set(corto)
+for p in post.select():
+    print(p)
