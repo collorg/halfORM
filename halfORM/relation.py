@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-# pylint: disable=protected-access
+# pylint: disable=protected-access, too-few-public-methods
 
 """This module provides: relation, RelationFactory
 
@@ -40,13 +40,14 @@ class Relation():
 def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
     self.__cons_fields = []
-    _ = [self.__setattr__(field_name, value) for field_name, value in kwargs.items()]
+    _ = [self.__setattr__(field_name, value)
+         for field_name, value in kwargs.items()]
     self.__deja_vu_join = []
     self.__joined_to = []
     self.__in_join = [(self, None)]
     self.__sql_query = []
     self.__sql_values = []
-    [field._Field__set_relation(self) for field in self.__fields]
+    _ = [field._Field__set_relation(self) for field in self.__fields]
 
 def __call__(self, **kwargs):
     """__call__ method for the class Relation
@@ -202,7 +203,7 @@ def __select_args(self, *args, **kwargs):
                 "select {} from {} {}", field.value.name())
             placeholder = "({})".format(squery)
             svalues.reverse()
-            [values.insert(idx, e) for e in svalues]
+            _ = [values.insert(idx, e) for e in svalues]
         where.append('{} {} {}'.format(
             praf(field.name()), field.comp(), placeholder))
         idx += 1
@@ -229,11 +230,16 @@ def select(self, *args, **kwargs):
     self.__sql_values = []
     query_template = "select {} from {} {}"
     query, values = self.__get_query(query_template, *args, **kwargs)
+    values = tuple(self.__sql_values + values)
     try:
-        self.__cursor.execute(query, tuple(self.__sql_values + values))
+        if not 'mogrify' in kwargs:
+            self.__cursor.execute(query, values)
+        else:
+            print(self.__cursor.mogrify(query, values).decode('utf-8'))
+            return
     except Exception as err:
-        print(self.__cursor.mogrify(
-            query, tuple(self.__sql_values + values)).decode('utf-8'))
+        sys.stderr.write(
+            self.__cursor.mogrify(query, values).decode('utf-8'))
         raise err
     for elt in self.__cursor.fetchall():
         yield elt
@@ -314,7 +320,8 @@ def delete(self, no_clause=False, **kwargs):
     kwargs is {[field name:value]}
     To empty the relation, no_clause must be set to True.
     """
-    _ = [self.__setattr__(field_name, value) for field_name, value in kwargs.items()]
+    _ = [self.__setattr__(field_name, value)
+         for field_name, value in kwargs.items()]
     assert self.is_set or no_clause
     query_template = "delete from {} {}"
     _, where, values = self.__select_args(__query='delete')

@@ -75,6 +75,7 @@ class Field():
     def relation(self):
         """Returns the relation for which self is an attribute."""
         return self.__relation
+
     def __set_relation(self, relation):
         """Sets the relation for which self is an attribute."""
         self.__relation = relation

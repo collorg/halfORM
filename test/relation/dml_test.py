@@ -60,9 +60,10 @@ class Test(TestCase):
             relation_errors.ExpectedOneError, pers.getone)
 
     def insert_error_test(self):
-        pers = self.pers(last_name='ba').getone()
-        self.assertRaises(
-            psycopg2.IntegrityError, pers.insert)
+        pers = self.pers(last_name='ba')
+        self.assertEqual(len(pers), 1)
+        pers = pers.getone()
+        self.assertRaises(psycopg2.IntegrityError, pers.insert)
 
     def select_test(self):
         n = 'abcdef'[randint(0, 5)]
