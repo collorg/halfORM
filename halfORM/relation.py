@@ -43,11 +43,10 @@ def __init__(self, **kwargs):
     _ = [self.__setattr__(field_name, value)
          for field_name, value in kwargs.items()]
     self.__deja_vu_join = []
-    self.__joined_to = []
-    self.__in_join = [(self, None)]
+    self._joined_to = []
     self.__sql_query = []
     self.__sql_values = []
-    _ = [field._Field__set_relation(self) for field in self.__fields]
+    _ = [field._set_relation(self) for field in self._fields]
 
 def __call__(self, **kwargs):
     """__call__ method for the class Relation
@@ -81,10 +80,10 @@ def __repr__(self):
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
     ret.append('FIELDS:')
     mx_fld_n_len = 0
-    for field in self.__fields:
+    for field in self._fields:
         if len(field.name()) > mx_fld_n_len:
             mx_fld_n_len = len(field.name())
-    for field in self.__fields:
+    for field in self._fields:
         ret.append('- {}:{}{}'.format(
             field.name(),
             ' ' * (mx_fld_n_len + 1 - len(field.name())),
@@ -104,7 +103,7 @@ def fqrn(self):
 @property
 def is_set(self):
     """return True if one field at least is set"""
-    for field in self.__fields:
+    for field in self._fields:
         if field.is_set():
             return True
     return False
@@ -112,23 +111,24 @@ def is_set(self):
 @property
 def fields(self):
     """Yields the fields of the relation."""
-    for field in self.__fields:
+    for field in self._fields:
         yield field
 
 def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
-    return [field for field in self.__fields if field.is_set()]
+    return [field for field in self._fields if field.is_set()]
 
 def join(self, frel, fkey_name=None):
     """Returns the foreign relation constained by self.
     """
     def __join_match_fkeys(self, _fqrn, fkey_name):
-        """Returns the list of keys matchin _fqrn."""
+        """Returns the list of keys matching _fqrn."""
         if not fkey_name:
             ret_val = [fkey for fkey in self.__fkeys if fkey.fk_fqrn == _fqrn]
             return ret_val
         else:
-            return [fkey for fkey in self.__fkeys if fkey.name == fkey_name]
+            return [fkey for fkey in self.__fkeys if fkey.name() == fkey_name]
+
     if isinstance(frel, str):
         # Assume frel is a QRN
         frel = self.model.relation(frel)
@@ -142,15 +142,49 @@ def join(self, frel, fkey_name=None):
     elif len(fkeys_dir) == 0 and len(fkeys_rev) != 1:
         raise Exception("More than one reverse fkey matching")
     if fkeys_dir:
-        fkey = self.__getattribute__(fkeys_dir[0].name)
+        fkey = self.__getattribute__(fkeys_dir[0].name())
         fkey.set(self, frel)
     else:
         fkey = fkeys_rev[0]
         fkey.set(frel, self)
-    frel.__joined_to.insert(0, (self, fkey))
-    frel.__in_join = self.__in_join
-    frel.__in_join.append((self, fkey))
+    frel._joined_to.insert(0, (self, fkey))
     return frel
+
+def __join_query(self, fkey):
+    """Returns the join_query, join_values of a foreign key.
+    fkey interface: frel, from_, to_, fields, fk_names
+    """
+    print(self.fqrn, fkey.name())
+    from_ = self
+    if fkey.to_ is self or from_ is None:
+        from_ = fkey.from_
+    to_ = fkey.to_
+    assert id(from_) != id(to_)
+    to_id = 'r{}'.format(id(to_))
+    from_id = 'r{}'.format(id(from_))
+    from_fields = ['{}.{}'.format(from_id, name)
+                   for name in fkey.fields]
+    to_fields = ['{}.{}'.format(to_id, name) for name in fkey.fk_names]
+    print("XXX", from_fields, to_fields)
+    bounds = ' and '.join(['{} = {}'.format(a, b) for
+                           a, b in zip(to_fields, from_fields)])
+    constraints_to_query = [
+        '{}.{} {} %s'.format(to_id, field.name(), field.comp())
+        for field in to_.fields if field.is_set()]
+    constraints_to_values = [
+        field for field in to_.fields if field.is_set()]
+    constraints_from_query = [
+        '{}.{} {} %s'.format(from_id, field.name(), field.comp())
+        for field in from_.fields if field.is_set()]
+    constraints_from_values = [
+        field for field in from_.fields if field.is_set()]
+    constraints_query = ' and '.join(
+        constraints_to_query + constraints_from_query)
+    constraints_values = constraints_to_values + constraints_from_values
+
+    if constraints_query:
+        bounds = ' and '.join([bounds, constraints_query])
+    return str(bounds), constraints_values
 
 def __get_from(self, orig_rel=None, deja_vu=None):
     """Constructs the __sql_query and gets the __sql_values for self."""
@@ -162,20 +196,17 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         orig_rel = self
         self.__sql_query = [__sql_id(self)]
         deja_vu = [(self, None)]
-    for elt, fkey in self.__joined_to:
-        if (elt, fkey) in deja_vu or elt is orig_rel:
-            sys.stderr.write("déjà vu in from! {}\n".format(elt.fqrn))
+    for rel, fkey in self._joined_to:
+        if (rel, fkey) in deja_vu or rel is orig_rel:
+            sys.stderr.write("déjà vu in from! {}\n".format(rel.fqrn))
             continue
-        deja_vu.append((elt, fkey))
-        from_ = elt
-        if fkey.frel is elt:
-            from_ = fkey.from_
-        elt.__get_from(orig_rel, deja_vu)
-        elt.__sql_query, elt.__sql_values = fkey.join_query(from_)
-        orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(elt)))
-        orig_rel.__sql_query.insert(2, elt.__sql_query)
-        if orig_rel != elt:
-            orig_rel.__sql_values = (elt.__sql_values + orig_rel.__sql_values)
+        deja_vu.append((rel, fkey))
+        rel.__get_from(orig_rel, deja_vu)
+        rel.__sql_query, rel.__sql_values = rel.__join_query(fkey)
+        orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(rel)))
+        orig_rel.__sql_query.insert(2, rel.__sql_query)
+        if orig_rel != rel:
+            orig_rel.__sql_values = (rel.__sql_values + orig_rel.__sql_values)
 
 def __select_args(self, *args, **kwargs):
     """Returns the what, where and values needed to construct the queries.
@@ -235,7 +266,7 @@ def select(self, *args, **kwargs):
         if not 'mogrify' in kwargs:
             self.__cursor.execute(query, values)
         else:
-            print(self.__cursor.mogrify(query, values).decode('utf-8'))
+            yield self.__cursor.mogrify(query, values).decode('utf-8')
             return
     except Exception as err:
         sys.stderr.write(
@@ -243,6 +274,10 @@ def select(self, *args, **kwargs):
         raise err
     for elt in self.__cursor.fetchall():
         yield elt
+
+def mogrify(self):
+    for elt in self.select(mogrify=True):
+        print(elt)
 
 def get(self, **kwargs):
     """Yields instanciated Relation objects instead of dict."""
@@ -349,6 +384,7 @@ TABLE_INTERFACE = {
     'is_set': is_set,
     '__select_args': __select_args,
     'select': select,
+    'mogrify': mogrify,
     '__len__': __len__,
     'get': get,
     'getone': getone,
@@ -361,6 +397,7 @@ TABLE_INTERFACE = {
     '__update_args': __update_args,
     'delete': delete,
     'Transaction': Transaction,
+    '__join_query': __join_query,
     'join': join,
 }
 
@@ -378,6 +415,7 @@ VIEW_INTERFACE = {
     'is_set': is_set,
     '__select_args': __select_args,
     'select': select,
+    'mogrify': mogrify,
     '__len__': __len__,
     'get': get,
     'getone': getone,
@@ -429,14 +467,14 @@ class RelationFactory(type):
         """ta_: table attributes dictionary."""
         from .field import Field
         from .fkey import FKey
-        ta_['__fields'] = []
+        ta_['_fields'] = []
         ta_['__fkeys'] = []
         dbm = ta_['model'].metadata
         flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
             ta_[field_name] = Field(field_name, f_metadata)
-            ta_['__fields'].append(ta_[field_name])
+            ta_['_fields'].append(ta_[field_name])
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
             fkeyname = f_metadata.get('fkeyname')

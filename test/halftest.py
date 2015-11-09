@@ -117,6 +117,6 @@ if len(post) == 0:
 
 post = post(title=('Vaudou%', 'like'))
 #post.title.value = 'Vaudou pour Monsieur le Président'
-post.author_fkey.set(corto)
-for p in post.select():
-    print(p)
+post.author_fkey = corto
+print(post)
+post.mogrify()
