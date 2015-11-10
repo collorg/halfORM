@@ -118,43 +118,10 @@ def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
     return [field for field in self._fields if field.is_set()]
 
-def join(self, frel, fkey_name=None):
-    """Returns the foreign relation constained by self.
-    """
-    def __join_match_fkeys(self, _fqrn, fkey_name):
-        """Returns the list of keys matching _fqrn."""
-        if not fkey_name:
-            ret_val = [fkey for fkey in self.__fkeys if fkey.fk_fqrn == _fqrn]
-            return ret_val
-        else:
-            return [fkey for fkey in self.__fkeys if fkey.name() == fkey_name]
-
-    if isinstance(frel, str):
-        # Assume frel is a QRN
-        frel = self.model.relation(frel)
-    # Search for direct or reversed keys to join on.
-    fkeys_dir = __join_match_fkeys(self, frel.fqrn, fkey_name)
-    fkeys_rev = __join_match_fkeys(frel, self.fqrn, fkey_name)
-    if fkeys_dir and fkeys_rev:
-        raise Exception("Cycle")
-    elif len(fkeys_rev) == 0 and len(fkeys_dir) != 1:
-        raise Exception("More than one direct fkey matching")
-    elif len(fkeys_dir) == 0 and len(fkeys_rev) != 1:
-        raise Exception("More than one reverse fkey matching")
-    if fkeys_dir:
-        fkey = self.__getattribute__(fkeys_dir[0].name())
-        fkey.set(self, frel)
-    else:
-        fkey = fkeys_rev[0]
-        fkey.set(frel, self)
-    frel._joined_to.insert(0, (self, fkey))
-    return frel
-
 def __join_query(self, fkey):
     """Returns the join_query, join_values of a foreign key.
     fkey interface: frel, from_, to_, fields, fk_names
     """
-    print(self.fqrn, fkey.name())
     from_ = self
     if fkey.to_ is self or from_ is None:
         from_ = fkey.from_
@@ -165,7 +132,6 @@ def __join_query(self, fkey):
     from_fields = ['{}.{}'.format(from_id, name)
                    for name in fkey.fields]
     to_fields = ['{}.{}'.format(to_id, name) for name in fkey.fk_names]
-    print("XXX", from_fields, to_fields)
     bounds = ' and '.join(['{} = {}'.format(a, b) for
                            a, b in zip(to_fields, from_fields)])
     constraints_to_query = [
@@ -276,6 +242,7 @@ def select(self, *args, **kwargs):
         yield elt
 
 def mogrify(self):
+    """Prints the select query."""
     for elt in self.select(mogrify=True):
         print(elt)
 
@@ -398,7 +365,6 @@ TABLE_INTERFACE = {
     'delete': delete,
     'Transaction': Transaction,
     '__join_query': __join_query,
-    'join': join,
 }
 
 VIEW_INTERFACE = {

@@ -14,7 +14,7 @@ class FKey(FKeyInterface):
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
         super(FKey, self).__init__(fk_name, fk_names, fields)
 
-    def set(self, from_, to_=None):
+    def __set__(self, from_, to_=None):# obj, value):
         """Sets the value associated with the foreign key.
 
         The value must be and object of type Relation having the
@@ -29,13 +29,17 @@ class FKey(FKeyInterface):
             to_ = from_.model.relation(__get_qrn(self.__fk_fqrn))
         if not isinstance(to_, Relation):
             raise Exception("Expecting a Relation")
-        if not self.__fk_fqrn == to_.fqrn:
+        #TODO deal with inheritance
+        # if the fqrn differ, we verify that
+        # model.relation(self.__fk_fqrn) inherits to_
+        if False and not self.__fk_fqrn == to_.fqrn:
             raise Exception(
                 "Relations must be of the same type\n{} != {}".format(
                     self.__fk_fqrn, to_.fqrn))
         self.from_ = from_
         self.to_ = to_
         self._is_set = True
+        from_._joined_to.insert(0, (to_, self))
 
     @property
     def fk_fqrn(self):

@@ -39,6 +39,7 @@ class Field(FKeyInterface):
     def __set__(self, obj, value):
         """Sets the value (and the comparator) associated with the field."""
         comp = None
+        self.__relation = obj
         is_field = isinstance(value, Field)
         if isinstance(value, tuple):
             assert len(value) == 2
