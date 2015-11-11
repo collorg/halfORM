@@ -14,6 +14,14 @@ class FKey(FKeyInterface):
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
         super(FKey, self).__init__(fk_name, fk_names, fields)
 
+    def __get__(self, obj, type_=None):
+        """Returns the relation on which the fkey is defined."""
+        if self.from_ == None:
+            self.__set__(obj)
+            if not (self.from_, self) in self.to_._joined_to:
+                self.to_._joined_to.insert(0, (self.from_, self))
+        return self.to_
+
     def __set__(self, from_, to_=None):# obj, value):
         """Sets the value associated with the foreign key.
 
@@ -39,7 +47,8 @@ class FKey(FKeyInterface):
         self.from_ = from_
         self.to_ = to_
         self._is_set = True
-        from_._joined_to.insert(0, (to_, self))
+        if not (to_, self) in from_._joined_to:
+            from_._joined_to.insert(0, (to_, self))
 
     @property
     def fk_fqrn(self):

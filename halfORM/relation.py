@@ -42,7 +42,6 @@ def __init__(self, **kwargs):
     self.__cons_fields = []
     _ = [self.__setattr__(field_name, value)
          for field_name, value in kwargs.items()]
-    self.__deja_vu_join = []
     self._joined_to = []
     self.__sql_query = []
     self.__sql_values = []
@@ -161,16 +160,22 @@ def __get_from(self, orig_rel=None, deja_vu=None):
     if deja_vu is None:
         orig_rel = self
         self.__sql_query = [__sql_id(self)]
-        deja_vu = [(self, None)]
+        deja_vu = {id(self):[(self, None)]}
     for rel, fkey in self._joined_to:
-        if (rel, fkey) in deja_vu or rel is orig_rel:
-            sys.stderr.write("déjà vu in from! {}\n".format(rel.fqrn))
+        id_rel = id(rel)
+        new_rel = False
+        if not id_rel in deja_vu:
+            new_rel = True
+            deja_vu[id_rel] = []
+        elif (rel, fkey) in deja_vu[id_rel] or rel is orig_rel:
+            #sys.stderr.write("déjà vu in from! {}\n".format(rel.fqrn))
             continue
-        deja_vu.append((rel, fkey))
+        deja_vu[id_rel].append((rel, fkey))
         rel.__get_from(orig_rel, deja_vu)
         rel.__sql_query, rel.__sql_values = rel.__join_query(fkey)
-        orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(rel)))
-        orig_rel.__sql_query.insert(2, rel.__sql_query)
+        if new_rel:
+            orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(rel)))
+            orig_rel.__sql_query.insert(2, rel.__sql_query)
         if orig_rel != rel:
             orig_rel.__sql_values = (rel.__sql_values + orig_rel.__sql_values)
 
