@@ -45,6 +45,7 @@ def __init__(self, **kwargs):
     self._joined_to = []
     self.__sql_query = []
     self.__sql_values = []
+    self.__setop = []
     _ = [field._set_relation(self) for field in self._fields]
 
 def __call__(self, **kwargs):
@@ -102,10 +103,9 @@ def fqrn(self):
 @property
 def is_set(self):
     """return True if one field at least is set"""
-    for field in self._fields:
-        if field.is_set():
-            return True
-    return False
+    if self._joined_to or self.__setop:
+        return True
+    return {field.is_set() for field in self._fields} is not {False}
 
 @property
 def fields(self):
@@ -163,9 +163,8 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         deja_vu = {id(self):[(self, None)]}
     for rel, fkey in self._joined_to:
         id_rel = id(rel)
-        new_rel = False
-        if not id_rel in deja_vu:
-            new_rel = True
+        new_rel = id_rel not in deja_vu
+        if new_rel:
             deja_vu[id_rel] = []
         elif (rel, fkey) in deja_vu[id_rel] or rel is orig_rel:
             #sys.stderr.write("déjà vu in from! {}\n".format(rel.fqrn))
@@ -248,6 +247,7 @@ def select(self, *args, **kwargs):
 
 def mogrify(self):
     """Prints the select query."""
+    print("XXX", [(elt[0], elt[1].fqrn) for elt in self.__setop])
     for elt in self.select(mogrify=True):
         print(elt)
 
@@ -338,11 +338,45 @@ def delete(self, no_clause=False, **kwargs):
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
 
+def __opset(self, op_, other):
+    """Registers the set operation and ensures self and other are of the same
+    type.
+    """
+    assert isinstance(other, Relation) and other.fqrn == self.fqrn
+    print("YYY", op_)
+    self.__setop.append([op_, other])
+    return self
+
+def __and__(self, other):
+    return self.__opset('and', other)
+
+def __iand__(self, other):
+    return self & other
+
+def __or__(self, other):
+    return self.__opset('or', other)
+
+def __ior__(self, other):
+    return self | other
+
+def __sub__(self, other):
+    return self.__opset('sub', other)
+
+def __isub__(self, other):
+    return self - other
+
+def __xor__(self, other):
+    return self.__opset('xor', other)
+
+def __ixor__(self, other):
+    return self ^ other
+
+def __neg__(self):
+    return self.__opset('not', self)
+
 #### END of Relation methods definition
 
-TABLE_INTERFACE = {
-    # shared with view_interface
-
+COMMON_INTERFACE = {
     '__init__': __init__,
     '__call__': __call__,
     '__getitem__': __getitem__,
@@ -360,37 +394,30 @@ TABLE_INTERFACE = {
     '__len__': __len__,
     'get': get,
     'getone': getone,
+    '__opset': __opset,
+    '__and__': __and__,
+    '__iand__': __iand__,
+    '__or__': __or__,
+    '__ior__': __ior__,
+    '__sub__': __sub__,
+    '__isub__': __isub__,
+    '__xor__': __xor__,
+    '__ixor__': __ixor__,
+    '__neg__': __neg__,
+    '__join_query': __join_query,
+}
 
-    # specific table
-
+TABLE_INTERFACE = {
     'insert': insert,
     '__what_to_insert': __what_to_insert,
     'update': update,
     '__update_args': __update_args,
     'delete': delete,
     'Transaction': Transaction,
-    '__join_query': __join_query,
 }
+TABLE_INTERFACE.update(COMMON_INTERFACE)
 
-VIEW_INTERFACE = {
-    '__init__': __init__,
-    '__call__': __call__,
-    '__getitem__': __getitem__,
-    '__get_set_fields': __get_set_fields,
-    '__repr__': __repr__,
-    'json': json,
-    'fields': fields,
-    '__get_from': __get_from,
-    '__get_query': __get_query,
-    'fqrn': fqrn,
-    'is_set': is_set,
-    '__select_args': __select_args,
-    'select': select,
-    'mogrify': mogrify,
-    '__len__': __len__,
-    'get': get,
-    'getone': getone,
-}
+VIEW_INTERFACE = COMMON_INTERFACE
 
 class RelationFactory(type):
     """RelationFactory Metaclass

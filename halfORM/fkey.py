@@ -1,4 +1,5 @@
 """This module provides the FKey class."""
+# pylint: disable=protected-access
 
 from halfORM.fkey_interface import FKeyInterface
 
@@ -22,7 +23,7 @@ class FKey(FKeyInterface):
                 self.to_._joined_to.insert(0, (self.from_, self))
         return self.to_
 
-    def __set__(self, from_, to_=None):# obj, value):
+    def __set__(self, from_, to_=None):
         """Sets the value associated with the foreign key.
 
         The value must be and object of type Relation having the
