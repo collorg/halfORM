@@ -30,6 +30,42 @@ import sys
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
+class Ops():
+    def __init__(self):
+        self.__op = None
+        self.__left = None
+        self.__right = None
+        self.__depth = 0
+
+    @property
+    def op_(self):
+        return self.__op
+
+    def add(self, left, op, right=None):
+        self.__op = op
+        self.__left = left
+        self.__right = right
+
+    def depth(self, depth):
+        self.__depth = depth
+
+    def __repr__(self):
+        if self.__op is not None:
+            lop = len(self.__op) + 1
+            self.__left.ops.depth(self.__depth + lop)
+            if self.__right:
+                self.__right.ops.depth(self.__depth + lop)
+            right_list = self.__right and [str(self.__right)] or []
+            res = "\n{}{}({})".format(
+                self.__depth * ' ', self.__op,
+                ", ".join(
+                    [str(self.__left)] + right_list))
+            self.__left.ops.depth(self.__depth - lop)
+            if self.__right:
+                self.__right.ops.depth(self.__depth - lop)
+            return res
+        return ""
+
 class Relation():
     """Base class of Table and View classes (see RelationFactory)."""
     pass
@@ -45,7 +81,7 @@ def __init__(self, **kwargs):
     self._joined_to = []
     self.__sql_query = []
     self.__sql_values = []
-    self.__setop = []
+    self.__ops = Ops()
     _ = [field._set_relation(self) for field in self._fields]
 
 def __call__(self, **kwargs):
@@ -73,6 +109,7 @@ def json(self, **kwargs):
     return js_.dumps([elt for elt in self.select(**kwargs)], default=handler)
 
 def __repr__(self):
+    print(self.__ops)
     rel_kind = self.__kind
     ret = []
     ret.append("{}: {}".format(rel_kind.upper(), self.__fqrn))
@@ -247,7 +284,6 @@ def select(self, *args, **kwargs):
 
 def mogrify(self):
     """Prints the select query."""
-    print("XXX", [(elt[0], elt[1].fqrn) for elt in self.__setop])
     for elt in self.select(mogrify=True):
         print(elt)
 
@@ -338,41 +374,41 @@ def delete(self, no_clause=False, **kwargs):
 def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
 
-def __opset(self, op_, other):
-    """Registers the set operation and ensures self and other are of the same
-    type.
-    """
-    assert isinstance(other, Relation) and other.fqrn == self.fqrn
-    print("YYY", op_)
-    self.__setop.append([op_, other])
-    return self
+@property
+def ops(self):
+    return self.__ops
 
 def __and__(self, other):
-    return self.__opset('and', other)
-
+    new = self()
+    new.__ops.add(self, "and", other)
+    return new
 def __iand__(self, other):
     return self & other
 
 def __or__(self, other):
-    return self.__opset('or', other)
-
+    new = self()
+    new.__ops.add(self, "or", other)
+    return new
 def __ior__(self, other):
     return self | other
 
 def __sub__(self, other):
-    return self.__opset('sub', other)
-
+    new = self()
+    new.__ops.add(self, "sub", other)
+    return new
 def __isub__(self, other):
     return self - other
 
-def __xor__(self, other):
-    return self.__opset('xor', other)
+def __neg__(self):
+    new = self()
+    new.__ops.add(self, "neg")
+    return new
 
+def __xor__(self, other):
+    new = (self | other) & (self - other)
+    return new
 def __ixor__(self, other):
     return self ^ other
-
-def __neg__(self):
-    return self.__opset('not', self)
 
 #### END of Relation methods definition
 
@@ -394,7 +430,7 @@ COMMON_INTERFACE = {
     '__len__': __len__,
     'get': get,
     'getone': getone,
-    '__opset': __opset,
+    'ops': ops,
     '__and__': __and__,
     '__iand__': __iand__,
     '__or__': __or__,
