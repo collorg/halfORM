@@ -14,7 +14,6 @@ class Test(TestCase):
         self.pers = halftest.relation("actor.person")
 
     def unknown_field_test(self):
-        """Unknonw field test"""
         with self.assertRaises(AttributeError) as cm:
             self.pers.unknown
         self.assertEqual(

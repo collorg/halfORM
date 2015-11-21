@@ -30,8 +30,8 @@ import sys
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
-class Ops():
-    """Ops class stores the set operations made on the Relation class objects
+class SetOp():
+    """SetOp class stores the set operations made on the Relation class objects
     in a tree like structure.
     - __op is one of {'or', 'and', 'sub', 'neg'}
     - __left and __right are Relation objects. __right can be None if the
@@ -59,23 +59,23 @@ class Ops():
         self.__right = right
 
     def depth(self, depth):
-        """Depth of the op in the tree."""
+        """Depth of the op in the tree (used for __repr__)."""
         self.__depth = depth
 
     def __repr__(self):
         if self.__op is not None:
             lop = len(self.__op) + 1
-            self.__left.ops.depth(self.__depth + lop)
+            self.__left.set_ops_tree.depth(self.__depth + lop)
             if self.__right:
-                self.__right.ops.depth(self.__depth + lop)
+                self.__right.set_ops_tree.depth(self.__depth + lop)
             right_list = self.__right and [str(self.__right)] or []
             res = "\n{}{}({})".format(
                 self.__depth * ' ', self.__op,
                 ", ".join(
                     [str(self.__left)] + right_list))
-            self.__left.ops.depth(self.__depth - lop)
+            self.__left.set_ops_tree.depth(self.__depth - lop)
             if self.__right:
-                self.__right.ops.depth(self.__depth - lop)
+                self.__right.set_ops_tree.depth(self.__depth - lop)
             return res
         return ""
 
@@ -94,14 +94,10 @@ def __init__(self, **kwargs):
     self._joined_to = []
     self.__sql_query = []
     self.__sql_values = []
-    self.__ops = Ops()
+    self.__set_ops_tree = SetOp()
     _ = [field._set_relation(self) for field in self._fields]
 
 def __call__(self, **kwargs):
-    """__call__ method for the class Relation
-
-    Instanciate a new object with all fields unset.
-    """
     return relation(self.__fqrn, **kwargs)
 
 def json(self, **kwargs):
@@ -151,7 +147,7 @@ def fqrn(self):
 
 def is_set(self):
     """return True if one field at least is set"""
-    if self._joined_to or self.__ops.is_set():
+    if self._joined_to or self.__set_ops_tree.is_set():
         return True
     return {field.is_set() for field in self._fields} != {False}
 
@@ -274,7 +270,7 @@ def select(self, *args, **kwargs):
     """Generator. Yiels the result of the query as a dictionary.
 
     - @args are fields names to restrict the returned attributes
-    - @kwargs: limit, order by, distinct... options
+    - @kwargs: limit, order by, distinct... options (not implemented yet)
     """
     self.__sql_values = []
     query_template = "select {} from {} {}"
@@ -386,34 +382,34 @@ def __getitem__(self, key):
     return self.__cursor.fetchall()[key]
 
 @property
-def ops(self):
+def set_ops_tree(self):
     """Return the set operations on self."""
-    return self.__ops
+    return self.__set_ops_tree
 
 def __and__(self, other):
     new = self()
-    new.__ops.add(self, "and", other)
+    new.__set_ops_tree.add(self, "and", other)
     return new
 def __iand__(self, other):
     return self & other
 
 def __or__(self, other):
     new = self()
-    new.__ops.add(self, "or", other)
+    new.__set_ops_tree.add(self, "or", other)
     return new
 def __ior__(self, other):
     return self | other
 
 def __sub__(self, other):
     new = self()
-    new.__ops.add(self, "sub", other)
+    new.__set_ops_tree.add(self, "sub", other)
     return new
 def __isub__(self, other):
     return self - other
 
 def __neg__(self):
     new = self()
-    new.__ops.add(self, "neg")
+    new.__set_ops_tree.add(self, "neg")
     return new
 
 def __xor__(self, other):
@@ -442,7 +438,7 @@ COMMON_INTERFACE = {
     '__len__': __len__,
     'get': get,
     'getone': getone,
-    'ops': ops,
+    'set_ops_tree': set_ops_tree,
     '__and__': __and__,
     '__iand__': __iand__,
     '__or__': __or__,
