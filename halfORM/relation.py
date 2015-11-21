@@ -36,15 +36,20 @@ class Ops():
         self.__left = None
         self.__right = None
         self.__depth = 0
+        self.__is_set = False
 
     @property
     def op_(self):
         return self.__op
 
+    def is_set(self):
+        return self.__is_set
+
     def add(self, left, op, right=None):
         self.__op = op
         self.__left = left
         self.__right = right
+        self.__is_set = True
 
     def depth(self, depth):
         self.__depth = depth
@@ -109,7 +114,6 @@ def json(self, **kwargs):
     return js_.dumps([elt for elt in self.select(**kwargs)], default=handler)
 
 def __repr__(self):
-    print(self.__ops)
     rel_kind = self.__kind
     ret = []
     ret.append("{}: {}".format(rel_kind.upper(), self.__fqrn))
@@ -137,12 +141,11 @@ def fqrn(self):
     """Returns the FQRN (fully qualified relation name)"""
     return self.__fqrn
 
-@property
 def is_set(self):
     """return True if one field at least is set"""
-    if self._joined_to or self.__setop:
+    if self._joined_to or self.__ops.is_set():
         return True
-    return {field.is_set() for field in self._fields} is not {False}
+    return {field.is_set() for field in self._fields} != {False}
 
 @property
 def fields(self):
@@ -335,7 +338,7 @@ def update(self, no_clause=False, **kwargs):
     """
     if not kwargs:
         return # no new value update. Should we raise an error here?
-    assert self.is_set or no_clause
+    assert self.is_set() or no_clause
 
     query_template = "update {} set {} {}"
     what, where, values = self.__update_args(**kwargs)
@@ -365,7 +368,7 @@ def delete(self, no_clause=False, **kwargs):
     """
     _ = [self.__setattr__(field_name, value)
          for field_name, value in kwargs.items()]
-    assert self.is_set or no_clause
+    assert self.is_set() or no_clause
     query_template = "delete from {} {}"
     _, where, values = self.__select_args(__query='delete')
     query = query_template.format(self.__fqrn, where)

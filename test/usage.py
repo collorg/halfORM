@@ -76,13 +76,14 @@ if __name__ == '__main__':
     assert s.tba.is_set()
     assert s.tba.value is False
     s2 = s()
+    print(s2.is_set())
+    assert s2.is_set() == False
     print(type(s), type(s2))
     print(id(s.__class__), id(s2.__class__))
     assert isinstance(s, Relation)
     print(s.__class__, s2.__class__)
 #FAILS    assert s.__class__ == s2.__class__
 #FAILS TOO    assert type(s) == type(s2)
-    assert s2.is_set is False
     assert s.tba.is_set()
     """iterate over the extension."""
     print(s.json())

@@ -42,15 +42,8 @@ class Test(TestCase):
     def count_test(self):
         self.assertEqual(len(self.pers()), 60)
 
-    def update_test(self):
-        pers = self.pers(last_name=('a%', 'like'))
-        self.assertEqual(len(pers), 10)
-        pers.update(last_name=pers.last_name.value.upper())
-        self.assertEqual(len(pers), 0)
-        self.assertEqual(len(pers(last_name=('A%', 'like'))), 10)
-
     def expected_one_error_test_0(self):
-        pers = self.pers(last_name='B152')
+        pers = self.pers(last_name="this name doesn't exist")
         self.assertRaises(
             relation_errors.ExpectedOneError, pers.getone)
 
@@ -75,3 +68,10 @@ class Test(TestCase):
         self.assertEqual(len(pers), 1)
         for dct in pers.select():
             self.pers(**dct).getone()
+
+    def update_test(self):
+        pers = self.pers(last_name=('a%', 'like'))
+        self.assertEqual(len(pers), 10)
+        pers.update(last_name=pers.last_name.value.upper())
+        self.assertEqual(len(pers), 0)
+        self.assertEqual(len(pers(last_name=('A%', 'like'))), 10)
