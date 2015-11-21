@@ -31,27 +31,35 @@ from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
 class Ops():
+    """Ops class stores the set operations made on the Relation class objects
+    in a tree like structure.
+    - __op is one of {'or', 'and', 'sub', 'neg'}
+    - __left and __right are Relation objects. __right can be None if the
+      operator is 'neg'.
+    """
     def __init__(self):
         self.__op = None
         self.__left = None
         self.__right = None
         self.__depth = 0
-        self.__is_set = False
 
     @property
     def op_(self):
+        """Poperty retruning the __op value."""
         return self.__op
 
     def is_set(self):
-        return self.__is_set
+        """Retrun True if the self object has been set."""
+        return self.__op is not None
 
-    def add(self, left, op, right=None):
-        self.__op = op
+    def add(self, left, op_, right=None):
+        """Add the informations correponding the the new op."""
+        self.__op = op_
         self.__left = left
         self.__right = right
-        self.__is_set = True
 
     def depth(self, depth):
+        """Depth of the op in the tree."""
         self.__depth = depth
 
     def __repr__(self):
@@ -379,6 +387,7 @@ def __getitem__(self, key):
 
 @property
 def ops(self):
+    """Return the set operations on self."""
     return self.__ops
 
 def __and__(self, other):
