@@ -35,5 +35,7 @@ class Test(TestCase):
         set_pers = self.pers(id=1)
         non_set_pers |= set_pers()
         self.assertTrue(non_set_pers.is_set())
+
+    def non_set_net_is_non_set_test(self):
         non_set_pers = self.pers()
-        self.assertTrue((-non_set_pers).is_set())
+        self.assertFalse((-non_set_pers).is_set())

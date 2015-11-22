@@ -27,6 +27,7 @@ the double quotes.
 """
 
 import sys
+from copy import copy
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
@@ -34,14 +35,11 @@ class SetOp():
     """SetOp class stores the set operations made on the Relation class objects
     in a tree like structure.
     - __op is one of {'or', 'and', 'sub', 'neg'}
-    - __left and __right are Relation objects. __right can be None if the
-      operator is 'neg'.
+    - __right is a Relation object. It can be None if the operator is 'neg'.
     """
     def __init__(self):
-        self.__op = None
-        self.__left = None
-        self.__right = None
-        self.__depth = 0
+        self.__neg = False
+        self.__op = []
 
     @property
     def op_(self):
@@ -50,34 +48,46 @@ class SetOp():
 
     def is_set(self):
         """Retrun True if the self object has been set."""
-        return self.__op is not None
+        return self.__op != []
 
-    def add(self, left, op_, right=None):
-        """Add the informations correponding the the new op."""
-        self.__op = op_
-        self.__left = left
-        self.__right = right
+    def add(self, left, op_, right):
+        """Add the informations corresponding to the new op."""
+        print("ADD {} {} {}".format(op_, id(left), id(right)))
+        self.__op.append((op_, left, right))
 
-    def depth(self, depth):
-        """Depth of the op in the tree (used for __repr__)."""
-        self.__depth = depth
+    def __get_neg(self):
+        """returns the value of self.__neg."""
+        return self.__neg
+    def __set_neg(self, neg):
+        """sets the value of self.__neg. The neg argument is not used."""
+        self.__neg = neg
+    neg = property(__get_neg, __set_neg)
 
-    def __repr__(self):
-        if self.__op is not None:
-            lop = len(self.__op) + 1
-            self.__left.set_ops_tree.depth(self.__depth + lop)
-            if self.__right:
-                self.__right.set_ops_tree.depth(self.__depth + lop)
-            right_list = self.__right and [str(self.__right)] or []
-            res = "\n{}{}({})".format(
-                self.__depth * ' ', self.__op,
-                ", ".join(
-                    [str(self.__left)] + right_list))
-            self.__left.set_ops_tree.depth(self.__depth - lop)
-            if self.__right:
-                self.__right.set_ops_tree.depth(self.__depth - lop)
-            return res
-        return ""
+    def __iter__(self):
+        def iter(set_op):
+            """Recursive method used to iterate over set_op."""
+            print("ZZZ",
+                  set_op.__op and set_op.__op[0][0],
+                  id(set_op.__op and set_op.__op[0][1]))
+            for op_, left, right in set_op.__op:
+                print("xxx right is {} and is set is {}".format(
+                    id(right),
+                    right is not None and right.set_ops_tree.is_set() or None))
+                if id(left) == id(right):
+                    print("111", op_, id(left), id(right))
+                    yield op_, left, right
+                    return
+                if right is not None and right.set_ops_tree.is_set():
+                    print("KKK", right.set_ops_tree.__op[0][0])
+                    for elt in iter(right.set_ops_tree):
+                        op_, left, right = elt
+                        print("333", op_, id(left), id(right))
+                        yield op_, left, right
+                        return
+                print("222", op_, id(left), id(right))
+                yield op_, left, right
+        print([("000", op_, id(rel), id(orel)) for op_, rel, orel in self.__op])
+        return iter(self)
 
 class Relation():
     """Base class of Table and View classes (see RelationFactory)."""
@@ -89,13 +99,13 @@ class Relation():
 def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
     self.__cons_fields = []
-    _ = [self.__setattr__(field_name, value)
-         for field_name, value in kwargs.items()]
+    _ = {self.__setattr__(field_name, value)
+         for field_name, value in kwargs.items()}
     self._joined_to = []
     self.__sql_query = []
     self.__sql_values = []
     self.__set_ops_tree = SetOp()
-    _ = [field._set_relation(self) for field in self._fields]
+    _ = {field._set_relation(self) for field in self._fields}
 
 def __call__(self, **kwargs):
     return relation(self.__fqrn, **kwargs)
@@ -146,10 +156,13 @@ def fqrn(self):
     return self.__fqrn
 
 def is_set(self):
-    """return True if one field at least is set"""
-    if self._joined_to or self.__set_ops_tree.is_set():
-        return True
-    return {field.is_set() for field in self._fields} != {False}
+    """Return True if one field at least is set or if self has been
+    constrained by at least one of its foreign keys or self is the
+    result of a combination of Relations (using set operators).
+    """
+    return (bool(self._joined_to) or
+            self.__set_ops_tree.is_set() or
+            bool({field for field in self._fields if field.is_set()}))
 
 @property
 def fields(self):
@@ -161,7 +174,7 @@ def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
     return [field for field in self._fields if field.is_set()]
 
-def __join_query(self, fkey):
+def __join_query(self, fkey, op_=' and '):
     """Returns the join_query, join_values of a foreign key.
     fkey interface: frel, from_, to_, fields, fk_names
     """
@@ -172,27 +185,27 @@ def __join_query(self, fkey):
     assert id(from_) != id(to_)
     to_id = 'r{}'.format(id(to_))
     from_id = 'r{}'.format(id(from_))
-    from_fields = ['{}.{}'.format(from_id, name)
-                   for name in fkey.fields]
-    to_fields = ['{}.{}'.format(to_id, name) for name in fkey.fk_names]
-    bounds = ' and '.join(['{} = {}'.format(a, b) for
-                           a, b in zip(to_fields, from_fields)])
+    from_fields = ('{}.{}'.format(from_id, name)
+                   for name in fkey.fields)
+    to_fields = ('{}.{}'.format(to_id, name) for name in fkey.fk_names)
+    bounds = op_.join(['{} = {}'.format(a, b) for
+                       a, b in zip(to_fields, from_fields)])
     constraints_to_query = [
         '{}.{} {} %s'.format(to_id, field.name(), field.comp())
         for field in to_.fields if field.is_set()]
-    constraints_to_values = [
-        field for field in to_.fields if field.is_set()]
+    constraints_to_values = (
+        field for field in to_.fields if field.is_set())
     constraints_from_query = [
         '{}.{} {} %s'.format(from_id, field.name(), field.comp())
         for field in from_.fields if field.is_set()]
-    constraints_from_values = [
-        field for field in from_.fields if field.is_set()]
-    constraints_query = ' and '.join(
+    constraints_from_values = (
+        field for field in from_.fields if field.is_set())
+    constraints_query = op_.join(
         constraints_to_query + constraints_from_query)
-    constraints_values = constraints_to_values + constraints_from_values
+    constraints_values = list(constraints_to_values) + list(constraints_from_values)
 
     if constraints_query:
-        bounds = ' and '.join([bounds, constraints_query])
+        bounds = op_.join([bounds, constraints_query])
     return str(bounds), constraints_values
 
 def __get_from(self, orig_rel=None, deja_vu=None):
@@ -235,25 +248,29 @@ def __select_args(self, *args, **kwargs):
     if args:
         what = ', '.join([praf(field_name) for field_name in args])
     set_fields = self.__get_set_fields()
-    values = set_fields
     where = []
-    idx = 0
     for field in set_fields:
-        placeholder = '%s'
-        if isinstance(field.value, field.__class__):
-            if id(field.value.relation) == id(self):
-                raise Exception("Field assigned to itself!")
-            values.pop(idx) # we remove field from values
-            squery, svalues = field.value.relation.__get_query(
-                "select {} from {} {}", field.value.name())
-            placeholder = "({})".format(squery)
-            svalues.reverse()
-            _ = [values.insert(idx, e) for e in svalues]
-        where.append('{} {} {}'.format(
-            praf(field.name()), field.comp(), placeholder))
-        idx += 1
+        where.append("{} {} %s".format(praf(field.name()), field.comp()))
     if where:
-        where = 'where {}'.format(" and ".join(where))
+        where = '{}'.format(" and ".join(where))
+        if self.__set_ops_tree.neg:
+            where = "not({})".format(where)
+        where = [where]
+    if self.__set_ops_tree.is_set():
+        for op_, rel, orel in self.__set_ops_tree:
+            if id(rel) == id(self):
+                pass # do something
+            o_set_fields = orel.__get_set_fields()
+            o_where = []
+            set_fields += o_set_fields
+            for field in o_set_fields:
+                o_where.append(
+                    "{} {} %s".format(praf(field.name()), field.comp()))
+            o_where = " and ".join(o_where)
+            o_where = "{}({})".format(op_, o_where)
+            where.append(o_where)
+    if where:
+        where = 'where {}'.format("".join(where))
     else:
         where = ''
     return what, where, set_fields
@@ -289,9 +306,9 @@ def select(self, *args, **kwargs):
     for elt in self.__cursor.fetchall():
         yield elt
 
-def mogrify(self):
+def mogrify(self, *args):
     """Prints the select query."""
-    for elt in self.select(mogrify=True):
+    for elt in self.select(mogrify=True, *args):
         print(elt)
 
 def get(self, **kwargs):
@@ -370,8 +387,8 @@ def delete(self, no_clause=False, **kwargs):
     kwargs is {[field name:value]}
     To empty the relation, no_clause must be set to True.
     """
-    _ = [self.__setattr__(field_name, value)
-         for field_name, value in kwargs.items()]
+    _ = {self.__setattr__(field_name, value)
+         for field_name, value in kwargs.items()}
     assert self.is_set() or no_clause
     query_template = "delete from {} {}"
     _, where, values = self.__select_args(__query='delete')
@@ -386,35 +403,44 @@ def set_ops_tree(self):
     """Return the set operations on self."""
     return self.__set_ops_tree
 
+def __copy(self):
+    new = copy(self)
+    new.__set_ops_tree = copy(self.__set_ops_tree)
+    return new
+
 def __and__(self, other):
-    new = self()
-    new.__set_ops_tree.add(self, "and", other)
+    new = self.__copy()
+    nother = other.__copy()
+    new.__set_ops_tree.add(new, "and", nother)
     return new
 def __iand__(self, other):
     return self & other
 
 def __or__(self, other):
-    new = self()
-    new.__set_ops_tree.add(self, "or", other)
+    new = self.__copy()
+    nother = other.__copy()
+    new.__set_ops_tree.add(new, "or", nother)
     return new
 def __ior__(self, other):
     return self | other
 
 def __sub__(self, other):
-    new = self()
-    new.__set_ops_tree.add(self, "sub", other)
+    new = self.__copy()
+    nother = other.__copy()
+    new.__set_ops_tree.add(new, "and not", nother)
     return new
 def __isub__(self, other):
     return self - other
 
 def __neg__(self):
-    new = self()
-    new.__set_ops_tree.add(self, "neg")
+    new = self.__copy()
+    print("NEG", id(new), id(self))
+    new.__set_ops_tree.neg = not new.__set_ops_tree.neg
+    print("NEG", id(new.__set_ops_tree.neg), id(self.__set_ops_tree.neg))
     return new
 
 def __xor__(self, other):
-    new = (self | other) & (self - other)
-    return new
+    return (self | other) - (self & other)
 def __ixor__(self, other):
     return self ^ other
 
@@ -439,6 +465,7 @@ COMMON_INTERFACE = {
     'get': get,
     'getone': getone,
     'set_ops_tree': set_ops_tree,
+    '__copy': __copy,
     '__and__': __and__,
     '__iand__': __iand__,
     '__or__': __or__,
