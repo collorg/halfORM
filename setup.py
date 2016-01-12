@@ -2,16 +2,12 @@
 
 import sys
 import os
+import codecs
 from setuptools import setup
 
-#try:
-#    assert sys.version_info.major >= 3
-#except:
-#    sys.stderr.write("ERROR! halfORM requires Python3.\n")
-#    exit(1)
-
 def read(name):
-    return open(os.path.join(os.path.dirname(__file__), name)).read()
+    return codecs.open(
+        os.path.join(os.path.dirname(__file__), name), "r", "utf-8").read()
 
 setup(
     name='halfORM',
