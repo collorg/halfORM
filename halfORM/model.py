@@ -30,7 +30,7 @@ from halfORM import model_errors
 from halfORM.relation import _normalize_fqrn, _normalize_qrn, RelationFactory
 #from pprint import PrettyPrinter
 
-class Model():
+class Model(object):
     """Model class
 
     The model establishes a connection to the database and allows to
@@ -63,6 +63,7 @@ class Model():
         self.__connect(**params)
         self.__conn.autocommit = True
         self.__cursor = self.__conn.cursor()
+        self.__relations = []
         self.__metadata[self.__dbname] = self.__get_metadata()
         self.__deja_vu[self.__dbname] = self
 
@@ -134,9 +135,17 @@ class Model():
                 byname[table_key]['fields'][fieldname] = dct
                 byname[table_key]['fields_by_num'][fieldnum] = dct
                 byid[tableid]['fields'][fieldnum] = fieldname
+                if not (tablekind, table_key) in self.__relations:
+                    self.__relations.append((tablekind, table_key))
         #pp = PrettyPrinter()
         #pp.pprint(metadata)
+        self.__relations.sort()
         return metadata
+
+    def relations(self):
+        """List all the relations in the database"""
+        for relation in self.__relations:
+            yield "{} {}.{}.{}".format(relation[0], *relation[1])
 
     def relation(self, qtn, **kwargs):
         """Instanciate an object of Relation, using the RelationFactory class.
@@ -164,4 +173,3 @@ class Model():
         else:
             fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
             print(relation(fqrn))
-

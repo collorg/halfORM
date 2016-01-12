@@ -2,7 +2,7 @@
 
 """This module provides the FKeyInterface class."""
 
-class FKeyInterface():
+class FKeyInterface(object):
     """Foreign key class interface
 
     properties shared between Fkey and Field classes

@@ -5,7 +5,7 @@
 
 import sys
 
-class Transaction():
+class Transaction(object):
     """The Transaction class is intended to be used as a class attribute of
     relation.Relation class:
 

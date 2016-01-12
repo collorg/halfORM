@@ -31,7 +31,7 @@ from copy import copy
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
-class SetOp():
+class SetOp(object):
     """SetOp class stores the set operations made on the Relation class objects
     in a tree like structure.
     - __op is one of {'or', 'and', 'sub', 'neg'}
@@ -47,13 +47,15 @@ class SetOp():
         return self.__op
 
     def is_set(self):
-        """Retrun True if the self object has been set."""
+        """Return True if the self object has been set."""
         return self.__op != []
 
     def add(self, left, op_, right):
         """Add the informations corresponding to the new op."""
-        print("ADD {} {} {}".format(op_, id(left), id(right)))
-        self.__op.append((op_, left, right))
+        self.__op.append(
+            (op_,
+            left.set_ops.__op and left.set_ops or left,
+            right.set_ops.__op and right.set_ops or right))
 
     def __get_neg(self):
         """returns the value of self.__neg."""
@@ -66,30 +68,25 @@ class SetOp():
     def __iter__(self):
         def iter(set_op):
             """Recursive method used to iterate over set_op."""
-            print("ZZZ",
-                  set_op.__op and set_op.__op[0][0],
-                  id(set_op.__op and set_op.__op[0][1]))
             for op_, left, right in set_op.__op:
-                print("xxx right is {} and is set is {}".format(
-                    id(right),
-                    right is not None and right.set_ops_tree.is_set() or None))
-                if id(left) == id(right):
-                    print("111", op_, id(left), id(right))
-                    yield op_, left, right
-                    return
-                if right is not None and right.set_ops_tree.is_set():
-                    print("KKK", right.set_ops_tree.__op[0][0])
-                    for elt in iter(right.set_ops_tree):
-                        op_, left, right = elt
-                        print("333", op_, id(left), id(right))
+                if isinstance(left, SetOp):
+                    for op_, left, right in iter(left.__op):
                         yield op_, left, right
-                        return
-                print("222", op_, id(left), id(right))
-                yield op_, left, right
-        print([("000", op_, id(rel), id(orel)) for op_, rel, orel in self.__op])
-        return iter(self)
+                if isinstance(right, SetOp):
+                    for op_, left, right in iter(right):
+                        yield op_, left, right
+                else:
+                    yield op_, left, right
+        for op_, left, right in iter(self):
+            print(op_, left, right)
+            yield op_, left, right
 
-class Relation():
+    def __repr__(self):
+        #for op, left, right in self:
+        #    output.append("{} ({},\n{})".format(op, left, right))
+        return str(self.__op)
+
+class Relation(object):
     """Base class of Table and View classes (see RelationFactory)."""
     pass
 
@@ -102,10 +99,15 @@ def __init__(self, **kwargs):
     _ = {self.__setattr__(field_name, value)
          for field_name, value in kwargs.items()}
     self._joined_to = []
+    self.__query = None
     self.__sql_query = []
     self.__sql_values = []
     self.__set_ops_tree = SetOp()
     _ = {field._set_relation(self) for field in self._fields}
+
+@property
+def set_ops(self):
+    return self.__set_ops_tree
 
 def __call__(self, **kwargs):
     return relation(self.__fqrn, **kwargs)
@@ -238,13 +240,44 @@ def __get_from(self, orig_rel=None, deja_vu=None):
 def __select_args(self, *args, **kwargs):
     """Returns the what, where and values needed to construct the queries.
     """
+    def __set_ops(self, where, set_fields, set_ops_tree):
+        print("{}\n{}\n{}\n".format(80*'.', set_ops_tree, 80*'.'))
+        self_op = set_ops_tree.op_[0][0]
+        where.append(" {} ".format(self_op))
+        for op_, left, right in set_ops_tree:
+            l_where = []
+            if id(left) == id(self):
+                coucou
+                pass # do something
+            else:
+                l_set_fields = left.__get_set_fields()
+                set_fields += l_set_fields
+                for field in l_set_fields:
+                    l_where.append(
+                        "{} {} %s".format(praf(field.name()), field.comp()))
+                l_where = " and ".join(l_where)
+                print("L_WHERE", l_where)
+
+            o_where = []
+            o_set_fields = right.__get_set_fields()
+            set_fields += o_set_fields
+            for field in o_set_fields:
+                o_where.append(
+                    "{} {} %s".format(praf(field.name()), field.comp()))
+            o_where = " and ".join(o_where)
+            o_where = "(({}) {} ({}))".format(l_where, op_, o_where)
+            print("O_WHERE", o_where)
+            where.append(o_where)
+
+    for fieldname, value in kwargs.items():
+        self.__setattr__(fieldname, value)
     id_ = 'r{}'.format(id(self))
     def praf(field_name):
         """Returns field_name prefixed with relation alias."""
-        if kwargs['__query'] == 'select':
+        if self.__query == 'select':
             return '{}.{}'.format(id_, field_name)
         return field_name
-    what = praf('*')
+    what = '*'
     if args:
         what = ', '.join([praf(field_name) for field_name in args])
     set_fields = self.__get_set_fields()
@@ -257,18 +290,7 @@ def __select_args(self, *args, **kwargs):
             where = "not({})".format(where)
         where = [where]
     if self.__set_ops_tree.is_set():
-        for op_, rel, orel in self.__set_ops_tree:
-            if id(rel) == id(self):
-                pass # do something
-            o_set_fields = orel.__get_set_fields()
-            o_where = []
-            set_fields += o_set_fields
-            for field in o_set_fields:
-                o_where.append(
-                    "{} {} %s".format(praf(field.name()), field.comp()))
-            o_where = " and ".join(o_where)
-            o_where = "{}({})".format(op_, o_where)
-            where.append(o_where)
+        __set_ops(self, where, set_fields, self.__set_ops_tree)
     if where:
         where = 'where {}'.format("".join(where))
     else:
@@ -278,7 +300,8 @@ def __select_args(self, *args, **kwargs):
 def __get_query(self, query_template, *args, **kwargs):
     """Prepare the SQL query to be executed."""
     self.__sql_values = []
-    what, where, values = self.__select_args(*args, __query='select', **kwargs)
+    self.__query = 'select'
+    what, where, values = self.__select_args(*args, **kwargs)
     self.__get_from()
     return (
         query_template.format(what, ' '.join(self.__sql_query), where), values)
@@ -306,9 +329,9 @@ def select(self, *args, **kwargs):
     for elt in self.__cursor.fetchall():
         yield elt
 
-def mogrify(self, *args):
+def mogrify(self, *args, **kwargs):
     """Prints the select query."""
-    for elt in self.select(mogrify=True, *args):
+    for elt in self.select(mogrify=True, *args, **kwargs):
         print(elt)
 
 def get(self, **kwargs):
@@ -334,10 +357,10 @@ def __len__(self, *args, **kwargs):
     query_template = "select count({}) from {} {}"
     query, values = self.__get_query(query_template, *args, **kwargs)
     try:
-        self.__cursor.execute(query, tuple(self.__sql_values + values))
+        vars = tuple(self.__sql_values + values)
+        self.__cursor.execute(query, vars)
     except Exception as err:
-        print(self.__cursor.mogrify(
-            query, tuple(self.__sql_values + values)).decode('utf-8'))
+        print(query, vars)
         raise err
     return self.__cursor.fetchone()['count']
 
@@ -345,7 +368,8 @@ def __update_args(self, **kwargs):
     """Returns the what, where an values for the update query."""
     what_fields = []
     new_values = []
-    _, where, values = self.__select_args(__query='update')
+    self.__query = 'update'
+    _, where, values = self.__select_args()
     for field_name, new_value in kwargs.items():
         what_fields.append(field_name)
         new_values.append(new_value)
@@ -391,7 +415,8 @@ def delete(self, no_clause=False, **kwargs):
          for field_name, value in kwargs.items()}
     assert self.is_set() or no_clause
     query_template = "delete from {} {}"
-    _, where, values = self.__select_args(__query='delete')
+    self.__query = 'delete'
+    _, where, values = self.__select_args(**kwargs)
     query = query_template.format(self.__fqrn, where)
     self.__cursor.execute(query, tuple(values))
 
@@ -404,30 +429,25 @@ def set_ops_tree(self):
     return self.__set_ops_tree
 
 def __copy(self):
-    new = copy(self)
-    new.__set_ops_tree = copy(self.__set_ops_tree)
-    return new
+    return copy(self)
 
 def __and__(self, other):
     new = self.__copy()
-    nother = other.__copy()
-    new.__set_ops_tree.add(new, "and", nother)
+    new.__set_ops_tree.add(new, "and", other)
     return new
 def __iand__(self, other):
     return self & other
 
 def __or__(self, other):
     new = self.__copy()
-    nother = other.__copy()
-    new.__set_ops_tree.add(new, "or", nother)
+    new.__set_ops_tree.add(new, "or", other)
     return new
 def __ior__(self, other):
     return self | other
 
 def __sub__(self, other):
     new = self.__copy()
-    nother = other.__copy()
-    new.__set_ops_tree.add(new, "and not", nother)
+    new.__set_ops_tree.add(new, "and not", other)
     return new
 def __isub__(self, other):
     return self - other
@@ -476,18 +496,17 @@ COMMON_INTERFACE = {
     '__ixor__': __ixor__,
     '__neg__': __neg__,
     '__join_query': __join_query,
-}
-
-TABLE_INTERFACE = {
     'insert': insert,
     '__what_to_insert': __what_to_insert,
     'update': update,
     '__update_args': __update_args,
     'delete': delete,
     'Transaction': Transaction,
+    # test
+    'set_ops': set_ops,
 }
-TABLE_INTERFACE.update(COMMON_INTERFACE)
 
+TABLE_INTERFACE = COMMON_INTERFACE
 VIEW_INTERFACE = COMMON_INTERFACE
 
 class RelationFactory(type):
