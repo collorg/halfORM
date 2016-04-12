@@ -56,7 +56,9 @@ FROM
 WHERE
     n.nspname <> 'pg_catalog'::name AND
     n.nspname <> 'information_schema'::name AND
-    ( c.relkind = 'r'::"char" OR c.relkind = 'v'::"char" ) AND
+    ( c.relkind = 'r'::"char" -- table
+      OR c.relkind = 'v'::"char" -- view
+      OR c.relkind = 'm' ) AND
     a.attnum > 0 -- AND
 GROUP BY
     a.attrelid,
