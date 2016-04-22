@@ -58,7 +58,9 @@ WHERE
     n.nspname <> 'information_schema'::name AND
     ( c.relkind = 'r'::"char" -- table
       OR c.relkind = 'v'::"char" -- view
-      OR c.relkind = 'm' ) AND
+      OR c.relkind = 'm' -- materialized view
+      OR c.relkind = 'f' -- foreign table/view/mat. view
+    ) AND
     a.attnum > 0 -- AND
 GROUP BY
     a.attrelid,

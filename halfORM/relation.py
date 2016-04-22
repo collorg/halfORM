@@ -509,6 +509,7 @@ COMMON_INTERFACE = {
 TABLE_INTERFACE = COMMON_INTERFACE
 VIEW_INTERFACE = COMMON_INTERFACE
 MVIEW_INTERFACE = COMMON_INTERFACE
+FDATA_INTERFACE = COMMON_INTERFACE
 
 class RelationFactory(type):
     """RelationFactory Metaclass
@@ -541,11 +542,18 @@ class RelationFactory(type):
         if dct.get('model'):
             tbl_attr['model'] = dct['model']
         tbl_attr['__sfqrn'] = tuple(sfqrn)
-        rel_class_names = {'r': 'Table', 'v': 'View', 'm': 'Materialized view'}
+        rel_class_names = {
+            'r': 'Table',
+            'v': 'View',
+            'm': 'Materialized view',
+            'f': 'Foreign data'}
         kind = metadata['tablekind']
         tbl_attr['__kind'] = rel_class_names[kind]
         rel_interfaces = {
-            'r': TABLE_INTERFACE, 'v': VIEW_INTERFACE, 'm': MVIEW_INTERFACE}
+            'r': TABLE_INTERFACE,
+            'v': VIEW_INTERFACE,
+            'm': MVIEW_INTERFACE,
+            'f': FDATA_INTERFACE}
         rf_.__set_fields(tbl_attr)
         for fct_name, fct in rel_interfaces[kind].items():
             tbl_attr[fct_name] = fct
