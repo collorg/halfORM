@@ -20,7 +20,7 @@ About QRN and FQRN:
 
 """
 
-__all__ = ["Model"]
+__all__ = ["Model", "Relation"]
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -30,6 +30,69 @@ from collections import OrderedDict
 from halfORM import model_errors
 from halfORM.relation import _normalize_fqrn, _normalize_qrn, RelationFactory
 #from pprint import PrettyPrinter
+
+class Relation:
+    """Example of usage:
+
+    from halfORM.model import Model, Relation
+
+    class User(Relation):
+        _model = Model('my_database')
+        _fqtn = 'actor.user'
+        def __init__(self, **kwargs):
+            super(User, self).__init__(**kwargs)
+
+    'my_database' references the file /etc/halfORM/my_database or ./my_database
+
+    [database]
+    name = db_name
+    user = role_name
+    password = password
+    host = localhost
+    port = 5432
+
+    """
+    def __init__(self, **kwargs):
+        self._relation = self._model.relation(self._fqtn)
+        self._fields_names = {elt.name() for elt in self._relation.fields}
+        for key, value in kwargs.items():
+            try:
+                assert key in self._fields_names
+            except Exception as err:
+                sys.stderr.write(
+                    "ERROR! Unknown field name: '{}'\n".format(key))
+                raise err
+            setattr(self._relation, key, value)
+
+    def select(self, *args, **kwargs):
+        return self._relation.select(*args, **kwargs)
+
+    def insert(self):
+        return self._relation.insert()
+
+    def update(self, no_clause=False, **kwargs):
+        return self._relation.update(no_clause=no_clause, **kwargs)
+
+    def delete(self, no_clause=False, **kwargs):
+        return self._relation.delete(no_clause=no_clause, **kwargs)
+
+    def mogrify(self, *args, **kwargs):
+        return self._relation.mogrify(*args, **kwargs)
+
+    def get(self, **kwargs):
+        return self._relation.get(**kwargs)
+
+    def getone(self):
+        return self._relation.getone()
+
+    def json(self, *args):
+        return self._relation.json(*args)
+
+    def __len__(self, *args, **kwargs):
+        return self._relation.__len__(*args, **kwargs)
+
+    def __repr__(self):
+        return self._relation.__repr__()
 
 class Model(object):
     """Model class

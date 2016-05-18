@@ -332,7 +332,8 @@ def select(self, *args, **kwargs):
     """Generator. Yiels the result of the query as a dictionary.
 
     - @args are fields names to restrict the returned attributes
-    - @kwargs: limit, order by, distinct... options (not implemented yet)
+    - @kwargs: key is a field_name, value the constraint associated
+      to that field
     """
     if kwargs and self.is_set():
         msg = """
@@ -450,6 +451,7 @@ def delete(self, no_clause=False, **kwargs):
     self.__cursor.execute(query, tuple(values))
 
 def __getitem__(self, key):
+    raise NotImplementedError
     return self.__cursor.fetchall()[key]
 
 @property
