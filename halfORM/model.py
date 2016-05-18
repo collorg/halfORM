@@ -22,6 +22,7 @@ About QRN and FQRN:
 
 __all__ = ["Model", "Relation"]
 
+import sys
 import psycopg2
 from psycopg2.extras import RealDictCursor
 psycopg2.extras.register_uuid()
