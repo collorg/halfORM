@@ -26,12 +26,14 @@ both FQRN and QRN. The _normalize_fqrn and _normalize_qrn functions add
 the double quotes.
 """
 
+import uuid
 import sys
 from copy import copy
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
 class SetOp(object):
+    ### WARNING! NOT FUNCTIONAL!
     """SetOp class stores the set operations made on the Relation class objects
     in a tree like structure.
     - __op is one of {'or', 'and', 'sub', 'neg'}
@@ -78,13 +80,18 @@ class SetOp(object):
                 else:
                     yield op_, left, right
         for op_, left, right in iter(self):
-            print(op_, left, right)
             yield op_, left, right
 
     def __repr__(self):
         #for op, left, right in self:
         #    output.append("{} ({},\n{})".format(op, left, right))
         return str(self.__op)
+
+class SQLClause(object):
+    def __init__(self):
+        self.__order_by = []
+        self.__offset = None
+        self.__limit = None
 
 class Relation(object):
     """Base class of Table and View classes (see RelationFactory)."""
@@ -102,6 +109,7 @@ def __init__(self, **kwargs):
     self.__query = None
     self.__sql_query = []
     self.__sql_values = []
+    self.__mogrify = False
     self.__set_ops_tree = SetOp()
     _ = {field._set_relation(self) for field in self._fields}
 
@@ -115,19 +123,21 @@ def __call__(self, **kwargs):
 def json(self, **kwargs):
     """Returns a JSON representation of the set returned by the select query.
     """
-    import json as js_, time
+    import json
+    import time
+    import uuid
     def handler(obj):
         """Replacement of default handler for json.dumps."""
         if hasattr(obj, 'timetuple'):
             # seconds since the epoch
             return int(time.mktime(obj.timetuple()))
-        #elif isinstance(obj, ...):
-        #    return ...
+        elif isinstance(obj, uuid.UUID):
+            return str(obj)
         else:
             raise TypeError(
                 'Object of type {} with value of '
                 '{} is not JSON serializable'.format(type(obj), repr(obj)))
-    return js_.dumps([elt for elt in self.select(**kwargs)], default=handler)
+    return json.dumps([elt for elt in self.select(**kwargs)], default=handler)
 
 def __repr__(self):
     rel_kind = self.__kind
@@ -253,20 +263,26 @@ def __select_args(self, *args, **kwargs):
                 l_set_fields = left.__get_set_fields()
                 set_fields += l_set_fields
                 for field in l_set_fields:
+                    comp_str = '%s'
+                    if type(field.value) in [list, tuple]:
+                        comp_str = 'any(%s)'
                     l_where.append(
-                        "{} {} %s".format(praf(field.name()), field.comp()))
+                        "{} {} {}".format(
+                            praf(field.name()), field.comp(), comp_str))
                 l_where = " and ".join(l_where)
-                print("L_WHERE", l_where)
 
             o_where = []
             o_set_fields = right.__get_set_fields()
             set_fields += o_set_fields
             for field in o_set_fields:
+                comp_str = '%s'
+                if type(field.value) in [list, tuple]:
+                    comp_str = 'any(%s)'
                 o_where.append(
-                    "{} {} %s".format(praf(field.name()), field.comp()))
+                    "{} {} %s".format(
+                        praf(field.name()), field.comp(), comp_str))
             o_where = " and ".join(o_where)
             o_where = "(({}) {} ({}))".format(l_where, op_, o_where)
-            print("O_WHERE", o_where)
             where.append(o_where)
 
     for fieldname, value in kwargs.items():
@@ -283,7 +299,11 @@ def __select_args(self, *args, **kwargs):
     set_fields = self.__get_set_fields()
     where = []
     for field in set_fields:
-        where.append("{} {} %s".format(praf(field.name()), field.comp()))
+        comp_str = '%s'
+        if type(field.value) is list:
+            comp_str = 'any(%s)'
+        where.append("{} {} {}".format(
+            praf(field.name()), field.comp(), comp_str))
     if where:
         where = '{}'.format(" and ".join(where))
         if self.__set_ops_tree.neg:
@@ -302,6 +322,8 @@ def __get_query(self, query_template, *args, **kwargs):
     self.__sql_values = []
     self.__query = 'select'
     what, where, values = self.__select_args(*args, **kwargs)
+    if args:
+        what = 'distinct {}'.format(what)
     self.__get_from()
     return (
         query_template.format(what, ' '.join(self.__sql_query), where), values)
@@ -312,12 +334,17 @@ def select(self, *args, **kwargs):
     - @args are fields names to restrict the returned attributes
     - @kwargs: limit, order by, distinct... options (not implemented yet)
     """
+    if kwargs and self.is_set():
+        msg = """
+        You can't use kwargs in select/mogrify if self is already set!
+        {}\n{}""".format(self, kwargs)
+        raise RuntimeError(msg)
     self.__sql_values = []
     query_template = "select {} from {} {}"
     query, values = self.__get_query(query_template, *args, **kwargs)
     values = tuple(self.__sql_values + values)
     try:
-        if not 'mogrify' in kwargs:
+        if not self.__mogrify:
             self.__cursor.execute(query, values)
         else:
             yield self.__cursor.mogrify(query, values).decode('utf-8')
@@ -331,8 +358,10 @@ def select(self, *args, **kwargs):
 
 def mogrify(self, *args, **kwargs):
     """Prints the select query."""
-    for elt in self.select(mogrify=True, *args, **kwargs):
+    self.__mogrify = True
+    for elt in self.select(*args, **kwargs):
         print(elt)
+    self.__mogrify = False
 
 def get(self, **kwargs):
     """Yields instanciated Relation objects instead of dict."""

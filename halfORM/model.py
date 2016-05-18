@@ -24,6 +24,7 @@ __all__ = ["Model"]
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
+psycopg2.extras.register_uuid()
 from configparser import ConfigParser
 from collections import OrderedDict
 from halfORM import model_errors
@@ -141,6 +142,9 @@ class Model(object):
         #pp.pprint(metadata)
         self.__relations.sort()
         return metadata
+
+    def execute_query(self, query, values=()):
+        return self.__cursor.execute(query, values)
 
     def relations(self):
         """List all the relations in the database"""

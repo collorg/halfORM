@@ -60,7 +60,7 @@ class FKey(FKeyInterface):
         """Representation of a foreign key
         """
         fields = '({})'.format(', '.join(self.fields))
-        repr_ = u"- {}: {}\n  \u21B3 {}({})".format(
+        repr_ = u"- {}: {}\n ↳ {}({})".format(
             self.name(),
             fields, self.__fk_fqrn, ', '.join(self.fk_names))
         if self._is_set:
