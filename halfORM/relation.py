@@ -126,12 +126,15 @@ def json(self, **kwargs):
     import json
     import time
     import uuid
+    from datetime import timedelta
     def handler(obj):
         """Replacement of default handler for json.dumps."""
         if hasattr(obj, 'timetuple'):
             # seconds since the epoch
-            return int(time.mktime(obj.timetuple()))
+            return int(time.mktime(obj.timetuple())) * 1000
         elif isinstance(obj, uuid.UUID):
+            return str(obj)
+        elif isinstance(obj, timedelta):
             return str(obj)
         else:
             raise TypeError(
