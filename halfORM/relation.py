@@ -120,13 +120,51 @@ def set_ops(self):
 def __call__(self, **kwargs):
     return relation(self.__fqrn, **kwargs)
 
-def json(self, **kwargs):
+def json(self, group_by_list=None, **kwargs):
     """Returns a JSON representation of the set returned by the select query.
+
+    group_by_list is a list of fields names. lists can be nested.
+    example:
+    - ['a'], the elements of the relation will be grouped on 'a' field values,
+    - ['a', ['b']], the elements are grouped on 'a' then the sub relations
+      (without 'a') are grouped on 'b'.
+    - ['a', 'b'], the elements are groupes on 'a', 'b' values.
     """
     import json
     import time
     import uuid
     from datetime import timedelta
+
+    def group_by(data, group_by_list):
+        res = []
+        dict_ = {}
+        recurse = None
+        for key in group_by_list:
+            if type(key) is list:
+                recurse = key
+        for elt in data:
+            elt = dict(elt)
+            l_values = []
+            for key in group_by_list:
+                if type(key) is not list:
+                    l_values.append((key, elt.pop(key)))
+
+            value = tuple(l_values)
+            if not value in dict_:
+                dict_[value] = []
+            dict_[value].append(elt)
+        for kv, value in dict_.items():
+            dct_res = {}
+            for k in kv:
+                dct_res.update({k[0]:k[1]})
+            if not recurse:
+                dct_res.update({'_group_':value})
+            else:
+                dct_res.update({'_group_':group_by(value, recurse)})
+            res.append(dct_res)
+        return res
+
+
     def handler(obj):
         """Replacement of default handler for json.dumps."""
         if hasattr(obj, 'timetuple'):
@@ -140,7 +178,11 @@ def json(self, **kwargs):
             raise TypeError(
                 'Object of type {} with value of '
                 '{} is not JSON serializable'.format(type(obj), repr(obj)))
-    return json.dumps([elt for elt in self.select(**kwargs)], default=handler)
+
+    res = [elt for elt in self.select(**kwargs)]
+    if group_by_list:
+        res = group_by(res, group_by_list)
+    return json.dumps(res, default=handler)
 
 def __repr__(self):
     rel_kind = self.__kind
