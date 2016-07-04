@@ -41,9 +41,9 @@ class UnknownAttributeError(Exception):
             "ERROR! Unknown attribute: {}.".format(msg))
 
 class ExpectedOneElementError(Exception):
-    def __init__(self):
+    def __init__(self, msg):
         super(self.__class__, self).__init__(
-            "ERROR! More than one element for a non list item.")
+            "ERROR! More than one element for a non list item: {}.".format(msg))
 
 class SetOp(object):
     ### WARNING! NOT FUNCTIONAL!
@@ -138,7 +138,7 @@ def set_ops(self):
 def __call__(self, **kwargs):
     return relation(self.__fqrn, **kwargs)
 
-def group_by(self, data, directive):
+def group_by(self, directive, **kwargs):
     def inner_group_by(data, directive, grouped_data, gdata_tree, gdata=None):
         if gdata is None:
             directive = yaml.safe_load(directive)
@@ -147,17 +147,24 @@ def group_by(self, data, directive):
         is_list = type(directive) == list
         if directive_type is list:
             directive = directive[0]
-        keys = [key for key in directive.keys()]
+        keys = set(directive)
         for elt in data:
             res_elt = {}
+            dct_in_list = {}
             for key in keys:
                 value = directive[key]
                 if type(value) in [list, dict]:
-                    group_name = key
-                    if gdata.get(key) is None:
-                        gdata[key] = type(value)()
-                    gdata_tree.append(gdata[key])
-                    inner_group_by([elt], value, grouped_data, gdata_tree, gdata_tree[-1])
+                    if type(gdata) is list:
+                        raise NotImplementedError(
+                            "Don't know how to group a list within a list.")
+                    else:
+                        group_name = key
+                        if gdata.get(key) is None:
+                            gdata[key] = type(value)()
+                        gdata_tree.append(gdata[key])
+                    inner_group_by(
+                        [elt], value,
+                        grouped_data, gdata_tree, gdata_tree[-1])
                     gdata_tree.pop()
                 else:
                     try:
@@ -169,8 +176,9 @@ def group_by(self, data, directive):
                     if gdata.get(key):
                         try:
                             assert res_elt[key] == gdata[key]
-                        except:
-                            raise ExpectedOneElementError()
+                        except Exception as err:
+                            print(key)
+                            raise ExpectedOneElementError(res_elt)
                 gdata.update(res_elt)
             else:
                 if not res_elt in gdata:
@@ -178,6 +186,7 @@ def group_by(self, data, directive):
 
     grouped_data = {}
     gdata_tree = []
+    data = [elt for elt in self.select(**kwargs)]
     inner_group_by(data, directive, grouped_data, gdata_tree)
     return grouped_data
 
@@ -201,9 +210,10 @@ def to_json(self, group_by_directive=None, **kwargs):
                 'Object of type {} with value of '
                 '{} is not JSON serializable'.format(type(obj), repr(obj)))
 
-    res = [elt for elt in self.select(**kwargs)]
     if group_by_directive:
-        res = self.group_by(res, group_by_directive)
+        res = self.group_by(group_by_directive, **kwargs)
+    else:
+        res = [elt for elt in self.select(**kwargs)]
     return json.dumps(res, default=handler)
 
 def __repr__(self):
