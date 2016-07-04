@@ -26,11 +26,24 @@ both FQRN and QRN. The _normalize_fqrn and _normalize_qrn functions add
 the double quotes.
 """
 
-import uuid
+import datetime
 import sys
+import uuid
+import yaml
+from collections import OrderedDict
 from copy import copy
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
+
+class UnknownAttributeError(Exception):
+    def __init__(self, msg):
+        super(self.__class__, self).__init__(
+            "ERROR! Unknown attribute: {}.".format(msg))
+
+class ExpectedOneElementError(Exception):
+    def __init__(self):
+        super(self.__class__, self).__init__(
+            "ERROR! More than one element for a non list item.")
 
 class SetOp(object):
     ### WARNING! NOT FUNCTIONAL!
@@ -103,6 +116,11 @@ class Relation(object):
 def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
     self.__cons_fields = []
+    kk = set(kwargs.keys())
+    try:
+        assert kk.intersection(self._fields_names) == kk
+    except:
+        raise UnknownAttributeError(str(kk.difference(self._fields_names)))
     _ = {self.__setattr__(field_name, value)
          for field_name, value in kwargs.items()}
     self._joined_to = []
@@ -120,50 +138,54 @@ def set_ops(self):
 def __call__(self, **kwargs):
     return relation(self.__fqrn, **kwargs)
 
-def json(self, group_by_list=None, **kwargs):
-    """Returns a JSON representation of the set returned by the select query.
+def group_by(self, data, directive):
+    def inner_group_by(data, directive, grouped_data, gdata_tree, gdata=None):
+        if gdata is None:
+            directive = yaml.safe_load(directive)
+            gdata = grouped_data
+        directive_type = type(directive)
+        is_list = type(directive) == list
+        if directive_type is list:
+            directive = directive[0]
+        keys = [key for key in directive.keys()]
+        for elt in data:
+            res_elt = {}
+            for key in keys:
+                value = directive[key]
+                if type(value) in [list, dict]:
+                    group_name = key
+                    if gdata.get(key) is None:
+                        gdata[key] = type(value)()
+                    gdata_tree.append(gdata[key])
+                    inner_group_by([elt], value, grouped_data, gdata_tree, gdata_tree[-1])
+                    gdata_tree.pop()
+                else:
+                    try:
+                        res_elt.update({value:elt[key]})
+                    except:
+                        raise UnknownAttributeError(key)
+            if type(gdata) is dict:
+                for key in res_elt:
+                    if gdata.get(key):
+                        try:
+                            assert res_elt[key] == gdata[key]
+                        except:
+                            raise ExpectedOneElementError()
+                gdata.update(res_elt)
+            else:
+                if not res_elt in gdata:
+                    gdata.append(res_elt)
 
-    group_by_list is a list of fields names. lists can be nested.
-    example:
-    - ['a'], the elements of the relation will be grouped on 'a' field values,
-    - ['a', ['b']], the elements are grouped on 'a' then the sub relations
-      (without 'a') are grouped on 'b'.
-    - ['a', 'b'], the elements are groupes on 'a', 'b' values.
+    grouped_data = {}
+    gdata_tree = []
+    inner_group_by(data, directive, grouped_data, gdata_tree)
+    return grouped_data
+
+def to_json(self, group_by_directive=None, **kwargs):
+    """Returns a JSON representation of the set returned by the select query.
     """
     import json
     import time
-    import uuid
-    from datetime import timedelta
-
-    def group_by(data, group_by_list):
-        res = []
-        dict_ = {}
-        recurse = None
-        for key in group_by_list:
-            if type(key) is list:
-                recurse = key
-        for elt in data:
-            elt = dict(elt)
-            l_values = []
-            for key in group_by_list:
-                if type(key) is not list:
-                    l_values.append((key, elt.pop(key)))
-
-            value = tuple(l_values)
-            if not value in dict_:
-                dict_[value] = []
-            dict_[value].append(elt)
-        for kv, value in dict_.items():
-            dct_res = {}
-            for k in kv:
-                dct_res.update({k[0]:k[1]})
-            if not recurse:
-                dct_res.update({'_group_':value})
-            else:
-                dct_res.update({'_group_':group_by(value, recurse)})
-            res.append(dct_res)
-        return res
-
 
     def handler(obj):
         """Replacement of default handler for json.dumps."""
@@ -172,7 +194,7 @@ def json(self, group_by_list=None, **kwargs):
             return int(time.mktime(obj.timetuple())) * 1000
         elif isinstance(obj, uuid.UUID):
             return str(obj)
-        elif isinstance(obj, timedelta):
+        elif isinstance(obj, datetime.timedelta):
             return str(obj)
         else:
             raise TypeError(
@@ -180,8 +202,8 @@ def json(self, group_by_list=None, **kwargs):
                 '{} is not JSON serializable'.format(type(obj), repr(obj)))
 
     res = [elt for elt in self.select(**kwargs)]
-    if group_by_list:
-        res = group_by(res, group_by_list)
+    if group_by_directive:
+        res = self.group_by(res, group_by_directive)
     return json.dumps(res, default=handler)
 
 def __repr__(self):
@@ -385,6 +407,11 @@ def select(self, *args, **kwargs):
         You can't use kwargs in select/mogrify if self is already set!
         {}\n{}""".format(self, kwargs)
         raise RuntimeError(msg)
+    kk = set(kwargs.keys())
+    try:
+        assert kk.intersection(self._fields_names) == kk
+    except:
+        raise UnknownAttributeError(str(kk.difference(self._fields_names)))
     self.__sql_values = []
     query_template = "select {} from {} {}"
     query, values = self.__get_query(query_template, *args, **kwargs)
@@ -548,7 +575,8 @@ COMMON_INTERFACE = {
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
-    'json': json,
+    'group_by': group_by,
+    'to_json': to_json,
     'fields': fields,
     '__get_from': __get_from,
     '__get_query': __get_query,
@@ -641,14 +669,16 @@ class RelationFactory(type):
         """ta_: table attributes dictionary."""
         from .field import Field
         from .fkey import FKey
-        ta_['_fields'] = []
-        ta_['__fkeys'] = []
+        ta_['_fields'] = set()
+        ta_['__fkeys'] = set()
+        ta_['_fields_names'] = set()
         dbm = ta_['model'].metadata
         flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
             ta_[field_name] = Field(field_name, f_metadata)
-            ta_['_fields'].append(ta_[field_name])
+            ta_['_fields'].add(ta_[field_name])
+            ta_['_fields_names'].add(field_name)
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
             fkeyname = f_metadata.get('fkeyname')
@@ -665,7 +695,7 @@ class RelationFactory(type):
                                    for elt in f_metadata['fkeynum']]
                 ta_[fkeyname] = FKey(
                     fkeyname, ft_sfqrn, ft_fields_names, fields_names)
-                ta_['__fkeys'].append(ta_[fkeyname])
+                ta_['__fkeys'].add(ta_[fkeyname])
 
 def relation(_fqrn, **kwargs):
     """This function is used to instanciate a Relation object using
