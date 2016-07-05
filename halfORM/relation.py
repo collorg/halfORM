@@ -140,53 +140,62 @@ def __call__(self, **kwargs):
 
 def group_by(self, directive, **kwargs):
     def inner_group_by(data, directive, grouped_data, gdata_tree, gdata=None):
+        deja_vu_key = set()
         if gdata is None:
-            directive = yaml.safe_load(directive)
             gdata = grouped_data
         directive_type = type(directive)
         is_list = type(directive) == list
         if directive_type is list:
             directive = directive[0]
         keys = set(directive)
+        akeys = keys.intersection(self._fields_names)
+        gkeys = keys.difference(akeys)
         for elt in data:
             res_elt = {}
-            dct_in_list = {}
-            for key in keys:
-                value = directive[key]
-                if type(value) in [list, dict]:
-                    if type(gdata) is list:
-                        raise NotImplementedError(
-                            "Don't know how to group a list within a list.")
-                    else:
-                        group_name = key
-                        if gdata.get(key) is None:
-                            gdata[key] = type(value)()
-                        gdata_tree.append(gdata[key])
-                    inner_group_by(
-                        [elt], value,
-                        grouped_data, gdata_tree, gdata_tree[-1])
-                    gdata_tree.pop()
-                else:
-                    try:
-                        res_elt.update({value:elt[key]})
-                    except:
-                        raise UnknownAttributeError(key)
-            if type(gdata) is dict:
-                for key in res_elt:
-                    if gdata.get(key):
-                        try:
-                            assert res_elt[key] == gdata[key]
-                        except Exception as err:
-                            print(key)
-                            raise ExpectedOneElementError(res_elt)
-                gdata.update(res_elt)
+            for key in akeys:
+                alias = directive[key]
+                deja_vu_key.add(alias)
+                try:
+                    res_elt.update({alias:elt[key]})
+                except:
+                    raise UnknownAttributeError(key)
+            if type(gdata) is list:
+                gdata.append(res_elt)
             else:
-                if not res_elt in gdata:
-                    gdata.append(res_elt)
+                gdata.update(res_elt)
+            for group_name in gkeys:
+                type_directive = type(directive[group_name])
+                suite = None
+                if not gdata:
+                    gdata[group_name] = type_directive()
+                    suite = gdata[group_name]
+                elif type(gdata) is list:
+                    suite = None
+                    for selt in gdata:
+                        different = True
+                        for skey in deja_vu_key:
+                            different = selt[skey] != res_elt[skey]
+                            if different:
+                                break
+                        if not different:
+                            if selt.get(group_name) is None:
+                                selt[group_name] = type_directive()
+                            suite = selt[group_name]
+                            break
+                    if suite is None:
+                        gdata.append(res_elt)
+                elif gdata.get(group_name) is None:
+                    gdata[group_name] = type_directive()
+                    suite = gdata[group_name]
+                else:
+                    suite = gdata[group_name]
+                inner_group_by(
+                    [elt], directive[group_name], suite, None)
 
     grouped_data = {}
     gdata_tree = []
     data = [elt for elt in self.select(**kwargs)]
+    directive = yaml.safe_load(directive)
     inner_group_by(data, directive, grouped_data, gdata_tree)
     return grouped_data
 
