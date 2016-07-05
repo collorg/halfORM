@@ -216,6 +216,11 @@ def to_json(self, group_by_directive=None, **kwargs):
         res = [elt for elt in self.select(**kwargs)]
     return json.dumps(res, default=handler)
 
+def json(self, group_by_directive=None, **kwargs):
+    sys.stderr.write(
+        "Relation.json is deprecated. Please, use to_json instead.")
+    return self.to_json(group_by_directive, **kwargs)
+
 def __repr__(self):
     rel_kind = self.__kind
     ret = []
@@ -587,6 +592,7 @@ COMMON_INTERFACE = {
     '__repr__': __repr__,
     'group_by': group_by,
     'to_json': to_json,
+    'json': json,
     'fields': fields,
     '__get_from': __get_from,
     '__get_query': __get_query,
