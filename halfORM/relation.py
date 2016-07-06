@@ -160,7 +160,17 @@ def group_by(self, directive, **kwargs):
                 except:
                     raise UnknownAttributeError(key)
             if type(gdata) is list:
-                gdata.append(res_elt)
+                different = None
+                for selt in gdata:
+                    different = True
+                    for key in deja_vu_key:
+                        different = selt[key] != res_elt[key]
+                        if different:
+                            break
+                    if not different:
+                        break
+                if not gdata or different:
+                    gdata.append(res_elt)
             else:
                 gdata.update(res_elt)
             for group_name in gkeys:
