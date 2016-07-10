@@ -36,7 +36,7 @@ To access the database, we need a config file ([test/halftest.ini](test/halftest
 
 ## API Examples (Everything you need to know to program with halfORM in five minutes)
 Some scripts snippets to illustrate the current implementation of the API.
-## The Method class:
+## The Model class:
 The first thing you need is a model object to play with your database. Let us play with the ```halftest``` database:
 ```python
 from halfORM.model import Model
