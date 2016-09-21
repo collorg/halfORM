@@ -195,6 +195,7 @@ def group_by(self, directive, **kwargs):
                     if suite is None:
                         gdata.append(res_elt)
                 elif gdata.get(group_name) is None:
+                    #TODO: Raise ExpectedOneElementError if necessary
                     gdata[group_name] = type_directive()
                     suite = gdata[group_name]
                 else:
@@ -379,9 +380,14 @@ def __select_args(self, *args, **kwargs):
                 comp_str = '%s'
                 if type(field.value) in [list, tuple]:
                     comp_str = 'any(%s)'
-                o_where.append(
-                    "{} {} %s".format(
-                        praf(field.name()), field.comp(), comp_str))
+                if not field.unaccent:
+                    o_where.append(
+                        "{} {} %s".format(
+                            praf(field.name()), field.comp(), comp_str))
+                else:
+                    o_where.append(
+                        "unaccent({}) {} unaccent(%s)".format(
+                            praf(field.name()), field.comp(), comp_str))
             o_where = " and ".join(o_where)
             o_where = "(({}) {} ({}))".format(l_where, op_, o_where)
             where.append(o_where)
@@ -403,8 +409,12 @@ def __select_args(self, *args, **kwargs):
         comp_str = '%s'
         if type(field.value) is list:
             comp_str = 'any(%s)'
-        where.append("{} {} {}".format(
-            praf(field.name()), field.comp(), comp_str))
+        if not field.unaccent:
+            where.append("{} {} {}".format(
+                praf(field.name()), field.comp(), comp_str))
+        else:
+            where.append("unaccent({}) {} unaccent({})".format(
+                praf(field.name()), field.comp(), comp_str))
     if where:
         where = '{}'.format(" and ".join(where))
         if self.__set_ops_tree.neg:

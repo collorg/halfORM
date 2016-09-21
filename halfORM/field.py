@@ -14,6 +14,7 @@ class Field(FKeyInterface):
         self.__relation = None
         self.__metadata = metadata
         self.__value = None
+        self.__unaccent = False
         self.__comp = '='
         super(Field, self).__init__(name)
 
@@ -35,6 +36,14 @@ class Field(FKeyInterface):
     def value(self):
         "Returns the value of the field object"
         return self.__value
+
+    def __get_unaccent(self):
+        return self.__unaccent
+    def __set_unaccent(self, value):
+        assert type(value) == bool
+        self.__unaccent = value
+
+    unaccent = property(__get_unaccent, __set_unaccent)
 
     def __set__(self, obj, value):
         """Sets the value (and the comparator) associated with the field."""
@@ -64,7 +73,7 @@ class Field(FKeyInterface):
         self.__comp = comp
 
     def comp(self):
-        "This property returns the comparator associated with the value."
+        "Returns the comparator associated to the value."
         return self.__comp
 
     @property

@@ -13,8 +13,12 @@ The Model class allows to load the model of a database:
 About QRN and FQRN:
 - FQRN stands for: Fully Qualified Relation Name. It is composed of:
   <database name>.<schema name>.<table name>.
-  Only the schema name can have dots in it. In this case, it must be written
-  <database name>."<schema name>".<table name>
+  Only the schema name can have dots in it. In this case, you must double
+  quote the schema name :
+  <database connection filename>."<schema name>".<table name>
+  ex:
+  - one.public.my_table
+  - two."access.role".acces
 - QRN is the Qualified Relation Name. Same as the FQRN without the database
   name. Double quotes can be ommited even if there are dots in the schema name.
 
@@ -33,25 +37,7 @@ from halfORM.relation import _normalize_fqrn, _normalize_qrn, RelationFactory
 #from pprint import PrettyPrinter
 
 class Relation:
-    """Example of usage:
-
-    from halfORM.model import Model, Relation
-
-    class User(Relation):
-        _model = Model('my_database')
-        _fqtn = 'actor.user'
-        def __init__(self, **kwargs):
-            super(User, self).__init__(**kwargs)
-
-    'my_database' references the file /etc/halfORM/my_database or ./my_database
-
-    [database]
-    name = db_name
-    user = role_name
-    password = password
-    host = localhost
-    port = 5432
-
+    """[NF] Do not use
     """
     def __init__(self, **kwargs):
         self._relation = self._model.relation(self._fqtn)

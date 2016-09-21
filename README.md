@@ -1,24 +1,15 @@
 # halfORM
 
-halfORM is a really simple ORM (fully written in Python3), easy to learn (full documentation should be at most 10 pages) and hopefully less than a 1000 lines of Python3 code when it is done.
+halfORM is a really simple ORM for PostgreSQL (9+) fully written in Python3.
 
-This project has just started (2015-10-18) and is in pre-alpha development stage. If you think you can contribute in any way, you are most welcome.
+halfORM only deals with the data manipulation part of the SQL language (SELECT, INSERT, UPDATE, DELETE) making it's usage quite trivial. All the data definition language part (CREATE TABLE/VIEW) has been left to SQL or whatever software used to define the structure of the database.
 
-## Why half?
-Because halfORM only deals with the data manipulation part of the SQL language (DML) making it much easier to learn and to write. All the CREATE part (data definition language) has been left to SQL or whatever software used to define the structure of the database.
+halfORM can produce complex JSON aggregations from any table/view with very simple YAML directives (nested aggregations are possible).
 
-## TODO
-- Fix the API (**THIS PROJECT DEVELOPMENT STATE IS PRE-ALPHA**),
-- doc doc doc and test test test,
-- Port it to MySQL,
-- Generate packages from the database,
-- Generate a browsable graph of the database structure,
-- PostgreSQL specific :
-  - Deal with inheritance,
+# Documentation
 
-## Use cases
-- Prototype in Python without investing too much in learning a complex ORM,
-- You already have a PostgreSQL database and you want to see it's structure,
+## The connection file
+## Typical use case
 - Easily request your data in JSON,
 - ...
 
