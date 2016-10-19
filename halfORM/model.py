@@ -111,12 +111,9 @@ class Model(object):
         if missing_params:
             raise model_errors.MalformedConfigFile(config_file, missing_params)
         self.__conn = None
-        self.__connect(**params)
-        self.__conn.autocommit = True
-        self.__cursor = self.__conn.cursor()
+        self.__cursor = None
         self.__relations = []
-        self.__metadata[self.__dbname] = self.__get_metadata()
-        self.__deja_vu[self.__dbname] = self
+        self.connect(**params)
 
     @staticmethod
     def deja_vu(dbname):
@@ -127,12 +124,16 @@ class Model(object):
         """
         return Model.__deja_vu.get(dbname)
 
-    def __connect(self, **params):
+    def connect(self, **params):
         """Returns the pyscopg2 connection object."""
         self.__conn = psycopg2.connect(
             'dbname={name} host={host} user={user} '
             'password={password} port={port}'.format(**params),
             cursor_factory=RealDictCursor)
+        self.__conn.autocommit = True
+        self.__cursor = self.__conn.cursor()
+        self.__metadata[self.__dbname] = self.__get_metadata()
+        self.__deja_vu[self.__dbname] = self
 
     @property
     def dbname(self):

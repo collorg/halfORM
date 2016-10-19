@@ -353,7 +353,7 @@ def __select_args(self, *args, **kwargs):
     """Returns the what, where and values needed to construct the queries.
     """
     def __set_ops(self, where, set_fields, set_ops_tree):
-        print("{}\n{}\n{}\n".format(80*'.', set_ops_tree, 80*'.'))
+#        print("{}\n{}\n{}\n".format(80*'.', set_ops_tree, 80*'.'))
         self_op = set_ops_tree.op_[0][0]
         where.append(" {} ".format(self_op))
         for op_, left, right in set_ops_tree:
