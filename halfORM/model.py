@@ -96,24 +96,15 @@ class Model(object):
         reserved to the RelationFactory metaclass.
         """
         assert bool(config_file) != bool(dbname)
+        self.__config_file = config_file
         if dbname:
             self = self.__deja_vu[dbname]
             self.__dbname = dbname
             return
-        config = ConfigParser()
-        if not config.read(
-                [config_file, '/etc/halfORM/{}'.format(config_file)]):
-            raise model_errors.MissingConfigFile(config_file)
-        params = dict(config['database'].items())
-        needed_params = {'name', 'host', 'user', 'password', 'port'}
-        self.__dbname = params['name']
-        missing_params = needed_params.symmetric_difference(set(params.keys()))
-        if missing_params:
-            raise model_errors.MalformedConfigFile(config_file, missing_params)
         self.__conn = None
         self.__cursor = None
         self.__relations = []
-        self.connect(**params)
+        self.connect()
 
     @staticmethod
     def deja_vu(dbname):
@@ -126,6 +117,17 @@ class Model(object):
 
     def connect(self, **params):
         """Returns the pyscopg2 connection object."""
+        config = ConfigParser()
+        if not config.read(
+                [self.__config_file,
+                 '/etc/halfORM/{}'.format(self.__config_file)]):
+            raise model_errors.MissingConfigFile(config_file)
+        params = dict(config['database'].items())
+        needed_params = {'name', 'host', 'user', 'password', 'port'}
+        self.__dbname = params['name']
+        missing_params = needed_params.symmetric_difference(set(params.keys()))
+        if missing_params:
+            raise model_errors.MalformedConfigFile(config_file, missing_params)
         self.__conn = psycopg2.connect(
             'dbname={name} host={host} user={user} '
             'password={password} port={port}'.format(**params),
