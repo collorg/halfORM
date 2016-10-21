@@ -36,11 +36,13 @@ from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
 class UnknownAttributeError(Exception):
+    """Unknown attribute error"""
     def __init__(self, msg):
         super(self.__class__, self).__init__(
             "ERROR! Unknown attribute: {}.".format(msg))
 
 class ExpectedOneElementError(Exception):
+    """Expected one element error"""
     def __init__(self, msg):
         super(self.__class__, self).__init__(
             "ERROR! More than one element for a non list item: {}.".format(msg))
@@ -69,8 +71,8 @@ class SetOp(object):
         """Add the informations corresponding to the new op."""
         self.__op.append(
             (op_,
-            left.set_ops.__op and left.set_ops or left,
-            right.set_ops.__op and right.set_ops or right))
+             left.set_ops.__op and left.set_ops or left,
+             right.set_ops.__op and right.set_ops or right))
 
     def __get_neg(self):
         """returns the value of self.__neg."""
@@ -81,7 +83,7 @@ class SetOp(object):
     neg = property(__get_neg, __set_neg)
 
     def __iter__(self):
-        def iter(set_op):
+        def _iter(set_op):
             """Recursive method used to iterate over set_op."""
             for op_, left, right in set_op.__op:
                 if isinstance(left, SetOp):
@@ -92,7 +94,7 @@ class SetOp(object):
                         yield op_, left, right
                 else:
                     yield op_, left, right
-        for op_, left, right in iter(self):
+        for op_, left, right in _iter(self):
             yield op_, left, right
 
     def __repr__(self):
@@ -116,11 +118,11 @@ class Relation(object):
 def __init__(self, **kwargs):
     self.__cursor = self.model.connection.cursor()
     self.__cons_fields = []
-    kk = set(kwargs.keys())
+    kwk_ = set(kwargs.keys())
     try:
-        assert kk.intersection(self._fields_names) == kk
+        assert kwk_.intersection(self._fields_names) == kwk_
     except:
-        raise UnknownAttributeError(str(kk.difference(self._fields_names)))
+        raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
     _ = {self.__setattr__(field_name, value)
          for field_name, value in kwargs.items()}
     self._joined_to = []
@@ -359,8 +361,7 @@ def __select_args(self, *args, **kwargs):
         for op_, left, right in set_ops_tree:
             l_where = []
             if id(left) == id(self):
-                coucou
-                pass # do something
+                pass
             else:
                 l_set_fields = left.__get_set_fields()
                 set_fields += l_set_fields
@@ -382,11 +383,11 @@ def __select_args(self, *args, **kwargs):
                     comp_str = 'any(%s)'
                 if not field.unaccent:
                     o_where.append(
-                        "{} {} %s".format(
+                        "{} {} {}".format(
                             praf(field.name()), field.comp(), comp_str))
                 else:
                     o_where.append(
-                        "unaccent({}) {} unaccent(%s)".format(
+                        "unaccent({}) {} unaccent({})".format(
                             praf(field.name()), field.comp(), comp_str))
             o_where = " and ".join(o_where)
             o_where = "(({}) {} ({}))".format(l_where, op_, o_where)
@@ -451,11 +452,11 @@ def select(self, *args, **kwargs):
         You can't use kwargs in select/mogrify if self is already set!
         {}\n{}""".format(self, kwargs)
         raise RuntimeError(msg)
-    kk = set(kwargs.keys())
+    kwk_ = set(kwargs.keys())
     try:
-        assert kk.intersection(self._fields_names) == kk
+        assert kwk_.intersection(self._fields_names) == kwk_
     except:
-        raise UnknownAttributeError(str(kk.difference(self._fields_names)))
+        raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
     self.__sql_values = []
     query_template = "select {} from {} {}"
     query, values = self.__get_query(query_template, *args, **kwargs)

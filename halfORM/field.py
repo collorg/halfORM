@@ -40,7 +40,7 @@ class Field(FKeyInterface):
     def __get_unaccent(self):
         return self.__unaccent
     def __set_unaccent(self, value):
-        assert type(value) == bool
+        assert isinstance(value, bool)
         self.__unaccent = value
 
     unaccent = property(__get_unaccent, __set_unaccent)

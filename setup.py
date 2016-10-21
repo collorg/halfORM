@@ -21,4 +21,9 @@ setup(
     license='GPL',
     packages=['halfORM'],
     install_requires=['psycopg2>=2.6.1'],
+    entry_points={
+        'console_scripts': [
+            'hormgen=halfORM.hormgen:main',
+        ],
+    },
 )
