@@ -26,14 +26,14 @@ About QRN and FQRN:
 
 __all__ = ["Model"]
 
-import sys
-import psycopg2
-from psycopg2.extras import RealDictCursor
-psycopg2.extras.register_uuid()
 from configparser import ConfigParser
 from collections import OrderedDict
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from halfORM import model_errors
 from halfORM.relation import _normalize_fqrn, _normalize_qrn, RelationFactory
+
+psycopg2.extras.register_uuid()
 #from pprint import PrettyPrinter
 
 class Model(object):
@@ -130,7 +130,7 @@ class Model(object):
                     dct.pop('schemaname'), dct.pop('relationname'))
                 tableid = dct.pop('tableid')
                 description = dct.pop('tabledescription')
-                if not table_key in byname:
+                if table_key not in byname:
                     byid[tableid] = {}
                     byid[tableid]['sfqrn'] = table_key
                     byid[tableid]['fields'] = {}
@@ -145,7 +145,7 @@ class Model(object):
                 byname[table_key]['fields'][fieldname] = dct
                 byname[table_key]['fields_by_num'][fieldnum] = dct
                 byid[tableid]['fields'][fieldnum] = fieldname
-                if not (tablekind, table_key) in self.__relations:
+                if (tablekind, table_key) not in self.__relations:
                     self.__relations.append((tablekind, table_key))
         #pp = PrettyPrinter()
         #pp.pprint(metadata)
@@ -153,6 +153,7 @@ class Model(object):
         return metadata
 
     def execute_query(self, query, values=()):
+        """Execute a raw SQL query"""
         return self.__cursor.execute(query, values)
 
     def relations(self):

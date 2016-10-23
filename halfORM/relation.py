@@ -30,8 +30,6 @@ import datetime
 import sys
 import uuid
 import yaml
-from collections import OrderedDict
-from copy import copy
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
@@ -48,31 +46,25 @@ class ExpectedOneElementError(Exception):
             "ERROR! More than one element for a non list item: {}.".format(msg))
 
 class SetOp(object):
-    ### WARNING! NOT FUNCTIONAL!
     """SetOp class stores the set operations made on the Relation class objects
-    in a tree like structure.
+
     - __op is one of {'or', 'and', 'sub', 'neg'}
     - __right is a Relation object. It can be None if the operator is 'neg'.
     """
-    def __init__(self):
+    def __init__(self, op=None, right=None):
         self.__neg = False
-        self.__op = []
+        self.__op = op
+        self.__right = right
 
     @property
     def op_(self):
-        """Poperty retruning the __op value."""
+        """Property returning the __op value."""
         return self.__op
 
-    def is_set(self):
-        """Return True if the self object has been set."""
-        return self.__op != []
-
-    def add(self, left, op_, right):
-        """Add the informations corresponding to the new op."""
-        self.__op.append(
-            (op_,
-             left.set_ops.__op and left.set_ops or left,
-             right.set_ops.__op and right.set_ops or right))
+    @property
+    def right(self):
+        """Property returning the right operand (relation)."""
+        return self.__right
 
     def __get_neg(self):
         """returns the value of self.__neg."""
@@ -82,31 +74,11 @@ class SetOp(object):
         self.__neg = neg
     neg = property(__get_neg, __set_neg)
 
-    def __iter__(self):
-        def _iter(set_op):
-            """Recursive method used to iterate over set_op."""
-            for op_, left, right in set_op.__op:
-                if isinstance(left, SetOp):
-                    for op_, left, right in iter(left.__op):
-                        yield op_, left, right
-                if isinstance(right, SetOp):
-                    for op_, left, right in iter(right):
-                        yield op_, left, right
-                else:
-                    yield op_, left, right
-        for op_, left, right in _iter(self):
-            yield op_, left, right
-
     def __repr__(self):
-        #for op, left, right in self:
-        #    output.append("{} ({},\n{})".format(op, left, right))
-        return str(self.__op)
-
-class SQLClause(object):
-    def __init__(self):
-        self.__order_by = []
-        self.__offset = None
-        self.__limit = None
+        return "{}{} {}".format(
+            self.__neg and "NOT " or "",
+            self.__op,
+            self.__right.fqrn)
 
 class Relation(object):
     """Base class of Table and View classes (see RelationFactory)."""
@@ -130,38 +102,26 @@ def __init__(self, **kwargs):
     self.__sql_query = []
     self.__sql_values = []
     self.__mogrify = False
-    self.__set_ops_tree = SetOp()
+    self.__set_op = None
     _ = {field._set_relation(self) for field in self._fields}
 
-@property
-def set_ops(self):
-    return self.__set_ops_tree
-
-def __call__(self, **kwargs):
-    return relation(self.__fqrn, **kwargs)
-
-def group_by(self, directive, **kwargs):
-    def inner_group_by(data, directive, grouped_data, gdata_tree, gdata=None):
+def __group_by(self, yml_directive, **kwargs):
+    def inner_group_by(data, directive, grouped_data, gdata=None):
         deja_vu_key = set()
         if gdata is None:
             gdata = grouped_data
-        directive_type = type(directive)
-        is_list = type(directive) == list
-        if directive_type is list:
+        if isinstance(directive, list):
             directive = directive[0]
         keys = set(directive)
-        akeys = keys.intersection(self._fields_names)
-        gkeys = keys.difference(akeys)
         for elt in data:
             res_elt = {}
-            for key in akeys:
-                alias = directive[key]
-                deja_vu_key.add(alias)
+            for key in keys.intersection(self._fields_names):
+                deja_vu_key.add(directive[key])
                 try:
-                    res_elt.update({alias:elt[key]})
+                    res_elt.update({directive[key]:elt[key]})
                 except:
                     raise UnknownAttributeError(key)
-            if type(gdata) is list:
+            if isinstance(gdata, list):
                 different = None
                 for selt in gdata:
                     different = True
@@ -175,13 +135,14 @@ def group_by(self, directive, **kwargs):
                     gdata.append(res_elt)
             else:
                 gdata.update(res_elt)
-            for group_name in gkeys:
+            for group_name in keys.difference(
+                    keys.intersection(self._fields_names)):
                 type_directive = type(directive[group_name])
                 suite = None
                 if not gdata:
                     gdata[group_name] = type_directive()
                     suite = gdata[group_name]
-                elif type(gdata) is list:
+                elif isinstance(gdata, list):
                     suite = None
                     for selt in gdata:
                         different = True
@@ -206,13 +167,12 @@ def group_by(self, directive, **kwargs):
                     [elt], directive[group_name], suite, None)
 
     grouped_data = {}
-    gdata_tree = []
     data = [elt for elt in self.select(**kwargs)]
-    directive = yaml.safe_load(directive)
-    inner_group_by(data, directive, grouped_data, gdata_tree)
+    directive = yaml.safe_load(yml_directive)
+    inner_group_by(data, directive, grouped_data)
     return grouped_data
 
-def to_json(self, group_by_directive=None, **kwargs):
+def to_json(self, yml_directive=None, **kwargs):
     """Returns a JSON representation of the set returned by the select query.
     """
     import json
@@ -232,16 +192,11 @@ def to_json(self, group_by_directive=None, **kwargs):
                 'Object of type {} with value of '
                 '{} is not JSON serializable'.format(type(obj), repr(obj)))
 
-    if group_by_directive:
-        res = self.group_by(group_by_directive, **kwargs)
+    if yml_directive:
+        res = self.__group_by(yml_directive, **kwargs)
     else:
         res = [elt for elt in self.select(**kwargs)]
     return json.dumps(res, default=handler)
-
-def json(self, group_by_directive=None, **kwargs):
-    sys.stderr.write(
-        "Relation.json is deprecated. Please, use to_json instead.")
-    return self.to_json(group_by_directive, **kwargs)
 
 def __repr__(self):
     rel_kind = self.__kind
@@ -277,7 +232,7 @@ def is_set(self):
     result of a combination of Relations (using set operators).
     """
     return (bool(self._joined_to) or
-            self.__set_ops_tree.is_set() or
+            self.__set_op or
             bool({field for field in self._fields if field.is_set()}))
 
 @property
@@ -318,7 +273,8 @@ def __join_query(self, fkey, op_=' and '):
         field for field in from_.fields if field.is_set())
     constraints_query = op_.join(
         constraints_to_query + constraints_from_query)
-    constraints_values = list(constraints_to_values) + list(constraints_from_values)
+    constraints_values = list(constraints_to_values) + \
+                         list(constraints_from_values)
 
     if constraints_query:
         bounds = op_.join([bounds, constraints_query])
@@ -354,44 +310,24 @@ def __get_from(self, orig_rel=None, deja_vu=None):
 def __select_args(self, *args, **kwargs):
     """Returns the what, where and values needed to construct the queries.
     """
-    def __set_ops(self, where, set_fields, set_ops_tree):
-#        print("{}\n{}\n{}\n".format(80*'.', set_ops_tree, 80*'.'))
-        self_op = set_ops_tree.op_[0][0]
-        where.append(" {} ".format(self_op))
-        for op_, left, right in set_ops_tree:
-            l_where = []
-            if id(left) == id(self):
-                pass
+    def __set_ops(rel, where, set_fields):
+        o_where = []
+        o_set_fields = self.__set_op.right.__get_set_fields()
+        set_fields += o_set_fields
+        for field in o_set_fields:
+            comp_str = '%s'
+            if isinstance(field.value, (list, tuple)):
+                comp_str = 'any(%s)'
+            if not field.unaccent:
+                o_where.append(
+                    "{} {} {}".format(
+                        praf(field.name()), field.comp(), comp_str))
             else:
-                l_set_fields = left.__get_set_fields()
-                set_fields += l_set_fields
-                for field in l_set_fields:
-                    comp_str = '%s'
-                    if type(field.value) in [list, tuple]:
-                        comp_str = 'any(%s)'
-                    l_where.append(
-                        "{} {} {}".format(
-                            praf(field.name()), field.comp(), comp_str))
-                l_where = " and ".join(l_where)
-
-            o_where = []
-            o_set_fields = right.__get_set_fields()
-            set_fields += o_set_fields
-            for field in o_set_fields:
-                comp_str = '%s'
-                if type(field.value) in [list, tuple]:
-                    comp_str = 'any(%s)'
-                if not field.unaccent:
-                    o_where.append(
-                        "{} {} {}".format(
-                            praf(field.name()), field.comp(), comp_str))
-                else:
-                    o_where.append(
-                        "unaccent({}) {} unaccent({})".format(
-                            praf(field.name()), field.comp(), comp_str))
-            o_where = " and ".join(o_where)
-            o_where = "(({}) {} ({}))".format(l_where, op_, o_where)
-            where.append(o_where)
+                o_where.append(
+                    "unaccent({}) {} unaccent({})".format(
+                        praf(field.name()), field.comp(), comp_str))
+        res_where = " and ".join(o_where)
+        where.append("{} ({})".format(rel.__set_op.op_, res_where))
 
     for fieldname, value in kwargs.items():
         self.__setattr__(fieldname, value)
@@ -408,7 +344,7 @@ def __select_args(self, *args, **kwargs):
     where = []
     for field in set_fields:
         comp_str = '%s'
-        if type(field.value) is list:
+        if isinstance(field.value, list):
             comp_str = 'any(%s)'
         if not field.unaccent:
             where.append("{} {} {}".format(
@@ -417,17 +353,17 @@ def __select_args(self, *args, **kwargs):
             where.append("unaccent({}) {} unaccent({})".format(
                 praf(field.name()), field.comp(), comp_str))
     if where:
-        where = '{}'.format(" and ".join(where))
-        if self.__set_ops_tree.neg:
-            where = "not({})".format(where)
-        where = [where]
-    if self.__set_ops_tree.is_set():
-        __set_ops(self, where, set_fields, self.__set_ops_tree)
+        s_where = '{}'.format(" and ".join(where))
+        if self.__set_op and self.__set_op.neg:
+            s_where = "not({})".format(where)
+        where = [s_where]
+    if self.__set_op:
+        __set_ops(self, where, set_fields)
     if where:
-        where = 'where {}'.format("".join(where))
+        s_where = 'where {}'.format("".join(where))
     else:
-        where = ''
-    return what, where, set_fields
+        s_where = ''
+    return what, s_where, set_fields
 
 def __get_query(self, query_template, *args, **kwargs):
     """Prepare the SQL query to be executed."""
@@ -504,10 +440,10 @@ def __len__(self, *args, **kwargs):
     query_template = "select count({}) from {} {}"
     query, values = self.__get_query(query_template, *args, **kwargs)
     try:
-        vars = tuple(self.__sql_values + values)
-        self.__cursor.execute(query, vars)
+        vars_ = tuple(self.__sql_values + values)
+        self.__cursor.execute(query, vars_)
     except Exception as err:
-        print(query, vars)
+        print(query, vars_)
         raise err
     return self.__cursor.fetchone()['count']
 
@@ -571,40 +507,42 @@ def __getitem__(self, key):
     raise NotImplementedError
     return self.__cursor.fetchall()[key]
 
-@property
-def set_ops_tree(self):
-    """Return the set operations on self."""
-    return self.__set_ops_tree
+def __call__(self, **kwargs):
+    return relation(self.__fqrn, **kwargs)
 
 def __copy(self):
-    return copy(self)
+    new = self.__class__(
+        **{field.name():(field.value, field.comp())
+           for field in self._fields if field.value})
+    new.__set_op = self.__set_op
+    return new
 
 def __and__(self, other):
     new = self.__copy()
-    new.__set_ops_tree.add(new, "and", other)
+    new.__set_op = SetOp("and", other)
     return new
 def __iand__(self, other):
     return self & other
 
 def __or__(self, other):
     new = self.__copy()
-    new.__set_ops_tree.add(new, "or", other)
+    new.__set_op = SetOp("or", other)
     return new
 def __ior__(self, other):
     return self | other
 
 def __sub__(self, other):
     new = self.__copy()
-    new.__set_ops_tree.add(new, "and not", other)
+    new.__set_op = SetOp("and not", other)
     return new
 def __isub__(self, other):
     return self - other
 
 def __neg__(self):
     new = self.__copy()
-    print("NEG", id(new), id(self))
-    new.__set_ops_tree.neg = not new.__set_ops_tree.neg
-    print("NEG", id(new.__set_ops_tree.neg), id(self.__set_ops_tree.neg))
+    if new.__set_op is None:
+        new.__set_op = SetOp()
+    new.__set_op.neg = not new.__set_op.neg
     return new
 
 def __xor__(self, other):
@@ -617,12 +555,12 @@ def __ixor__(self, other):
 COMMON_INTERFACE = {
     '__init__': __init__,
     '__call__': __call__,
+    '__copy': __copy,
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
-    'group_by': group_by,
+    '__group_by':__group_by,
     'to_json': to_json,
-    'json': json,
     'fields': fields,
     '__get_from': __get_from,
     '__get_query': __get_query,
@@ -634,8 +572,6 @@ COMMON_INTERFACE = {
     '__len__': __len__,
     'get': get,
     'getone': getone,
-    'set_ops_tree': set_ops_tree,
-    '__copy': __copy,
     '__and__': __and__,
     '__iand__': __iand__,
     '__or__': __or__,
@@ -653,7 +589,6 @@ COMMON_INTERFACE = {
     'delete': delete,
     'Transaction': Transaction,
     # test
-    'set_ops': set_ops,
 }
 
 TABLE_INTERFACE = COMMON_INTERFACE
@@ -678,8 +613,8 @@ class RelationFactory(type):
         tbl_attr = {}
         tbl_attr['__fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
         attr_names = ['dbname', 'schemaname', 'relationname']
-        for i in range(len(attr_names)):
-            tbl_attr[attr_names[i]] = sfqrn[i]
+        for i, name in enumerate(attr_names):
+            tbl_attr[name] = sfqrn[i]
         dbname = tbl_attr['dbname']
         tbl_attr['model'] = model.Model.deja_vu(dbname)
         if not tbl_attr['model']:

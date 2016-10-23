@@ -18,7 +18,7 @@ class FKey(FKeyInterface):
 
     def __get__(self, obj, type_=None):
         """Returns the relation on which the fkey is defined."""
-        if self.from_ == None:
+        if self.from_ is None:
             self.__set__(obj)
             if not (self.from_, self) in self.to_._joined_to:
                 self.to_._joined_to.insert(0, (self.from_, self))
