@@ -50,15 +50,15 @@ DESCRIPTION:
 The table blog.comment contains all the comments
 made by a person on a post.
 FIELDS:
+- author_id: (int4) 
 - id:        (int4) PK
 - content:   (text) 
 - post_id:   (int4) 
-- author_id: (int4) 
 FOREIGN KEYS:
-- post: (post_id)
-  ↳ "halftest"."blog"."post"(id)
-- author: (author_id)
-  ↳ "halftest"."actor"."person"(id)
+- post_fkey: (post_id)
+ ↳ "halftest"."blog"."post"(id)
+- author_fkey: (author_id)
+ ↳ "halftest"."actor"."person"(id)
 ```
 Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halftest"."actor"."person"(id)```
 
@@ -71,14 +71,13 @@ person = halftest.relation("actor.person")
 ```
 With a Relation object, you can use the following methods if it is of type ```Table```:
 - ```insert```
-- ```select```, ```json```, ```get``` and ```getone```
-- ```join```
+- ```select```, ```to_json```, ```get``` and ```getone```
 - ```update```
 - ```delete```
 
-If the type of the relation is ```View```, only the ```select```, ```get``` and ```getone``` methods are present.
+If the type of the relation is ```View```, only the ```select```, ... methods can be used.
 ### Insert
-To insert a tuple in the relation, just use the ```insert``` method as show bellow:
+To insert a tuple in the relation, just use the ```insert``` method as shown bellow:
 ```python
 @person.Transaction
 def insert_many(person):
@@ -92,7 +91,9 @@ insert_many(person)
 ```
 You can put a transaction on any function/method using the ```Relation.Transaction``` decorator.
 
-### Select/Json
+Note: halfORM works in autocommit mode by default.
+
+### Select
 ```Select``` is a generator. Without any argument, it returns all the datas in the relation in a list of dictionaries. You can easily filter to get any subset:
 ```python
 person = person(last_name=('_a%', 'like'))
@@ -117,72 +118,7 @@ for dct in person(last_name=('_a%', 'like')).select('last_name'):
 
 ```
 
-### Playing with foreign keys
-We want to see *Gaston*'s comments containing "m'enfin" on *Corto*'s posts.
-```python
-gaston = person(first_name="Gaston")
-corto = person(first_name="Corto")
-corto_post = halftest.relation("blog.post", author=corto)
-gaston_comment_on_corto_post = halftest.relation(
-    "blog.comment", text=("%m'enfin%", "ilike"), author=gaston, post=corto_post)
-```
 
-The representation of the request can be displayed just by printing the comment object:
-```python
-print(gaston_comment_on_corto_post)
-```
-```
-TABLE: "halftest"."blog"."comment"
-DESCRIPTION:
-The table blog.comment contains all the comments
-made by a person on a post.
-FIELDS:
-- id:        (int4) PK
-- content:   (text)  (content ilike %m'enfin%)
-- post_id:   (int4) 
-- author_id: (int4) 
-FOREIGN KEYS:
-- post: (post_id)
-  ↳ "halftest"."blog"."post"(id)
-     TABLE: "halftest"."blog"."post"
-     DESCRIPTION:
-     The table blog.post contains all the post
-     made by a person in the blogging system.
-     FIELDS:
-     - id:                (int4) PK
-     - title:             (text) 
-     - content:           (text) 
-     - author_first_name: (text) 
-     - author_last_name:  (text) 
-     - author_birth_date: (date) 
-     FOREIGN KEY:
-     - author: (author_first_name, author_last_name, author_birth_date)
-       ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
-          TABLE: "halftest"."actor"."person"
-          DESCRIPTION:
-          The table actor.person contains the persons of the blogging system.
-          FIELDS:
-          - id:         (int4) UNIQUE NOT NULL (id = 545)
-          - first_name: (text) PK (first_name = Corto)
-          - last_name:  (text) PK (last_name = MALTESE)
-          - birth_date: (date) PK (birth_date = 1975-01-07)
-- author: (author_id)
-  ↳ "halftest"."actor"."person"(id)
-     TABLE: "halftest"."actor"."person"
-     DESCRIPTION:
-     The table actor.person contains the persons of the blogging system.
-     FIELDS:
-     - id:         (int4) UNIQUE NOT NULL
-     - first_name: (text) PK (first_name = Gaston)
-     - last_name:  (text) PK
-     - birth_date: (date) PK
-```
-### Join
-The ```Relation.join``` method can be used to propagate constraints through relations:
-```python
-gaston_comment_on_corto_post = gaston.join(corto_post).join(comment)
-```
-The method can only join relations that are directly linked by foreign keys whatever the direction of the link is.
 ### Update
 In this example, we upper case the last name of all the persons for which the second letter is an ```a```:
 
