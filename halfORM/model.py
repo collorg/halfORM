@@ -70,6 +70,9 @@ class Model(object):
         """
         return Model.__deja_vu.get(dbname)
 
+    def ping(self):
+        self.execute_query("select 1");
+
     def connect(self, **params):
         """Returns the pyscopg2 connection object."""
         config = ConfigParser()
