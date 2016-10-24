@@ -105,7 +105,7 @@ def __init__(self, **kwargs):
     self.__set_op = None
     _ = {field._set_relation(self) for field in self._fields}
 
-def __group_by(self, yml_directive, **kwargs):
+def group_by(self, yml_directive, **kwargs):
     def inner_group_by(data, directive, grouped_data, gdata=None):
         deja_vu_key = set()
         if gdata is None:
@@ -180,20 +180,19 @@ def to_json(self, yml_directive=None, **kwargs):
 
     def handler(obj):
         """Replacement of default handler for json.dumps."""
-        if hasattr(obj, 'timetuple'):
-            # seconds since the epoch
-            return int(time.mktime(obj.timetuple())) * 1000
+        if hasattr(obj, 'isoformat'):
+            return str(obj.isoformat())
         elif isinstance(obj, uuid.UUID):
             return str(obj)
         elif isinstance(obj, datetime.timedelta):
-            return str(obj)
+            return obj.total_seconds()
         else:
             raise TypeError(
                 'Object of type {} with value of '
                 '{} is not JSON serializable'.format(type(obj), repr(obj)))
 
     if yml_directive:
-        res = self.__group_by(yml_directive, **kwargs)
+        res = self.group_by(yml_directive, **kwargs)
     else:
         res = [elt for elt in self.select(**kwargs)]
     return json.dumps(res, default=handler)
@@ -559,7 +558,7 @@ COMMON_INTERFACE = {
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
-    '__group_by':__group_by,
+    'group_by':group_by,
     'to_json': to_json,
     'fields': fields,
     '__get_from': __get_from,
