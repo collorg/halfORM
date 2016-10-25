@@ -46,7 +46,7 @@ class Model(object):
     """
     __deja_vu = {}
     __metadata = {}
-    def __init__(self, config_file=None, dbname=None):
+    def __init__(self, config_file=None, dbname=None, raise_error=True):
         """Model constructor
 
         Use @config_file in your scripts. The @dbname parameter is
@@ -64,6 +64,8 @@ class Model(object):
         try:
             self.connect()
         except Exception as err:
+            if raise_error:
+                raise err.__class__(err.filename)
             sys.stderr.write("{}\n".format(err))
             sys.stderr.flush()
 
