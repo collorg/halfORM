@@ -26,10 +26,12 @@ About QRN and FQRN:
 
 __all__ = ["Model"]
 
-from configparser import ConfigParser
-from collections import OrderedDict
+import sys
 import psycopg2
 from psycopg2.extras import RealDictCursor
+
+from configparser import ConfigParser
+from collections import OrderedDict
 from halfORM import model_errors
 from halfORM.relation import _normalize_fqrn, _normalize_qrn, RelationFactory
 
@@ -59,7 +61,11 @@ class Model(object):
         self.__conn = None
         self.__cursor = None
         self.__relations = []
-        self.connect()
+        try:
+            self.connect()
+        except Exception as err:
+            sys.stderr.write("{}\n".format(err))
+            sys.stderr.flush()
 
     @staticmethod
     def deja_vu(dbname):
@@ -71,10 +77,25 @@ class Model(object):
         return Model.__deja_vu.get(dbname)
 
     def ping(self):
-        self.execute_query("select 1");
+        """Returns True if the connection is OK.
+        Otherwise attempt a new connection and return False.
+        """
+        try:
+            self.execute_query("select 1");
+            return True
+        except:
+            try:
+                self.connect()
+            except Exception as err:
+                sys.stderr.write('{}\n'.format(err))
+                sys.stderr.flush()
+            return False
 
     def connect(self, **params):
-        """Returns the pyscopg2 connection object."""
+        """Setup a new connexion, cursor to the database."""
+        if self.__conn is not None:
+            if not self.__conn.closed:
+                self.__conn.close()
         config = ConfigParser()
         if not config.read(
                 [self.__config_file,
