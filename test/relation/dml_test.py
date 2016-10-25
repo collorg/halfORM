@@ -61,10 +61,10 @@ class Test(TestCase):
     def select_test(self):
         n = 'abcdef'[randint(0, 5)]
         p = chr(ord('a') + range(10)[randint(0, 9)])
-        pers = self.pers
-        pers.last_name = ('{}%'.format(n), 'ilike')
-        pers.first_name = ('%{}'.format(p), 'ilike')
-        pers.birth_date = self.today
+        pers = self.pers(
+            last_name=('{}%'.format(n), 'ilike'),
+            first_name=('%{}'.format(p), 'ilike'),
+            birth_date=self.today)
         self.assertEqual(len(pers), 1)
         for dct in pers.select():
             self.pers(**dct).getone()
