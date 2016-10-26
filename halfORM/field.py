@@ -4,6 +4,7 @@
 """This module provides the Field class."""
 
 from halfORM.fkey_interface import FKeyInterface
+from halfORM.null import NULL
 from psycopg2.extensions import register_adapter, adapt
 
 class Field(FKeyInterface):
@@ -47,15 +48,18 @@ class Field(FKeyInterface):
 
     def __set__(self, obj, value):
         """Sets the value (and the comparator) associated with the field."""
+        if value is None:
+            # None is not a value use Null class to set to Null
+            return
         comp = None
         self.__relation = obj
         is_field = isinstance(value, Field)
         if isinstance(value, tuple):
             assert len(value) == 2
             value, comp = value
-        if value is None and comp is None:
+        if value is NULL and comp is None:
             comp = 'is'
-        if value is None:
+        if value is NULL:
             assert comp == 'is' or comp == 'is not'
         elif comp is None:
             if not is_field:
