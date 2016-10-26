@@ -314,6 +314,13 @@ def __get_from(self, orig_rel=None, deja_vu=None):
 def __select_args(self, *args, **kwargs):
     """Returns the what, where and values needed to construct the queries.
     """
+    def praf(field_name):
+        """Returns field_name prefixed with relation alias if the query is
+        select. Otherwise, returns the field name quoted with ".
+        """
+        if self.__query == 'select':
+            return '{}.{}'.format(id_, field_name)
+        return '"{}"'.format(field_name)
     def __set_ops(rel, where, set_fields):
         o_where = []
         o_set_fields = self.__set_op.right.__get_set_fields()
@@ -336,11 +343,6 @@ def __select_args(self, *args, **kwargs):
     for field_name, value in kwargs.items():
         self._fields[field_name]._set_value(value)
     id_ = 'r{}'.format(id(self))
-    def praf(field_name):
-        """Returns field_name prefixed with relation alias."""
-        if self.__query == 'select':
-            return '{}.{}'.format(id_, field_name)
-        return field_name
     what = '*'
     if args:
         what = ', '.join([praf(field_name) for field_name in args])
@@ -483,7 +485,7 @@ def __what_to_insert(self):
     fields_names = []
     set_fields = self.__get_set_fields()
     if set_fields:
-        fields_names = [field.name() for field in set_fields]
+        fields_names = ['"{}"'.format(field.name()) for field in set_fields]
     return ", ".join(fields_names), set_fields
 
 def insert(self):
