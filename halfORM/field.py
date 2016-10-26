@@ -38,6 +38,10 @@ class Field(FKeyInterface):
         "Returns the value of the field object"
         return self.__value
 
+    def _set_value(self, value):
+        "Sets the value of the field object"
+        self.__set__(self.__relation, value)
+
     def __get_unaccent(self):
         return self.__unaccent
     def __set_unaccent(self, value):

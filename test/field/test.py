@@ -28,14 +28,12 @@ class Test(TestCase):
         self.assertTrue(fields_set, {False})
 
     def set_field_test(self):
-        pers = self.pers()
-        pers.first_name = 'jojo'
-        self.assertTrue(pers.first_name.is_set())
+        pers = self.pers(first_name='jojo')
+        self.assertTrue(pers._fields['first_name'].is_set())
 
     def idem_test(self):
-        pers = self.pers()
-        pers.first_name = 'jojo'
-        self.assertEqual(isinstance(pers.first_name, Field), True)
+        pers = self.pers(first_name='jojo')
+        self.assertEqual(isinstance(pers._fields['first_name'], Field), True)
 
     def fields_names_test(self):
         field_names = {elt.name() for elt in self.pers.fields}
@@ -45,7 +43,7 @@ class Test(TestCase):
             {'id', 'first_name', 'last_name', 'birth_date'})
 
     def relation_ref_test(self):
-        first_name = self.pers.first_name
+        first_name = self.pers._fields['first_name']
         print(first_name.relation)
         self.assertEqual(id(first_name.relation), id(self.pers))
 

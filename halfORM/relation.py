@@ -30,6 +30,7 @@ import datetime
 import sys
 import uuid
 import yaml
+from collections import OrderedDict
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
@@ -95,7 +96,7 @@ def __init__(self, **kwargs):
         assert kwk_.intersection(self._fields_names) == kwk_
     except:
         raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
-    _ = {self.__setattr__(field_name, value)
+    _ = {self._fields[field_name]._set_value(value)
          for field_name, value in kwargs.items()}
     self._joined_to = []
     self.__query = None
@@ -103,7 +104,7 @@ def __init__(self, **kwargs):
     self.__sql_values = []
     self.__mogrify = False
     self.__set_op = None
-    _ = {field._set_relation(self) for field in self._fields}
+    _ = {field._set_relation(self) for field in self._fields.values()}
 
 def group_by(self, yml_directive, **kwargs):
     def inner_group_by(data, directive, grouped_data, gdata=None):
@@ -197,7 +198,11 @@ def to_json(self, yml_directive=None, **kwargs):
         res = [elt for elt in self.select(**kwargs)]
     return json.dumps(res, default=handler)
 
-def __repr__(self):
+def to_dict(self):
+    """Retruns a dictionary containing only the fields that are set."""
+    return {key:field.value for key, field in self._fields.items() if field.is_set()}
+
+def __str__(self):
     rel_kind = self.__kind
     ret = []
     ret.append("{}: {}".format(rel_kind.upper(), self.__fqrn))
@@ -205,13 +210,13 @@ def __repr__(self):
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
     ret.append('FIELDS:')
     mx_fld_n_len = 0
-    for field in self._fields:
-        if len(field.name()) > mx_fld_n_len:
-            mx_fld_n_len = len(field.name())
-    for field in self._fields:
+    for field_name in self._fields.keys():
+        if len(field_name) > mx_fld_n_len:
+            mx_fld_n_len = len(field_name)
+    for field_name, field in self._fields.items():
         ret.append('- {}:{}{}'.format(
-            field.name(),
-            ' ' * (mx_fld_n_len + 1 - len(field.name())),
+            field_name,
+            ' ' * (mx_fld_n_len + 1 - len(field_name)),
             repr(field)))
     if self.__fkeys:
         plur = len(self.__fkeys) > 1 and  'S' or ''
@@ -232,17 +237,17 @@ def is_set(self):
     """
     return (bool(self._joined_to) or
             self.__set_op or
-            bool({field for field in self._fields if field.is_set()}))
+            bool({field for field in self._fields.values() if field.is_set()}))
 
 @property
 def fields(self):
     """Yields the fields of the relation."""
-    for field in self._fields:
+    for field in self._fields.values():
         yield field
 
 def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
-    return [field for field in self._fields if field.is_set()]
+    return [field for field in self._fields.values() if field.is_set()]
 
 def __join_query(self, fkey, op_=' and '):
     """Returns the join_query, join_values of a foreign key.
@@ -328,8 +333,8 @@ def __select_args(self, *args, **kwargs):
         res_where = " and ".join(o_where)
         where.append("{} ({})".format(rel.__set_op.op_, res_where))
 
-    for fieldname, value in kwargs.items():
-        self.__setattr__(fieldname, value)
+    for field_name, value in kwargs.items():
+        self._fields[field_name]._set_value(value)
     id_ = 'r{}'.format(id(self))
     def praf(field_name):
         """Returns field_name prefixed with relation alias."""
@@ -443,6 +448,7 @@ def __len__(self, *args, **kwargs):
         self.__cursor.execute(query, vars_)
     except Exception as err:
         print(query, vars_)
+        self.mogrify()
         raise err
     return self.__cursor.fetchone()['count']
 
@@ -493,7 +499,7 @@ def delete(self, no_clause=False, **kwargs):
     kwargs is {[field name:value]}
     To empty the relation, no_clause must be set to True.
     """
-    _ = {self.__setattr__(field_name, value)
+    _ = {self._fields[field_name]._set_value(value)
          for field_name, value in kwargs.items()}
     assert self.is_set() or no_clause
     query_template = "delete from {} {}"
@@ -512,7 +518,7 @@ def __call__(self, **kwargs):
 def __copy(self):
     new = self.__class__(
         **{field.name():(field.value, field.comp())
-           for field in self._fields if field.value})
+           for field in self._fields.values() if field.value})
     new.__set_op = self.__set_op
     return new
 
@@ -557,9 +563,10 @@ COMMON_INTERFACE = {
     '__copy': __copy,
     '__getitem__': __getitem__,
     '__get_set_fields': __get_set_fields,
-    '__repr__': __repr__,
+    '__str__': __str__,
     'group_by':group_by,
     'to_json': to_json,
+    'to_dict': to_dict,
     'fields': fields,
     '__get_from': __get_from,
     '__get_query': __get_query,
@@ -649,15 +656,14 @@ class RelationFactory(type):
         """ta_: table attributes dictionary."""
         from .field import Field
         from .fkey import FKey
-        ta_['_fields'] = set()
+        ta_['_fields'] = OrderedDict()
         ta_['__fkeys'] = set()
         ta_['_fields_names'] = set()
         dbm = ta_['model'].metadata
         flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
-            ta_[field_name] = Field(field_name, f_metadata)
-            ta_['_fields'].add(ta_[field_name])
+            ta_['_fields'][field_name] = Field(field_name, f_metadata)
             ta_['_fields_names'].add(field_name)
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
