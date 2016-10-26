@@ -38,6 +38,11 @@ class Field(FKeyInterface):
         "Returns the value of the field object"
         return self.__value
 
+    @property
+    def type_(self):
+        "Returns the SQL type of the field"
+        return self.__metadata['fieldtype']
+
     def _set_value(self, value):
         "Sets the value of the field object"
         self.__set__(self.__relation, value)

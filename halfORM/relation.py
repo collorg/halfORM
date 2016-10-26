@@ -328,7 +328,8 @@ def __select_args(self, *args, **kwargs):
         for field in o_set_fields:
             comp_str = '%s'
             if isinstance(field.value, (list, tuple)):
-                comp_str = 'any(%s)'
+                if field.type_[0] != '_': # not an array type
+                    comp_str = 'any(%s)'
             if not field.unaccent:
                 o_where.append(
                     "{} {} {}".format(
@@ -351,7 +352,8 @@ def __select_args(self, *args, **kwargs):
     for field in set_fields:
         comp_str = '%s'
         if isinstance(field.value, list):
-            comp_str = 'any(%s)'
+            if field.type_[0] != '_': # not an array type
+                comp_str = 'any(%s)'
         if not field.unaccent:
             where.append("{} {} {}".format(
                 praf(field.name()), field.comp(), comp_str))
