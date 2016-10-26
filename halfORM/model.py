@@ -65,7 +65,7 @@ class Model(object):
             self.connect()
         except Exception as err:
             if raise_error:
-                raise err.__class__(err.filename)
+                raise err.__class__(err)
             sys.stderr.write("{}\n".format(err))
             sys.stderr.flush()
 
@@ -199,17 +199,29 @@ class Model(object):
         return RelationFactory(
             'Table', (), {'fqrn': fqrn, 'model': self})(**kwargs)
 
-    def desc(self, qrn=None):
+    def desc(self, qrn=None, verbose=False):
         """Prints the description of the relations of the model
 
-        If an qualified relation name (<schema name>.<table name>) is
+        If a qualified relation name (<schema name>.<table name>) is
         passed, prints only the description of the corresponding relation.
         """
         from halfORM.relation import relation
         if not qrn:
-            for key in self.__metadata[self.__dbname]['byname']:
-                fqrn = ".".join(['"{}"'.format(elt) for elt in key])
-                print(relation(fqrn))
+            entry = self.__metadata[self.__dbname]['byname']
+            for key in entry:
+                fqrn = ".".join(['"{}"'.format(elt) for elt in key[1:]])
+                if verbose:
+                    print(relation(fqrn))
+                else:
+                    print('{} {}'.format(entry[key]['tablekind'], fqrn))
         else:
             fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
             print(relation(fqrn))
+
+    def __str__(self):
+        out = []
+        entry = self.__metadata[self.__dbname]['byname']
+        for key in entry:
+            fqrn = ".".join(['"{}"'.format(elt) for elt in key[1:]])
+            out.append('{} {}'.format(entry[key]['tablekind'], fqrn))
+        return '\n'.join(out)
