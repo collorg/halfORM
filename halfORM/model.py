@@ -119,6 +119,8 @@ class Model(object):
         self.__metadata[self.__dbname] = self.__get_metadata()
         self.__deja_vu[self.__dbname] = self
 
+    reconnect = connect
+
     @property
     def dbname(self):
         """
@@ -180,7 +182,9 @@ class Model(object):
 
     def execute_query(self, query, values=()):
         """Execute a raw SQL query"""
-        return self.__cursor.execute(query, values)
+        cursor = self.__conn.cursor()
+        cursor.execute(query, values)
+        return cursor
 
     def relations(self):
         """List all the relations in the database"""
