@@ -339,7 +339,7 @@ def __select_args(self, *args, **kwargs):
                     "unaccent({}) {} unaccent({})".format(
                         praf(field.name()), field.comp(), comp_str))
         res_where = " and ".join(o_where)
-        where.append("{} ({})".format(rel.__set_op.op_, res_where))
+        where.append(" {} ({})".format(rel.__set_op.op_, res_where))
 
     for field_name, value in kwargs.items():
         self._fields[field_name]._set_value(value)
@@ -472,6 +472,7 @@ def update(self, no_clause=False, **kwargs):
     """
     kwargs represents the values to be updated {[field name:value]}
     The object self must be set unless no_clause is false.
+    The constraints of the relations are updated with kwargs.
     """
     if not kwargs:
         return # no new value update. Should we raise an error here?
@@ -481,6 +482,8 @@ def update(self, no_clause=False, **kwargs):
     what, where, values = self.__update_args(**kwargs)
     query = query_template.format(self.__fqrn, what, where)
     self.__cursor.execute(query, tuple(values))
+    for field_name, value in kwargs.items():
+        self._fields[field_name]._set_value(value)
 
 def __what_to_insert(self):
     """Returns the field names and values to be inserted."""
@@ -520,29 +523,28 @@ def __call__(self, **kwargs):
     return relation(self.__fqrn, **kwargs)
 
 def __copy(self):
-    new = self.__class__(
+    new = RelationFactory(None, None, {'fqrn': self.fqrn})(
         **{field.name():(field.value, field.comp())
            for field in self._fields.values() if field.value})
-    new.__set_op = self.__set_op
     return new
 
 def __and__(self, other):
     new = self.__copy()
-    new.__set_op = SetOp("and", other)
+    new.__set_op = SetOp("and", other.__copy())
     return new
 def __iand__(self, other):
     return self & other
 
 def __or__(self, other):
     new = self.__copy()
-    new.__set_op = SetOp("or", other)
+    new.__set_op = SetOp("or", other.__copy())
     return new
 def __ior__(self, other):
     return self | other
 
 def __sub__(self, other):
     new = self.__copy()
-    new.__set_op = SetOp("and not", other)
+    new.__set_op = SetOp("and not", other.__copy())
     return new
 def __isub__(self, other):
     return self - other
