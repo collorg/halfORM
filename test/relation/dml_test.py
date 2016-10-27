@@ -73,5 +73,4 @@ class Test(TestCase):
         pers = self.pers(last_name=('a%', 'like'))
         self.assertEqual(len(pers), 10)
         pers.update(last_name=pers._fields['last_name'].value.upper())
-        self.assertEqual(len(pers), 0)
-        self.assertEqual(len(pers(last_name=('A%', 'like'))), 10)
+        self.assertEqual(len(pers), 10)
