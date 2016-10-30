@@ -26,11 +26,12 @@ both FQRN and QRN. The _normalize_fqrn and _normalize_qrn functions add
 the double quotes.
 """
 
+from collections import OrderedDict
 import datetime
 import sys
 import uuid
 import yaml
-from collections import OrderedDict
+
 from halfORM import relation_errors
 from halfORM.transaction import Transaction
 
@@ -52,20 +53,35 @@ class SetOp(object):
     - __op is one of {'or', 'and', 'sub', 'neg'}
     - __right is a Relation object. It can be None if the operator is 'neg'.
     """
-    def __init__(self, op=None, right=None):
+    def __init__(self, left, op=None, right=None):
         self.__neg = False
+        self.__left = left
         self.__op = op
         self.__right = right
 
-    @property
-    def op_(self):
+    def __get_op(self):
         """Property returning the __op value."""
         return self.__op
+    def __set_op(self, op_):
+        """Set operator setter."""
+        self.__op = op_
+    op_ = property(__get_op, __set_op)
 
-    @property
-    def right(self):
+    def __get_left(self):
+        """Returns the left object of the set operation."""
+        return self.__left
+    def __set_left(self, left):
+        """left operand (relation) setter."""
+        self.__left = left
+    left = property(__get_left, __set_left)
+
+    def __get_right(self):
         """Property returning the right operand (relation)."""
         return self.__right
+    def __set_right(self, right):
+        """right operand (relation) setter."""
+        self.__right = right
+    right = property(__get_right, __set_right)
 
     def __get_neg(self):
         """returns the value of self.__neg."""
@@ -103,11 +119,15 @@ def __init__(self, **kwargs):
     self.__sql_query = []
     self.__sql_values = []
     self.__mogrify = False
-    self.__set_op = None
+    self.__set_op = SetOp(self)
     _ = {field._set_relation(self) for field in self._fields.values()}
 
-def group_by(self, yml_directive, **kwargs):
+def group_by(self, yml_directive):
+    """Returns an aggregation of the data according to the yml directive
+    description.
+    """
     def inner_group_by(data, directive, grouped_data, gdata=None):
+        """reccursive fonction to actually group the data in grouped_data."""
         deja_vu_key = set()
         if gdata is None:
             gdata = grouped_data
@@ -168,16 +188,15 @@ def group_by(self, yml_directive, **kwargs):
                     [elt], directive[group_name], suite, None)
 
     grouped_data = {}
-    data = [elt for elt in self.select(**kwargs)]
+    data = [elt for elt in self.select()]
     directive = yaml.safe_load(yml_directive)
     inner_group_by(data, directive, grouped_data)
     return grouped_data
 
-def to_json(self, yml_directive=None, **kwargs):
+def to_json(self, yml_directive=None):
     """Returns a JSON representation of the set returned by the select query.
     """
     import json
-    import time
 
     def handler(obj):
         """Replacement of default handler for json.dumps."""
@@ -193,14 +212,15 @@ def to_json(self, yml_directive=None, **kwargs):
                 '{} is not JSON serializable'.format(type(obj), repr(obj)))
 
     if yml_directive:
-        res = self.group_by(yml_directive, **kwargs)
+        res = self.group_by(yml_directive)
     else:
-        res = [elt for elt in self.select(**kwargs)]
+        res = [elt for elt in self.select()]
     return json.dumps(res, default=handler)
 
 def to_dict(self):
     """Retruns a dictionary containing only the fields that are set."""
-    return {key:field.value for key, field in self._fields.items() if field.is_set()}
+    return {key:field.value for key, field in
+            self._fields.items() if field.is_set()}
 
 def __str__(self):
     rel_kind = self.__kind
@@ -236,7 +256,7 @@ def is_set(self):
     result of a combination of Relations (using set operators).
     """
     return (bool(self._joined_to) or
-            self.__set_op or
+            (self.__set_op.op_ or self.__set_op.neg) or
             bool({field for field in self._fields.values() if field.is_set()}))
 
 @property
@@ -311,99 +331,66 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         if orig_rel != rel:
             orig_rel.__sql_values = (rel.__sql_values + orig_rel.__sql_values)
 
-def __select_args(self, *args, **kwargs):
+def __where_repr(self, query, id_):
+    where_repr = []
+    for field in self.__get_set_fields():
+        where_repr.append(field.where_repr(query, id_))
+    return "({})".format(" and ".join(where_repr))
+
+def __select_args(self, *args):
     """Returns the what, where and values needed to construct the queries.
     """
-    def praf(field_name):
-        """Returns field_name prefixed with relation alias if the query is
-        select. Otherwise, returns the field name quoted with ".
-        """
-        if self.__query == 'select':
-            return '{}.{}'.format(id_, field_name)
-        return '"{}"'.format(field_name)
-    def __set_ops(rel, where, set_fields):
-        o_where = []
-        o_set_fields = self.__set_op.right.__get_set_fields()
-        set_fields += o_set_fields
-        for field in o_set_fields:
-            comp_str = '%s'
-            if isinstance(field.value, (list, tuple)):
-                if field.type_[0] != '_': # not an array type
-                    comp_str = 'any(%s)'
-            if not field.unaccent:
-                o_where.append(
-                    "{} {} {}".format(
-                        praf(field.name()), field.comp(), comp_str))
-            else:
-                o_where.append(
-                    "unaccent({}) {} unaccent({})".format(
-                        praf(field.name()), field.comp(), comp_str))
-        res_where = " and ".join(o_where)
-        where.append(" {} ({})".format(rel.__set_op.op_, res_where))
-
-    for field_name, value in kwargs.items():
-        self._fields[field_name]._set_value(value)
-    id_ = 'r{}'.format(id(self))
+    query = self.__query
+    id_ = id(self)
     what = '*'
     if args:
-        what = ', '.join([praf(field_name) for field_name in args])
-    set_fields = self.__get_set_fields()
-    where = []
-    for field in set_fields:
-        comp_str = '%s'
-        if isinstance(field.value, list):
-            if field.type_[0] != '_': # not an array type
-                comp_str = 'any(%s)'
-        if not field.unaccent:
-            where.append("{} {} {}".format(
-                praf(field.name()), field.comp(), comp_str))
+        what = ', '.join([self._fields[arg]._praf(query) for arg in args])
+    def walk_op(rel, out=None, fields=None):
+        if rel is None:
+            return out, fields
+        if out is None:
+            out = []
+            fields = []
+        if rel.__set_op.op_ or rel.__set_op.neg:
+            if rel.__set_op.neg:
+                out.append("not")
+            out.append("(")
+            walk_op(rel.__set_op.left, out, fields)
+            if rel.__set_op.op_ is not None:
+                out.append(" {} ".format(rel.__set_op.op_))
+                walk_op(rel.__set_op.right, out, fields)
+            out.append(")")
         else:
-            where.append("unaccent({}) {} unaccent({})".format(
-                praf(field.name()), field.comp(), comp_str))
-    if where:
-        s_where = '{}'.format(" and ".join(where))
-        if self.__set_op and self.__set_op.neg:
-            s_where = "not({})".format(where)
-        where = [s_where]
-    if self.__set_op:
-        __set_ops(self, where, set_fields)
-    if where:
-        s_where = 'where {}'.format("".join(where))
-    else:
+            out.append(rel.__where_repr(query, id_))
+            fields += rel.__get_set_fields()
+        return out, fields
+    s_where, set_fields = walk_op(self)
+    s_where = ''.join(s_where)
+    if s_where == '()':
         s_where = ''
+    if s_where:
+        s_where = ' where {}'.format(s_where)
     return what, s_where, set_fields
 
-def __get_query(self, query_template, *args, **kwargs):
+def __get_query(self, query_template, *args):
     """Prepare the SQL query to be executed."""
     self.__sql_values = []
     self.__query = 'select'
-    what, where, values = self.__select_args(*args, **kwargs)
+    what, where, values = self.__select_args(*args)
     if args:
         what = 'distinct {}'.format(what)
     self.__get_from()
     return (
         query_template.format(what, ' '.join(self.__sql_query), where), values)
 
-def select(self, *args, **kwargs):
+def select(self, *args):
     """Generator. Yiels the result of the query as a dictionary.
 
     - @args are fields names to restrict the returned attributes
-    - @kwargs: key is a field_name, value the constraint associated
-      to that field
     """
-    if kwargs and self.is_set():
-        msg = """
-        You can't use kwargs in select/mogrify if self is already set!
-        {}\n{}""".format(self, kwargs)
-        raise RuntimeError(msg)
-    kwk_ = set(kwargs.keys())
-    try:
-        assert kwk_.intersection(self._fields_names) == kwk_
-    except:
-        raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
     self.__sql_values = []
     query_template = "select {} from {} {}"
-    query, values = self.__get_query(query_template, *args, **kwargs)
+    query, values = self.__get_query(query_template, *args)
     values = tuple(self.__sql_values + values)
     try:
         if not self.__mogrify:
@@ -413,21 +400,21 @@ def select(self, *args, **kwargs):
             return
     except Exception as err:
         sys.stderr.write(
-            self.__cursor.mogrify(query, values).decode('utf-8'))
+            "QUERY: {}\nVALUES: {}\n".format(query, values))
         raise err
     for elt in self.__cursor.fetchall():
         yield elt
 
-def mogrify(self, *args, **kwargs):
+def mogrify(self, *args):
     """Prints the select query."""
     self.__mogrify = True
-    for elt in self.select(*args, **kwargs):
+    for elt in self.select(*args):
         print(elt)
     self.__mogrify = False
 
-def get(self, **kwargs):
+def get(self):
     """Yields instanciated Relation objects instead of dict."""
-    for dct in self.select(**kwargs):
+    for dct in self.select():
         yield self(**dct)
 
 def getone(self):
@@ -440,13 +427,13 @@ def getone(self):
         raise relation_errors.ExpectedOneError(self, count)
     return list(self.get())[0]
 
-def __len__(self, *args, **kwargs):
+def __len__(self, *args):
     """Retruns the number of tuples matching the intention in the relation.
 
     See select for arguments.
     """
     query_template = "select count({}) from {} {}"
-    query, values = self.__get_query(query_template, *args, **kwargs)
+    query, values = self.__get_query(query_template, *args)
     try:
         vars_ = tuple(self.__sql_values + values)
         self.__cursor.execute(query, vars_)
@@ -501,73 +488,95 @@ def insert(self):
     query = query_template.format(self.__fqrn, fields_names, what_to_insert)
     self.__cursor.execute(query, tuple(values))
 
-def delete(self, no_clause=False, **kwargs):
+def delete(self, no_clause=False):
     """Removes a set of tuples from the relation.
-    kwargs is {[field name:value]}
     To empty the relation, no_clause must be set to True.
     """
-    _ = {self._fields[field_name]._set_value(value)
-         for field_name, value in kwargs.items()}
     assert self.is_set() or no_clause
     query_template = "delete from {} {}"
     self.__query = 'delete'
-    _, where, values = self.__select_args(**kwargs)
+    _, where, values = self.__select_args()
     query = query_template.format(self.__fqrn, where)
     self.__cursor.execute(query, tuple(values))
-
-def __getitem__(self, key):
-    raise NotImplementedError
-    return self.__cursor.fetchall()[key]
 
 def __call__(self, **kwargs):
     return relation(self.__fqrn, **kwargs)
 
-def __copy(self):
+def copy(self):
     new = RelationFactory(None, None, {'fqrn': self.fqrn})(
         **{field.name():(field.value, field.comp())
            for field in self._fields.values() if field.value})
+    new.__set_op.op_ = self.__set_op.op_
+    if self.__set_op.right is not None:
+        new.__set_op.right = self.__set_op.right.copy()
     return new
 
-def __and__(self, other):
-    new = self.__copy()
-    new.__set_op = SetOp("and", other.__copy())
+def __set__op__(self, op_, right):
+    """Si l'opérateur du self est déjà défini, il faut aller modifier
+    l'opérateur du right ???
+    On crée un nouvel objet sans contrainte et on a left et right et opérateur
+    """
+    new = RelationFactory(None, None, {'fqrn': self.fqrn})()
+    new.__set_op.left = self
+    new.__set_op.op_ = op_
+    new.__set_op.right = right
     return new
-def __iand__(self, other):
-    return self & other
 
-def __or__(self, other):
-    new = self.__copy()
-    new.__set_op = SetOp("or", other.__copy())
-    return new
-def __ior__(self, other):
-    return self | other
+def __and__(self, right):
+    return self.__set__op__("and", right)
+def __iand__(self, right):
+    self = self & right
+    return self
 
-def __sub__(self, other):
-    new = self.__copy()
-    new.__set_op = SetOp("and not", other.__copy())
-    return new
-def __isub__(self, other):
-    return self - other
+def __or__(self, right):
+    return self.__set__op__("or", right)
+def __ior__(self, right):
+    self = self | right
+    return self
+
+def __sub__(self, right):
+    return self.__set__op__("and not", right)
+def __isub__(self, right):
+    self = self - right
+    return self
 
 def __neg__(self):
-    new = self.__copy()
-    if new.__set_op is None:
-        new.__set_op = SetOp()
-    new.__set_op.neg = not new.__set_op.neg
+    new = RelationFactory(None, None, {'fqrn': self.fqrn})(
+        **{field.name():(field.value, field.comp())
+        for field in self._fields.values() if field.value})
+    new.__set_op.neg = not self.__set_op.neg
+    new.__set_op.left = self.__set_op.left
+    new.__set_op.op_ = self.__set_op.op_
+    new.__set_op.right = self.__set_op.right
     return new
 
-def __xor__(self, other):
-    return (self | other) - (self & other)
-def __ixor__(self, other):
-    return self ^ other
+def __xor__(self, right):
+    return (self | right) - (self & right)
+def __ixor__(self, right):
+    self = self ^ right
+    return self
+
+def __contains__(self, right):
+    return len(right - self) == 0
+
+def __eq__(self, right):
+    if id(self) == id(right):
+        return True
+    return self in right and right in self
+
+def __ne__(self, right):
+    return not self == right
+
+def debug(self):
+    """To debug"""
+    pass
 
 #### END of Relation methods definition
 
 COMMON_INTERFACE = {
     '__init__': __init__,
     '__call__': __call__,
-    '__copy': __copy,
-    '__getitem__': __getitem__,
+    'copy': copy,
     '__get_set_fields': __get_set_fields,
     '__str__': __str__,
     'group_by':group_by,
@@ -578,12 +587,14 @@ COMMON_INTERFACE = {
     '__get_query': __get_query,
     'fqrn': fqrn,
     'is_set': is_set,
+    '__where_repr': __where_repr,
     '__select_args': __select_args,
     'select': select,
     'mogrify': mogrify,
     '__len__': __len__,
     'get': get,
     'getone': getone,
+    '__set__op__': __set__op__,
     '__and__': __and__,
     '__iand__': __iand__,
     '__or__': __or__,
@@ -593,6 +604,8 @@ COMMON_INTERFACE = {
     '__xor__': __xor__,
     '__ixor__': __ixor__,
     '__neg__': __neg__,
+    '__contains__': __contains__,
+    '__eq__': __eq__,
     '__join_query': __join_query,
     'insert': insert,
     '__what_to_insert': __what_to_insert,
@@ -601,6 +614,7 @@ COMMON_INTERFACE = {
     'delete': delete,
     'Transaction': Transaction,
     # test
+    'debug': debug,
 }
 
 TABLE_INTERFACE = COMMON_INTERFACE

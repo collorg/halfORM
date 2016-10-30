@@ -1,45 +1,23 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
+from time import sleep
 from random import randint
 import psycopg2
 import sys
 from unittest import TestCase
-from datetime import date
 
 from ..init import halftest
 from halfORM import relation_errors, model
 
-def name(letter, integer):
-    return '{}{}'.format(letter, chr(ord('a') + integer))
-
 class Test(TestCase):
     def setUp(self):
-        self.today = date.today()
-        self.pers = halftest.relation("actor.person")
-        self.pers.delete(no_clause=True)
-        self.post = halftest.relation("blog.post")
-        self.pers.delete(no_clause=True)
-
-        @self.pers.Transaction
-        def insert_pers(pers):
-            for n in 'abcdef':
-                for i in range(10):
-                    last_name = name(n, i)
-                    first_name = name(n, i)
-                    birth_date = self.today
-                    self.pers(
-                        last_name=last_name,
-                        first_name=first_name,
-                        birth_date=birth_date).insert()
-
-        insert_pers(self.pers)
-
-    def tearDown(self):
-        self.pers().delete(last_name=('%', 'like'))
-        self.assertEqual(len(self.pers()), 0)
+        self.pers = halftest.pers
+        self.post = halftest.post
+        self.today = halftest.today
 
     def count_test(self):
+        self.pers.mogrify()
         self.assertEqual(len(self.pers()), 60)
 
     def expected_one_error_test_0(self):

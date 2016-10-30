@@ -12,15 +12,9 @@ from halfORM.field import Field
 
 class Test(TestCase):
     def setUp(self):
-        self.today = date.today()
-        self.pers = halftest.relation("actor.person")
-        self.pers.delete(no_clause=True)
-        self.post = halftest.relation("blog.post")
-        self.pers.delete(no_clause=True)
-
-    def tearDown(self):
-        self.pers().delete(last_name=('%', 'like'))
-        self.assertEqual(len(self.pers()), 0)
+        self.pers = halftest.pers
+        self.post = halftest.post
+        self.today = halftest.today
 
     def not_set_field_test(self):
         pers = self.pers()
