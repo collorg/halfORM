@@ -1,4 +1,4 @@
-# halfORM API
+# half_orm API
 
 ```python
 mymodel = Model('mymodel_init_file')

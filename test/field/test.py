@@ -8,7 +8,7 @@ from unittest import TestCase
 from datetime import date
 
 from ..init import halftest
-from halfORM.field import Field
+from half_orm.field import Field
 
 class Test(TestCase):
     def setUp(self):

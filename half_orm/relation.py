@@ -32,8 +32,8 @@ import sys
 import uuid
 import yaml
 
-from halfORM import relation_errors
-from halfORM.transaction import Transaction
+from half_orm import relation_errors
+from half_orm.transaction import Transaction
 
 class UnknownAttributeError(Exception):
     """Unknown attribute error"""
@@ -457,15 +457,15 @@ def __update_args(self, **kwargs):
     what = ", ".join(["{} = %s".format(elt) for elt in what_fields])
     return what, where, new_values + values
 
-def update(self, no_clause=False, **kwargs):
+def update(self, update_all=False, **kwargs):
     """
     kwargs represents the values to be updated {[field name:value]}
-    The object self must be set unless no_clause is false.
+    The object self must be set unless update_all is True.
     The constraints of the relations are updated with kwargs.
     """
     if not kwargs:
         return # no new value update. Should we raise an error here?
-    assert self.is_set() or no_clause
+    assert self.is_set() or update_all
 
     query_template = "update {} set {} {}"
     what, where, values = self.__update_args(**kwargs)
@@ -490,11 +490,11 @@ def insert(self):
     query = query_template.format(self.__fqrn, fields_names, what_to_insert)
     self.__cursor.execute(query, tuple(values))
 
-def delete(self, no_clause=False):
+def delete(self, delete_all=False):
     """Removes a set of tuples from the relation.
-    To empty the relation, no_clause must be set to True.
+    To empty the relation, delete_all must be set to True.
     """
-    assert self.is_set() or no_clause
+    assert self.is_set() or delete_all
     query_template = "delete from {} {}"
     self.__query = 'delete'
     _, where, values = self.__select_args()
@@ -629,7 +629,7 @@ class RelationFactory(type):
     """RelationFactory Metaclass
     """
     def __new__(mcs, class_name, bases, dct):
-        from halfORM import model, model_errors
+        from half_orm import model, model_errors
         def _gen_class_name(rel_kind, sfqrn):
             """Generates class name from relation kind and FQRN tuple"""
             class_name = "".join([elt.capitalize() for elt in

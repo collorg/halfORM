@@ -2,25 +2,25 @@
 #-*- coding: utf-8 -*-
 
 import os.path
-from halfORM.model import Model
+from half_orm.model import Model
 
 dirname = os.path.dirname(__file__)
 halftest = Model('{}/halftest.ini'.format(dirname))
 
 person = halftest.relation("actor.person")
 print(person)
-person.delete(no_clause=True)
+person.delete(delete_all=True)
 post = halftest.relation("blog.post")
 print(post)
-post.delete(no_clause=True)
+post.delete(delete_all=True)
 comment = halftest.relation("blog.comment")
 print(comment)
-comment.delete(no_clause=True)
+comment.delete(delete_all=True)
 
 person = halftest.relation("actor.person")
 print(type(person.last_name))
 # just in case
-#person.delete(no_clause=True)
+#person.delete(delete_all=True)
 
 @person.Transaction
 def insert0(person):
@@ -105,7 +105,7 @@ corto_post.select()
 gaston_comment_on_corto_post.select()
 print('APRÈS')
 
-#person().delete(no_clause=True)
+#person().delete(delete_all=True)
 
 corto = halftest.relation("actor.person", first_name="Corto").getone()
 post = halftest.relation("blog.post")

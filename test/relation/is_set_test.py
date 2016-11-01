@@ -8,7 +8,7 @@ from unittest import TestCase
 from datetime import date
 
 from ..init import halftest
-from halfORM import relation_errors, model
+from half_orm import relation_errors, model
 
 class Test(TestCase):
     def setUp(self):

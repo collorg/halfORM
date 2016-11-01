@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import sys
-from halfORM import model
+from half_orm import model
 
 relations = [None]
 filename = sys.argv[1]

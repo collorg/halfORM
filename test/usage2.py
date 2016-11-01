@@ -2,9 +2,9 @@
 #-*- coding: utf-8 -*-
 
 import time
-from halfORM.model import Model
+from half_orm.model import Model
 
-dpt_info = Model(config_file='/etc/halfORM/dpt_info')
+dpt_info = Model(config_file='/etc/half_orm/dpt_info')
 oidt = dpt_info.relation(
     'collorg.core.oid_table',
     cog_oid=('e%', 'like'), cog_fqtn='seminaire.session')

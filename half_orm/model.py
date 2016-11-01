@@ -31,8 +31,8 @@ import sys
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from halfORM import model_errors
-from halfORM.relation import _normalize_fqrn, _normalize_qrn, RelationFactory
+from half_orm import model_errors
+from half_orm.relation import _normalize_fqrn, _normalize_qrn, RelationFactory
 
 __all__ = ["Model"]
 
@@ -102,7 +102,7 @@ class Model(object):
         config = ConfigParser()
         if not config.read(
                 [self.__config_file,
-                 '/etc/halfORM/{}'.format(self.__config_file)]):
+                 '/etc/half_orm/{}'.format(self.__config_file)]):
             raise model_errors.MissingConfigFile(self.__config_file)
         params = dict(config['database'].items())
         needed_params = {'name', 'host', 'user', 'password', 'port'}

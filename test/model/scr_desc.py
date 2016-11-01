@@ -3,7 +3,7 @@
 
 import sys
 import os.path
-from halfORM import model
+from half_orm import model
 
 """
 Tests the desc method

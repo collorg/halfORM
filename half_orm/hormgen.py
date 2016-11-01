@@ -8,7 +8,7 @@ Generates a python package from a PostgreSQL database
 import re
 import os
 
-from halfORM.model import Model
+from half_orm.model import Model
 
 SETUP_TEMPLATE = '''\
 """Package Python pour l'exploitation de la BD du SI du LIRMM
@@ -65,7 +65,7 @@ setup(
 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 
-    install_requires=['halfORM'],
+    install_requires=['half_orm'],
 
 )
 '''
@@ -73,7 +73,7 @@ setup(
 DB_CONNECTOR_TEMPLATE = """\
 #-*- coding: utf-8 -*-
 
-from halfORM.model import Model
+from half_orm.model import Model
 
 db = Model('{dbname}')
 """

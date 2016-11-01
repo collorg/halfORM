@@ -4,7 +4,7 @@
 import os.path
 from unittest import TestCase
 from ..init import halftest
-from halfORM.model import Model
+from half_orm.model import Model
 
 class Test(TestCase):
     def reset(self):

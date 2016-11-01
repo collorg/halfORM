@@ -1,10 +1,10 @@
-# halfORM
+# half_orm
 
-halfORM is a really simple ORM for PostgreSQL (9+) fully written in Python3.
+half_orm is a really simple ORM for PostgreSQL (9+) fully written in Python3.
 
-halfORM only deals with the data manipulation part of the SQL language (SELECT, INSERT, UPDATE, DELETE) making it's usage quite trivial. All the data definition language part (CREATE TABLE/VIEW) has been left to SQL or whatever software used to define the structure of the database.
+half_orm only deals with the data manipulation part of the SQL language (SELECT, INSERT, UPDATE, DELETE) making it's usage quite trivial. All the data definition language part (CREATE TABLE/VIEW) has been left to SQL or whatever software used to define the structure of the database.
 
-halfORM can produce complex JSON aggregations from any table/view with very simple YAML directives (nested aggregations are possible).
+half_orm can produce complex JSON aggregations from any table/view with very simple YAML directives (nested aggregations are possible).
 
 # Documentation
 
@@ -25,12 +25,12 @@ The ```halftest``` defines:
 
 To access the database, we need a config file ([test/halftest.ini](test/halftest.ini))
 
-## API Examples (Everything you need to know to program with halfORM in five minutes)
+## API Examples (Everything you need to know to program with half_orm in five minutes)
 Some scripts snippets to illustrate the current implementation of the API.
 ## The Model class:
 The first thing you need is a model object to play with your database. Let us play with the ```halftest``` database:
 ```python
-from halfORM.model import Model
+from half_orm.model import Model
 
 halftest = Model(config_file='test/halftest.ini')
 ```
@@ -91,7 +91,7 @@ insert_many(person)
 ```
 You can put a transaction on any function/method using the ```Relation.Transaction``` decorator.
 
-Note: halfORM works in autocommit mode by default.
+Note: half_orm works in autocommit mode by default.
 
 ### Select
 ```Select``` is a generator. Without any argument, it returns all the datas in the relation in a list of dictionaries. You can easily filter to get any subset:
@@ -143,9 +143,9 @@ print(person(last_name=('_A%', 'like')).json())
 ```
 
 ### Delete
-We finally remove every inserted tuples. Notice that we use the ```no_clause``` argument with a ```True``` value. The ```delete``` would have been rejected otherwise:
+We finally remove every inserted tuples. Notice that we use the ```delete_all``` argument with a ```True``` value. The ```delete``` would have been rejected otherwise:
 ```python
-person().delete(no_clause=True)
+person().delete(delete_all=True)
 
 print(person().json())
 ```
@@ -153,6 +153,6 @@ Well, there is not much left after this in the ```actor.person``` table.
 ```
 []
 ```
-That's it! You've learn pretty much everything there is to know to begin to use halfORM for testing purpose only (**THIS PROJECT IS STILL PRE-ALPHA**).
+That's it! You've learn pretty much everything there is to know to begin to use half_orm for testing purpose only (**THIS PROJECT IS STILL PRE-ALPHA**).
 ## Interested?
-Fork me on Github: https://github.com/collorg/halfORM
+Fork me on Github: https://github.com/collorg/half_orm

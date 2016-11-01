@@ -2,10 +2,10 @@
 #-*- coding: utf-8 -*-
 
 from datetime import datetime
-from halfORM.model import Model
-from halfORM.relation import RelationFactory, Relation, relation
+from half_orm.model import Model
+from half_orm.relation import RelationFactory, Relation, relation
 
-dpt_info = Model(config_file='/etc/halfORM/dpt_info')
+dpt_info = Model(config_file='/etc/half_orm/dpt_info')
 
 class OidTable(metaclass=RelationFactory):
     fqrn = 'dpt_info."collorg.core".oid_table'

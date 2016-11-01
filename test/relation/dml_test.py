@@ -8,7 +8,7 @@ import sys
 from unittest import TestCase
 
 from ..init import halftest
-from halfORM import relation_errors, model
+from half_orm import relation_errors, model
 
 class Test(TestCase):
     def setUp(self):

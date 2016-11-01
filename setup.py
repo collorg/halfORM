@@ -10,20 +10,20 @@ def read(name):
         os.path.join(os.path.dirname(__file__), name), "r", "utf-8").read()
 
 setup(
-    name='halfORM',
-    version='0.0.1',
+    name='half_orm',
+    version='0.1.0',
     description="A simple ORM in Python only dealing with the DML part of SQL.",
     long_description=read('README.md'),
     keywords='',
     author='Joël Maïzi',
     author_email='joel.maizi@collorg.org',
-    url='https://github.com/collorg/halfORM',
+    url='https://github.com/collorg/half_orm',
     license='GPL',
-    packages=['halfORM'],
+    packages=['half_orm'],
     install_requires=['psycopg2>=2.6.1'],
     entry_points={
         'console_scripts': [
-            'hormgen=halfORM.hormgen:main',
+            'half_orm=half_orm.hormgen:main',
         ],
     },
 )

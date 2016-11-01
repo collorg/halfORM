@@ -3,7 +3,7 @@
 import os
 import sys
 from datetime import date
-from halfORM.model import Model
+from half_orm.model import Model
 
 path = os.path.dirname(__file__)
 
@@ -45,8 +45,8 @@ class HalfTest:
                         birth_date=birth_date).insert()
 
         if len(self.pers) != 60:
-            self.pers.delete(no_clause=True)
-            self.post.delete(no_clause=True)
+            self.pers.delete(delete_all=True)
+            self.post.delete(delete_all=True)
             insert_pers(self.pers)
 
 try:

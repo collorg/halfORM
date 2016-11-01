@@ -2,7 +2,7 @@
 """This module provides the FKey class."""
 # pylint: disable=protected-access
 
-from halfORM.fkey_interface import FKeyInterface
+from half_orm.fkey_interface import FKeyInterface
 
 class FKey(FKeyInterface):
     """Foreign key class
@@ -34,7 +34,7 @@ class FKey(FKeyInterface):
             """Returns QRN from FQRN."""
             return '.'.join(fqrn.split('.', 1)[1:])
 
-        from halfORM.relation import Relation
+        from half_orm.relation import Relation
         if to_ is None:
             to_ = from_.model.relation(__get_qrn(self.__fk_fqrn))
         if not isinstance(to_, Relation):

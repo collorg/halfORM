@@ -3,7 +3,7 @@
 
 from unittest import TestCase
 from ..init import halftest
-from halfORM import model_errors, model
+from half_orm import model_errors, model
 
 class Test(TestCase):
     def reset(self):

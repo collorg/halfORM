@@ -1,7 +1,7 @@
 create user halftest password 'halftest';
 create database halftest owner halftest;
 comment on database halftest is
-'Database used to test halfORM. Sort of blogging database';
+'Database used to test half_orm. Sort of blogging database';
 
 \c halftest
 

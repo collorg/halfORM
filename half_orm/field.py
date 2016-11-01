@@ -5,8 +5,8 @@
 
 from psycopg2.extensions import register_adapter, adapt
 
-from halfORM.fkey_interface import FKeyInterface
-from halfORM.null import NULL
+from half_orm.fkey_interface import FKeyInterface
+from half_orm.null import NULL
 
 class Field(FKeyInterface):
     """The class Field is for Relation internal usage. It is called by
