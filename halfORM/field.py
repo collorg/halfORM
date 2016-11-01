@@ -3,9 +3,10 @@
 
 """This module provides the Field class."""
 
+from psycopg2.extensions import register_adapter, adapt
+
 from halfORM.fkey_interface import FKeyInterface
 from halfORM.null import NULL
-from psycopg2.extensions import register_adapter, adapt
 
 class Field(FKeyInterface):
     """The class Field is for Relation internal usage. It is called by
@@ -43,6 +44,8 @@ class Field(FKeyInterface):
         return '"{}"'.format(self.name())
 
     def where_repr(self, query, id_):
+        """Returns the SQL representation of the field for the where clause
+        """
         where_repr = ''
         comp_str = '%s'
         if isinstance(self.__value, (list, tuple)):

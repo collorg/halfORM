@@ -24,16 +24,17 @@ About QRN and FQRN:
 
 """
 
-__all__ = ["Model"]
-
+from configparser import ConfigParser
+from collections import OrderedDict
 import sys
+
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from configparser import ConfigParser
-from collections import OrderedDict
 from halfORM import model_errors
 from halfORM.relation import _normalize_fqrn, _normalize_qrn, RelationFactory
+
+__all__ = ["Model"]
 
 psycopg2.extras.register_uuid()
 #from pprint import PrettyPrinter
@@ -63,7 +64,7 @@ class Model(object):
         self.__relations = []
         try:
             self.connect()
-        except Exception as err:
+        except psycopg2.OperationalError as err:
             if raise_error:
                 raise err.__class__(err)
             sys.stderr.write("{}\n".format(err))
@@ -83,12 +84,12 @@ class Model(object):
         Otherwise attempt a new connection and return False.
         """
         try:
-            self.execute_query("select 1");
+            self.execute_query("select 1")
             return True
-        except:
+        except psycopg2.OperationalError:
             try:
                 self.connect()
-            except Exception as err:
+            except psycopg2.OperationalError as err:
                 sys.stderr.write('{}\n'.format(err))
                 sys.stderr.flush()
             return False
@@ -209,18 +210,19 @@ class Model(object):
         If a qualified relation name (<schema name>.<table name>) is
         passed, prints only the description of the corresponding relation.
         """
-        from halfORM.relation import relation
         if not qrn:
             entry = self.__metadata[self.__dbname]['byname']
             for key in entry:
                 fqrn = ".".join(['"{}"'.format(elt) for elt in key[1:]])
                 if verbose:
-                    print(relation(fqrn))
+                    print(RelationFactory(
+                        'Table', (), {'fqrn': fqrn, 'model': self})())
                 else:
                     print('{} {}'.format(entry[key]['tablekind'], fqrn))
         else:
             fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
-            print(relation(fqrn))
+            print(RelationFactory(
+                'Table', (), {'fqrn': fqrn, 'model': self})())
 
     def __str__(self):
         out = []

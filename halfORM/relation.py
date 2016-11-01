@@ -345,25 +345,28 @@ def __select_args(self, *args):
     what = '*'
     if args:
         what = ', '.join([self._fields[arg]._praf(query) for arg in args])
-    def walk_op(rel, out=None, fields=None):
+    def walk_op(rel, out=None, _fields_=None):
+        """Walk the set operators tree and return a list of SQL where
+        representation of the query with a list of the fields of the query.
+        """
         if rel is None:
-            return out, fields
+            return out, _fields_
         if out is None:
             out = []
-            fields = []
+            _fields_ = []
         if rel.__set_op.op_ or rel.__set_op.neg:
             if rel.__set_op.neg:
                 out.append("not")
             out.append("(")
-            walk_op(rel.__set_op.left, out, fields)
+            walk_op(rel.__set_op.left, out, _fields_)
             if rel.__set_op.op_ is not None:
                 out.append(" {} ".format(rel.__set_op.op_))
-                walk_op(rel.__set_op.right, out, fields)
+                walk_op(rel.__set_op.right, out, _fields_)
             out.append(")")
         else:
             out.append(rel.__where_repr(query, id_))
-            fields += rel.__get_set_fields()
-        return out, fields
+            _fields_ += rel.__get_set_fields()
+        return out, _fields_
     s_where, set_fields = walk_op(self)
     s_where = ''.join(s_where)
     if s_where == '()':
@@ -408,8 +411,7 @@ def select(self, *args):
 def mogrify(self, *args):
     """Prints the select query."""
     self.__mogrify = True
-    for elt in self.select(*args):
-        print(elt)
+    print([elt for elt in self.select(*args)][0])
     self.__mogrify = False
 
 def get(self):
@@ -484,7 +486,7 @@ def insert(self):
     """Insert a new tuple into the Relation."""
     query_template = "insert into {} ({}) values ({})"
     fields_names, values = self.__what_to_insert()
-    what_to_insert = ", ".join(["%s" for i in range(len(values))])
+    what_to_insert = ", ".join(["%s" for _ in range(len(values))])
     query = query_template.format(self.__fqrn, fields_names, what_to_insert)
     self.__cursor.execute(query, tuple(values))
 
@@ -502,7 +504,8 @@ def delete(self, no_clause=False):
 def __call__(self, **kwargs):
     return relation(self.__fqrn, **kwargs)
 
-def copy(self):
+def dup(self):
+    """Duplicate a Relation object"""
     new = RelationFactory(None, None, {'fqrn': self.fqrn})(
         **{field.name():(field.value, field.comp())
            for field in self._fields.values() if field.value})
@@ -543,7 +546,7 @@ def __isub__(self, right):
 def __neg__(self):
     new = RelationFactory(None, None, {'fqrn': self.fqrn})(
         **{field.name():(field.value, field.comp())
-        for field in self._fields.values() if field.value})
+           for field in self._fields.values() if field.value})
     new.__set_op.neg = not self.__set_op.neg
     new.__set_op.left = self.__set_op.left
     new.__set_op.op_ = self.__set_op.op_
@@ -567,8 +570,8 @@ def __eq__(self, right):
 def __ne__(self, right):
     return not self == right
 
-def debug(self):
-    """To debug"""
+def debug():
+    """For debug usage"""
     pass
 
 #### END of Relation methods definition
@@ -576,7 +579,7 @@ def debug(self):
 COMMON_INTERFACE = {
     '__init__': __init__,
     '__call__': __call__,
-    'copy': copy,
+    'dup': dup,
     '__get_set_fields': __get_set_fields,
     '__str__': __str__,
     'group_by':group_by,

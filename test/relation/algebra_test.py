@@ -324,21 +324,14 @@ class Test(TestCase):
         a = self.set_1
         (-(-a)).mogrify()
         a.mogrify()
-        self.assertTrue(-(-a) in a)
+        self.assertTrue(-(-a) == a)
 
-    def empty_universe_complement_test_1(self):
+    def empty_universe_complement_test(self):
         universe = self.universe
         empty = self.empty_set
         (-empty).mogrify()
         universe.mogrify()
-        self.assertTrue(-empty in universe)
-
-    def empty_universe_complement_test_2(self):
-        universe = self.universe
-        empty = self.empty_set
-        (-universe).mogrify()
-        empty.mogrify()
-        self.assertTrue(-universe in empty)
+        self.assertTrue(-empty == universe)
 
     def inclusion_test_1_0(self):
         a = self.set_1
@@ -351,7 +344,7 @@ class Test(TestCase):
         ab.mogrify()
         a.mogrify()
         self.assertTrue(ab in a)
-  
+
     def inclusion_test_1_2(self):
         b = self.set_2
         ab = self.subset_1_2
@@ -359,13 +352,13 @@ class Test(TestCase):
         b.mogrify()
         self.assertTrue(ab in b)
 
-    def inclusion_test_1_3(self):
+    def ab_equal_a_inter_b_test(self):
         a = self.set_1
         b = self.set_2
         ab = self.subset_1_2
         ab.mogrify()
         (a & b).mogrify()
-        self.assertTrue(ab in a & b)
+        self.assertTrue(ab == a & b)
 
     def inclusion_test_2(self):
         a = self.set_1
