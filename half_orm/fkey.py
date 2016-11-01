@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
-"""This module provides the FKey class."""
 # pylint: disable=protected-access
+
+"""This module provides the FKey class."""
 
 from half_orm.fkey_interface import FKeyInterface
 
@@ -13,6 +14,7 @@ class FKey(FKeyInterface):
     method.
     """
     def __init__(self, fk_name, fk_sfqrn, fk_names, fields):
+        self._relation = None
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
         super(FKey, self).__init__(fk_name, fk_names, fields)
 
@@ -24,6 +26,9 @@ class FKey(FKeyInterface):
                 self.to_._joined_to.insert(0, (self.from_, self))
         return self.to_
 
+    def set(self, to_):
+        self.__set__(self._relation, to_)
+
     def __set__(self, from_, to_=None):
         """Sets the value associated with the foreign key.
 
@@ -34,10 +39,9 @@ class FKey(FKeyInterface):
             """Returns QRN from FQRN."""
             return '.'.join(fqrn.split('.', 1)[1:])
 
-        from half_orm.relation import Relation
         if to_ is None:
-            to_ = from_.model.relation(__get_qrn(self.__fk_fqrn))
-        if not isinstance(to_, Relation):
+            to_ = self._relation(__get_qrn(self.__fk_fqrn))
+        if not isinstance(to_, self._relation.__class__.__bases__[0]):
             raise Exception("Expecting a Relation")
         #TODO deal with inheritance
         # if the fqrn differ, we verify that

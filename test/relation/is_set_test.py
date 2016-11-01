@@ -19,15 +19,15 @@ class Test(TestCase):
         set_pers = self.pers(id=1)
         non_set_pers = set_pers()
         self.assertFalse(non_set_pers.is_set())
-        
+
     def is_set_test(self):
         set_pers = self.pers(id=1)
         self.assertTrue(set_pers.is_set())
-        
+
     def is_set_test_fkey(self):
         set_pers = self.pers(id=1)
         set_post = self.post()
-        set_post.author_fkey = set_pers
+        set_post.fkeys['author'].set(set_pers)
         self.assertTrue(set_post.is_set())
 
     def is_set_test_op(self):

@@ -121,6 +121,7 @@ def __init__(self, **kwargs):
     self.__mogrify = False
     self.__set_op = SetOp(self)
     _ = {field._set_relation(self) for field in self._fields.values()}
+    _ = {fkey._set_relation(self) for fkey in self.fkeys.values()}
 
 def group_by(self, yml_directive):
     """Returns an aggregation of the data according to the yml directive
@@ -238,10 +239,10 @@ def __str__(self):
             field_name,
             ' ' * (mx_fld_n_len + 1 - len(field_name)),
             repr(field)))
-    if self.__fkeys:
-        plur = len(self.__fkeys) > 1 and  'S' or ''
+    if self.fkeys:
+        plur = len(self.fkeys) > 1 and  'S' or ''
         ret.append('FOREIGN KEY{}:'.format(plur))
-        for fkey in self.__fkeys:
+        for fkey in self.fkeys.values():
             ret.append(repr(fkey))
     return '\n'.join(ret)
 
@@ -680,7 +681,7 @@ class RelationFactory(type):
         from .field import Field
         from .fkey import FKey
         ta_['_fields'] = OrderedDict()
-        ta_['__fkeys'] = set()
+        ta_['fkeys'] = OrderedDict()
         ta_['_fields_names'] = set()
         dbm = ta_['model'].metadata
         flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
@@ -691,20 +692,15 @@ class RelationFactory(type):
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():
             fkeyname = f_metadata.get('fkeyname')
-            if fkeyname and fkeyname.find('fk') == -1:
-                fkeyname = '{}_fkey'.format(fkeyname)
-                if ta_.get(fkeyname) and isinstance(ta_[fkeyname], Field):
-                    fkeyname = '{}_fkey'.format(fkeyname)
-            if fkeyname and not fkeyname in ta_:
+            if fkeyname and not fkeyname in ta_['fkeys']:
                 ft_ = dbm['byid'][f_metadata['fkeytableid']]
                 ft_sfqrn = ft_['sfqrn']
                 fields_names = [flds[elt-1]
                                 for elt in f_metadata['keynum']]
                 ft_fields_names = [ft_['fields'][elt]
                                    for elt in f_metadata['fkeynum']]
-                ta_[fkeyname] = FKey(
+                ta_['fkeys'][fkeyname] = FKey(
                     fkeyname, ft_sfqrn, ft_fields_names, fields_names)
-                ta_['__fkeys'].add(ta_[fkeyname])
 
 def relation(_fqrn, **kwargs):
     """This function is used to instanciate a Relation object using

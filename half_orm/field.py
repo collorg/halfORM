@@ -13,7 +13,7 @@ class Field(FKeyInterface):
     the RelationFactory metaclass for each field in the relation considered.
     """
     def __init__(self, name, metadata):
-        self.__relation = None
+        self._relation = None
         self.__metadata = metadata
         self.__value = None
         self.__unaccent = False
@@ -66,7 +66,7 @@ class Field(FKeyInterface):
 
     def _set_value(self, value):
         "Sets the value of the field object"
-        self.__set__(self.__relation, value)
+        self.__set__(self._relation, value)
 
     def __set__(self, obj, value):
         """Sets the value (and the comparator) associated with the field."""
@@ -74,7 +74,7 @@ class Field(FKeyInterface):
             # None is not a value use Null class to set to Null
             return
         comp = None
-        self.__relation = obj
+        self._relation = obj
         is_field = isinstance(value, Field)
         if isinstance(value, tuple):
             assert len(value) == 2
@@ -87,8 +87,8 @@ class Field(FKeyInterface):
             if not is_field:
                 comp = '='
             else:
-                value.from_ = value.__relation
-                value.to_ = self.__relation
+                value.from_ = value._relation
+                value.to_ = self._relation
                 value.to_._joined_to.insert(0, (value.from_, value))
                 value.fields = [value.name()]
                 value.fk_names = [self.name()]
@@ -118,11 +118,7 @@ class Field(FKeyInterface):
     @property
     def relation(self):
         """Returns the relation for which self is an attribute."""
-        return self.__relation
-
-    def _set_relation(self, relation):
-        """Sets the relation for which self is an attribute."""
-        self.__relation = relation
+        return self._relation
 
     def _psycopg_adapter(self):
         """Return the SQL representation of self.__value"""

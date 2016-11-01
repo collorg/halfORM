@@ -15,6 +15,10 @@ class FKeyInterface(object):
         self._fk_to = None
         self._is_set = False
 
+    def _set_relation(self, relation):
+        """Sets the relation for which self is an attribute."""
+        self._relation = relation
+
     def name(self):
         """Returns the name of the field/foreign key."""
         return self._name
