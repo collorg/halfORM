@@ -7,7 +7,7 @@
 - remove the installed module (```/usr/local/lib/python3.4/dist-packages/halfORM...``` on debian)
 - change ```from halfORM.model import Model``` to ```from half_orm.model import Model``` in your scripts.
 
-# half_orm 
+# half_orm
 
 ```half_orm``` is a really simple ORM for PostgreSQL (9+) fully written in Python3.
 
@@ -16,7 +16,7 @@ The SQL language is divided in two different parts:
 - DDL (Data definition language) to manipulate the structure of a database,
 - DML (Data manipulation language) used for selecting, inserting, deleting and updating data in a database.
 
-The half part of ```half_orm``` only addresses the data manipulation part of the SQL language, making it's usage quite trivial.
+The half part of ```half_orm``` is here to indicate that only the data manipulation part of the SQL language is addressed. This makes ```half_orm``` learning and usage quite easy.
 All the data definition language part has been left to SQL or whatever software used to define the structure of the database.
 
 half_orm can produce complex JSON aggregations from any table/view with very simple YAML directives (nested aggregations are possible).
@@ -75,10 +75,10 @@ DESCRIPTION:
 The table blog.comment contains all the comments
 made by a person on a post.
 FIELDS:
-- author_id: (int4) 
+- author_id: (int4)
 - id:        (int4) PK
-- content:   (text) 
-- post_id:   (int4) 
+- content:   (text)
+- post_id:   (int4)
 FOREIGN KEYS:
 - post_fkey: (post_id)
  ↳ "halftest"."blog"."post"(id)
@@ -92,10 +92,11 @@ Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halfte
 To instanciate a Relation object, just use the ```Model.relation(QRN)``` method.
 ```QRN``` is the "qualified relation name" here ```actor.person```.
 ```python
->>> person = halftest.relation("actor.person")
+>>> persons = halftest.relation("actor.person")
 ```
-The person object can be used to instanciate new ```actor.person``` objects.
-With a Relation object, you can use the following methods to interact whith the data in your database:
+The persons object can be used to instanciate new ```actor.person``` objects.
+With a Relation object, you can use the following methods to manipulate the
+data in your database:
 
 If it is of type ```Table```:
 - ```insert```
@@ -108,25 +109,25 @@ If the type of the relation is ```View```, only the ```select```, ... methods ca
 You also can use set operators to set complex constraints on your relations:
 - ```&```, ```|```, ```^``` and ```-``` for ```and```, ```or```, ```xor``` and ```not```.
 Take a look at [the algebra test file](test/relation/algebra_test.py).
-- you can also use the ```in``` and ```==``` operators to compare two sets.
+- you can also use the ```==```, ```!=``` and ```in``` operators to compare two sets.
 - you can finally get the number of elements in a relation whith ```len```.
 
 ### Insert
 To insert a tuple in the relation, just use the ```insert``` method as shown bellow:
 ```python
-person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
+persons(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
 ```
 You can put a transaction on any function/method using the ```Relation.Transaction``` decorator.
 ```python
-@person.Transaction
-def insert_many(person):
-    person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
-    person(last_name='Fricotin', first_name='Bibi', birth_date='1924-10-05').insert()
-    person(last_name='Maltese', first_name='Corto', birth_date='1975-01-07').insert()
-    person(last_name='Talon', first_name='Achile', birth_date='1963-11-07').insert()
-    person(last_name='Jourdan', first_name='Gil', birth_date='1956-09-20').insert()
+@persons.Transaction
+def insert_many(persons):
+    persons(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
+    persons(last_name='Fricotin', first_name='Bibi', birth_date='1924-10-05').insert()
+    persons(last_name='Maltese', first_name='Corto', birth_date='1975-01-07').insert()
+    persons(last_name='Talon', first_name='Achile', birth_date='1963-11-07').insert()
+    persons(last_name='Jourdan', first_name='Gil', birth_date='1956-09-20').insert()
 
-insert_many(person)
+insert_many(persons)
 ```
 
 Note: half_orm works in autocommit mode by default.
@@ -137,19 +138,30 @@ The data are returned in a list of dictionaries.
 
 Putting a constraint on a person object:
 ```python
->>> _a_persons = person(last_name=('_a%', 'like'))
+>>> _a_persons = persons(last_name=('_a%', 'like'))
+```
+```python
+>>> for pers in persons.select():
+...     print(pers)
+...
+{'first_name': 'Gaston', 'birth_date': datetime.date(1957, 2, 28), 'id': 159361, 'last_name': 'Lagaffe'}
+{'first_name': 'Bibi', 'birth_date': datetime.date(1924, 10, 5), 'id': 159362, 'last_name': 'Fricotin'}
+{'first_name': 'Corto', 'birth_date': datetime.date(1975, 1, 7), 'id': 159363, 'last_name': 'Maltese'}
+{'first_name': 'Achile', 'birth_date': datetime.date(1963, 11, 7), 'id': 159364, 'last_name': 'Talon'}
+{'first_name': 'Gil', 'birth_date': datetime.date(1956, 9, 20), 'id': 159365, 'last_name': 'Jourdan'}
+>>>
 ```
 
 ```python
->>> print(_a_persons.to_json())
-[{"birth_date": -405219600, "id": 37, "last_name": "Lagaffe", "first_name": "Gaston"},
-  {"birth_date": 158281200, "id": 39, "last_name": "Maltese", "first_name": "Corto"},
-  {"birth_date": -194144400, "id": 40, "last_name": "Talon", "first_name": "Achile"}]
+>>> _a_persons.to_json()
+'[{"first_name": "Gaston", "birth_date": "1957-02-28", "id": 159361, "last_name": "Lagaffe"},
+ {"first_name": "Corto", "birth_date": "1975-01-07", "id": 159363, "last_name": "Maltese"},
+ {"first_name": "Achile", "birth_date": "1963-11-07", "id": 159364, "last_name": "Talon"}]'
 ```
 You can also get a subset of the attributes:
 ```python
 >>> for dct in _a_persons.select('last_name'):
----     print(dct)
+...     print(dct)
 {'last_name': 'Lagaffe'}
 {'last_name': 'Maltese'}
 {'last_name': 'Talon'}
@@ -160,20 +172,20 @@ In this example, we upper case the last name of all the persons for which the se
 We use the ```get``` method which returns a list of Relation objects:
 
 ```python
-@person.Transaction
-def update_a(person):
-    for pers in person.get():
-        pers.update(last_name=pers.last_name.value.upper())
-
-update_a(_a_persons)
+>>> @persons.Transaction
+... def upper_a(persons):
+...     for pers in persons.get():
+...         pers.update(last_name=pers._fields['last_name'].value.upper())
+...
+>>> upper_a(_a_persons)
 ```
 Again, we insure the atomicity of the transaction using the ```Relation.Transaction``` decorator.
 
 ```python
->>> print(person(last_name=('_A%', 'like')).json())
-[{"birth_date": -405219600, "id": 37, "last_name": "LAGAFFE", "first_name": "Gaston"},
-  {"birth_date": 158281200, "id": 39, "last_name": "MALTESE", "first_name": "Corto"},
-  {"birth_date": -194144400, "id": 40, "last_name": "TALON", "first_name": "Achile"}]
+>>> persons(last_name=('_A%', 'like')).to_json()
+'[{"first_name": "Gaston", "birth_date": "1957-02-28", "id": 159361, "last_name": "LAGAFFE"},
+  {"first_name": "Corto", "birth_date": "1975-01-07", "id": 159363, "last_name": "MALTESE"},
+  {"first_name": "Achile", "birth_date": "1963-11-07", "id": 159364, "last_name": "TALON"}]'
 ```
 
 If you want to update all the data in a relation, you must set the argument ```update_all``` to ```True```.
@@ -181,14 +193,12 @@ If you want to update all the data in a relation, you must set the argument ```u
 ### Delete
 We finally remove every inserted tuples. Notice that we use the ```delete_all``` argument with a ```True``` value. The ```delete``` would have been rejected otherwise:
 ```python
-person().delete(delete_all=True)
-
-print(person().json())
-```
-Well, there is not much left after this in the ```actor.person``` table.
-```
+>>> persons().delete(delete_all=True)
+>>> persons().to_json()
 []
 ```
+Well, there is not much left after this in the ```actor.person``` table.
+
 # Working with foreign keys
 [WIP]
 
