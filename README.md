@@ -1,8 +1,10 @@
-**Looking for testers/contributors**
+**Looking for testers/contributors**.
+I'd love to have some feedback/bug report/help before releasing the first alpha
+version of ```half_orm```.
 
 **WARNING!** (2016-11-02)
 
-```halfORM``` module has been renamed to ```half_orm```. If you were using halfORM and you want to upgrade to the lastest version:
+```halfORM``` module has been renamed ```half_orm```. If you were using halfORM and you want to upgrade to the lastest version:
 - move ```/etc/halfORM``` directory to ```/etc/half_orm``` if you were using it,
 - remove the installed module (```/usr/local/lib/python3.4/dist-packages/halfORM...``` on debian)
 - change ```from halfORM.model import Model``` to ```from half_orm.model import Model``` in your scripts.
@@ -22,7 +24,7 @@ All the data definition language part has been left to SQL or whatever software 
 half_orm can produce complex JSON aggregations from any table/view with very simple YAML directives (nested aggregations are possible).
 
 # Installation (only tested on Linux)
-- Fork the project https://github.com/collorg/halfORM
+- Clone the project ```git clone https://github.com/collorg/halfORM```
 - Install psycopg2 (http://initd.org/psycopg/docs/install.html)
 - Go to the halfORM directory and install half_orm:
  ```sudo python3 setup.py -q install```
@@ -59,7 +61,8 @@ The first thing you need is a model object to connect to your database.
 Four methods are available:
 - ```desc``` to display the structure of the database or of a relation in the database.
 - ```relation``` to instanciate a Relation object and play with this relation. More on the ```Relation``` class below.
-- ```ping``` to check if the connection is still up. It will attempt a reconnection if not.
+- ```ping``` to check if the connection is still up. It will attempt a reconnection if not. Very convenient to keep alive a web service even if the database
+goes down.
 - ```reconnect``` well, to reconnect to the database.
 
 Without argument, the ```desc``` method iterates over every *relational object* of the database and prints it's type and name.
@@ -106,7 +109,7 @@ data in your database:
 
 If it is of type ```Table```:
 - ```insert```
-- ```select```, ```to_json```, ```get``` and ```getone```
+- ```select```, ```get```, ```getone``` and ```to_json```
 - ```update```
 - ```delete```
 
@@ -171,6 +174,36 @@ You can also get a subset of the attributes:
 {'last_name': 'Lagaffe'}
 {'last_name': 'Maltese'}
 {'last_name': 'Talon'}
+```
+
+### get and getone
+Like ```select```, ```get``` is a generator, but it returns a list of the
+same time than the object that invoqued the method.
+
+```getone``` returns one object. It raises an exception if 0 or more than 1
+ojects match the intention.
+
+### to_json
+the ```to_json``` method returns a json representation of the returned data.
+It accepts a ```yml_directive``` that allows you to aggregate your data according
+to your needs. For instance:
+
+```python
+yml_directive = """
+authors:
+   author_first_name: first_name
+   author_last_name: last_name
+   posts:
+     - title: title
+"""
+post = halftest.relation('blog.post', last_name="Lagaffe")
+post.to_json(yml_directive)
+```
+Would return the list of posts grouped by author. You can have more than one
+level of aggregation.
+
+```json
+'[{"authors":[{"first_name": "Gaston", "last_name": "Lagaffe", "posts":[{"title": "Bof!"}, {"title": "Menfin!!!"}]}]}]'
 ```
 
 ### Update
