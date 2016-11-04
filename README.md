@@ -177,8 +177,8 @@ You can also get a subset of the attributes:
 ```
 
 ### get and getone
-Like ```select```, ```get``` is a generator, but it returns a list of the
-same time than the object that invoqued the method.
+Like ```select```, ```get``` is a generator, but it returns a list Relation object.
+These objects are of the same type of the object that invoqued the method.
 
 ```getone``` returns one object. It raises an exception if 0 or more than 1
 ojects match the intention.
@@ -205,6 +205,39 @@ level of aggregation.
 ```json
 '[{"authors":[{"first_name": "Gaston", "last_name": "Lagaffe", "posts":[{"title": "Bof!"}, {"title": "Menfin!!!"}]}]}]'
 ```
+
+In fact, this feature is very handy when you have SQL views. You can just
+join your tables and then reorganise your data. For example with the view
+["blog.view".post_comment](test/sql/halftest.sql) you can get:
+
+The list of posts with the comments on those posts
+```yml
+posts:
+  - post_title: title
+    author:
+      author_post_first_name: first_name
+      author_post_last_name: last_name
+    comments:
+      - comment_content: comment_content
+        author:
+          author_comment_first_name: first_name
+          author_comment_last_name: last_name   
+```
+
+or the list of authors with their posts and the comments on thoses posts
+```yml
+authors:
+  - author_post_first_name: first_name
+    author_post_last_name: last_name
+    posts:
+      - post_title: title
+        comments:
+        - comment_content: content
+          author:
+            author_comment_last_name: last_name
+            author_comment_first_name: first_name
+```
+...
 
 ### Update
 In this example, we upper case the last name of all the persons for which the second letter is an ```a```.

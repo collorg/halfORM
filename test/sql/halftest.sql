@@ -68,26 +68,26 @@ grant all on schema "blog.view" to halftest;
 
 create view "blog.view".post_comment as
 select
-    comment.id as comment_id,
-    comment.content as comment_content,
-    comment.post_id as post_id,
     post.title as post_title,
     auth_p.id as author_post_id,
     auth_p.first_name as author_post_first_name,
     auth_p.last_name as author_post_last_name,
+    comment.id as comment_id,
+    comment.content as comment_content,
+    comment.post_id as post_id,
     auth_c.id as author_comment_id,
     auth_c.first_name as author_comment_first_name,
     auth_c.last_name as author_comment_last_name
 from
-    blog.comment
-    join actor.person as auth_c on
-    comment.author_id = auth_c.id
-    join blog.post on
-    post.id = comment.post_id
+    blog.post
     join actor.person as auth_p on
     post.author_first_name = auth_p.first_name and
     post.author_last_name = auth_p.last_name and
-    post.author_birth_date = auth_p.birth_date;
+    post.author_birth_date = auth_p.birth_date
+    left join blog.comment on
+    post.id = comment.post_id
+    left join actor.person as auth_c on
+    comment.author_id = auth_c.id;
 
 grant all on "blog.view".post_comment to halftest;
 comment on view "blog.view".post_comment is
