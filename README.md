@@ -7,7 +7,7 @@
 - remove the installed module (```/usr/local/lib/python3.4/dist-packages/halfORM...``` on debian)
 - change ```from halfORM.model import Model``` to ```from half_orm.model import Model``` in your scripts.
 
-# half_orm
+# What is half_orm?
 
 ```half_orm``` is a really simple ORM for PostgreSQL (9+) fully written in Python3.
 
@@ -20,6 +20,12 @@ The half part of ```half_orm``` is here to indicate that only the data manipulat
 All the data definition language part has been left to SQL or whatever software used to define the structure of the database.
 
 half_orm can produce complex JSON aggregations from any table/view with very simple YAML directives (nested aggregations are possible).
+
+# Installation (only tested on Linux)
+- Fork the project https://github.com/collorg/halfORM
+- Install psycopg2 (http://initd.org/psycopg/docs/install.html)
+- Go to the halfORM directory and install half_orm:
+ ```sudo python3 setup.py -q install```
 
 
 # The full API
@@ -205,4 +211,4 @@ Well, there is not much left after this in the ```actor.person``` table.
 
 That's it! You've learn pretty much everything there is to know to begin to use half_orm for testing purpose only (**THIS PROJECT IS STILL PRE-ALPHA**).
 ## Interested?
-Fork me on Github: https://github.com/collorg/half_orm
+Fork me on Github: https://github.com/collorg/halfORM
