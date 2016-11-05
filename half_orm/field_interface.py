@@ -1,8 +1,8 @@
 #-*- coding: utf-8 -*-
 
-"""This module provides the FKeyInterface class."""
+"""This module provides the FieldInterface class."""
 
-class FKeyInterface(object):
+class FieldInterface(object):
     """Foreign key class interface
 
     properties shared between Fkey and Field classes
@@ -26,22 +26,6 @@ class FKeyInterface(object):
     def is_set(self):
         """Returns True is the foreign key is set."""
         return self._is_set
-
-    def __get_from(self):
-        """Returns the origin of the fkey."""
-        return self._fk_from
-    def __set_from(self, from_):
-        """Sets the origin of the fkey."""
-        self._fk_from = from_
-    from_ = property(__get_from, __set_from)
-
-    def __get_to(self):
-        """Returns the destination relation of the fkey."""
-        return self._fk_to
-    def __set_to(self, to_):
-        """Sets the destination relation of the fkey."""
-        self._fk_to = to_
-    to_ = property(__get_to, __set_to)
 
     def __get_fields(self):
         """Returns the the fields of the foreign key."""

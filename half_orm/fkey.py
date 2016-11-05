@@ -3,9 +3,9 @@
 
 """This module provides the FKey class."""
 
-from half_orm.fkey_interface import FKeyInterface
+from half_orm.field_interface import FieldInterface
 
-class FKey(FKeyInterface):
+class FKey(FieldInterface):
     """Foreign key class
 
     A foreign key is set by assigning to it a Relation object of the
@@ -55,6 +55,22 @@ class FKey(FKeyInterface):
         self._is_set = True
         if not (to_, self) in from_._joined_to:
             from_._joined_to.insert(0, (to_, self))
+
+    def __get_from(self):
+        """Returns the origin of the fkey."""
+        return self._fk_from
+    def __set_from(self, from_):
+        """Sets the origin of the fkey."""
+        self._fk_from = from_
+    from_ = property(__get_from, __set_from)
+
+    def __get_to(self):
+        """Returns the destination relation of the fkey."""
+        return self._fk_to
+    def __set_to(self, to_):
+        """Sets the destination relation of the fkey."""
+        self._fk_to = to_
+    to_ = property(__get_to, __set_to)
 
     @property
     def fk_fqrn(self):
