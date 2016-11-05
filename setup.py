@@ -23,7 +23,7 @@ setup(
     install_requires=['psycopg2>=2.6.1', 'PyYAML'],
     entry_points={
         'console_scripts': [
-            'half_orm=half_orm.hormgen:main',
+            'half_orm=half_orm.half_orm:main',
         ],
     },
 )

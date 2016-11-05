@@ -10,8 +10,12 @@ import os
 
 from half_orm.model import Model
 
+README = '''\
+Package for PostgreSQL {dbname} database.
+'''
+
 SETUP_TEMPLATE = '''\
-"""Package Python pour l'exploitation de la BD du SI du LIRMM
+"""Package for PostgreSQL {dbname} database.
 """
 
 from setuptools import setup, find_packages
@@ -120,14 +124,24 @@ def main():
     parser.add_argument(
         "-p", "--package_name", help="Python package name default to DB_NAME"
     )
+    parser.add_argument(
+        "-c", "--config_file", help="Configuration file to connect to DB_NAME"
+    )
     parser.add_argument("db_name", help="Database name")
     args = parser.parse_args()
+    dbname = args.db_name
     package_name = args.package_name and args.package_name or args.db_name
 
     if not os.path.exists(package_name):
-        os.mkdir(package_name)
-        open('{}/db_connector.py'.format(package_name), 'w').write(
-            DB_CONNECTOR_TEMPLATE)
+        package_dir = "{}/{}".format(package_name, package_name)
+        os.makedirs(package_dir)
+        setup = SETUP_TEMPLATE.format(dbname=dbname, package_name=package_name)
+        readme = README.format(dbname=dbname)
+        open('{}/README.rst'.format(package_name), 'w').write(readme)
+        open('{}/setup.py'.format(package_name), 'w').write(setup)
+        open('{}/db_connector.py'.format(package_dir), 'w').write(
+            DB_CONNECTOR_TEMPLATE.format(
+                dbname=dbname, package_name=package_name))
 
     model = Model(args.db_name)
     for relation in model.relations():
@@ -136,7 +150,7 @@ def main():
 
         fqtn = '.'.join(path[1:])
 
-        path[0] = package_name
+        path[0] = "{}/{}".format(package_name, package_name)
         module_path = '{}.py'.format('/'.join(path))
         module_name = path[-1]
         path = '/'.join(path[:-1])
