@@ -343,7 +343,7 @@ def __select_args(self, *args):
     """
     query = self.__query
     id_ = id(self)
-    what = '*'
+    what = 'r{}.*'.format(id_)
     if args:
         what = ', '.join([self._fields[arg]._praf(query) for arg in args])
     def walk_op(rel, out=None, _fields_=None):

@@ -15,11 +15,27 @@ class FKey(FieldInterface):
     """
     def __init__(self, fk_name, fk_sfqrn, fk_names, fields):
         self._relation = None
+        self._fk_from = None
+        self._fk_to = None
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
         super(FKey, self).__init__(fk_name, fk_names, fields)
 
-    def __get__(self, obj, type_=None):
+    def __get_fk_qrn(self):
+        """Returns QRN from FQRN."""
+        return '.'.join(self.__fk_fqrn.split('.', 1)[1:])
+
+    def __call__(self, **kwargs):
         """Returns the relation on which the fkey is defined."""
+        f_relation = self._relation.model.relation(
+            self.__get_fk_qrn(), **kwargs)
+        f_relation.fkeys = {
+            '__reverse': FKey(
+                '__reverse',
+                f_relation.fqrn.split('.'), self._fields, self._fk_names)}
+        _ = {fkey._set_relation(f_relation)
+             for fkey in f_relation.fkeys.values()}
+        f_relation.fkeys['__reverse'].set(self._relation)
+        return f_relation
         if self.from_ is None:
             self.__set__(obj)
             if not (self.from_, self) in self.to_._joined_to:
@@ -35,12 +51,9 @@ class FKey(FieldInterface):
         The value must be and object of type Relation having the
         same FQRN as referenced by self.__fk_fqrn.
         """
-        def __get_qrn(fqrn):
-            """Returns QRN from FQRN."""
-            return '.'.join(fqrn.split('.', 1)[1:])
 
         if to_ is None:
-            to_ = self._relation(__get_qrn(self.__fk_fqrn))
+            to_ = self._relation(self.__get_fk_fqrn())
         if not isinstance(to_, self._relation.__class__.__bases__[0]):
             raise Exception("Expecting a Relation")
         #TODO deal with inheritance

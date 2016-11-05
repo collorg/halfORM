@@ -11,8 +11,6 @@ class FieldInterface(object):
         self._name = name
         self._fk_names = fk_names or []
         self._fields = fields or []
-        self._fk_from = None
-        self._fk_to = None
         self._is_set = False
 
     def _set_relation(self, relation):

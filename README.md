@@ -1,4 +1,4 @@
-**Looking for testers/contributors**.
+**THIS PROJECT IS IN ALPHA STAGE. I'm looking for testers/contributors to validate the API.**
 
 # Welcome to halfORM, the object relational mapper carefully designed to **not** address any of the data definition language part of SQL.
 
@@ -20,13 +20,13 @@ half_orm can produce complex JSON aggregations from any table/view with very sim
 - Go to the halfORM directory and install half_orm:
  ```sudo python3 setup.py -q install```
 
-You're ready to go!
+You're now ready to go!
 
 # The full API
 
 ## The config file
-Before we can begin, we need a configuration file to access the database. This file contains the user name, database name, port
-and host informations. By default, ```half_orm``` looks for these files in
+Before we can begin, we need a configuration file to access the database. This file contains the database name, user name and passowrd, host and port informations.
+Keep it in a safe place. By default, ```half_orm``` looks for these files in
 ```/etc/half_orm``` directory.
 
 Example: ([test/halftest.ini](test/halftest.ini))
@@ -52,7 +52,7 @@ The first thing you need is a model object to connect to your database.
 ```
 Four methods are available:
 - ```desc``` to display the structure of the database or of a relation in the database.
-- ```relation``` to instanciate a Relation object and play with this relation. More on the ```Relation``` class below.
+- **```relation```**, the most important, to instanciate a Relation object and play with this relation. More on the ```Relation``` class below.
 - ```ping``` to check if the connection is still up. It will attempt a reconnection if not. Very convenient to keep alive a web service even if the database
 goes down.
 - ```reconnect``` well, to reconnect to the database.
@@ -67,7 +67,7 @@ r "blog"."post"
 v "blog.view"."post_comment"
 ```
 
-The expression ```halftest.desc("blog.comment")``` displays only the representation of the ```blog.comment``` table as bellow:
+The expression ```halftest.desc("blog.comment")``` show the representation of the ```blog.comment``` Relation as bellow:
 
 ```python
 >>> halftest.desc("blog.comment")
@@ -81,9 +81,9 @@ FIELDS:
 - content:   (text)
 - post_id:   (int4)
 FOREIGN KEYS:
-- post_fkey: (post_id)
+- post: (post_id)
  ↳ "halftest"."blog"."post"(id)
-- author_fkey: (author_id)
+- author: (author_id)
  ↳ "halftest"."actor"."person"(id)
 ```
 Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halftest"."actor"."person"(id)```
@@ -263,10 +263,54 @@ We finally remove every inserted tuples. Notice that we use the ```delete_all```
 ```
 Well, there is not much left after this in the ```actor.person``` table.
 
-# Working with foreign keys
-[WIP]
+# Working with foreign keys (the FKey class)
+Working with foreign keys is as easy as working with Relational objects.
+A Relational object has an attribute ```fkeys``` that contains the foreign
+keys in a dictionary. Foreign keys are ```Fkey``` objects. The Fkey class
+has one method:
+- the ```set``` method allows you to constrain a foreign key with a Relation object,
+- a foreign key is a transitional object, so when you "call" an FKey object,
+you get the relation it points to. This relation is then constrained by the
+Relation object of origin.
 
+Okay, let's see an example. Remember the ```blog.comment``` relation?
 
-That's it! You've learn pretty much everything there is to know to begin to use half_orm for testing purpose only (**THIS PROJECT IS STILL PRE-ALPHA**).
-## Interested?
-Fork me on Github: https://github.com/collorg/halfORM
+```python
+>>> comments = halftest.relation("blog.comment")
+>>> print(comments)
+TABLE: "halftest"."blog"."comment"
+DESCRIPTION:
+The table blog.comment contains all the comments
+made by a person on a post.
+FIELDS:
+- author_id: (int4)
+- id:        (int4) PK
+- content:   (text)
+- post_id:   (int4)
+FOREIGN KEYS:
+- post: (post_id)
+ ↳ "halftest"."blog"."post"(id)
+- author: (author_id)
+ ↳ "halftest"."actor"."person"(id)
+```
+
+It has two foreign keys: ```post_fkey``` and ```author_fkey```
+
+We want the comments made by Gaston:
+
+```python
+>>> gaston = persons(last_name="Lagaffe")
+>>> gaston_comments = comments()
+>>> gaston_comments.fkeys['author'].set(gaston)
+```
+
+We now want to know on which posts gaston has made at least one comment:
+
+```python
+>>> the_posts = gaston_comments.fkeys['post']()
+```
+It's that easy!
+
+That's it! You've learn pretty much everything there is to know with half_orm.
+# Interested?
+Fork me on Github: https://github.com/collorg/halfORM, give some feedback, report issues.
