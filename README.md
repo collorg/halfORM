@@ -1,18 +1,17 @@
 **THIS PROJECT IS IN ALPHA STAGE. I'm looking for testers/contributors to validate the API.**
 
-# Welcome to halfORM, the object relational mapper carefully designed to **not** address any of the data definition language part of SQL.
+# Welcome to halfORM, the object relational mapper carefully designed to **NOT** address any of the data definition language part of SQL.
 
-```half_orm``` is a really simple ORM for PostgreSQL (9+) fully written in Python3.
+```half_orm``` is a really simple relational object mapper for PostgreSQL (9+) fully written in Python3.
 
 ## Why half?
 The SQL language is divided in two different parts:
-- DDL (Data definition language) to manipulate the structure of a database,
-- DML (Data manipulation language) used for selecting, inserting, deleting and updating data in a database.
+- the data definition language part (DDL) to manipulate the structure of a database,
+- the data manipulation language par (DML) used for selecting, inserting, deleting and updating data in a database.
 
-The half part of ```half_orm``` is here to indicate that only the data manipulation part of the SQL language is addressed. This makes ```half_orm``` learning and usage quite easy.
-All the data definition language part has been left to SQL or whatever software used to define the structure of the database.
+The half part of ```half_orm``` indicates that only the DML part is addressed. This makes ```half_orm``` learning and usage quite easy.
 
-half_orm can produce complex JSON aggregations from any table/view with very simple YAML directives (nested aggregations are possible).
+With ```half_orm``` you manipulate your data with true relational objects.
 
 # Installation (only tested on Linux)
 - Clone the project ```git clone https://github.com/collorg/halfORM```
@@ -204,8 +203,7 @@ level of aggregation.
 '[{"authors":[{"first_name": "Gaston", "last_name": "Lagaffe", "posts":[{"title": "Bof!"}, {"title": "Menfin!!!"}]}]}]'
 ```
 
-In fact, this feature is very handy when you have SQL views. You can just
-join your tables and then reorganise your data. For example with the view
+In fact, this feature is very handy with SQL views. For example with the view
 ["blog.view".post_comment](test/sql/halftest.sql) you can get:
 
 The list of posts with the comments on those posts
@@ -235,7 +233,6 @@ authors:
             author_comment_last_name: last_name
             author_comment_first_name: first_name
 ```
-...
 
 ### Update
 In this example, we upper case the last name of all the persons for which the second letter is an ```a```.
@@ -276,7 +273,7 @@ keys in a dictionary. Foreign keys are ```Fkey``` objects. The Fkey class
 has one method:
 - the ```set``` method allows you to constrain a foreign key with a Relation object,
 - a foreign key is a transitional object, so when you "call" an FKey object,
-you get the relation it points to. This relation is then constrained by the
+you get the relation it points to. This relation is constrained by the
 Relation object of origin.
 
 Okay, let's see an example. Remember the ```blog.comment``` relation?
