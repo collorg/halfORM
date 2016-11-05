@@ -329,7 +329,7 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         if new_rel:
             orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(rel)))
             orig_rel.__sql_query.insert(2, rel.__sql_query)
-        if orig_rel != rel:
+        if id(orig_rel) != id(rel):
             orig_rel.__sql_values = (rel.__sql_values + orig_rel.__sql_values)
 
 def __where_repr(self, query, id_):

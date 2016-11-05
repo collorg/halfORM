@@ -1,15 +1,6 @@
 **Looking for testers/contributors**.
-I'd love to have some feedback/bug report/help before releasing the first alpha
-version of ```half_orm```.
 
-**WARNING!** (2016-11-02)
-
-```halfORM``` module has been renamed ```half_orm```. If you were using halfORM and you want to upgrade to the lastest version:
-- move ```/etc/halfORM``` directory to ```/etc/half_orm``` if you were using it,
-- remove the installed module (```/usr/local/lib/python3.4/dist-packages/halfORM...``` on debian)
-- change ```from halfORM.model import Model``` to ```from half_orm.model import Model``` in your scripts.
-
-# What is half_orm?
+# Welcome to halfORM, the object relational mapper carefully designed to **not** address any of the data definition language part of SQL.
 
 ```half_orm``` is a really simple ORM for PostgreSQL (9+) fully written in Python3.
 
@@ -29,6 +20,7 @@ half_orm can produce complex JSON aggregations from any table/view with very sim
 - Go to the halfORM directory and install half_orm:
  ```sudo python3 setup.py -q install```
 
+You're ready to go!
 
 # The full API
 
