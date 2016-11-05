@@ -24,7 +24,7 @@ You're now ready to go!
 # The full API
 
 ## The config file
-Before we can begin, we need a configuration file to access the database. This file contains the database name, user name and passowrd, host and port informations.
+Before we can begin, we need a configuration file to access the database. This file contains the database name, user name and password, host and port informations.
 Keep it in a safe place. By default, ```half_orm``` looks for these files in
 ```/etc/half_orm``` directory.
 
@@ -41,7 +41,7 @@ The ```halftest``` has:
 - one view:
  - ```blog.view.post_comment```
 
-## API Examples (Everything you need to know to program with half_orm in five minutes)
+## API Examples (Everything you need to know to program with half_orm in 30 minutes)
 Some scripts snippets to illustrate the current implementation of the API.
 ## The Model class:
 The first thing you need is a model object to connect to your database.
@@ -54,7 +54,7 @@ Four methods are available:
 - **```relation```**, the most important, to instanciate a Relation object and play with this relation. More on the ```Relation``` class below.
 - ```ping``` to check if the connection is still up. It will attempt a reconnection if not. Very convenient to keep alive a web service even if the database
 goes down.
-- ```reconnect``` well, to reconnect to the database.
+- ```reconnect``` well, to reconnect and reload the metadata from the database.
 
 Without argument, the ```desc``` method iterates over every *relational object* of the database and prints it's type and name.
 
@@ -66,7 +66,7 @@ r "blog"."post"
 v "blog.view"."post_comment"
 ```
 
-The expression ```halftest.desc("blog.comment")``` show the representation of the ```blog.comment``` Relation as bellow:
+The expression ```halftest.desc("blog.comment")``` shows the representation of the ```blog.comment``` Relation:
 
 ```python
 >>> halftest.desc("blog.comment")
@@ -94,15 +94,21 @@ To instanciate a Relation object, just use the ```Model.relation(QRN)``` method.
 ```python
 >>> persons = halftest.relation("actor.person")
 ```
-The persons object can be used to instanciate new ```actor.person``` objects.
 With a Relation object, you can use the following methods to manipulate the
 data in your database:
 
 If it is of type ```Table```:
-- ```insert```
-- ```select```, ```get```, ```getone``` and ```to_json```
-- ```update```
-- ```delete```
+- ```insert``` to insert data,
+- ```select```, ```get```, ```getone``` and ```to_json``` to retreive data,
+  - ```select_params``` to set limit and/or offset,
+- ```update``` to update data,
+- ```delete``` to delete data.
+
+You can "call" a Relation object to instanciate a new object with new constraints.
+
+```python
+new_rel = rel(**kwargs)
+```
 
 If the type of the relation is ```View```, only the ```select```, ... methods can be used.
 
@@ -110,7 +116,8 @@ You also can use set operators to set complex constraints on your relations:
 - ```&```, ```|```, ```^``` and ```-``` for ```and```, ```or```, ```xor``` and ```not```.
 Take a look at [the algebra test file](test/relation/algebra_test.py).
 - you can also use the ```==```, ```!=``` and ```in``` operators to compare two sets.
-- you can finally get the number of elements in a relation whith ```len```.
+
+You can get the number of elements in a relation whith ```len```.
 
 ### Insert
 To insert a tuple in the relation, just use the ```insert``` method as shown bellow:
@@ -130,7 +137,10 @@ def insert_many(persons):
 insert_many(persons)
 ```
 
-Note: half_orm works in autocommit mode by default.
+Notice:
+- half_orm works in autocommit mode by default.
+- if "Lagaffe" was already inserted, none of the data would be
+inserted by insert_many.
 
 ### Select
 The ```select``` is a generator. It returns all the datas in the relation that match the constraint set on the Relation object.
@@ -147,6 +157,12 @@ The data are returned in a list of dictionaries.
 {'first_name': 'Gil', 'birth_date': datetime.date(1956, 9, 20), 'id': 159365, 'last_name': 'Jourdan'}
 >>>
 ```
+
+You can limit of put and offset:
+```python
+>>> persons.select_params(offset=2, limit=3)
+```
+
 To put a constraint on a an object you just pass arguments corresponding to the
 fields names you want to constrain. A constraint is an SQL one. By default, the
 comparison operator is '=' but you can use any
@@ -297,7 +313,7 @@ FOREIGN KEYS:
  ↳ "halftest"."actor"."person"(id)
 ```
 
-It has two foreign keys: ```post_fkey``` and ```author_fkey```
+It has two foreign keys named ```post``` and ```author```.
 
 We want the comments made by Gaston:
 
@@ -307,7 +323,8 @@ We want the comments made by Gaston:
 >>> gaston_comments.fkeys['author'].set(gaston)
 ```
 
-We now want to know on which posts gaston has made at least one comment:
+To know on which posts gaston has made at least one comment, we just "call"
+the foreign key ```post```:
 
 ```python
 >>> the_posts = gaston_comments.fkeys['post']()

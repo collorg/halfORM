@@ -120,8 +120,14 @@ def __init__(self, **kwargs):
     self.__sql_values = []
     self.__mogrify = False
     self.__set_op = SetOp(self)
+    self.__select_params = {}
     _ = {field._set_relation(self) for field in self._fields.values()}
     _ = {fkey._set_relation(self) for fkey in self.fkeys.values()}
+
+def select_params(self, **kwargs):
+    """Sets the limit and offset on the relation (used by select)."""
+    self.__select_params.update(kwargs)
+    return self
 
 def group_by(self, yml_directive):
     """Returns an aggregation of the data according to the yml directive
@@ -396,6 +402,10 @@ def select(self, *args):
     query_template = "select {} from {} {}"
     query, values = self.__get_query(query_template, *args)
     values = tuple(self.__sql_values + values)
+    if 'limit' in self.__select_params.keys():
+        query = '{} limit {}'.format(query, self.__select_params['limit'])
+    if 'offset' in self.__select_params.keys():
+        query = "{} offset {}".format(query, self.__select_params['offset'])
     try:
         if not self.__mogrify:
             self.__cursor.execute(query, values)
@@ -579,6 +589,7 @@ def debug():
 
 COMMON_INTERFACE = {
     '__init__': __init__,
+    'select_params': select_params,
     '__call__': __call__,
     'dup': dup,
     '__get_set_fields': __get_set_fields,
