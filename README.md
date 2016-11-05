@@ -137,10 +137,6 @@ Note: half_orm works in autocommit mode by default.
 The ```select``` is a generator. It returns all the datas in the relation that match the constraint set on the Relation object.
 The data are returned in a list of dictionaries.
 
-Putting a constraint on a person object:
-```python
->>> _a_persons = persons(last_name=('_a%', 'like'))
-```
 ```python
 >>> for pers in persons.select():
 ...     print(pers)
@@ -151,6 +147,16 @@ Putting a constraint on a person object:
 {'first_name': 'Achile', 'birth_date': datetime.date(1963, 11, 7), 'id': 159364, 'last_name': 'Talon'}
 {'first_name': 'Gil', 'birth_date': datetime.date(1956, 9, 20), 'id': 159365, 'last_name': 'Jourdan'}
 >>>
+```
+To put a constraint on a an object you just pass arguments corresponding to the
+fields names you want to constrain. A constraint is an SQL one. By default, the
+comparison operator is '=' but you can use any
+[comparison operator](https://www.postgresql.org/docs/9.0/static/functions-comparison.html)
+or [pattern matching operator (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html)
+ with a tuple of the form: ```(value, comp)```.
+
+```python
+>>> _a_persons = persons(last_name=('_a%', 'like'))
 ```
 
 ```python
