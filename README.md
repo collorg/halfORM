@@ -17,7 +17,9 @@ With ```half_orm``` you manipulate your data with true relational objects.
 - Clone the project ```git clone https://github.com/collorg/halfORM```
 - Install psycopg2 (http://initd.org/psycopg/docs/install.html)
 - Go to the halfORM directory and install half_orm:
- ```sudo python3 setup.py -q install```
+ ```sudo python3 setup.py -q install```. This will install the package and
+ the script ```/usr/local/bin/halfORM```. The script can be used to generate
+ a python package with all the relations of your database [WIP].
 
 You're now ready to go!
 
@@ -54,7 +56,7 @@ Four methods are available:
 - **```relation```**, the most important, to instanciate a Relation object and play with this relation. More on the ```Relation``` class below.
 - ```ping``` to check if the connection is still up. It will attempt a reconnection if not. Very convenient to keep alive a web service even if the database
 goes down.
-- ```reconnect``` well, to reconnect and reload the metadata from the database possibly with another configuration file (to change the role).
+- ```reconnect``` well, to reconnect and reload the metadata from the database possibly with another configuration file, allowing to change the role.
 
 Without argument, the ```desc``` method iterates over every *relational object* of the database and prints it's type and name.
 

@@ -63,7 +63,7 @@ class Model(object):
         self.__cursor = None
         self.__relations = []
         try:
-            self.connect()
+            self._connect()
         except psycopg2.OperationalError as err:
             if raise_error:
                 raise err.__class__(err)
@@ -71,7 +71,7 @@ class Model(object):
             sys.stderr.flush()
 
     @staticmethod
-    def deja_vu(dbname):
+    def _deja_vu(dbname):
         """Returns None if the database hasn't been loaded yet.
         Otherwise, it returns the Model object already loaded.
         The Model object is shared between all the relations in the
@@ -81,21 +81,28 @@ class Model(object):
 
     def ping(self):
         """Returns True if the connection is OK.
-        Otherwise attempt a new connection and return False.
+
+        Otherwise attempts a new connection and return False.
         """
         try:
             self.execute_query("select 1")
             return True
         except psycopg2.OperationalError:
             try:
-                self.connect()
+                self._connect()
             except psycopg2.OperationalError as err:
                 sys.stderr.write('{}\n'.format(err))
                 sys.stderr.flush()
             return False
 
-    def connect(self, config_file=None):
-        """Setup a new connexion, cursor to the database."""
+    def _connect(self, config_file=None):
+        """Setup a new connection to the database.
+
+        If a config_file is provided, the connection is made with the new
+        parameters, allowing to change role. The database name must be the same.
+
+        The reconnect method is an alias to the connect method.
+        """
         if self.__conn is not None:
             if not self.__conn.closed:
                 self.__conn.close()
@@ -130,24 +137,24 @@ class Model(object):
         self.__metadata[self.__dbname] = self.__get_metadata()
         self.__deja_vu[self.__dbname] = self
 
-    reconnect = connect
+    reconnect = _connect
 
     @property
-    def dbname(self):
+    def _dbname(self):
         """
         property. Returns the database name.
         """
         return self.__dbname
 
     @property
-    def connection(self):
-        """
+    def _connection(self):
+        """\
         Property. Returns the psycopg2 connection attached to the Model object.
         """
         return self.__conn
 
     @property
-    def metadata(self):
+    def _metadata(self):
         """Returns the metadata of the database.
         Uses the Model.__metadata class dictionary.
         """
@@ -161,7 +168,7 @@ class Model(object):
         metadata = {}
         byname = metadata['byname'] = OrderedDict()
         byid = metadata['byid'] = {}
-        with self.connection.cursor() as cur:
+        with self._connection.cursor() as cur:
             cur.execute(REQUEST)
             for dct in cur.fetchall():
                 table_key = (
@@ -196,11 +203,6 @@ class Model(object):
         cursor = self.__conn.cursor()
         cursor.execute(query, values)
         return cursor
-
-    def relations(self):
-        """List all the relations in the database"""
-        for relation in self.__relations:
-            yield "{} {}.{}.{}".format(relation[0], *relation[1])
 
     def relation(self, qtn, **kwargs):
         """Instanciate an object of Relation, using the RelationFactory class.

@@ -105,7 +105,7 @@ class Relation(object):
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
 def __init__(self, **kwargs):
-    self.__cursor = self.model.connection.cursor()
+    self.__cursor = self.model._connection.cursor()
     self.__cons_fields = []
     kwk_ = set(kwargs.keys())
     try:
@@ -657,11 +657,11 @@ class RelationFactory(type):
         for i, name in enumerate(attr_names):
             tbl_attr[name] = sfqrn[i]
         dbname = tbl_attr['dbname']
-        tbl_attr['model'] = model.Model.deja_vu(dbname)
+        tbl_attr['model'] = model.Model._deja_vu(dbname)
         if not tbl_attr['model']:
             tbl_attr['model'] = model.Model(dbname)
         try:
-            metadata = tbl_attr['model'].metadata['byname'][tuple(sfqrn)]
+            metadata = tbl_attr['model']._metadata['byname'][tuple(sfqrn)]
         except KeyError:
             raise model_errors.UnknownRelation(sfqrn)
         tbl_attr['__metadata'] = metadata
@@ -694,7 +694,7 @@ class RelationFactory(type):
         ta_['_fields'] = OrderedDict()
         ta_['fkeys'] = OrderedDict()
         ta_['_fields_names'] = set()
-        dbm = ta_['model'].metadata
+        dbm = ta_['model']._metadata
         flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
         for field_name, f_metadata in dbm['byname'][
                 ta_['__sfqrn']]['fields'].items():

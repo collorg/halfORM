@@ -55,18 +55,18 @@ class Transaction(object):
         res = None
         try:
             Transaction.__level += 1
-            if relation.model.connection.autocommit:
-                relation.model.connection.autocommit = False
+            if relation.model._connection.autocommit:
+                relation.model._connection.autocommit = False
             res = self.__func(relation, *args, **kwargs)
             Transaction.__level -= 1
             if Transaction.__level == 0:
-                relation.model.connection.commit()
-                relation.model.connection.autocommit = True
+                relation.model._connection.commit()
+                relation.model._connection.autocommit = True
         except Exception as err:
             sys.stderr.write(
                 "Transaction error: {}\nRolling back!\n".format(err))
             self.__level = 0
-            relation.model.connection.rollback()
-            relation.model.connection.autocommit = True
+            relation.model._connection.rollback()
+            relation.model._connection.autocommit = True
             raise err
         return res

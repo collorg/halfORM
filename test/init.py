@@ -26,7 +26,7 @@ def name(letter, integer):
 
 class HalfTest:
     def __init__(self):
-        self.dbname = model.dbname
+        self.dbname = model._dbname
         self.today = date.today()
         self.pers = model.relation("actor.person")
         self.relation = model.relation
@@ -55,4 +55,3 @@ else:#except Exception as err:
     sys.stderr.write('{}\n'.format(err))
     sys.stderr.write(README.format(path))
     sys.exit(1)
-    
