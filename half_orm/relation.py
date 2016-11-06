@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-# pylint: disable=protected-access, too-few-public-methods
+# pylint: disable=protected-access, too-few-public-methods, no-member
 
 """This module provides: relation, relation_factory
 

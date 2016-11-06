@@ -55,9 +55,9 @@ class Model(object):
         """
         assert bool(config_file) != bool(dbname)
         self.__config_file = config_file
+        self.__dbname = dbname
         if dbname:
             self = self.__deja_vu[dbname]
-            self.__dbname = dbname
             return
         self.__conn = None
         self.__cursor = None
@@ -194,7 +194,7 @@ class Model(object):
                 fieldnum = dct['fieldnum']
                 tablekind = dct.pop('tablekind')
                 inherits = [byid[int(elt.split(':')[1])]['sfqrn']
-                    for elt in dct.pop('inherits') if elt is not None]
+                            for elt in dct.pop('inherits') if elt is not None]
                 byname[table_key]['tablekind'] = tablekind
                 byname[table_key]['inherits'] = inherits
                 byname[table_key]['fields'][fieldname] = dct
