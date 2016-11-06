@@ -94,17 +94,27 @@ class Model(object):
                 sys.stderr.flush()
             return False
 
-    def connect(self, **params):
+    def connect(self, config_file=None):
         """Setup a new connexion, cursor to the database."""
         if self.__conn is not None:
             if not self.__conn.closed:
                 self.__conn.close()
+        if config_file:
+            self.__config_file = config_file
         config = ConfigParser()
         if not config.read(
                 [self.__config_file,
                  '/etc/half_orm/{}'.format(self.__config_file)]):
             raise model_errors.MissingConfigFile(self.__config_file)
         params = dict(config['database'].items())
+        if config_file:
+            try:
+                assert params['name'] == self.__dbname
+            except AssertionError as err:
+                sys.stderr.write(
+                    "Can't reconnect to another database {} != {}".format(
+                        params['name'], self.__dbname))
+                raise err
         needed_params = {'name', 'host', 'user', 'password', 'port'}
         self.__dbname = params['name']
         missing_params = needed_params.symmetric_difference(set(params.keys()))
