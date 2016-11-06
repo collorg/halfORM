@@ -1,16 +1,16 @@
 #-*- coding: utf-8 -*-
 # pylint: disable=protected-access, too-few-public-methods
 
-"""This module provides: relation, RelationFactory
+"""This module provides: relation, relation_factory
 
 The relation function allows you to directly instanciate a Relation object
 given its fully qualified relation name:
 - relation(<FQRN>)
 
-The RelationFactory can be used to create classes to manipulate the relations
+The relation_factory can be used to create classes to manipulate the relations
 of the database:
 ```
-class MyClass(metaclass=RelationFactory):
+class MyClass(metaclass=relation_factory):
     fqrn = '<FQRN>'
 ```
 
@@ -98,7 +98,7 @@ class SetOp(object):
             self.__right.fqrn)
 
 class Relation(object):
-    """Base class of Table and View classes (see RelationFactory)."""
+    """Base class of Table and View classes (see relation_factory)."""
     pass
 
 #### THE following METHODS are included in Relation class according to
@@ -517,7 +517,7 @@ def __call__(self, **kwargs):
 
 def dup(self):
     """Duplicate a Relation object"""
-    new = RelationFactory(None, None, {'fqrn': self.fqrn})(
+    new = relation_factory(None, None, {'fqrn': self.fqrn})(
         **{field.name():(field.value, field.comp())
            for field in self._fields.values() if field.value})
     new.__set_op.op_ = self.__set_op.op_
@@ -530,7 +530,7 @@ def __set__op__(self, op_, right):
     l'opérateur du right ???
     On crée un nouvel objet sans contrainte et on a left et right et opérateur
     """
-    new = RelationFactory(None, None, {'fqrn': self.fqrn})()
+    new = relation_factory(None, None, {'fqrn': self.fqrn})()
     new.__set_op.left = self
     new.__set_op.op_ = op_
     new.__set_op.right = right
@@ -555,7 +555,7 @@ def __isub__(self, right):
     return self
 
 def __neg__(self):
-    new = RelationFactory(None, None, {'fqrn': self.fqrn})(
+    new = relation_factory(None, None, {'fqrn': self.fqrn})(
         **{field.name():(field.value, field.comp())
            for field in self._fields.values() if field.value})
     new.__set_op.neg = not self.__set_op.neg
@@ -637,86 +637,81 @@ VIEW_INTERFACE = COMMON_INTERFACE
 MVIEW_INTERFACE = COMMON_INTERFACE
 FDATA_INTERFACE = COMMON_INTERFACE
 
-class RelationFactory(type):
-    """RelationFactory Metaclass
-    """
-    def __new__(mcs, class_name, bases, dct):
-        from half_orm import model, model_errors
-        def _gen_class_name(rel_kind, sfqrn):
-            """Generates class name from relation kind and FQRN tuple"""
-            class_name = "".join([elt.capitalize() for elt in
-                                  [elt.replace('.', '') for elt in sfqrn]])
-            return "{}_{}".format(rel_kind, class_name)
+def relation_factory(class_name, bases, dct):
+    from half_orm import model, model_errors
+    def _gen_class_name(rel_kind, sfqrn):
+        """Generates class name from relation kind and FQRN tuple"""
+        class_name = "".join([elt.capitalize() for elt in
+                              [elt.replace('.', '') for elt in sfqrn]])
+        return "{}_{}".format(rel_kind, class_name)
 
-        bases = (Relation,)
-        rf_ = RelationFactory
-        tbl_attr = {}
-        tbl_attr['__fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
-        attr_names = ['dbname', 'schemaname', 'relationname']
-        for i, name in enumerate(attr_names):
-            tbl_attr[name] = sfqrn[i]
-        dbname = tbl_attr['dbname']
-        tbl_attr['model'] = model.Model._deja_vu(dbname)
-        if not tbl_attr['model']:
-            tbl_attr['model'] = model.Model(dbname)
-        try:
-            metadata = tbl_attr['model']._metadata['byname'][tuple(sfqrn)]
-        except KeyError:
-            raise model_errors.UnknownRelation(sfqrn)
-        if metadata['inherits']:
-            bases = []
-        for parent_fqrn in metadata['inherits']:
-            parent_fqrn = ".".join(['"{}"'.format(elt) for elt in parent_fqrn])
-            bases.append(RelationFactory(None, None, {'fqrn': parent_fqrn}))
-        bases = tuple(bases)
-        tbl_attr['__metadata'] = metadata
-        if dct.get('model'):
-            tbl_attr['model'] = dct['model']
-        tbl_attr['__sfqrn'] = tuple(sfqrn)
-        rel_class_names = {
-            'r': 'Table',
-            'v': 'View',
-            'm': 'Materialized view',
-            'f': 'Foreign data'}
-        kind = metadata['tablekind']
-        tbl_attr['__kind'] = rel_class_names[kind]
-        rel_interfaces = {
-            'r': TABLE_INTERFACE,
-            'v': VIEW_INTERFACE,
-            'm': MVIEW_INTERFACE,
-            'f': FDATA_INTERFACE}
-        rf_.__set_fields(tbl_attr)
-        for fct_name, fct in rel_interfaces[kind].items():
-            tbl_attr[fct_name] = fct
-        class_name = _gen_class_name(rel_class_names[kind], sfqrn)
-        return super(rf_, mcs).__new__(mcs, class_name, bases, tbl_attr)
+    bases = (Relation,)
+    tbl_attr = {}
+    tbl_attr['__fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
+    attr_names = ['dbname', 'schemaname', 'relationname']
+    for i, name in enumerate(attr_names):
+        tbl_attr[name] = sfqrn[i]
+    dbname = tbl_attr['dbname']
+    tbl_attr['model'] = model.Model._deja_vu(dbname)
+    if not tbl_attr['model']:
+        tbl_attr['model'] = model.Model(dbname)
+    try:
+        metadata = tbl_attr['model']._metadata['byname'][tuple(sfqrn)]
+    except KeyError:
+        raise model_errors.UnknownRelation(sfqrn)
+    if metadata['inherits']:
+        bases = []
+    for parent_fqrn in metadata['inherits']:
+        parent_fqrn = ".".join(['"{}"'.format(elt) for elt in parent_fqrn])
+        bases.append(relation_factory(None, None, {'fqrn': parent_fqrn}))
+    bases = tuple(bases)
+    tbl_attr['__metadata'] = metadata
+    if dct.get('model'):
+        tbl_attr['model'] = dct['model']
+    tbl_attr['__sfqrn'] = tuple(sfqrn)
+    rel_class_names = {
+        'r': 'Table',
+        'v': 'View',
+        'm': 'Materialized view',
+        'f': 'Foreign data'}
+    kind = metadata['tablekind']
+    tbl_attr['__kind'] = rel_class_names[kind]
+    rel_interfaces = {
+        'r': TABLE_INTERFACE,
+        'v': VIEW_INTERFACE,
+        'm': MVIEW_INTERFACE,
+        'f': FDATA_INTERFACE}
+    __set_fields(tbl_attr)
+    for fct_name, fct in rel_interfaces[kind].items():
+        tbl_attr[fct_name] = fct
+    class_name = _gen_class_name(rel_class_names[kind], sfqrn)
+    return type(class_name, bases, tbl_attr)
 
-    @staticmethod
-    def __set_fields(ta_):
-        """ta_: table attributes dictionary."""
-        from .field import Field
-        from .fkey import FKey
-        ta_['_fields'] = OrderedDict()
-        ta_['fkeys'] = OrderedDict()
-        ta_['_fields_names'] = set()
-        dbm = ta_['model']._metadata
-        flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
-        for field_name, f_metadata in dbm['byname'][
-                ta_['__sfqrn']]['fields'].items():
-            ta_['_fields'][field_name] = Field(field_name, f_metadata)
-            ta_['_fields_names'].add(field_name)
-        for field_name, f_metadata in dbm['byname'][
-                ta_['__sfqrn']]['fields'].items():
-            fkeyname = f_metadata.get('fkeyname')
-            if fkeyname and not fkeyname in ta_['fkeys']:
-                ft_ = dbm['byid'][f_metadata['fkeytableid']]
-                ft_sfqrn = ft_['sfqrn']
-                fields_names = [flds[elt-1]
-                                for elt in f_metadata['keynum']]
-                ft_fields_names = [ft_['fields'][elt]
-                                   for elt in f_metadata['fkeynum']]
-                ta_['fkeys'][fkeyname] = FKey(
-                    fkeyname, ft_sfqrn, ft_fields_names, fields_names)
+def __set_fields(ta_):
+    """ta_: table attributes dictionary."""
+    from .field import Field
+    from .fkey import FKey
+    ta_['_fields'] = OrderedDict()
+    ta_['fkeys'] = OrderedDict()
+    ta_['_fields_names'] = set()
+    dbm = ta_['model']._metadata
+    flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
+    for field_name, f_metadata in dbm['byname'][
+            ta_['__sfqrn']]['fields'].items():
+        ta_['_fields'][field_name] = Field(field_name, f_metadata)
+        ta_['_fields_names'].add(field_name)
+    for field_name, f_metadata in dbm['byname'][
+            ta_['__sfqrn']]['fields'].items():
+        fkeyname = f_metadata.get('fkeyname')
+        if fkeyname and not fkeyname in ta_['fkeys']:
+            ft_ = dbm['byid'][f_metadata['fkeytableid']]
+            ft_sfqrn = ft_['sfqrn']
+            fields_names = [flds[elt-1]
+                            for elt in f_metadata['keynum']]
+            ft_fields_names = [ft_['fields'][elt]
+                               for elt in f_metadata['fkeynum']]
+            ta_['fkeys'][fkeyname] = FKey(
+                fkeyname, ft_sfqrn, ft_fields_names, fields_names)
 
 def relation(_fqrn, **kwargs):
     """This function is used to instanciate a Relation object using
@@ -725,7 +720,7 @@ def relation(_fqrn, **kwargs):
     If the <schema name> comprises a dot it must be enclosed in double
     quotes. Dots are not allowed in <database name> and <relation name>.
     """
-    return RelationFactory(None, None, {'fqrn': _fqrn})(**kwargs)
+    return relation_factory(None, None, {'fqrn': _fqrn})(**kwargs)
 
 def _normalize_fqrn(_fqrn):
     """

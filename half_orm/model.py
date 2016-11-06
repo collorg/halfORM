@@ -32,7 +32,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from half_orm import model_errors
-from half_orm.relation import _normalize_fqrn, _normalize_qrn, RelationFactory
+from half_orm.relation import _normalize_fqrn, _normalize_qrn, relation_factory
 
 __all__ = ["Model"]
 
@@ -51,7 +51,7 @@ class Model(object):
         """Model constructor
 
         Use @config_file in your scripts. The @dbname parameter is
-        reserved to the RelationFactory metaclass.
+        reserved to the relation_factory metaclass.
         """
         assert bool(config_file) != bool(dbname)
         self.__config_file = config_file
@@ -214,7 +214,7 @@ class Model(object):
         return cursor
 
     def relation(self, qtn, **kwargs):
-        """Instanciate an object of Relation, using the RelationFactory class.
+        """Instanciate an object of Relation, using the relation_factory class.
 
         @qtn is the <schema>.<table> name of the relation
         @kwargs is a dictionary {field_name:value}
@@ -222,8 +222,13 @@ class Model(object):
         schema, table = qtn.rsplit('.', 1)
         fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
         fqrn, _ = _normalize_fqrn(fqrn)
-        return RelationFactory(
+        return relation_factory(
             'Table', (), {'fqrn': fqrn, 'model': self})(**kwargs)
+
+    def _relations(self):
+        """List all the relations in the database"""
+        for relation in self.__relations:
+            yield "{} {}.{}.{}".format(relation[0], *relation[1])
 
     def desc(self, qrn=None, verbose=False):
         """Prints the description of the relations of the model
@@ -236,13 +241,13 @@ class Model(object):
             for key in entry:
                 fqrn = ".".join(['"{}"'.format(elt) for elt in key[1:]])
                 if verbose:
-                    print(RelationFactory(
+                    print(relation_factory(
                         'Table', (), {'fqrn': fqrn, 'model': self})())
                 else:
                     print('{} {}'.format(entry[key]['tablekind'], fqrn))
         else:
             fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
-            print(RelationFactory(
+            print(relation_factory(
                 'Table', (), {'fqrn': fqrn, 'model': self})())
 
     def __str__(self):

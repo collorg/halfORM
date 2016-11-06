@@ -89,11 +89,13 @@ RELATION_TEMPLATE = """\
 #-*- coding: utf-8 -*-
 
 from {package_name}.db_connector import model
+{inheritance_import}
 
-class {class_name}:
-    __model = model
-    def __new__(cls, **kwargs):
-        return cls.__model.relation('{fqtn}', **kwargs)
+__RCLS = model.relation('{fqtn}').__class__
+
+class {class_name}(__RCLS, {inherited_classes}):
+    def __init__(self, **kwargs):
+        super({class_name}, self).__init__(**kwargs)
 """
 
 def camel_case(name):
@@ -156,11 +158,24 @@ def main():
                 dbname=dbname, package_name=package_name))
 
     model = Model(args.db_name)
-    for relation in model.relations():
+    for relation in model._relations():
         _, fqtn = relation.split()
         path = fqtn.split('.')
 
         fqtn = '.'.join(path[1:])
+        rel = model.relation(fqtn)
+        inheritance_import_list = []
+        inherited_classes_list = []
+        for base in rel.__class__.__bases__:
+            if base.__name__ != 'Relation':
+                inh_sfqrn = base.__sfqrn
+                inh_cl_name = camel_case(inh_sfqrn[-1])
+                inheritance_import_list.append(
+                    "from {} import {}".format(".".join(inh_sfqrn), inh_cl_name)
+                )
+                inherited_classes_list.append(inh_cl_name)
+        inheritance_import = "\n".join(inheritance_import_list)
+        inherited_classes = ", ".join(inherited_classes_list)
 
         path[0] = "{}/{}".format(package_name, package_name)
         module_path = '{}.py'.format('/'.join(path))
@@ -171,6 +186,8 @@ def main():
         open(module_path, 'w').write(
             RELATION_TEMPLATE.format(
                 package_name=package_name,
+                inheritance_import=inheritance_import,
+                inherited_classes=inherited_classes,
                 class_name=camel_case(module_name), fqtn=fqtn))
     for root, dirs, files in os.walk(package_name):
         all_ = (

@@ -42,6 +42,23 @@ comment on table blog.post is
 'The table blog.post contains all the post
 made by a person in the blogging system.';
 
+create table blog.event(
+    id int default nextval('blog.post_id') unique not null,
+    "begin" timestamp(0),
+    "end" timestamp(0),
+    location text,
+    primary key(id)
+) inherits(blog.post);
+alter table blog.event add constraint "author"
+    foreign key(author_first_name, author_last_name, author_birth_date)
+    references actor.person(first_name, last_name, birth_date)
+	on update cascade on delete cascade;
+grant all on table blog.event to halftest;
+comment on table blog.event is
+'The table blog.event contains all the events
+of the blogging system. It inherits blog.post.
+It''s just here to illustrate the inheriance in half_orm';
+
 create sequence blog.id_comment;
 create table blog.comment(
     id int default nextval('blog.id_comment') unique not null,

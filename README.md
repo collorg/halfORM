@@ -36,9 +36,10 @@ Example: ([test/halftest.ini](test/halftest.ini))
 The examples bellow use the [halftest example database](test/sql/halftest.sql).
 
 The ```halftest``` has:
-- three tables:
+- for tables:
  - ```actor.person```
  - ```blog.post```
+ - ```blog.event``` inherits ```blog.post```
  - ```blog.comment```
 - one view:
  - ```blog.view.post_comment```
@@ -333,6 +334,68 @@ the foreign key ```post```:
 ```
 It's that easy!
 
+# The halfORM script
+Assuming you have a config file named ```halftest``` in ```/etc/half_orm```,
+just run:
+```sh
+$ halfORM halftest
+```
+The script generates for you a package with a python module for each relation
+in your database.
+```sh
+$ tree halftest/
+halftest/
+├── halftest
+│   ├── actor
+│   │   ├── __init__.py
+│   │   └── person.py
+│   ├── blog
+│   │   ├── comment.py
+│   │   ├── event.py
+│   │   ├── __init__.py
+│   │   ├── post.py
+│   │   └── view
+│   │       ├── __init__.py
+│   │       └── post_comment.py
+│   ├── db_connector.py
+│   └── __init__.py
+├── __init__.py
+├── README.rst
+└── setup.py
+```
+
+The modules are ordered by schema name (one directory by schema). The dot in
+a schema name is used as a separator (```blog.view``` becomes ```blog/view```).
+The classes in the relation modules are camel cased:
+ - ```post```: ```Post```
+ - ```post_comment```: ```PostComment```
+
+ You can now edit those modules and use what you've learn.
+
+To install the package, just go to the halftest directory and run:
+```sh
+python3 setup.py -q install
+```
+
+You can now write this script:
+
+```python
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*-
+
+from halform.blog.view.post_comment import PostComment
+
+post_gaston = PostComment(author_post_first_name="Lagaffe")
+posts_by_author = """
+   ...: author:
+   ...:   author_post_first_name: first_name
+   ...:   author_post_last_name: last_name
+   ...:   posts:
+   ...:     - post_id: id
+   ...:       post_title: title
+   ...: """
+post_gaston.to_json(posts_by_author)
+```
 That's it! You've learn pretty much everything there is to know with half_orm.
 # Interested?
 Fork me on Github: https://github.com/collorg/halfORM, give some feedback, report issues.
