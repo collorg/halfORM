@@ -2,14 +2,14 @@
 
 # Welcome to halfORM, the PostgreSQL/Python3 relation/object mapper carefully designed to **NOT** address any of the data definition language part of SQL.
 
-```half_orm``` is a really simple relational object mapper for PostgreSQL (9+) fully written in Python3. It manages the table inheritance of PostgreSQL and more...
+```half_orm``` is a really simple relational object mapper for PostgreSQL (9+) fully written in Python3. It manages the table inheritance of PostgreSQL and more... See the complete tour of ```half_orm``` in 30 minutes bellow.
 
 ## Why half?
 The SQL language is divided in two different parts:
 - the data definition language part (DDL) to manipulate the structure of a database,
 - the data manipulation language par (DML) used for selecting, inserting, deleting and updating data in a database.
 
-The half part of ```half_orm``` indicates that only the DML part is addressed. This makes ```half_orm``` learning and usage quite easy.
+The half part of ```half_orm``` name indicates that only the DML part is addressed. This makes ```half_orm``` easy to learne and use. See the complete tour of ```half_orm``` in 30 minutes bellow.
 
 With ```half_orm``` you manipulate your data with true relational objects.
 
@@ -19,7 +19,7 @@ With ```half_orm``` you manipulate your data with true relational objects.
 - Go to the halfORM directory and install half_orm:
  ```sudo python3 setup.py -q install```. This will install the package and
  the script ```/usr/local/bin/halfORM```. The script can be used to generate
- a python package with all the relations of your database [WIP].
+ a python package with all the relations of your database. More on ```halfORM``` script at the bottom of this page.
 
 You're now ready to go!
 
@@ -54,10 +54,10 @@ The first thing you need is a model object to connect to your database.
 ```
 Four methods are available:
 - ```desc``` to display the structure of the database or of a relation in the database.
-- **```relation```**, the most important, to instanciate a Relation object and play with this relation. More on the ```Relation``` class below.
+- **```relation```**, the most important one, to instanciate a Relation object and play with this relation. More on the ```Relation``` class below.
 - ```ping``` to check if the connection is still up. It will attempt a reconnection if not. Very convenient to keep alive a web service even if the database
 goes down.
-- ```reconnect``` well, to reconnect and reload the metadata from the database possibly with another configuration file, allowing to change the role.
+- ```reconnect``` well, to reconnect and reload the metadata from the database possibly with another configuration file, usefull to change the role.
 
 Without argument, the ```desc``` method iterates over every *relational object* of the database and prints it's type and name.
 
@@ -383,7 +383,10 @@ You can now write this script:
 #!/usr/bin/env python3
 #-*- coding: utf-8 -*-
 
+from halform.db_connector import model
 from halform.blog.view.post_comment import PostComment
+
+model.reconnect('halftest_read_only_pc') # a role with only ro rights
 
 post_gaston = PostComment(author_post_first_name="Lagaffe")
 posts_by_author = """
