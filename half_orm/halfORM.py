@@ -7,6 +7,7 @@ Generates a python package from a PostgreSQL database
 
 import re
 import os
+import sys
 
 from half_orm.model import Model
 
@@ -77,20 +78,22 @@ setup(
 DB_CONNECTOR_TEMPLATE = """\
 #-*- coding: utf-8 -*-
 
+__all__ = ['model']
+
 from half_orm.model import Model
 
-db = Model('{dbname}')
+model = Model('{dbname}')
 """
 
 RELATION_TEMPLATE = """\
 #-*- coding: utf-8 -*-
 
-from {dbname}.db_connector import db
+from {package_name}.db_connector import model
 
 class {class_name}:
-    __db = db
+    __model = model
     def __new__(cls, **kwargs):
-        return cls.__db.relation('{fqtn}', **kwargs)
+        return cls.__model.relation('{fqtn}', **kwargs)
 """
 
 def camel_case(name):
@@ -125,12 +128,21 @@ def main():
         "-p", "--package_name", help="Python package name default to DB_NAME"
     )
     parser.add_argument(
-        "-c", "--config_file", help="Configuration file to connect to DB_NAME"
+        "-c", "--config_file",
+        help="Configuration file to connect to DB_NAME. Must be in /etc/half_orm"
     )
     parser.add_argument("db_name", help="Database name")
     args = parser.parse_args()
     dbname = args.db_name
     package_name = args.package_name and args.package_name or args.db_name
+    config_file = args.config_file and args.config_file or args.db_name
+
+    try:
+        open('/etc/half_orm/{}'.format(config_file))
+    except FileNotFoundError as err:
+        sys.stderr.write('{}\n'.format(err))
+        sys.stderr.write('Config file must be in /etc/half_orm/ directory!\n')
+        sys.exit(1)
 
     if not os.path.exists(package_name):
         package_dir = "{}/{}".format(package_name, package_name)
@@ -158,7 +170,7 @@ def main():
             os.makedirs(path)
         open(module_path, 'w').write(
             RELATION_TEMPLATE.format(
-                dbname=args.db_name,
+                package_name=package_name,
                 class_name=camel_case(module_name), fqtn=fqtn))
     for root, dirs, files in os.walk(package_name):
         all_ = (
