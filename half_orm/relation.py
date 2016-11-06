@@ -581,7 +581,7 @@ def __eq__(self, right):
 def __ne__(self, right):
     return not self == right
 
-def debug():
+def _debug():
     """For debug usage"""
     pass
 
@@ -629,7 +629,7 @@ COMMON_INTERFACE = {
     'delete': delete,
     'Transaction': Transaction,
     # test
-    'debug': debug,
+    '_debug': _debug,
 }
 
 TABLE_INTERFACE = COMMON_INTERFACE
@@ -648,7 +648,6 @@ class RelationFactory(type):
                                   [elt.replace('.', '') for elt in sfqrn]])
             return "{}_{}".format(rel_kind, class_name)
 
-        #TODO get bases from table inheritance
         bases = (Relation,)
         rf_ = RelationFactory
         tbl_attr = {}
@@ -664,6 +663,12 @@ class RelationFactory(type):
             metadata = tbl_attr['model']._metadata['byname'][tuple(sfqrn)]
         except KeyError:
             raise model_errors.UnknownRelation(sfqrn)
+        if metadata['inherits']:
+            bases = []
+        for parent_fqrn in metadata['inherits']:
+            parent_fqrn = ".".join(['"{}"'.format(elt) for elt in parent_fqrn])
+            bases.append(RelationFactory(None, None, {'fqrn': parent_fqrn}))
+        bases = tuple(bases)
         tbl_attr['__metadata'] = metadata
         if dct.get('model'):
             tbl_attr['model'] = dct['model']
@@ -684,7 +689,7 @@ class RelationFactory(type):
         for fct_name, fct in rel_interfaces[kind].items():
             tbl_attr[fct_name] = fct
         class_name = _gen_class_name(rel_class_names[kind], sfqrn)
-        return super(rf_, mcs).__new__(mcs, class_name, (bases), tbl_attr)
+        return super(rf_, mcs).__new__(mcs, class_name, bases, tbl_attr)
 
     @staticmethod
     def __set_fields(ta_):

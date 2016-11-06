@@ -1,8 +1,8 @@
 **THIS PROJECT IS IN ALPHA STAGE. I'm looking for testers/contributors to validate the API.**
 
-# Welcome to halfORM, the object relational mapper carefully designed to **NOT** address any of the data definition language part of SQL.
+# Welcome to halfORM, the PostgreSQL/Python3 relation/object mapper carefully designed to **NOT** address any of the data definition language part of SQL.
 
-```half_orm``` is a really simple relational object mapper for PostgreSQL (9+) fully written in Python3.
+```half_orm``` is a really simple relational object mapper for PostgreSQL (9+) fully written in Python3. It manages the table inheritance of PostgreSQL and more...
 
 ## Why half?
 The SQL language is divided in two different parts:

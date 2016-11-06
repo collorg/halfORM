@@ -170,12 +170,13 @@ class Model(object):
         byid = metadata['byid'] = {}
         with self._connection.cursor() as cur:
             cur.execute(REQUEST)
-            for dct in cur.fetchall():
+            all = [elt for elt in cur.fetchall()]
+            for dct in all:
                 table_key = (
                     self.__dbname,
-                    dct.pop('schemaname'), dct.pop('relationname'))
-                tableid = dct.pop('tableid')
-                description = dct.pop('tabledescription')
+                    dct['schemaname'], dct['relationname'])
+                tableid = dct['tableid']
+                description = dct['tabledescription']
                 if table_key not in byname:
                     byid[tableid] = {}
                     byid[tableid]['sfqrn'] = table_key
@@ -184,10 +185,18 @@ class Model(object):
                     byname[table_key]['description'] = description
                     byname[table_key]['fields'] = OrderedDict()
                     byname[table_key]['fields_by_num'] = OrderedDict()
+            for dct in all:
+                table_key = (
+                    self.__dbname,
+                    dct['schemaname'], dct['relationname'])
+                tableid = dct['tableid']
                 fieldname = dct.pop('fieldname')
                 fieldnum = dct['fieldnum']
                 tablekind = dct.pop('tablekind')
+                inherits = [byid[int(elt.split(':')[1])]['sfqrn']
+                    for elt in dct.pop('inherits') if elt is not None]
                 byname[table_key]['tablekind'] = tablekind
+                byname[table_key]['inherits'] = inherits
                 byname[table_key]['fields'][fieldname] = dct
                 byname[table_key]['fields_by_num'][fieldnum] = dct
                 byid[tableid]['fields'][fieldnum] = fieldname
