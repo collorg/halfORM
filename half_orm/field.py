@@ -29,7 +29,7 @@ class Field(FieldInterface):
         if self._is_set:
             repr_ = "{} ({} {} {})".format(
                 repr_, self.name(), self.__comp, self.__value)
-        return repr_
+        return repr_.strip()
 
     def __str__(self):
         return str(self.__value)
