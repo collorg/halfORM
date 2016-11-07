@@ -2,14 +2,14 @@
 
 # Welcome to halfORM, the PostgreSQL/Python3 relation/object mapper carefully designed to **NOT** address any of the data definition language part of SQL.
 
-```half_orm``` is a really simple relational object mapper for PostgreSQL (9+) fully written in Python3. It manages the table inheritance of PostgreSQL and more... See the complete tour of ```half_orm``` in 30 minutes bellow.
+```half_orm``` is a really simple relational object mapper for PostgreSQL (9+) fully written in Python3. It manages [the table inheritance of PostgreSQL](https://www.postgresql.org/docs/current/static/tutorial-inheritance.html) and more... See the complete tour of ```half_orm``` in 30 minutes bellow.
 
 ## Why half?
 The SQL language is divided in two different parts:
 - the data definition language part (DDL) to manipulate the structure of a database,
 - the data manipulation language par (DML) used for selecting, inserting, deleting and updating data in a database.
 
-The half part of ```half_orm``` name indicates that only the DML part is addressed. This makes ```half_orm``` easy to learne and use. See the complete tour of ```half_orm``` in 30 minutes bellow.
+The half part of ```half_orm``` name indicates that only the DML part is addressed. This makes ```half_orm``` easy to learn and use. See the complete tour of ```half_orm``` in 30 minutes bellow.
 
 With ```half_orm``` you manipulate your data with true relational objects.
 
@@ -88,7 +88,8 @@ FOREIGN KEYS:
 - author: (author_id)
  ↳ "halftest"."actor"."person"(id)
 ```
-Notice the two foreign keys on ```"halftest"."blog"."post"(id)``` and ```"halftest"."actor"."person"(id)```
+Notice the two foreign keys ```post``` on ```"halftest"."blog"."post"``` and
+```author``` on ```"halftest"."actor"."person"```
 
 ## The Relation class:
 
