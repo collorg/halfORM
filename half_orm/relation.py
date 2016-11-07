@@ -351,7 +351,7 @@ def __select_args(self, *args):
     id_ = id(self)
     what = 'r{}.*'.format(id_)
     if args:
-        what = ', '.join([self._fields[arg]._praf(query) for arg in args])
+        what = ', '.join([self._fields[arg]._praf(id_, query) for arg in args])
     def walk_op(rel, out=None, _fields_=None):
         """Walk the set operators tree and return a list of SQL where
         representation of the query with a list of the fields of the query.
@@ -426,11 +426,6 @@ def mogrify(self, *args):
     self.__mogrify = False
 
 def get(self):
-    """Yields instanciated Relation objects instead of dict."""
-    for dct in self.select():
-        yield self(**dct)
-
-def getone(self):
     """Returns the Relation object extracted.
 
     Raises an exception if no or more than one element is found.
@@ -438,7 +433,8 @@ def getone(self):
     count = len(self)
     if count != 1:
         raise relation_errors.ExpectedOneError(self, count)
-    return list(self.get())[0]
+    res = list(self.select())
+    return self(**(res[0]))
 
 def __len__(self, *args):
     """Retruns the number of tuples matching the intention in the relation.
@@ -608,7 +604,6 @@ COMMON_INTERFACE = {
     'mogrify': mogrify,
     '__len__': __len__,
     'get': get,
-    'getone': getone,
     '__set__op__': __set__op__,
     '__and__': __and__,
     '__iand__': __iand__,

@@ -11,8 +11,6 @@ The SQL language is divided in two different parts:
 
 The half part of ```half_orm``` name indicates that only the DML part is addressed. This makes ```half_orm``` easy to learn and use. See the complete tour of ```half_orm``` in 30 minutes bellow.
 
-With ```half_orm``` you manipulate your data with true relational objects.
-
 # Installation (only tested on Linux)
 - Clone the project ```git clone https://github.com/collorg/halfORM```
 - Install psycopg2 (http://initd.org/psycopg/docs/install.html)
@@ -43,6 +41,50 @@ The ```halftest``` has:
  - ```blog.comment```
 - one view:
  - ```blog.view.post_comment```
+
+
+# The halfORM script
+
+Assuming you have a config file named ```halftest``` in ```/etc/half_orm```,
+just run:
+```sh
+$ halfORM halftest
+```
+The script generates for you a package with a python module for each relation
+in your database.
+```sh
+$ tree halftest/
+halftest/
+├── halftest
+│   ├── actor
+│   │   ├── __init__.py
+│   │   └── person.py
+│   ├── blog
+│   │   ├── comment.py
+│   │   ├── event.py
+│   │   ├── __init__.py
+│   │   ├── post.py
+│   │   └── view
+│   │       ├── __init__.py
+│   │       └── post_comment.py
+│   ├── db_connector.py
+│   └── __init__.py
+├── README.rst
+└── setup.py
+```
+
+The modules are ordered by schema name (one directory by schema). The dot in
+a schema name is used as a separator (```blog.view``` becomes ```blog/view```).
+The classes in the relation modules are camel cased:
+- ```post```: ```Post```
+- ```post_comment```: ```PostComment```
+
+You can now edit those modules and use what you've learn.
+
+ To install the package, just go to the halftest directory and run:
+ ```sh
+ python3 setup.py -q install
+ ```
 
 ## API Examples (Everything you need to know to program with half_orm in 30 minutes)
 Some scripts snippets to illustrate the current implementation of the API.
@@ -103,7 +145,7 @@ data in your database:
 
 If it is of type ```Table```:
 - ```insert``` to insert data,
-- ```select```, ```get```, ```getone``` and ```to_json``` to retreive data,
+- ```select```, ```get``` and ```to_json``` to retreive data,
   - ```select_params``` to set limit and/or offset,
 - ```update``` to update data,
 - ```delete``` to delete data.
@@ -193,12 +235,9 @@ You can also get a subset of the attributes:
 {'last_name': 'Talon'}
 ```
 
-### get and getone
-Like ```select```, ```get``` is a generator, but it returns a list Relation object.
-These objects are of the same type of the object that invoqued the method.
-
-```getone``` returns one object. It raises an exception if 0 or more than 1
-ojects match the intention.
+### get
+The ```get``` return returns one object of type Relation.
+It raises an exception if 0 or more than 1 ojects match the intention.
 
 ### to_json
 the ```to_json``` method returns a json representation of the returned data.
@@ -334,49 +373,6 @@ the foreign key ```post```:
 >>> the_posts = gaston_comments.fkeys['post']()
 ```
 It's that easy!
-
-# The halfORM script
-Assuming you have a config file named ```halftest``` in ```/etc/half_orm```,
-just run:
-```sh
-$ halfORM halftest
-```
-The script generates for you a package with a python module for each relation
-in your database.
-```sh
-$ tree halftest/
-halftest/
-├── halftest
-│   ├── actor
-│   │   ├── __init__.py
-│   │   └── person.py
-│   ├── blog
-│   │   ├── comment.py
-│   │   ├── event.py
-│   │   ├── __init__.py
-│   │   ├── post.py
-│   │   └── view
-│   │       ├── __init__.py
-│   │       └── post_comment.py
-│   ├── db_connector.py
-│   └── __init__.py
-├── __init__.py
-├── README.rst
-└── setup.py
-```
-
-The modules are ordered by schema name (one directory by schema). The dot in
-a schema name is used as a separator (```blog.view``` becomes ```blog/view```).
-The classes in the relation modules are camel cased:
- - ```post```: ```Post```
- - ```post_comment```: ```PostComment```
-
- You can now edit those modules and use what you've learn.
-
-To install the package, just go to the halftest directory and run:
-```sh
-python3 setup.py -q install
-```
 
 You can now write this script:
 

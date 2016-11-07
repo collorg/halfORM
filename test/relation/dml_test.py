@@ -23,17 +23,17 @@ class Test(TestCase):
     def expected_one_error_test_0(self):
         pers = self.pers(last_name="this name doesn't exist")
         self.assertRaises(
-            relation_errors.ExpectedOneError, pers.getone)
+            relation_errors.ExpectedOneError, pers.get)
 
     def expected_one_error_test_many(self):
         pers = self.pers(last_name=('%', 'like'))
         self.assertRaises(
-            relation_errors.ExpectedOneError, pers.getone)
+            relation_errors.ExpectedOneError, pers.get)
 
     def insert_error_test(self):
         pers = self.pers(last_name='ba')
         self.assertEqual(len(pers), 1)
-        pers = pers.getone()
+        pers = pers.get()
         self.assertRaises(psycopg2.IntegrityError, pers.insert)
 
     def select_test(self):
@@ -45,7 +45,7 @@ class Test(TestCase):
             birth_date=self.today)
         self.assertEqual(len(pers), 1)
         for dct in pers.select():
-            self.pers(**dct).getone()
+            self.pers(**dct).get()
 
     def update_test(self):
         pers = self.pers(last_name=('a%', 'like'))
