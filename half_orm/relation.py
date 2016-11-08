@@ -27,6 +27,7 @@ the double quotes.
 """
 
 from collections import OrderedDict
+from keyword import iskeyword
 import datetime
 import sys
 import uuid
@@ -100,6 +101,18 @@ class SetOp(object):
 class Relation(object):
     """Base class of Table and View classes (see relation_factory)."""
     _is_half_orm_relation = True
+
+class FKeys(object):
+    """Class of the Relation.fkeys attribute.
+    Each foreign key of the Relation will be accessible as an attribute
+    of Relation.fkeys with the foreign key's name.
+    """
+    def values(self):
+        for value in self.__dict__.values():
+            yield value
+
+    def __len__(self):
+        return len(self.__dict__)
 
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
@@ -687,7 +700,7 @@ def __set_fields(ta_):
     from .field import Field
     from .fkey import FKey
     ta_['_fields'] = OrderedDict()
-    ta_['fkeys'] = OrderedDict()
+    ta_['fkeys'] = FKeys()
     ta_['_fields_names'] = set()
     dbm = ta_['model']._metadata
     flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
@@ -698,15 +711,20 @@ def __set_fields(ta_):
     for field_name, f_metadata in dbm['byname'][
             ta_['__sfqrn']]['fields'].items():
         fkeyname = f_metadata.get('fkeyname')
-        if fkeyname and not fkeyname in ta_['fkeys']:
+        if fkeyname:
+            pyfkeyname = (
+                iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname)
+        if fkeyname and not hasattr(ta_['fkeys'], pyfkeyname):
             ft_ = dbm['byid'][f_metadata['fkeytableid']]
             ft_sfqrn = ft_['sfqrn']
             fields_names = [flds[elt-1]
                             for elt in f_metadata['keynum']]
             ft_fields_names = [ft_['fields'][elt]
                                for elt in f_metadata['fkeynum']]
-            ta_['fkeys'][fkeyname] = FKey(
-                fkeyname, ft_sfqrn, ft_fields_names, fields_names)
+            setattr(
+                ta_['fkeys'],
+                pyfkeyname,
+                FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names))
 
 def relation(_fqrn, **kwargs):
     """This function is used to instanciate a Relation object using
