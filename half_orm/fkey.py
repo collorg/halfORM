@@ -54,7 +54,13 @@ class FKey(FieldInterface):
 
         if to_ is None:
             to_ = self._relation(self.__get_fk_qrn())
-        if not isinstance(to_, self._relation.__class__.__bases__[0]):
+        to_classes = set(type.mro(to_.__class__))
+        object in to_classes and to_classes.remove(object)
+        self_classes = set(type.mro(self._relation.__class__))
+        object in self_classes and self_classes.remove(object)
+        common_classes = to_classes.intersection(self_classes)
+        if (not common_classes or not
+                hasattr(list(common_classes)[0], '_is_half_orm_relation')):
             raise Exception("Expecting a Relation")
         #TODO deal with inheritance
         # if the fqrn differ, we verify that
