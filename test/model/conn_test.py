@@ -15,10 +15,10 @@ class Test(TestCase):
 
     def relation_instanciation_test(self):
         person = halftest.relation("actor.person")
-        self.assertEqual(person.fqrn, '"halftest"."actor"."person"')
+        self.assertEqual(person._fqrn, '"halftest"."actor"."person"')
         post = halftest.relation("blog.post")
-        self.assertEqual(post.fqrn, '"halftest"."blog"."post"')
+        self.assertEqual(post._fqrn, '"halftest"."blog"."post"')
         person = halftest.relation("blog.comment")
-        self.assertEqual(person.fqrn, '"halftest"."blog"."comment"')
+        self.assertEqual(person._fqrn, '"halftest"."blog"."comment"')
         person = halftest.relation("blog.view.post_comment")
-        self.assertEqual(person.fqrn, '"halftest"."blog.view"."post_comment"')
+        self.assertEqual(person._fqrn, '"halftest"."blog.view"."post_comment"')

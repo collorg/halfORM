@@ -96,7 +96,7 @@ class SetOp(object):
         return "{}{} {}".format(
             self.__neg and "NOT " or "",
             self.__op,
-            self.__right.fqrn)
+            self.__right._fqrn)
 
 class Relation(object):
     """Base class of Table and View classes (see relation_factory)."""
@@ -118,7 +118,7 @@ class FKeys(object):
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
 def __init__(self, **kwargs):
-    self.__cursor = self.model._connection.cursor()
+    self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     kwk_ = set(kwargs.keys())
     try:
@@ -245,7 +245,7 @@ def to_dict(self):
 def __str__(self):
     rel_kind = self.__kind
     ret = []
-    ret.append("{}: {}".format(rel_kind.upper(), self.__fqrn))
+    ret.append("{}: {}".format(rel_kind.upper(), self._fqrn))
     if self.__metadata['description']:
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
     ret.append('FIELDS:')
@@ -264,11 +264,6 @@ def __str__(self):
         for fkey in self.fkeys.values():
             ret.append(repr(fkey))
     return '\n'.join(ret)
-
-@property
-def fqrn(self):
-    """Returns the FQRN (fully qualified relation name)"""
-    return self.__fqrn
 
 def is_set(self):
     """Return True if one field at least is set or if self has been
@@ -328,7 +323,7 @@ def __get_from(self, orig_rel=None, deja_vu=None):
     """Constructs the __sql_query and gets the __sql_values for self."""
     def __sql_id(rel):
         """Returns the FQRN as alias for the sql query."""
-        return "{} as r{}".format(rel.fqrn, id(rel))
+        return "{} as r{}".format(rel._fqrn, id(rel))
 
     if deja_vu is None:
         orig_rel = self
@@ -340,7 +335,7 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         if new_rel:
             deja_vu[id_rel] = []
         elif (rel, fkey) in deja_vu[id_rel] or rel is orig_rel:
-            #sys.stderr.write("déjà vu in from! {}\n".format(rel.fqrn))
+            #sys.stderr.write("déjà vu in from! {}\n".format(rel._fqrn))
             continue
         deja_vu[id_rel].append((rel, fkey))
         rel.__get_from(orig_rel, deja_vu)
@@ -489,7 +484,7 @@ def update(self, update_all=False, **kwargs):
 
     query_template = "update {} set {} {}"
     what, where, values = self.__update_args(**kwargs)
-    query = query_template.format(self.__fqrn, what, where)
+    query = query_template.format(self._fqrn, what, where)
     self.__cursor.execute(query, tuple(values))
     for field_name, value in kwargs.items():
         self._fields[field_name]._set_value(value)
@@ -507,7 +502,7 @@ def insert(self):
     query_template = "insert into {} ({}) values ({})"
     fields_names, values = self.__what_to_insert()
     what_to_insert = ", ".join(["%s" for _ in range(len(values))])
-    query = query_template.format(self.__fqrn, fields_names, what_to_insert)
+    query = query_template.format(self._fqrn, fields_names, what_to_insert)
     self.__cursor.execute(query, tuple(values))
 
 def delete(self, delete_all=False):
@@ -518,15 +513,15 @@ def delete(self, delete_all=False):
     query_template = "delete from {} {}"
     self.__query = 'delete'
     _, where, values = self.__select_args()
-    query = query_template.format(self.__fqrn, where)
+    query = query_template.format(self._fqrn, where)
     self.__cursor.execute(query, tuple(values))
 
 def __call__(self, **kwargs):
-    return relation(self.__fqrn, **kwargs)
+    return relation(self._fqrn, **kwargs)
 
 def dup(self):
     """Duplicate a Relation object"""
-    new = relation_factory(None, None, {'fqrn': self.fqrn})(
+    new = relation_factory(None, None, {'fqrn': self._fqrn})(
         **{field.name():(field.value, field.comp())
            for field in self._fields.values() if field.value})
     new.__set_op.op_ = self.__set_op.op_
@@ -539,7 +534,7 @@ def __set__op__(self, op_, right):
     l'opérateur du right ???
     On crée un nouvel objet sans contrainte et on a left et right et opérateur
     """
-    new = relation_factory(None, None, {'fqrn': self.fqrn})()
+    new = relation_factory(None, None, {'fqrn': self._fqrn})()
     new.__set_op.left = self
     new.__set_op.op_ = op_
     new.__set_op.right = right
@@ -564,7 +559,7 @@ def __isub__(self, right):
     return self
 
 def __neg__(self):
-    new = relation_factory(None, None, {'fqrn': self.fqrn})(
+    new = relation_factory(None, None, {'fqrn': self._fqrn})(
         **{field.name():(field.value, field.comp())
            for field in self._fields.values() if field.value})
     new.__set_op.neg = not self.__set_op.neg
@@ -609,7 +604,6 @@ COMMON_INTERFACE = {
     'fields': fields,
     '__get_from': __get_from,
     '__get_query': __get_query,
-    'fqrn': fqrn,
     'is_set': is_set,
     '__where_repr': __where_repr,
     '__select_args': __select_args,
@@ -655,16 +649,16 @@ def relation_factory(class_name, bases, dct):
 
     bases = (Relation,)
     tbl_attr = {}
-    tbl_attr['__fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
-    attr_names = ['dbname', 'schemaname', 'relationname']
+    tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
+    attr_names = ['_dbname', '_schemaname', '_relationname']
     for i, name in enumerate(attr_names):
         tbl_attr[name] = sfqrn[i]
-    dbname = tbl_attr['dbname']
-    tbl_attr['model'] = model.Model._deja_vu(dbname)
-    if not tbl_attr['model']:
-        tbl_attr['model'] = model.Model(dbname)
+    dbname = tbl_attr['_dbname']
+    tbl_attr['_model'] = model.Model._deja_vu(dbname)
+    if not tbl_attr['_model']:
+        tbl_attr['_model'] = model.Model(dbname)
     try:
-        metadata = tbl_attr['model']._metadata['byname'][tuple(sfqrn)]
+        metadata = tbl_attr['_model']._metadata['byname'][tuple(sfqrn)]
     except KeyError:
         raise model_errors.UnknownRelation(sfqrn)
     if metadata['inherits']:
@@ -675,7 +669,7 @@ def relation_factory(class_name, bases, dct):
     bases = tuple(bases)
     tbl_attr['__metadata'] = metadata
     if dct.get('model'):
-        tbl_attr['model'] = dct['model']
+        tbl_attr['_model'] = dct['model']
     tbl_attr['__sfqrn'] = tuple(sfqrn)
     rel_class_names = {
         'r': 'Table',
@@ -702,7 +696,7 @@ def __set_fields(ta_):
     ta_['_fields'] = OrderedDict()
     ta_['fkeys'] = FKeys()
     ta_['_fields_names'] = set()
-    dbm = ta_['model']._metadata
+    dbm = ta_['_model']._metadata
     flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
     for field_name, f_metadata in dbm['byname'][
             ta_['__sfqrn']]['fields'].items():
