@@ -153,9 +153,9 @@ MODULE_TEMPLATE_4 = """\
 """
 
 MODULE_FORMAT_1 = (
-    "{rt1}{bc}{c1}{ec}{rt2}{bc}{c2}    {ec}{rt3}{bc}{c3}        {ec}{rt4}{bc}{c4}")
+    "{rt1}{bc}{c1_}{ec}{rt2}{bc}{c2_}    {ec}{rt3}{bc}{c3_}        {ec}{rt4}{bc}{c4_}")
 MODULE_FORMAT_2 = (
-    "{rt1}{bc}{c1}{ec}{rt2}{bc}{c2}{ec}{rt3}{bc}{c3}{ec}{rt4}{bc}{c4}")
+    "{rt1}{bc}{c1_}{ec}{rt2}{bc}{c2_}{ec}{rt3}{bc}{c3_}{ec}{rt4}{bc}{c4_}")
 
 AP_DESCRIPTION = """Generates python package from a PG database"""
 AP_EPILOG = """"""
@@ -257,30 +257,30 @@ def main():
         path = '/'.join(path[:-1])
         if not os.path.exists(path):
             os.makedirs(path)
-        c1 = ""
-        c2 = ""
-        c3 = ""
-        c4 = ""
-        MODULE_TEMPLATE = MODULE_FORMAT_1
+        c1_ = ""
+        c2_ = ""
+        c3_ = ""
+        c4_ = ""
+        module_template = MODULE_FORMAT_1
         if os.path.exists(module_path):
-            MODULE_TEMPLATE = MODULE_FORMAT_2
+            module_template = MODULE_FORMAT_2
             slices = [elt.split(END_CODE)
                       for elt in open(module_path).read().split(BEGIN_CODE)]
-            c1 = slices[1][0]
-            c2 = slices[2][0]
-            c3 = slices[3][0]
-            c4 = slices[4][0]
-        module_template = MODULE_TEMPLATE.format(
+            c1_ = slices[1][0]
+            c2_ = slices[2][0]
+            c3_ = slices[3][0]
+            c4_ = slices[4][0]
+        module_template = module_template.format(
             rt1=MODULE_TEMPLATE_1,
             rt2=MODULE_TEMPLATE_2,
             rt3=MODULE_TEMPLATE_3,
             rt4=MODULE_TEMPLATE_4,
             bc=BEGIN_CODE,
             ec=END_CODE,
-            c1=c1,
-            c2=c2,
-            c3=c3,
-            c4=c4
+            c1_=c1_,
+            c2_=c2_,
+            c3_=c3_,
+            c4_=c4_
         )
         documentation = "\n".join(["    {}".format(line)
                                    for line in str(rel).split("\n")])
@@ -301,13 +301,13 @@ def main():
                 all_.append(dir_)
         for file in files:
             path_ = "{}/{}".format(root, file)
-            if not path_ in files_list and file not in DO_NOT_REMOVE:
+            if path_ not in files_list and file not in DO_NOT_REMOVE:
                 print("REMOVING: {}".format(path_))
                 os.remove(path_)
                 continue
             if (re.findall('.py$', file) and
-                file != '__init__.py' and
-                file != '__pycache__'):
+                    file != '__init__.py' and
+                    file != '__pycache__'):
                 all_.append(file.replace('.py', ''))
         open('{}/__init__.py'.format(root), 'w').write(
             '__all__ = {}\n'.format(all_))
