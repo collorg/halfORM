@@ -79,12 +79,15 @@ The classes in the relation modules are camel cased:
 - ```post```: ```Post```
 - ```post_comment```: ```PostComment```
 
-You can now edit those modules and use what you've learn.
 
- To install the package, just go to the halftest directory and run:
- ```sh
- python3 setup.py -q install
- ```
+To install the package, just go to the halftest directory and run:
+```sh
+python3 setup.py -q install
+```
+
+You can now edit those classes and use the API described bellow.
+
+# The following part will soon be rewritten.
 
 ## API Examples (Everything you need to know to program with half_orm in 30 minutes)
 Some scripts snippets to illustrate the current implementation of the API.

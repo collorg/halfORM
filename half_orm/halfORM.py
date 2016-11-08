@@ -8,6 +8,7 @@ Generates a python package from a PostgreSQL database
 import re
 import os
 import sys
+from keyword import iskeyword
 
 from half_orm.model import Model
 
@@ -242,7 +243,8 @@ def main():
 
         module = "{}.{}".format(package_name, fqtn)
         path[0] = "{}/{}".format(package_name, package_name)
-        module_path = '{}.py'.format('/'.join(path))
+        module_path = '{}.py'.format('/'.join(
+            [iskeyword(elt) and "{}_".format(elt) or elt for elt in path]))
         schema_dir = os.path.dirname(module_path)
         if not schema_dir in dirs_list:
             dirs_list.append(schema_dir)
