@@ -147,6 +147,8 @@ class Fields(object):
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
 def __init__(self, **kwargs):
+    """The arguments name must correspond to the attributes of the relation.
+    """
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     kwk_ = set(kwargs.keys())
@@ -451,7 +453,7 @@ def select(self, *args):
     for elt in self.__cursor.fetchall():
         yield elt
 
-def mogrify(self, *args):
+def _mogrify(self, *args):
     """Prints the select query."""
     self.__mogrify = True
     print([elt for elt in self.select(*args)][0])
@@ -631,7 +633,7 @@ COMMON_INTERFACE = {
     '__where_repr': __where_repr,
     '__select_args': __select_args,
     'select': select,
-    'mogrify': mogrify,
+    '_mogrify': _mogrify,
     '__len__': __len__,
     'get': get,
     '__set__op__': __set__op__,
