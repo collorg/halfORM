@@ -102,9 +102,9 @@ class Relation(object):
     _is_half_orm_relation = True
 
 class FKeys(object):
-    """Class of the Relation.fkeys attribute.
+    """Class of the Relation._fkeys attribute.
     Each foreign key of the PostgreSQL relation is accessible as an attribute
-    of Relation.fkeys with the foreign key's name.
+    of Relation._fkeys with the foreign key's name.
     """
     def __init__(self):
         self._fkeys_names = []
@@ -118,9 +118,9 @@ class FKeys(object):
         return len(self.__dict__)
 
 class Fields(object):
-    """Class of the Relation.fields attribute.
+    """Class of the Relation._fields attribute.
     Each attribute of the PostgreSQL relation is accessible as an attribute
-    of Relation.fields with the field's name.
+    of Relation._fields with the field's name.
     """
     def __init__(self):
         self._fields_names = []
@@ -154,7 +154,7 @@ def __init__(self, **kwargs):
         assert kwk_.intersection(self._fields_names) == kwk_
     except:
         raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
-    _ = {self.fields.__dict__[field_name]._set_value(value)
+    _ = {self._fields.__dict__[field_name]._set_value(value)
          for field_name, value in kwargs.items()}
     self._joined_to = []
     self.__query = None
@@ -163,8 +163,8 @@ def __init__(self, **kwargs):
     self.__mogrify = False
     self.__set_op = SetOp(self)
     self.__select_params = {}
-    _ = {field._set_relation(self) for field in self.fields.values()}
-    _ = {fkey._set_relation(self) for fkey in self.fkeys.values()}
+    _ = {field._set_relation(self) for field in self._fields.values()}
+    _ = {fkey._set_relation(self) for fkey in self._fkeys.values()}
 
 def select_params(self, **kwargs):
     """Sets the limit and offset on the relation (used by select)."""
@@ -269,7 +269,7 @@ def to_json(self, yml_directive=None):
 def to_dict(self):
     """Retruns a dictionary containing only the fields that are set."""
     return {key:field.value for key, field in
-            self.fields.items() if field.is_set()}
+            self._fields.items() if field.is_set()}
 
 def __str__(self):
     rel_kind = self.__kind
@@ -279,18 +279,18 @@ def __str__(self):
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
     ret.append('FIELDS:')
     mx_fld_n_len = 0
-    for field_name in self.fields.keys():
+    for field_name in self._fields.keys():
         if len(field_name) > mx_fld_n_len:
             mx_fld_n_len = len(field_name)
-    for field_name, field in self.fields.items():
+    for field_name, field in self._fields.items():
         ret.append('- {}:{}{}'.format(
             field_name,
             ' ' * (mx_fld_n_len + 1 - len(field_name)),
             repr(field)))
-    if self.fkeys:
-        plur = len(self.fkeys) > 1 and  'S' or ''
+    if self._fkeys:
+        plur = len(self._fkeys) > 1 and  'S' or ''
         ret.append('FOREIGN KEY{}:'.format(plur))
-        for fkey in self.fkeys.values():
+        for fkey in self._fkeys.values():
             ret.append(repr(fkey))
     return '\n'.join(ret)
 
@@ -301,11 +301,11 @@ def is_set(self):
     """
     return (bool(self._joined_to) or
             (self.__set_op.op_ or self.__set_op.neg) or
-            bool({field for field in self.fields.values() if field.is_set()}))
+            bool({field for field in self._fields.values() if field.is_set()}))
 
 def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
-    return [field for field in self.fields.values() if field.is_set()]
+    return [field for field in self._fields.values() if field.is_set()]
 
 def __join_query(self, fkey, op_=' and '):
     """Returns the join_query, join_values of a foreign key.
@@ -319,20 +319,20 @@ def __join_query(self, fkey, op_=' and '):
     to_id = 'r{}'.format(id(to_))
     from_id = 'r{}'.format(id(from_))
     from_fields = ('{}.{}'.format(from_id, name)
-                   for name in fkey.fields)
+                   for name in fkey._fields)
     to_fields = ('{}.{}'.format(to_id, name) for name in fkey.fk_names)
     bounds = op_.join(['{} = {}'.format(a, b) for
                        a, b in zip(to_fields, from_fields)])
     constraints_to_query = [
         '{}.{} {} %s'.format(to_id, field.name(), field.comp())
-        for field in to_.fields if field.is_set()]
+        for field in to_._fields.values() if field.is_set()]
     constraints_to_values = (
-        field for field in to_.fields if field.is_set())
+        field for field in to_._fields.values() if field.is_set())
     constraints_from_query = [
         '{}.{} {} %s'.format(from_id, field.name(), field.comp())
-        for field in from_.fields if field.is_set()]
+        for field in from_._fields.values() if field.is_set()]
     constraints_from_values = (
-        field for field in from_.fields if field.is_set())
+        field for field in from_._fields.values() if field.is_set())
     constraints_query = op_.join(
         constraints_to_query + constraints_from_query)
     constraints_values = list(constraints_to_values) + \
@@ -382,7 +382,7 @@ def __select_args(self, *args):
     id_ = id(self)
     what = 'r{}.*'.format(id_)
     if args:
-        what = ', '.join([self.fields.__dict__[arg]._praf(id_, query)
+        what = ', '.join([self._fields.__dict__[arg]._praf(id_, query)
                           for arg in args])
     def walk_op(rel, out=None, _fields_=None):
         """Walk the set operators tree and return a list of SQL where
@@ -511,7 +511,7 @@ def update(self, update_all=False, **kwargs):
     query = query_template.format(self._fqrn, what, where)
     self.__cursor.execute(query, tuple(values))
     for field_name, value in kwargs.items():
-        self.fields.__dict__[field_name]._set_value(value)
+        self._fields.__dict__[field_name]._set_value(value)
 
 def __what_to_insert(self):
     """Returns the field names and values to be inserted."""
@@ -547,7 +547,7 @@ def dup(self):
     """Duplicate a Relation object"""
     new = relation_factory(None, None, {'fqrn': self._fqrn})(
         **{field.name():(field.value, field.comp())
-           for field in self.fields.values() if field.value})
+           for field in self._fields.values() if field.value})
     new.__set_op.op_ = self.__set_op.op_
     if self.__set_op.right is not None:
         new.__set_op.right = self.__set_op.right.copy()
@@ -585,7 +585,7 @@ def __isub__(self, right):
 def __neg__(self):
     new = relation_factory(None, None, {'fqrn': self._fqrn})(
         **{field.name():(field.value, field.comp())
-           for field in self.fields.values() if field.value})
+           for field in self._fields.values() if field.value})
     new.__set_op.neg = not self.__set_op.neg
     new.__set_op.left = self.__set_op.left
     new.__set_op.op_ = self.__set_op.op_
@@ -719,8 +719,8 @@ def __set_fields(ta_):
     """ta_: table attributes dictionary."""
     from .field import Field
     from .fkey import FKey
-    ta_['fields'] = Fields()
-    ta_['fkeys'] = FKeys()
+    ta_['_fields'] = Fields()
+    ta_['_fkeys'] = FKeys()
     ta_['_fields_names'] = set()
     dbm = ta_['_model']._metadata
     flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
@@ -728,8 +728,8 @@ def __set_fields(ta_):
             ta_['__sfqrn']]['fields'].items():
         pyfield_name = (
             iskeyword(field_name) and "{}_".format(field_name) or field_name)
-        ta_['fields']._fields_names.append(pyfield_name)
-        setattr(ta_['fields'], pyfield_name, Field(field_name, f_metadata))
+        ta_['_fields']._fields_names.append(pyfield_name)
+        setattr(ta_['_fields'], pyfield_name, Field(field_name, f_metadata))
         ta_['_fields_names'].add(pyfield_name)
     for field_name, f_metadata in dbm['byname'][
             ta_['__sfqrn']]['fields'].items():
@@ -737,16 +737,16 @@ def __set_fields(ta_):
         if fkeyname:
             pyfkeyname = (
                 iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname)
-        if fkeyname and not hasattr(ta_['fkeys'], pyfkeyname):
+        if fkeyname and not hasattr(ta_['_fkeys'], pyfkeyname):
             ft_ = dbm['byid'][f_metadata['fkeytableid']]
             ft_sfqrn = ft_['sfqrn']
             fields_names = [flds[elt-1]
                             for elt in f_metadata['keynum']]
             ft_fields_names = [ft_['fields'][elt]
                                for elt in f_metadata['fkeynum']]
-            ta_['fkeys']._fkeys_names.append(pyfkeyname)
+            ta_['_fkeys']._fkeys_names.append(pyfkeyname)
             setattr(
-                ta_['fkeys'],
+                ta_['_fkeys'],
                 pyfkeyname,
                 FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names))
 
