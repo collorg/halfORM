@@ -12,21 +12,7 @@ The SQL language is divided in two different parts:
 The half part of ```half_orm``` name indicates that only the DML part is addressed. This makes ```half_orm``` easy to learn and use. See the complete tour of ```half_orm``` in 30 minutes bellow.
 
 # Installation (tested on Linux/Mac OSX)
-- Clone the project ```git clone https://github.com/collorg/halfORM```
-- Install psycopg2 (http://initd.org/psycopg/docs/install.html)
-- ```sudo pip3 install halfORM```. This will install the package and
- the script ```/usr/local/bin/halfORM```. The script can be used to generate
- a python package with all the relations of your database. More on ```halfORM``` script at the bottom of this page.
-
-## Upgrade
-In ```halfORM``` directory:
-- ```git pull```
-- ```sudo pip3 install --upgrade .```
-
-## Uninstall
-```sudo pip3 uninstall half-orm```
-
-You're now ready to go!
+See [the installation instructions file](INSTALL.md).
 
 # The full API
 
