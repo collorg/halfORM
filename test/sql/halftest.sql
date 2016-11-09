@@ -16,7 +16,9 @@ create table actor.person(
     primary key(first_name, last_name, birth_date)
 );
 comment on table actor.person is
-'The table actor.person contains the persons of the blogging system.';
+'The table actor.person contains the persons of the blogging system.
+The id attribute is a serial. Just pass first_name, last_name and birth_date
+to insert a new person.';
 grant all on table actor.person to halftest;
 grant all on table actor.id_person to halftest;
 

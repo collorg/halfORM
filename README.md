@@ -88,11 +88,36 @@ database. The equivalence between PostgreSQL and Python is immediate:
 
 ## The Relation class:
 
-To instanciate a Relation object, just use the ```Model.relation(QRN)``` method.
-```QRN``` is the "qualified relation name" here ```actor.person```.
+It provides the means to interact with the data in the database. Let us look
+at the ```actor.person``` relation:
 ```python
->>> persons = halftest.relation("actor.person")
+>>> from halftest.actor.person import Person
 ```
+You just have imported the Person class. The vocabulary used here is the one
+that has been defined in your database. Let us instanciate a Person object
+and print it:
+
+```python
+>>> persons = Person()
+>>> print(persons)
+Init definition: Person(self, **kwargs)
+Docstring:
+TABLE: "halftest"."actor"."person"
+DESCRIPTION:
+The table actor.person contains the persons of the blogging system.
+The id attribute is a serial. Just pass first_name, last_name and birth_date
+to insert a new person.
+FIELDS:
+- id:         (int4) UNIQUE NOT NULL
+- first_name: (text) PK
+- last_name:  (text) PK
+- birth_date: (date) PK
+FOREIGN KEY:
+```
+The structure of the relation is displayed as retreived from the database at
+the time the ```halfORM``` command has been run. As the structure of your
+database evolve, you can rerun the script as indicated in the ```halftest/README.rst``` file.
+
 With a Relation object, you can use the following methods to manipulate the
 data in your database:
 
@@ -117,6 +142,10 @@ Take a look at [the algebra test file](test/relation/algebra_test.py).
 - you can also use the ```==```, ```!=``` and ```in``` operators to compare two sets.
 
 You can get the number of elements in a relation whith ```len```.
+
+Most of the snippets bellow are extracted from the example script: [test/halftest_doc.py](test/halftest_doc.py).
+
+# WORK IN PROGRESS
 
 ### Insert
 To insert a tuple in the relation, just use the ```insert``` method as shown bellow:
@@ -291,7 +320,8 @@ Relation object of origin.
 Okay, let's see an example. Remember the ```blog.comment``` relation?
 
 ```python
->>> comments = halftest.relation("blog.comment")
+>>> from halftest.blog.comment import Comment
+>>> comments = Comment()
 >>> print(comments)
 TABLE: "halftest"."blog"."comment"
 DESCRIPTION:
@@ -323,7 +353,28 @@ To know on which posts gaston has made at least one comment, we just "call"
 the foreign key ```post``` on ```gaston_comments```:
 
 ```python
->>> the_posts = gaston_comments._fkeys.post()
+>>> the_posts_commented_by_gaston = gaston_comments._fkeys.post()
+```
+knowing that a Post object has the following struncture:
+```
+TABLE: "halftest"."blog"."post"
+DESCRIPTION:
+The table blog.post contains all the post
+made by a person in the blogging system.
+FIELDS:
+- id:                (int4) PK
+- title:             (text)
+- content:           (text)
+- author_first_name: (text)
+- author_last_name:  (text)
+- author_birth_date: (date)
+FOREIGN KEYS:
+- author: (author_first_name, author_last_name, author_birth_date)
+ ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+```
+And now retreive the authors of ```the_posts_commented_by_gaston```:
+```python
+>>> the_authors_of_posts_commented_by_gaston = the_posts_commented_by_gaston._fkeys.author()
 ```
 It's that easy!
 
