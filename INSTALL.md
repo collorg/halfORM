@@ -1,4 +1,5 @@
-halfORM: https://github.com/collorg/halfORM
+# Clone this project
+```git clone https://github.com/collorg/halfORM```
 
 # Installation (tested on Linux/Mac OSX)
 - Install psycopg2 (http://initd.org/psycopg/docs/install.html)

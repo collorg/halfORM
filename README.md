@@ -233,7 +233,7 @@ You can also get a subset of the attributes:
 
 ### get
 The ```get``` return returns one object of type Relation.
-It raises an exception if 0 or more than 1 ojects match the intention.
+It raises an exception if 0 or more than 1 object match the intention.
 
 ### to_json
 the ```to_json``` method returns a json representation of the returned data.
@@ -323,7 +323,7 @@ Well, there is not much left after this in the ```actor.person``` table.
 
 # Working with foreign keys (the FKey class)
 Working with foreign keys is as easy as working with Relational objects.
-A Relational object has an attribute ```fkeys``` that contains the foreign
+A Relational object has an attribute ```_fkeys``` that contains the foreign
 keys in a dictionary. Foreign keys are ```Fkey``` objects. The Fkey class
 has one method:
 - the ```set``` method allows you to constrain a foreign key with a Relation object,
@@ -359,14 +359,14 @@ We want the comments made by Gaston:
 ```python
 >>> gaston = persons(last_name="Lagaffe")
 >>> gaston_comments = comments()
->>> gaston_comments.fkeys['author'].set(gaston)
+>>> gaston_comments._fkeys.author.set(gaston)
 ```
 
 To know on which posts gaston has made at least one comment, we just "call"
-the foreign key ```post```:
+the foreign key ```post``` on ```gaston_comments```:
 
 ```python
->>> the_posts = gaston_comments.fkeys['post']()
+>>> the_posts = gaston_comments._fkeys.post()
 ```
 It's that easy!
 
