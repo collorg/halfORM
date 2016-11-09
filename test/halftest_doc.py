@@ -229,4 +229,4 @@ post = post(title=('Vaudou%', 'like'))
 #post.title.value = 'Vaudou pour Monsieur le Président'
 post.author_fkey = corto
 print(post)
-post.mogrify()
+post._mogrify()

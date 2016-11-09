@@ -17,7 +17,7 @@ class Test(TestCase):
         self.today = halftest.today
 
     def count_test(self):
-        self.pers.mogrify()
+        self.pers._mogrify()
         self.assertEqual(len(self.pers()), 60)
 
     def expected_one_error_test_0(self):
