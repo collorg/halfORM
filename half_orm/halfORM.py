@@ -102,8 +102,8 @@ model = Model('{dbname}')
 
 BEGIN_CODE = "#>>> Place your code bellow\n"
 END_CODE = "#<<< Place your code above\n"
-BEGIN_CODE_I = "#>>> Place your code bellow"
-END_CODE_I = "#<<< Place your code above"
+BEGIN_CODE_I = "#>>>_Place your code bellow"
+END_CODE_I = "#<<<_Place your code above"
 
 MODULE_TEMPLATE_1 = """\
 #-*- coding: utf-8 -*-
