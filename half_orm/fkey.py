@@ -26,12 +26,12 @@ class FKey(FieldInterface):
 
     def __call__(self, **kwargs):
         """Returns the relation on which the fkey is defined."""
-        f_relation = self._relation.model.relation(
+        f_relation = self._relation._model.relation(
             self.__get_fk_qrn(), **kwargs)
         f_relation.fkeys = {
             '__reverse': FKey(
                 '__reverse',
-                f_relation.fqrn.split('.'), self._fields, self._fk_names)}
+                f_relation._fqrn.split('.'), self._fields, self._fk_names)}
         _ = {fkey._set_relation(f_relation)
              for fkey in f_relation.fkeys.values()}
         f_relation.fkeys['__reverse'].set(self._relation)
@@ -65,10 +65,10 @@ class FKey(FieldInterface):
         #TODO deal with inheritance
         # if the fqrn differ, we verify that
         # model.relation(self.__fk_fqrn) inherits to_
-        if False and not self.__fk_fqrn == to_.fqrn:
+        if False and not self.__fk_fqrn == to_._fqrn:
             raise Exception(
                 "Relations must be of the same type\n{} != {}".format(
-                    self.__fk_fqrn, to_.fqrn))
+                    self.__fk_fqrn, to_._fqrn))
         self.from_ = from_
         self.to_ = to_
         self._is_set = True
