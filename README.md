@@ -17,20 +17,19 @@ See [the installation instructions file](INSTALL.md).
 # The full API
 
 ## The config file
-Before we can begin, we need a configuration file to access the database. This file contains the database name, user name and password, host and port informations.
+Before we can begin, we need a configuration file to access the database. This file contains the database name, user name and password, host and port informations. See the example: [test/halftest.ini](test/halftest.ini)
 Keep it in a safe place. By default, ```half_orm``` looks for these files in
 ```/etc/half_orm``` directory.
 
-Example: ([test/halftest.ini](test/halftest.ini))
-
 ## The ```halftest``` database ([SQL code](test/sql/halftest.sql))
 The examples bellow use the [halftest example database](test/sql/halftest.sql).
+To install the ```halftest``` database see [the installation instructions file](INSTALL.md).
 
 The ```halftest``` has:
 - for tables:
  - ```actor.person```
  - ```blog.post```
- - ```blog.event``` inherits ```blog.post```
+ - ```blog.event``` **inherits ```blog.post```**
  - ```blog.comment```
 - one view:
  - ```blog.view.post_comment```
@@ -38,13 +37,19 @@ The ```halftest``` has:
 
 # The halfORM script
 
-Assuming you have a config file named ```halftest``` in ```/etc/half_orm```,
+Assuming that you have copied [test/halftest.ini](test/halftest.ini) in ```/etc/half_orm/halftest``` and created the ```halftest``` database,
 just run:
 ```sh
 $ halfORM halftest
 ```
-The script generates for you a package with a python module for each relation
-in your database.
+The script generates for you a package with one python module for each relation
+in your database. Install the package:
+
+```sh
+$ sudo pip3 install halftest/
+```
+
+The structure of the Python package is:
 ```sh
 $ tree halftest/
 halftest/
@@ -66,68 +71,20 @@ halftest/
 └── setup.py
 ```
 
-The modules are ordered by schema name (one directory by schema). The dot in
+The modules are organized by schema name (one directory per schema). The dot in
 a schema name is used as a separator (```blog.view``` becomes ```blog/view```).
-The classes in the relation modules are camel cased:
-- ```post```: ```Post```
-- ```post_comment```: ```PostComment```
+The classes in the relation modules are camel cased.
 
+You now have acces to half_orm Relation classes matching the relations in your
+database. The equivalence between PostgreSQL and Python is immediate:
 
-To install the package, just go to the halftest directory and run:
-```sh
-python3 setup.py -q install
-```
-
-You can now edit those classes and use the API described bellow.
-
-# The following part will soon be rewritten.
-
-## API Examples (Everything you need to know to program with half_orm in 30 minutes)
-Some scripts snippets to illustrate the current implementation of the API.
-## The Model class:
-The first thing you need is a model object to connect to your database.
-```python
->>> from half_orm.model import Model
->>> halftest = Model(config_file='test/halftest.ini')
-```
-Four methods are available:
-- ```desc``` to display the structure of the database or of a relation in the database.
-- **```relation```**, the most important one, to instanciate a Relation object and play with this relation. More on the ```Relation``` class below.
-- ```ping``` to check if the connection is still up. It will attempt a reconnection if not. Very convenient to keep alive a web service even if the database
-goes down.
-- ```reconnect``` well, to reconnect and reload the metadata from the database possibly with another configuration file, usefull to change the role.
-
-Without argument, the ```desc``` method iterates over every *relational object* of the database and prints it's type and name.
-
-```python
->>> halftest.desc()
-r "actor"."person"
-r "blog"."comment"
-r "blog"."post"
-v "blog.view"."post_comment"
-```
-
-The expression ```halftest.desc("blog.comment")``` shows the representation of the ```blog.comment``` Relation:
-
-```python
->>> halftest.desc("blog.comment")
-TABLE: "halftest"."blog"."comment"
-DESCRIPTION:
-The table blog.comment contains all the comments
-made by a person on a post.
-FIELDS:
-- author_id: (int4)
-- id:        (int4) PK
-- content:   (text)
-- post_id:   (int4)
-FOREIGN KEYS:
-- post: (post_id)
- ↳ "halftest"."blog"."post"(id)
-- author: (author_id)
- ↳ "halftest"."actor"."person"(id)
-```
-Notice the two foreign keys ```post``` on ```"halftest"."blog"."post"``` and
-```author``` on ```"halftest"."actor"."person"```
+| PostgreSQL relation (schemaname.relname) | module | class |
+|----------|--------|-------|
+| actor.person | halftest.actor.person | Person |
+| blog.comment | haltest.blog.comment | Comment |
+| blog.event | halftest.blog.event | Event |
+| blog.post | halftest.blog.post | Post |
+| "blog.view".post_comment | halftest.blog.view.post_comment | PostComment |
 
 ## The Relation class:
 

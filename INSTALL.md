@@ -1,16 +1,33 @@
-# Clone this project
-```git clone https://github.com/collorg/halfORM```
-
 # Installation (tested on Linux/Mac OSX)
-- Install psycopg2 (http://initd.org/psycopg/docs/install.html)
-- ```sudo pip3 install halfORM```
-  This will install the package half_orm and the script /usr/local/bin/halfORM.
+- Install psycopg2 (see http://initd.org/psycopg/docs/install.html)
+- clone ```halfORM``` and install it:
+```sh
+$ git clone https://github.com/collorg/halfORM
+$ sudo pip3 install halfORM/
+```
 
 You're now ready to go!
 
-# Upgrade to last development release
-- ```git pull```
-- ```sudo pip3 install --upgrade .```
+## Upgrade halfORM to the last development release
+In the ```halfORM``` directory run:
+```sh
+$ git pull
+$ sudo pip3 install --upgrade .
+```
 
-# Uninstall
-```sudo pip3 uninstall half-orm```
+## Uninstall halfORM
+run ```sudo pip3 uninstall half-orm```
+
+# Installation of the halftest database
+You must have PostgreSQL superuser acces. In the ```halfORM``` directory, run:
+
+```sh
+$ psql template1 -f test/sql/halftest.sql
+```
+It creates a ```halftest``` user with the password ```halftest```  and the  ```halftest``` database.
+
+## Uninstallation of the halftest database
+```sh
+$ dropdb halftest
+$ dropuser halftest
+```
