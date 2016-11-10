@@ -47,6 +47,7 @@ class Model(object):
     """
     __deja_vu = {}
     __metadata = {}
+    _relations_ = {}
     def __init__(self, config_file=None, dbname=None, raise_error=True):
         """Model constructor
 
@@ -61,7 +62,8 @@ class Model(object):
             return
         self.__conn = None
         self.__cursor = None
-        self.__relations = []
+        self._relations_['list'] = []
+        self._relations_['classes'] = {}
         try:
             self._connect()
         except psycopg2.OperationalError as err:
@@ -200,11 +202,11 @@ class Model(object):
                 byname[table_key]['fields'][fieldname] = dct
                 byname[table_key]['fields_by_num'][fieldnum] = dct
                 byid[tableid]['fields'][fieldnum] = fieldname
-                if (tablekind, table_key) not in self.__relations:
-                    self.__relations.append((tablekind, table_key))
+                if ((tablekind, table_key) not in self._relations_['list']):
+                    self._relations_['list'].append((tablekind, table_key))
         #pp = PrettyPrinter()
         #pp.pprint(metadata)
-        self.__relations.sort()
+        self._relations_['list'].sort()
         return metadata
 
     def execute_query(self, query, values=()):
@@ -227,7 +229,7 @@ class Model(object):
 
     def _relations(self):
         """List all the relations in the database"""
-        for relation in self.__relations:
+        for relation in self._relations_['list']:
             yield "{} {}.{}.{}".format(relation[0], *relation[1])
 
     def desc(self, qrn=None, verbose=False):

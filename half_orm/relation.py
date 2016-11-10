@@ -101,47 +101,6 @@ class Relation(object):
     """Base class of Table and View classes (see relation_factory)."""
     _is_half_orm_relation = True
 
-class FKeys(object):
-    """Class of the Relation._fkeys attribute.
-    Each foreign key of the PostgreSQL relation is accessible as an attribute
-    of Relation._fkeys with the foreign key's name.
-    """
-    def __init__(self):
-        self._fkeys_names = []
-
-    def values(self):
-        """Yields the foreign keys (FKey objects)"""
-        for fkey_name in self._fkeys_names:
-            yield self.__dict__[fkey_name]
-
-    def __len__(self):
-        return len(self.__dict__)
-
-class Fields(object):
-    """Class of the Relation._fields attribute.
-    Each attribute of the PostgreSQL relation is accessible as an attribute
-    of Relation._fields with the field's name.
-    """
-    def __init__(self):
-        self._fields_names = []
-
-    def items(self):
-        """Yields the (fields names, Field objects)"""
-        for field_name in self._fields_names:
-            yield field_name, self.__dict__[field_name]
-
-    def keys(self):
-        """Yields the fields names."""
-        for field_name in self._fields_names:
-            yield field_name
-
-    def values(self):
-        """Yields the fields (Field objects)"""
-        for field_name in self._fields_names:
-            yield self.__dict__[field_name]
-
-    def __len__(self):
-        return len(self.__dict__)
 
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
@@ -149,6 +108,51 @@ class Fields(object):
 def __init__(self, **kwargs):
     """The arguments name must correspond to the attributes of the relation.
     """
+    class FKeys(object):
+        """Class of the Relation._fkeys attribute.
+        Each foreign key of the PostgreSQL relation is accessible as an attribute
+        of Relation._fkeys with the foreign key's name.
+        """
+        def __init__(self):
+            self._fkeys_names = []
+
+        def values(self):
+            """Yields the foreign keys (FKey objects)"""
+            for fkey_name in self._fkeys_names:
+                yield self.__dict__[fkey_name]
+
+        def __len__(self):
+            return len(self.__dict__)
+
+    class Fields(object):
+        """Class of the Relation._fields attribute.
+        Each attribute of the PostgreSQL relation is accessible as an attribute
+        of Relation._fields with the field's name.
+        """
+        def __init__(self):
+            self._fields_names = []
+
+        def items(self):
+            """Yields the (fields names, Field objects)"""
+            for field_name in self._fields_names:
+                yield field_name, self.__dict__[field_name]
+
+        def keys(self):
+            """Yields the fields names."""
+            for field_name in self._fields_names:
+                yield field_name
+
+        def values(self):
+            """Yields the fields (Field objects)"""
+            for field_name in self._fields_names:
+                yield self.__dict__[field_name]
+
+        def __len__(self):
+            return len(self.__dict__)
+    self._fields = Fields()
+    self._fkeys = FKeys()
+    self._fields_names = set()
+    self.__set_fields()
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     kwk_ = set(kwargs.keys())
@@ -167,6 +171,36 @@ def __init__(self, **kwargs):
     self.__select_params = {}
     _ = {field._set_relation(self) for field in self._fields.values()}
     _ = {fkey._set_relation(self) for fkey in self._fkeys.values()}
+
+def __set_fields(self):
+    """Initialise the fields and fkeys of the relation."""
+    from .field import Field
+    from .fkey import FKey
+    dbm = self._model._metadata
+    flds = list(dbm['byname'][self.__sfqrn]['fields'].keys())
+    for field_name, f_metadata in dbm['byname'][self.__sfqrn]['fields'].items():
+        pyfield_name = (
+            iskeyword(field_name) and "{}_".format(field_name) or field_name)
+        self._fields._fields_names.append(pyfield_name)
+        setattr(self._fields, pyfield_name, Field(field_name, f_metadata))
+        self._fields_names.add(pyfield_name)
+    for field_name, f_metadata in dbm['byname'][self.__sfqrn]['fields'].items():
+        fkeyname = f_metadata.get('fkeyname')
+        if fkeyname:
+            pyfkeyname = (
+                iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname)
+        if fkeyname and not hasattr(self._fkeys, pyfkeyname):
+            ft_ = dbm['byid'][f_metadata['fkeytableid']]
+            ft_sfqrn = ft_['sfqrn']
+            fields_names = [flds[elt-1]
+                            for elt in f_metadata['keynum']]
+            ft_fields_names = [ft_['fields'][elt]
+                               for elt in f_metadata['fkeynum']]
+            self._fkeys._fkeys_names.append(pyfkeyname)
+            setattr(
+                self._fkeys,
+                pyfkeyname,
+                FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names))
 
 def select_params(self, **kwargs):
     """Sets the limit and offset on the relation (used by select)."""
@@ -619,6 +653,7 @@ def _debug():
 
 COMMON_INTERFACE = {
     '__init__': __init__,
+    '__set_fields': __set_fields,
     'select_params': select_params,
     '__call__': __call__,
     'dup': dup,
@@ -683,6 +718,9 @@ def relation_factory(class_name, bases, dct):
         tbl_attr[name] = sfqrn[i]
     dbname = tbl_attr['_dbname']
     tbl_attr['_model'] = model.Model._deja_vu(dbname)
+    rel_class = model.Model._relations_['classes'].get(tuple(sfqrn))
+    if rel_class:
+        return rel_class
     if not tbl_attr['_model']:
         tbl_attr['_model'] = model.Model(dbname)
     try:
@@ -711,46 +749,12 @@ def relation_factory(class_name, bases, dct):
         'v': VIEW_INTERFACE,
         'm': MVIEW_INTERFACE,
         'f': FDATA_INTERFACE}
-    __set_fields(tbl_attr)
     for fct_name, fct in rel_interfaces[kind].items():
         tbl_attr[fct_name] = fct
     class_name = _gen_class_name(rel_class_names[kind], sfqrn)
-    return type(class_name, bases, tbl_attr)
-
-def __set_fields(ta_):
-    """ta_: table attributes dictionary."""
-    from .field import Field
-    from .fkey import FKey
-    ta_['_fields'] = Fields()
-    ta_['_fkeys'] = FKeys()
-    ta_['_fields_names'] = set()
-    dbm = ta_['_model']._metadata
-    flds = list(dbm['byname'][ta_['__sfqrn']]['fields'].keys())
-    for field_name, f_metadata in dbm['byname'][
-            ta_['__sfqrn']]['fields'].items():
-        pyfield_name = (
-            iskeyword(field_name) and "{}_".format(field_name) or field_name)
-        ta_['_fields']._fields_names.append(pyfield_name)
-        setattr(ta_['_fields'], pyfield_name, Field(field_name, f_metadata))
-        ta_['_fields_names'].add(pyfield_name)
-    for field_name, f_metadata in dbm['byname'][
-            ta_['__sfqrn']]['fields'].items():
-        fkeyname = f_metadata.get('fkeyname')
-        if fkeyname:
-            pyfkeyname = (
-                iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname)
-        if fkeyname and not hasattr(ta_['_fkeys'], pyfkeyname):
-            ft_ = dbm['byid'][f_metadata['fkeytableid']]
-            ft_sfqrn = ft_['sfqrn']
-            fields_names = [flds[elt-1]
-                            for elt in f_metadata['keynum']]
-            ft_fields_names = [ft_['fields'][elt]
-                               for elt in f_metadata['fkeynum']]
-            ta_['_fkeys']._fkeys_names.append(pyfkeyname)
-            setattr(
-                ta_['_fkeys'],
-                pyfkeyname,
-                FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names))
+    rel_class = type(class_name, bases, tbl_attr)
+    tbl_attr['_model']._relations_['classes'][tuple(sfqrn)] = rel_class
+    return rel_class
 
 def relation(_fqrn, **kwargs):
     """This function is used to instanciate a Relation object using
