@@ -335,7 +335,10 @@ def is_set(self):
     constrained by at least one of its foreign keys or self is the
     result of a combination of Relations (using set operators).
     """
-    return (bool(self._joined_to) or
+    joined_to = False
+    for jt_, elt in self._joined_to:
+        joined_to |= jt_.is_set()
+    return (joined_to or
             (self.__set_op.op_ or self.__set_op.neg) or
             bool({field for field in self._fields.values() if field.is_set()}))
 

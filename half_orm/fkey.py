@@ -71,7 +71,7 @@ class FKey(FieldInterface):
                     self.__fk_fqrn, to_._fqrn))
         self.from_ = from_
         self.to_ = to_
-        self._is_set = True
+        self._is_set = to_.is_set()
         if not (to_, self) in from_._joined_to:
             from_._joined_to.insert(0, (to_, self))
 

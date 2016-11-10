@@ -31,6 +31,8 @@ class HalfTest:
         self.pers = model.relation("actor.person")
         self.relation = model.relation
         self.post = model.relation("blog.post")
+        self.comment = model.relation("blog.comment")
+        self.event = model.relation("blog.event")
 
         @self.pers.Transaction
         def insert_pers(pers):
