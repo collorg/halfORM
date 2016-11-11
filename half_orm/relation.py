@@ -374,12 +374,12 @@ def __join_query(self, fkey, op_=' and '):
     bounds = op_.join(['{} = {}'.format(a, b) for
                        a, b in zip(to_fields, from_fields)])
     constraints_to_query = [
-        '{}.{} {} %s'.format(to_id, field.name(), field.comp())
+        field.where_repr('select', id(to_))
         for field in to_._fields.values() if field.is_set()]
     constraints_to_values = (
         field for field in to_._fields.values() if field.is_set())
     constraints_from_query = [
-        '{}.{} {} %s'.format(from_id, field.name(), field.comp())
+        field.where_repr('select', id(from_))
         for field in from_._fields.values() if field.is_set()]
     constraints_from_values = (
         field for field in from_._fields.values() if field.is_set())
