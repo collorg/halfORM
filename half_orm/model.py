@@ -244,10 +244,21 @@ class Model(object):
         @qtn is the <schema>.<table> name of the relation
         @kwargs is a dictionary {field_name:value}
         """
+        import importlib
+
         schema, table = qtn.rsplit('.', 1)
         fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
         fqrn, _ = _normalize_fqrn(fqrn)
         return relation_factory('Table', (), {'fqrn': fqrn, 'model': self})
+
+    def _import_class(self, qtn):
+        """Used to return the class from the scope module.
+        """
+        module_path = '{}.{}'.format(self._scope, qtn.replace('"', ''))
+        class_name = camel_case(qtn.split('.')[-1])
+        module = __import__(
+            module_path, globals(), locals(), [class_name], 0)
+        return module.__dict__[class_name]
 
     def _relations(self):
         """List all the relations in the database"""

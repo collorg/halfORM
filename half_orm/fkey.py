@@ -18,16 +18,30 @@ class FKey(FieldInterface):
         self._fk_from = None
         self._fk_to = None
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
+        self._cast = None
         super(FKey, self).__init__(fk_name, fk_names, fields)
 
     def __get_fk_qrn(self):
         """Returns QRN from FQRN."""
         return '.'.join(self.__fk_fqrn.split('.', 1)[1:])
 
+    def cast(self, qrn):
+        """Cast the fkey to another relation (usefull with inheritance)
+        """
+        self._cast = qrn
+
     def __call__(self, **kwargs):
-        """Returns the relation on which the fkey is defined."""
-        f_relation = self._relation._model.get_relation_class(
-            self.__get_fk_qrn())(**kwargs)
+        """Returns the relation on which the fkey is defined.
+        If model._scope is set, instanciate the class from the scoped module.
+        Uses the _cast if it is set.
+        """
+        model = self._relation._model
+        f_qrn = self.__get_fk_qrn()
+        if model._scope:
+            f_class = model._import_class(self._cast or f_qrn)
+        else:
+            f_class = model.get_relation_class(f_qrn)
+        f_relation = f_class(**kwargs)
         f_relation.fkeys = {
             '__reverse': FKey(
                 '__reverse',
