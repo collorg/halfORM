@@ -310,12 +310,17 @@ def to_dict(self):
 def __repr__(self):
     rel_kind = self.__kind
     ret = []
-    ret.append("CLASS: {}".format(self.__class__))
-    ret.append("DATABASE:")
-    ret.append("- NAME: {}".format(self._model._dbinfo['name']))
-    ret.append("- USER: {}".format(self._model._dbinfo['user']))
-    ret.append("- HOST: {}".format(self._model._dbinfo['host']))
-    ret.append("- PORT: {}".format(self._model._dbinfo['port']))
+    if self._model._scope:
+        ret.append("CLASS: {}".format(self.__class__))
+        ret.append("DATABASE:")
+        ret.append("- NAME: {}".format(self._model._dbinfo['name']))
+        ret.append("- USER: {}".format(self._model._dbinfo['user']))
+        ret.append("- HOST: {}".format(self._model._dbinfo['host']))
+        ret.append("- PORT: {}".format(self._model._dbinfo['port']))
+    else:
+        ret.append("__RCLS: {}".format(self.__class__))
+        ret.append(
+            "This class allows you to manipulate the data in the PG relation:")
     ret.append("{}: {}".format(rel_kind.upper(), self._fqrn))
     if self.__metadata['description']:
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
