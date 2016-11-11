@@ -307,9 +307,15 @@ def to_dict(self):
     return {key:field.value for key, field in
             self._fields.items() if field.is_set()}
 
-def __str__(self):
+def __repr__(self):
     rel_kind = self.__kind
     ret = []
+    ret.append("CLASS: {}".format(self.__class__))
+    ret.append("DATABASE:")
+    ret.append("- NAME: {}".format(self._model._dbinfo['name']))
+    ret.append("- USER: {}".format(self._model._dbinfo['user']))
+    ret.append("- HOST: {}".format(self._model._dbinfo['host']))
+    ret.append("- PORT: {}".format(self._model._dbinfo['port']))
     ret.append("{}: {}".format(rel_kind.upper(), self._fqrn))
     if self.__metadata['description']:
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
@@ -661,7 +667,7 @@ COMMON_INTERFACE = {
     '__call__': __call__,
     'dup': dup,
     '__get_set_fields': __get_set_fields,
-    '__str__': __str__,
+    '__repr__': __repr__,
     'group_by':group_by,
     'to_json': to_json,
     'to_dict': to_dict,
