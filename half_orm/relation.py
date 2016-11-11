@@ -334,8 +334,8 @@ def __repr__(self):
             field_name,
             ' ' * (mx_fld_n_len + 1 - len(field_name)),
             repr(field)))
-    if self._fkeys:
-        plur = len(self._fkeys) > 1 and  'S' or ''
+    if self._fkeys._fkeys_names:
+        plur = len(self._fkeys._fkeys_names) > 1 and  'S' or ''
         ret.append('FOREIGN KEY{}:'.format(plur))
         for fkey in self._fkeys.values():
             ret.append(repr(fkey))
