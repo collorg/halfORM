@@ -519,7 +519,7 @@ def __len__(self, *args):
         self.__cursor.execute(query, vars_)
     except Exception as err:
         print(query, vars_)
-        self.mogrify()
+        self._mogrify()
         raise err
     return self.__cursor.fetchone()['count']
 
