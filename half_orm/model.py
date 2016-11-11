@@ -7,8 +7,8 @@ The Model class allows to load the model of a database:
 - model = Model(config_file='<config file name>')
  - model.desc() displays information on the structure of
    the database.
- - model.relation(<QRN>)
-   see relation module for available methods on
+ - model.get_relation_class(<QRN>)
+   see relation module for available methods on Relation class.
 
 About QRN and FQRN:
 - FQRN stands for: Fully Qualified Relation Name. It is composed of:
@@ -34,7 +34,23 @@ from psycopg2.extras import RealDictCursor
 from half_orm import model_errors
 from half_orm.relation import _normalize_fqrn, _normalize_qrn, relation_factory
 
-__all__ = ["Model"]
+__all__ = ["Model", "camel_case"]
+
+def camel_case(name):
+    """Transform a string in camel case."""
+    ccname = []
+    name = name.lower()
+    capitalize = True
+    for char in name:
+        if not char.isalnum():
+            capitalize = True
+            continue
+        if capitalize:
+            ccname.append(char.upper())
+            capitalize = False
+            continue
+        ccname.append(char)
+    return ''.join(ccname)
 
 psycopg2.extras.register_uuid()
 #from pprint import PrettyPrinter
@@ -48,7 +64,8 @@ class Model(object):
     __deja_vu = {}
     __metadata = {}
     _relations_ = {}
-    def __init__(self, config_file=None, dbname=None, raise_error=True):
+    def __init__(self,
+                 config_file=None, dbname=None, scope=None, raise_error=True):
         """Model constructor
 
         Use @config_file in your scripts. The @dbname parameter is
@@ -56,12 +73,14 @@ class Model(object):
         """
         assert bool(config_file) != bool(dbname)
         self.__config_file = config_file
+        self._dbinfo = {}
         self.__dbname = dbname
         if dbname:
             self = self.__deja_vu[dbname]
             return
         self.__conn = None
         self.__cursor = None
+        self._scope = scope and scope.split('.')[0]
         self._relations_['list'] = []
         self._relations_['classes'] = {}
         try:
@@ -126,6 +145,10 @@ class Model(object):
                 raise err
         needed_params = {'name', 'host', 'user', 'password', 'port'}
         self.__dbname = params['name']
+        self._dbinfo['name'] = params['name']
+        self._dbinfo['user'] = params['user']
+        self._dbinfo['host'] = params['host']
+        self._dbinfo['port'] = params['port']
         missing_params = needed_params.symmetric_difference(set(params.keys()))
         if missing_params:
             raise model_errors.MalformedConfigFile(
@@ -215,8 +238,8 @@ class Model(object):
         cursor.execute(query, values)
         return cursor
 
-    def relation(self, qtn, **kwargs):
-        """Instanciate an object of Relation, using the relation_factory class.
+    def get_relation_class(self, qtn):
+        """Retuns the class corresponding to the fqrn relation in the database.
 
         @qtn is the <schema>.<table> name of the relation
         @kwargs is a dictionary {field_name:value}
@@ -224,8 +247,7 @@ class Model(object):
         schema, table = qtn.rsplit('.', 1)
         fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
         fqrn, _ = _normalize_fqrn(fqrn)
-        return relation_factory(
-            'Table', (), {'fqrn': fqrn, 'model': self})(**kwargs)
+        return relation_factory('Table', (), {'fqrn': fqrn, 'model': self})
 
     def _relations(self):
         """List all the relations in the database"""

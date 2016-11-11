@@ -17,10 +17,3 @@ class Test(TestCase):
         print(pers.__class__, self.pers.__class__)
         print(id(pers.__class__), id(self.pers.__class__))
         self.assertTrue(isinstance(pers, self.pers.__class__))
-
-    def isinstance_test_2(self):
-        pers = self.relation('actor.person')
-        print(pers.__class__, self.pers.__class__)
-        print(id(pers.__class__), id(self.pers.__class__))
-        self.assertTrue(isinstance(pers, self.pers.__class__))
-

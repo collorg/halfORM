@@ -580,7 +580,7 @@ def delete(self, delete_all=False):
     self.__cursor.execute(query, tuple(values))
 
 def __call__(self, **kwargs):
-    return relation(self._fqrn, **kwargs)
+    return self.__class__(**kwargs)
 
 def dup(self):
     """Duplicate a Relation object"""

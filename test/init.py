@@ -28,11 +28,11 @@ class HalfTest:
     def __init__(self):
         self.dbname = model._dbname
         self.today = date.today()
-        self.pers = model.relation("actor.person")
-        self.relation = model.relation
-        self.post = model.relation("blog.post")
-        self.comment = model.relation("blog.comment")
-        self.event = model.relation("blog.event")
+        self.pers = model.get_relation_class("actor.person")()
+        self.relation = model.get_relation_class
+        self.post = model.get_relation_class("blog.post")()
+        self.comment = model.get_relation_class("blog.comment")()
+        self.event = model.get_relation_class("blog.event")()
 
         @self.pers.Transaction
         def insert_pers(pers):

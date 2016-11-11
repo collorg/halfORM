@@ -6,15 +6,12 @@ from unittest import TestCase
 from .init import halftest
 
 class Test(TestCase):
-    def reset(self):
-        pass
-
     def setUp(self):
-        self.pers = halftest.relation("actor.person")
-        self.pers.delete(delete_all=True)
-        self.post = halftest.relation("blog.post")
-        self.post.delete(delete_all=True)
+        self.pers = halftest.pers
+        self.post = halftest.post
 
     def select_count_0_test(self):
+        self.pers.delete(delete_all=True)
+        self.post.delete(delete_all=True)
         self.assertEqual(len(self.pers), 0)
         self.assertEqual(len(self.post), 0)

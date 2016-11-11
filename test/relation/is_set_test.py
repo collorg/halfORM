@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
-from random import randint
 import psycopg2
-import sys
 from unittest import TestCase
-from datetime import date
 
 from ..init import halftest
 from half_orm import relation_errors, model

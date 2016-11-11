@@ -26,8 +26,8 @@ class FKey(FieldInterface):
 
     def __call__(self, **kwargs):
         """Returns the relation on which the fkey is defined."""
-        f_relation = self._relation._model.relation(
-            self.__get_fk_qrn(), **kwargs)
+        f_relation = self._relation._model.get_relation_class(
+            self.__get_fk_qrn())(**kwargs)
         f_relation.fkeys = {
             '__reverse': FKey(
                 '__reverse',
