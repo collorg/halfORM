@@ -15,10 +15,10 @@ from half_orm.model import Model, camel_case
 
 HALFORM_PATH = os.path.dirname(__file__)
 
-BEGIN_CODE = "#>>> Place your code bellow\n"
-END_CODE = "#<<< Place your code above\n"
-BEGIN_CODE_I = "#>>>\xa0Place your code bellow"
-END_CODE_I = "#<<<\xa0Place your code above"
+BEGIN_CODE = "#>>> Place your code bellow this line.\n"
+END_CODE = "#<<< Place your code above this line.\n"
+BEGIN_CODE_I = "#>>>\xa0Place your code bellow this line."
+END_CODE_I = "#<<<\xa0Place your code above this line."
 
 README = open('{}/halfORM_templates/README'.format(HALFORM_PATH)).read()
 
@@ -96,8 +96,6 @@ def init_package(model, package_dir, package_name):
         setup_file_name = '{}/setup.py'.format(package_name)
         if not os.path.exists(setup_file_name):
             open(setup_file_name, 'w').write(setup)
-    open('{}/db_connector.py'.format(package_dir), 'w').write(
-        DB_CONNECTOR_TEMPLATE.format(dbname=dbname, package_name=package_name))
     os.makedirs('{}/.halfORM'.format(package_name))
     open('{}/.halfORM/config'.format(package_name), 'w').write(
         CONFIG_TEMPLATE.format(
@@ -125,14 +123,10 @@ def get_inheritance_info(rel, package_name):
     inherited_classes = ", ".join(inherited_classes_list)
     return inheritance_import, inherited_classes
 
-def make_module(module_path):
+def assemble_module_template(module_path):
     """Construct the module after slicing it if it already exists.
     """
-    c1_ = ""
-    c2_ = ""
-    c3_ = ""
-    c4_ = ""
-    c5_ = ""
+    c1_ = c2_ = c3_ = c4_ = c5_ = ""
     module_template = MODULE_FORMAT_1
     if os.path.exists(module_path):
         module_template = MODULE_FORMAT_2
@@ -143,20 +137,11 @@ def make_module(module_path):
         c3_ = slices[3][0]
         c4_ = slices[4][0]
         c5_ = slices[5][0]
-    module_template = module_template.format(
-        rt1=MODULE_TEMPLATE_1,
-        rt2=MODULE_TEMPLATE_2,
-        rt3=MODULE_TEMPLATE_3,
-        rt4=MODULE_TEMPLATE_4,
-        bc=BEGIN_CODE,
-        ec=END_CODE,
-        c1_=c1_,
-        c2_=c2_,
-        c3_=c3_,
-        c4_=c4_,
-        c5_=c5_
-    )
-    return module_template
+    return module_template.format(
+        rt1=MODULE_TEMPLATE_1, rt2=MODULE_TEMPLATE_2,
+        rt3=MODULE_TEMPLATE_3, rt4=MODULE_TEMPLATE_4,
+        bc=BEGIN_CODE, ec=END_CODE,
+        c1_=c1_, c2_=c2_, c3_=c3_, c4_=c4_, c5_=c5_)
 
 def update_this_module(model, relation, package_dir, package_name, dirs_list):
     """Updates the module."""
@@ -176,7 +161,7 @@ def update_this_module(model, relation, package_dir, package_name, dirs_list):
     path = '/'.join(path[:-1])
     if not os.path.exists(path):
         os.makedirs(path)
-    module_template = make_module(module_path)
+    module_template = assemble_module_template(module_path)
     inheritance_import, inherited_classes = get_inheritance_info(
         rel, package_name)
     open(module_path, 'w').write(
@@ -196,6 +181,9 @@ def update_modules(model, package_dir, package_name):
     dirs_list = []
     files_list = []
 
+    dbname = model._dbname
+    open('{}/db_connector.py'.format(package_dir), 'w').write(
+        DB_CONNECTOR_TEMPLATE.format(dbname=dbname, package_name=package_name))
     for relation in model._relations():
         module_path = update_this_module(
             model, relation, package_dir, package_name, dirs_list)
@@ -203,10 +191,10 @@ def update_modules(model, package_dir, package_name):
 
     return files_list
 
-def update_init_files(package_name, files_list):
+def update_init_files(package_dir, files_list):
     """Update __all__ lists in __init__ files.
     """
-    for root, dirs, files in os.walk('{}/{}'.format(package_name, package_name)):
+    for root, dirs, files in os.walk(package_dir):
         all_ = []
         for dir_ in dirs:
             if dir_ != '__pycache__':
@@ -277,7 +265,7 @@ def main():
     if not rel_package:
         init_package(model, package_dir, package_name)
     files_list = update_modules(model, package_dir, package_name)
-    update_init_files(package_name, files_list)
+    update_init_files(package_dir, files_list)
 
 if __name__ == '__main__':
     main()
