@@ -1,6 +1,19 @@
+## Features
+
+- **Relation:** Add a cast method to cast to another relation type. (d662ccd)
+- **Model:** Model.relation replaced by get_relation_class now returns a class. (0998253)
+- **Relation:** __str__ becomes __repr__. (af6498b)
+
+## Bug fixes
+
+- **halfORM:** Fix problem with curly braces in user's code. (7a02309)
+- **Fkey:** The FK now references the class in the good scope. (fc304c7)
+- **Relation:** Use field.where_repr to have a correct construct of the request with fkeys. (39116a2)
+- **Relation:** remove the display of FOREIGN KEY when there is no FK. (89d9c6b)
+
 # 0.1.0-alpha.2 (2016-11-10)
 
-## API
+## Features
 
 - **Fkey:** Add tests for foreign keys. (5158ece)
 - **Relation:** attributes fields and fkeys are renamed _fields and _fkeys. (2e29af0)
