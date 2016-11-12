@@ -50,11 +50,6 @@ class FKey(FieldInterface):
              for fkey in f_relation.fkeys.values()}
         f_relation.fkeys['__reverse'].set(self._relation)
         return f_relation
-        if self.from_ is None:
-            self.__set__(obj)
-            if not (self.from_, self) in self.to_._joined_to:
-                self.to_._joined_to.insert(0, (self.from_, self))
-        return self.to_
 
     def set(self, to_):
         self.__set__(self._relation, to_)

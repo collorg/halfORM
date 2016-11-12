@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, protected-access
 
 """This module provides the Transaction class."""
 

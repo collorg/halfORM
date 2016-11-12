@@ -169,6 +169,7 @@ def __init__(self, **kwargs):
     self.__mogrify = False
     self.__set_op = SetOp(self)
     self.__select_params = {}
+    self.__cast = None
     _ = {field._set_relation(self) for field in self._fields.values()}
     _ = {fkey._set_relation(self) for fkey in self._fkeys.values()}
 
@@ -396,7 +397,7 @@ def __get_from(self, orig_rel=None, deja_vu=None):
     """Constructs the __sql_query and gets the __sql_values for self."""
     def __sql_id(rel):
         """Returns the FQRN as alias for the sql query."""
-        return "{} as r{}".format(rel._fqrn, id(rel))
+        return "{} as r{}".format(rel.__cast or rel._fqrn, id(rel))
 
     if deja_vu is None:
         orig_rel = self
@@ -516,7 +517,10 @@ def get(self):
     if count != 1:
         raise relation_errors.ExpectedOneError(self, count)
     res = list(self.select())
-    return self(**(res[0]))
+    if not self.__cast:
+        return self(**(res[0]))
+    else:
+        return self._model._import_class(self.__cast)(**(res[0]))
 
 def __len__(self, *args):
     """Retruns the number of tuples matching the intention in the relation.
@@ -591,10 +595,14 @@ def delete(self, delete_all=False):
     self.__cursor.execute(query, tuple(values))
 
 def __call__(self, **kwargs):
-    return self.__class__(**kwargs)
+    if not self.__cast:
+        return self.__class__(**kwargs)
+    else:
+        return self._model._import_class(self.__cast)(**kwargs)
 
 def dup(self):
     """Duplicate a Relation object"""
+    raise NotImplementedError
     new = relation_factory(None, None, {'fqrn': self._fqrn})(
         **{field.name():(field.value, field.comp())
            for field in self._fields.values() if field.value})
@@ -602,6 +610,11 @@ def dup(self):
     if self.__set_op.right is not None:
         new.__set_op.right = self.__set_op.right.copy()
     return new
+
+def cast(self, qrn):
+    """Cast a relation into another relation.
+    """
+    self.__cast = qrn
 
 def __set__op__(self, op_, right):
     """Si l'opérateur du self est déjà défini, il faut aller modifier
@@ -671,6 +684,7 @@ COMMON_INTERFACE = {
     'select_params': select_params,
     '__call__': __call__,
     'dup': dup,
+    'cast': cast,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
     'group_by':group_by,
