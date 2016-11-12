@@ -1,6 +1,9 @@
+# 0.1.0-alpha.3 (2016-11-12)
+
 ## Features
 
 - **Relation:** Add a cast method to cast to another relation type. (d662ccd)
+- **halfORM:** The script can now be called without argument inside a half_orm package. (95a4ba0)
 - **Model:** Model.relation replaced by get_relation_class now returns a class. (0998253)
 - **Relation:** __str__ becomes __repr__. (af6498b)
 
