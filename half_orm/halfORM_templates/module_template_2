@@ -1,0 +1,11 @@
+
+from {package_name}.db_connector import base_relation_class
+{inheritance_import}
+
+__RCLS = base_relation_class('{fqtn}')
+
+class {class_name}(__RCLS, {inherited_classes}):
+    """
+{documentation}
+    """
+
