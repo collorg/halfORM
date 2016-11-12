@@ -132,11 +132,11 @@ def assemble_module_template(module_path):
         module_template = MODULE_FORMAT_2
         slices = [elt.split(END_CODE)
                   for elt in open(module_path).read().split(BEGIN_CODE)]
-        c1_ = slices[1][0]
-        c2_ = slices[2][0]
-        c3_ = slices[3][0]
-        c4_ = slices[4][0]
-        c5_ = slices[5][0]
+        c1_ = slices[1][0].replace('{', '{{').replace('}', '}}')
+        c2_ = slices[2][0].replace('{', '{{').replace('}', '}}')
+        c3_ = slices[3][0].replace('{', '{{').replace('}', '}}')
+        c4_ = slices[4][0].replace('{', '{{').replace('}', '}}')
+        c5_ = slices[5][0].replace('{', '{{').replace('}', '}}')
     return module_template.format(
         rt1=MODULE_TEMPLATE_1, rt2=MODULE_TEMPLATE_2,
         rt3=MODULE_TEMPLATE_3, rt4=MODULE_TEMPLATE_4,
@@ -164,15 +164,17 @@ def update_this_module(model, relation, package_dir, package_name, dirs_list):
     module_template = assemble_module_template(module_path)
     inheritance_import, inherited_classes = get_inheritance_info(
         rel, package_name)
+    documentation = "\n".join(["    {}".format(line)
+                               for line in str(rel).split("\n")])
     open(module_path, 'w').write(
         module_template.format(
             module="{}.{}".format(package_name, fqtn),
             package_name=package_name,
-            documentation="\n".join(["    {}".format(line)
-                                     for line in str(rel).split("\n")]),
+            documentation=documentation,
             inheritance_import=inheritance_import,
             inherited_classes=inherited_classes,
-            class_name=camel_case(module_name), fqtn=fqtn))
+            class_name=camel_case(module_name),
+            fqtn=fqtn))
     return module_path
 
 def update_modules(model, package_dir, package_name):
