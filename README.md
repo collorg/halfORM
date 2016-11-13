@@ -358,7 +358,7 @@ the foreign key ```post``` on ```gaston_comments```:
 ```python
 >>> the_posts_commented_by_gaston = gaston_comments._fkeys.post()
 ```
-knowing that a Post object has the following struncture:
+Knowing that a Post object has the following structure:
 ```
 TABLE: "halftest"."blog"."post"
 DESCRIPTION:
@@ -375,7 +375,7 @@ FOREIGN KEYS:
 - author: (author_first_name, author_last_name, author_birth_date)
  ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
 ```
-And now retreive the authors of ```the_posts_commented_by_gaston```:
+We can now retreive the authors of ```the_posts_commented_by_gaston```:
 ```python
 >>> the_authors_of_posts_commented_by_gaston = the_posts_commented_by_gaston._fkeys.author()
 ```
@@ -390,7 +390,7 @@ You can now write this script:
 from halform.db_connector import model
 from halform.blog.view.post_comment import PostComment
 
-model.reconnect('halftest_read_only_pc') # a role with only ro rights
+model.reconnect('halftest_read_only_pc') # a role with only read rights
 
 post_gaston = PostComment(author_post_first_name="Lagaffe")
 posts_by_author = """

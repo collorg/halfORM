@@ -22,8 +22,7 @@ About QRN and FQRN:
   name.
 
 Double quotes can be ommited even if there are dots in the schema name for
-both FQRN and QRN. The _normalize_fqrn and _normalize_qrn functions add
-the double quotes.
+both FQRN and QRN. The _normalize_fqrn function add double quotes to the FQRN.
 """
 
 from keyword import iskeyword
@@ -741,6 +740,7 @@ def relation_factory(class_name, bases, dct):
     bases = (Relation,)
     tbl_attr = {}
     tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
+    tbl_attr['_qrn'] = tbl_attr['_fqrn'].split('.', 1)[1].replace('"', '')
     attr_names = ['_dbname', '_schemaname', '_relationname']
     for i, name in enumerate(attr_names):
         tbl_attr[name] = sfqrn[i]
