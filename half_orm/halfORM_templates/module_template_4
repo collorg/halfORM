@@ -1,3 +1,1 @@
-
         super({class_name}, self).__init__(**kwargs)
-

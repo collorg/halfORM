@@ -16,9 +16,7 @@ from half_orm.model import Model, camel_case
 HALFORM_PATH = os.path.dirname(__file__)
 
 BEGIN_CODE = "#>>> Place your code bellow this line.\n"
-END_CODE = "#<<< Place your code above this line.\n"
 BEGIN_CODE_I = "#>>>\xa0Place your code bellow this line."
-END_CODE_I = "#<<<\xa0Place your code above this line."
 
 README = open('{}/halfORM_templates/README'.format(HALFORM_PATH)).read()
 
@@ -33,7 +31,7 @@ DB_CONNECTOR_TEMPLATE = open(
 
 MODULE_TEMPLATE_1 = open(
     '{}/halfORM_templates/module_template_1'.format(HALFORM_PATH)
-    ).read().format(bc_i=BEGIN_CODE_I, ec_i=END_CODE_I)
+    ).read().format(bc_i=BEGIN_CODE_I)
 
 MODULE_TEMPLATE_2 = open(
     '{}/halfORM_templates/module_template_2'.format(HALFORM_PATH)).read()
@@ -47,18 +45,12 @@ MODULE_TEMPLATE_4 = open(
 WARING_TEMPLATE = open(
     '{}/halfORM_templates/warning'.format(HALFORM_PATH)).read()
 
-MODULE_FORMAT_1 = (
-    "{rt1}{bc}{c1_}{ec}"
-    "{rt2}    {bc}{c2_}    {ec}"
-    "{rt3}        {bc}{c3_}        {ec}"
-    "{rt4}        {bc}{c4_}        {ec}\n"
-    "    {bc}{c5_}")
-MODULE_FORMAT_2 = (
-    "{rt1}{bc}{c1_}{ec}"
-    "{rt2}    {bc}{c2_}{ec}"
-    "{rt3}        {bc}{c3_}{ec}"
-    "{rt4}        {bc}{c4_}{ec}\n"
-    "    {bc}{c5_}")
+MODULE_FORMAT = (
+    "{rt1}"
+    "{rt2}"
+    "{rt3}"
+    "{rt4}        {bc_}"
+    "{user_s_code}")
 
 AP_DESCRIPTION = """Generates python package from a PG database"""
 AP_EPILOG = """"""
@@ -132,22 +124,15 @@ def get_inheritance_info(rel, package_name):
 def assemble_module_template(module_path):
     """Construct the module after slicing it if it already exists.
     """
-    c1_ = c2_ = c3_ = c4_ = c5_ = ""
-    module_template = MODULE_FORMAT_1
+    user_s_code = ""
+    module_template = MODULE_FORMAT
     if os.path.exists(module_path):
-        module_template = MODULE_FORMAT_2
-        slices = [elt.split(END_CODE)
-                  for elt in open(module_path).read().split(BEGIN_CODE)]
-        c1_ = slices[1][0].replace('{', '{{').replace('}', '}}')
-        c2_ = slices[2][0].replace('{', '{{').replace('}', '}}')
-        c3_ = slices[3][0].replace('{', '{{').replace('}', '}}')
-        c4_ = slices[4][0].replace('{', '{{').replace('}', '}}')
-        c5_ = slices[5][0].replace('{', '{{').replace('}', '}}')
+        user_s_code = open(module_path).read().rsplit(BEGIN_CODE, 1)[1]
+        user_s_code = user_s_code.replace('{', '{{').replace('}', '}}')
     return module_template.format(
         rt1=MODULE_TEMPLATE_1, rt2=MODULE_TEMPLATE_2,
         rt3=MODULE_TEMPLATE_3, rt4=MODULE_TEMPLATE_4,
-        bc=BEGIN_CODE, ec=END_CODE,
-        c1_=c1_, c2_=c2_, c3_=c3_, c4_=c4_, c5_=c5_)
+        bc_=BEGIN_CODE, user_s_code=user_s_code)
 
 def update_this_module(
         model, relation, package_dir, package_name, dirs_list, warning):
