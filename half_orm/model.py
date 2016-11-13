@@ -83,13 +83,7 @@ class Model(object):
         self._scope = scope and scope.split('.')[0]
         self._relations_['list'] = []
         self._relations_['classes'] = {}
-        try:
-            self._connect()
-        except psycopg2.OperationalError as err:
-            if raise_error:
-                raise err.__class__(err)
-            sys.stderr.write("{}\n".format(err))
-            sys.stderr.flush()
+        self._connect(raise_error=raise_error)
 
     @staticmethod
     def _deja_vu(dbname):
@@ -116,7 +110,7 @@ class Model(object):
                 sys.stderr.flush()
             return False
 
-    def _connect(self, config_file=None):
+    def _connect(self, config_file=None, raise_error=True):
         """Setup a new connection to the database.
 
         If a config_file is provided, the connection is made with the new
@@ -153,10 +147,16 @@ class Model(object):
         if missing_params:
             raise model_errors.MalformedConfigFile(
                 self.__config_file, missing_params)
-        self.__conn = psycopg2.connect(
-            'dbname={name} host={host} user={user} '
-            'password={password} port={port}'.format(**params),
-            cursor_factory=RealDictCursor)
+        try:
+            self.__conn = psycopg2.connect(
+                'dbname={name} host={host} user={user} '
+                'password={password} port={port}'.format(**params),
+                cursor_factory=RealDictCursor)
+        except psycopg2.OperationalError as err:
+            if raise_error:
+                raise err.__class__(err)
+            sys.stderr.write("{}\n".format(err))
+            sys.stderr.flush()
         self.__conn.autocommit = True
         self.__cursor = self.__conn.cursor()
         self.__metadata[self.__dbname] = self.__get_metadata()
