@@ -40,19 +40,22 @@ The ```halftest``` has:
 Assuming that you have copied [test/halftest.ini](test/halftest.ini) in ```/etc/half_orm/halftest``` and created the ```halftest``` database,
 just run:
 ```sh
-$ halfORM halftest
+$ halfORM -c halftest -p halftest
 ```
 The script generates for you a package with one python module for each relation
 in your database. Install the package:
 
 ```sh
-$ sudo pip3 install halftest/
+$ cd halftest
+$ sudo -H pip3 install .
 ```
 
 The structure of the Python package is:
 ```sh
-$ tree halftest/
+$ $ tree -a halftest/
 halftest/
+├── .halfORM
+│   └── config
 ├── halftest
 │   ├── actor
 │   │   ├── __init__.py
@@ -99,7 +102,7 @@ and print it:
 
 ```python
 >>> persons = Person()
->>> print(persons)
+>>> persons
 Init definition: Person(self, **kwargs)
 Docstring:
 TABLE: "halftest"."actor"."person"
@@ -112,11 +115,11 @@ FIELDS:
 - first_name: (text) PK
 - last_name:  (text) PK
 - birth_date: (date) PK
-FOREIGN KEY:
 ```
 The structure of the relation is displayed as retreived from the database at
 the time the ```halfORM``` command has been run. As the structure of your
-database evolve, you can rerun the script as indicated in the ```halftest/README.rst``` file.
+database evolve, you can rerun the ```halfORM``` script whithout any argument
+anywhere in the source of the package to keep in sync your modules.
 
 With a Relation object, you can use the following methods to manipulate the
 data in your database:
@@ -322,7 +325,7 @@ Okay, let's see an example. Remember the ```blog.comment``` relation?
 ```python
 >>> from halftest.blog.comment import Comment
 >>> comments = Comment()
->>> print(comments)
+>>> comments
 TABLE: "halftest"."blog"."comment"
 DESCRIPTION:
 The table blog.comment contains all the comments

@@ -14,46 +14,31 @@ from keyword import iskeyword
 from half_orm.model import Model, camel_case
 
 HALFORM_PATH = os.path.dirname(__file__)
-
 BEGIN_CODE = "#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!\n"
-BEGIN_CODE_I = "#>>>\xa0PLACE YOUR CODE BELLOW THIS LINE."
 END_CODE = "#<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!\n"
-END_CODE_I = "#<<<\xa0PLACE YOUR CODE ABOVE THIS LINE."
-
 README = open('{}/halfORM_templates/README'.format(HALFORM_PATH)).read()
-
 CONFIG_TEMPLATE = open(
     '{}/halfORM_templates/config'.format(HALFORM_PATH)).read()
-
 SETUP_TEMPLATE = open(
     '{}/halfORM_templates/setup.py'.format(HALFORM_PATH)).read()
-
 DB_CONNECTOR_TEMPLATE = open(
     '{}/halfORM_templates/db_connector.py'.format(HALFORM_PATH)).read()
-
 MODULE_TEMPLATE_1 = open(
     '{}/halfORM_templates/module_template_1'.format(HALFORM_PATH)
-    ).read().format(bc_i=BEGIN_CODE_I)
-
+    ).read()
 MODULE_TEMPLATE_2 = open(
     '{}/halfORM_templates/module_template_2'.format(HALFORM_PATH)).read()
-
 MODULE_TEMPLATE_3 = open(
     '{}/halfORM_templates/module_template_3'.format(HALFORM_PATH)).read()
-
 MODULE_TEMPLATE_4 = open(
     '{}/halfORM_templates/module_template_4'.format(HALFORM_PATH)).read()
-
 WARING_TEMPLATE = open(
     '{}/halfORM_templates/warning'.format(HALFORM_PATH)).read()
-
 MODULE_FORMAT = (
     "{rt1}{bc_}{global_user_s_code}{ec_}"
     "{rt2}{rt3}{rt4}\n        {bc_}{user_s_code}")
-
 AP_DESCRIPTION = """Generates python package from a PG database"""
 AP_EPILOG = """"""
-
 DO_NOT_REMOVE = ['db_connector.py', '__init__.py']
 
 def load_config_file(base_dir=None, ref_dir=None):

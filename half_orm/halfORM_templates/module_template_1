@@ -1,16 +1,15 @@
 #-*- coding: utf-8 -*-
 
-"""The module {{module}} povides the {{class_name}} class.
+"""The module {module} povides the {class_name} class.
 
 WARNING!
 
-{{warning}}
+{warning}
 
 DO NOT REMOVE OR MODIFY THE LINES BEGINING WITH:
 #>>> PLACE YOUR CODE BELOW...
 #<<< PLACE YOUR CODE ABOVE...
 
 MAKE SURE YOU PLACE YOUR CODE BETWEEN THESE LINES OR AT THEN END OF THE FILE.
-halfORM ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RAN.
+halfORM ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 """
-
