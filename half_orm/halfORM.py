@@ -44,6 +44,9 @@ MODULE_TEMPLATE_3 = open(
 MODULE_TEMPLATE_4 = open(
     '{}/halfORM_templates/module_template_4'.format(HALFORM_PATH)).read()
 
+WARING_TEMPLATE = open(
+    '{}/halfORM_templates/warning'.format(HALFORM_PATH)).read()
+
 MODULE_FORMAT_1 = (
     "{rt1}{bc}{c1_}{ec}"
     "{rt2}    {bc}{c2_}    {ec}"
@@ -109,18 +112,21 @@ def get_inheritance_info(rel, package_name):
     """Returns inheritance informations for the rel relation.
     """
     inheritance_import_list = []
-    inherited_classes_list = []
+    inherited_classes_aliases_list = []
     for base in rel.__class__.__bases__:
         if base.__name__ != 'Relation':
             inh_sfqrn = list(base.__sfqrn)
             inh_sfqrn[0] = package_name
-            inh_cl_name = camel_case(inh_sfqrn[-1])
+            inh_cl_alias = "{}{}".format(
+                camel_case(inh_sfqrn[1]), camel_case(inh_sfqrn[2]))
+            inh_cl_name = "{}".format(camel_case(inh_sfqrn[2]))
             inheritance_import_list.append(
-                "from {} import {}".format(".".join(inh_sfqrn), inh_cl_name)
+                "from {} import {} as {}".format(".".join(
+                    inh_sfqrn), inh_cl_name, inh_cl_alias)
             )
-            inherited_classes_list.append(inh_cl_name)
+            inherited_classes_aliases_list.append(inh_cl_alias)
     inheritance_import = "\n".join(inheritance_import_list)
-    inherited_classes = ", ".join(inherited_classes_list)
+    inherited_classes = ", ".join(inherited_classes_aliases_list)
     return inheritance_import, inherited_classes
 
 def assemble_module_template(module_path):
@@ -143,7 +149,8 @@ def assemble_module_template(module_path):
         bc=BEGIN_CODE, ec=END_CODE,
         c1_=c1_, c2_=c2_, c3_=c3_, c4_=c4_, c5_=c5_)
 
-def update_this_module(model, relation, package_dir, package_name, dirs_list):
+def update_this_module(
+        model, relation, package_dir, package_name, dirs_list, warning):
     """Updates the module."""
     _, fqtn = relation.split()
     path = fqtn.split('.')
@@ -164,20 +171,20 @@ def update_this_module(model, relation, package_dir, package_name, dirs_list):
     module_template = assemble_module_template(module_path)
     inheritance_import, inherited_classes = get_inheritance_info(
         rel, package_name)
-    documentation = "\n".join(["    {}".format(line)
-                               for line in str(rel).split("\n")])
     open(module_path, 'w').write(
         module_template.format(
             module="{}.{}".format(package_name, fqtn),
             package_name=package_name,
-            documentation=documentation,
+            documentation="\n".join(["    {}".format(line)
+                                     for line in str(rel).split("\n")]),
             inheritance_import=inheritance_import,
             inherited_classes=inherited_classes,
             class_name=camel_case(module_name),
-            fqtn=fqtn))
+            fqtn=fqtn,
+            warning=warning))
     return module_path
 
-def update_modules(model, package_dir, package_name):
+def update_modules(model, package_dir, package_name, warning):
     """Synchronize the modules with the structure of the relation in PG.
     """
     dirs_list = []
@@ -188,12 +195,12 @@ def update_modules(model, package_dir, package_name):
         DB_CONNECTOR_TEMPLATE.format(dbname=dbname, package_name=package_name))
     for relation in model._relations():
         module_path = update_this_module(
-            model, relation, package_dir, package_name, dirs_list)
+            model, relation, package_dir, package_name, dirs_list, warning)
         files_list.append(module_path)
 
     return files_list
 
-def update_init_files(package_dir, files_list):
+def update_init_files(package_dir, warning, files_list):
     """Update __all__ lists in __init__ files.
     """
     for root, dirs, files in os.walk(package_dir):
@@ -212,8 +219,11 @@ def update_init_files(package_dir, files_list):
                     file != '__pycache__'):
                 all_.append(file.replace('.py', ''))
         all_.sort()
-        open('{}/__init__.py'.format(root), 'w').write(
-            '__all__ = {}\n'.format(all_))
+        with open('{}/__init__.py'.format(root), 'w') as init_file:
+            init_file.write('"""{}"""\n\n'.format(warning))
+            init_file.write(
+                '__all__ = [\n    {}\n]\n'.format(",\n    ".join(
+                    ["'{}'".format(elt) for elt in all_])))
 
 def main():
     """Script entry point"""
@@ -264,10 +274,12 @@ def main():
 
     package_dir = "{}/{}".format(rel_package or package_name, package_name)
 
+    warning = WARING_TEMPLATE.format(package_name=package_name)
+
     if not rel_package:
         init_package(model, package_dir, package_name)
-    files_list = update_modules(model, package_dir, package_name)
-    update_init_files(package_dir, files_list)
+    files_list = update_modules(model, package_dir, package_name, warning)
+    update_init_files(package_dir, warning, files_list)
 
 if __name__ == '__main__':
     main()
