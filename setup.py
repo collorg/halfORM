@@ -11,7 +11,7 @@ def read(name):
 
 setup(
     name='half_orm',
-    version='0.1.0a3',
+    version='0.1.0a4',
     description="A simple ORM in Python only dealing with the DML part of SQL.",
     long_description=read('README.md'),
     keywords='',

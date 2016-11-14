@@ -1,3 +1,17 @@
+# 0.1.0-alpha.4 (2016-11-14)
+
+## Features
+
+- **halfORM:** Reduce to two the spaces reserved to the developper in relation modules (85c3d6c, 0cd6d5f)
+- **model:** raise_error parameter is now passed to _connect/reconnect. (6bba6dd)
+- **relation:** Add attribute _qrn (<schema name>.<relation name>) without double quotes. (fd6c07d)
+- **relation:** Add _set_fkeys_properties. (2b0335f)
+
+## Bug fixes
+
+- **halfORM:** Reverse the order in inheritance. (d7d4432)
+- **halfORM:** Use aliases for imported inherited classes. Add warning in every modules. (e1f9841)
+
 # 0.1.0-alpha.3 (2016-11-12)
 
 ## Features
