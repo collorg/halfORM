@@ -676,16 +676,22 @@ def _set_fkeys_properties(self, *args):
     @args is a list of tuples (proerty_name, fkey_name)
     """
     for property_name, fkey_name in args:
-        def set_prop():
-            def fget(self):
-                return self._fkeys.__dict__[fkey_name]()
-            def fset(self, value):
-                self._fkeys.__dict__[fkey_name].set(value)
-            return locals()
-        setattr(
-            self.__class__,
-            property_name,
-            property(fget=set_prop()['fget'], fset=set_prop()['fset']))
+        self._set_fkey_property(property_name, fkey_name)
+
+def _set_fkey_property(self, property_name, fkey_name):
+    """Sets the property with property_name on the foreign key."""
+    def set_prop():
+        def fget(self):
+            return self._fkeys.__dict__[fkey_name]()
+        def fset(self, value):
+            self._fkeys.__dict__[fkey_name].set(value)
+        return locals()
+    setattr(
+        self.__class__,
+        property_name,
+        property(
+            fget=set_prop()['fget'],
+            fset=set_prop()['fset']))
 
 def _debug():
     """For debug usage"""
@@ -734,6 +740,7 @@ COMMON_INTERFACE = {
     'delete': delete,
     'Transaction': Transaction,
     '_set_fkeys_properties': _set_fkeys_properties,
+    '_set_fkey_property': _set_fkey_property,
     # test
     '_debug': _debug,
 }
@@ -789,6 +796,7 @@ def relation_factory(class_name, bases, dct):
         'f': 'Foreign data'}
     kind = metadata['tablekind']
     tbl_attr['__kind'] = rel_class_names[kind]
+    tbl_attr['_fkeys'] = []
     rel_interfaces = {
         'r': TABLE_INTERFACE,
         'v': VIEW_INTERFACE,
