@@ -432,8 +432,7 @@ def __select_args(self, *args):
     id_ = id(self)
     what = 'r{}.*'.format(id_)
     if args:
-        what = ', '.join([self._fields.__dict__[arg]._praf(id_, query)
-                          for arg in args])
+        what = ', '.join(['r{}.{}'.format(id_, arg) for arg in args])
     def walk_op(rel, out=None, _fields_=None):
         """Walk the set operators tree and return a list of SQL where
         representation of the query with a list of the fields of the query.
