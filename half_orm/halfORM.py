@@ -104,7 +104,7 @@ def get_inheritance_info(rel, package_name):
     inheritance_import = "\n".join(inheritance_import_list)
     inherited_classes = ", ".join(inherited_classes_aliases_list)
     if inherited_classes.strip():
-        inherited_classes = "{}, ".format(inherited_classes)
+        inherited_classes = "{},".format(inherited_classes)
     return inheritance_import, inherited_classes
 
 def assemble_module_template(module_path):

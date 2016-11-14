@@ -1,1 +1,6 @@
+    __fkeys_properties = False
     def __init__(self, **kwargs):
+        if ('FKEYS_PROPERTIES' in globals() and not
+                {class_name}.__fkeys_properties):
+            self._set_fkeys_properties(*globals()['FKEYS_PROPERTIES'])
+        {class_name}.__fkeys_properties = True

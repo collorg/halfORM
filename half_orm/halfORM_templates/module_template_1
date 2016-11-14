@@ -1,4 +1,5 @@
 #-*- coding: utf-8 -*-
+# pylint: disable=wrong-import-order
 
 """The module {module} povides the {class_name} class.
 
@@ -13,3 +14,7 @@ DO NOT REMOVE OR MODIFY THE LINES BEGINING WITH:
 MAKE SURE YOU PLACE YOUR CODE BETWEEN THESE LINES OR AT THEN END OF THE FILE.
 halfORM ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 """
+
+from {package_name}.db_connector import base_relation_class
+{inheritance_import}
+
