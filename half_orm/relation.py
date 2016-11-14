@@ -671,6 +671,22 @@ def __eq__(self, right):
 def __ne__(self, right):
     return not self == right
 
+def _set_fkeys_properties(self, *args):
+    """Property generator for fkeys.
+    @args is a list of tuples (proerty_name, fkey_name)
+    """
+    for property_name, fkey_name in args:
+        def set_prop():
+            def fget(self):
+                return self._fkeys.__dict__[fkey_name]()
+            def fset(self, value):
+                self._fkeys.__dict__[fkey_name].set(value)
+            return locals()
+        setattr(
+            self.__class__,
+            property_name,
+            property(fget=set_prop()['fget'], fset=set_prop()['fset']))
+
 def _debug():
     """For debug usage"""
     pass
@@ -717,6 +733,7 @@ COMMON_INTERFACE = {
     '__update_args': __update_args,
     'delete': delete,
     'Transaction': Transaction,
+    '_set_fkeys_properties': _set_fkeys_properties,
     # test
     '_debug': _debug,
 }
