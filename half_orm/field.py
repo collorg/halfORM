@@ -15,7 +15,7 @@ class Field(FieldInterface):
     def __init__(self, name, metadata):
         self._relation = None
         self.__metadata = metadata
-        self.__value = None
+        self._value = None #FIXME should be __value but __set__ doesn't work!
         self.__unaccent = False
         self.__comp = '='
         super(Field, self).__init__(name)
@@ -28,11 +28,11 @@ class Field(FieldInterface):
                 md_['notnull'] and 'NOT NULL' or '')))
         if self._is_set:
             repr_ = "{} ({} {} {})".format(
-                repr_, self.name(), self.__comp, self.__value)
+                repr_, self.name(), self.__comp, self._value)
         return repr_.strip()
 
     def __str__(self):
-        return str(self.__value)
+        return str(self._value)
 
     def _praf(self, query, id_):
         """Returns field_name prefixed with relation alias if the query is
@@ -48,7 +48,7 @@ class Field(FieldInterface):
         """
         where_repr = ''
         comp_str = '%s'
-        if isinstance(self.__value, (list, tuple)):
+        if isinstance(self._value, (list, tuple)):
             if self.type_[0] != '_': # not an array type
                 comp_str = 'any(%s)'
         if not self.unaccent:
@@ -62,7 +62,7 @@ class Field(FieldInterface):
     @property
     def value(self):
         "Returns the value of the field object"
-        return self.__value
+        return self._value
 
     def _set_value(self, value):
         "Sets the value of the field object"
@@ -95,7 +95,7 @@ class Field(FieldInterface):
                 comp = 'in'
         if not is_field:
             self._is_set = True
-        self.__value = value
+        self._value = value
         self.__comp = comp
 
     @property
@@ -121,7 +121,7 @@ class Field(FieldInterface):
         return self._relation
 
     def _psycopg_adapter(self):
-        """Return the SQL representation of self.__value"""
-        return adapt(self.__value)
+        """Return the SQL representation of self._value"""
+        return adapt(self._value)
 
 register_adapter(Field, Field._psycopg_adapter)
