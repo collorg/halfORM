@@ -679,18 +679,11 @@ def _set_fkeys_properties(self, *args):
 
 def _set_fkey_property(self, property_name, fkey_name):
     """Sets the property with property_name on the foreign key."""
-    def set_prop():
-        def fget(self):
-            return self._fkeys.__dict__[fkey_name]()
-        def fset(self, value):
-            self._fkeys.__dict__[fkey_name].set(value)
-        return locals()
-    setattr(
-        self.__class__,
-        property_name,
-        property(
-            fget=set_prop()['fget'],
-            fset=set_prop()['fset']))
+    def fget(self):
+        return self._fkeys.__dict__[fkey_name]()
+    def fset(self, value):
+        self._fkeys.__dict__[fkey_name].set(value)
+    setattr(self.__class__, property_name, property(fget=fget, fset=fset))
 
 def _debug():
     """For debug usage"""
