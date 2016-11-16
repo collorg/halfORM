@@ -132,7 +132,12 @@ def update_this_module(
     path = fqtn.split('.')
 
     fqtn = '.'.join(path[1:])
-    rel = model.get_relation_class(fqtn)()
+    try:
+        rel = model.get_relation_class(fqtn)()
+    except TypeError as err:
+        sys.stderr.write("{}\n{}\n".format(err, fqtn))
+        sys.stderr.flush()
+        return
 
     path[0] = package_dir
     module_path = '{}.py'.format('/'.join(
@@ -172,7 +177,8 @@ def update_modules(model, package_dir, package_name, warning):
     for relation in model._relations():
         module_path = update_this_module(
             model, relation, package_dir, package_name, dirs_list, warning)
-        files_list.append(module_path)
+        if module_path:
+            files_list.append(module_path)
 
     return files_list
 
