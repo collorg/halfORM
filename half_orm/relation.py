@@ -159,7 +159,7 @@ def __init__(self, **kwargs):
         assert kwk_.intersection(self._fields_names) == kwk_
     except:
         raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
-    _ = {self._fields.__dict__[field_name]._set_value(value)
+    _ = {self._fields.__dict__[field_name].set(value)
          for field_name, value in kwargs.items()}
     self._joined_to = []
     self.__query = None
@@ -563,7 +563,7 @@ def update(self, update_all=False, **kwargs):
     query = query_template.format(self._fqrn, what, where)
     self.__cursor.execute(query, tuple(values))
     for field_name, value in kwargs.items():
-        self._fields.__dict__[field_name]._set_value(value)
+        self._fields.__dict__[field_name].set(value)
 
 def __what_to_insert(self):
     """Returns the field names and values to be inserted."""

@@ -64,7 +64,7 @@ class Field(FieldInterface):
         "Returns the value of the field object"
         return self._value
 
-    def _set_value(self, value):
+    def set(self, value):
         "Sets the value of the field object"
         self.__set__(self._relation, value)
 
