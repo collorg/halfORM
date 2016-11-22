@@ -527,7 +527,7 @@ def __len__(self, *args):
 
     See select for arguments.
     """
-    query_template = "select count({}) from {} {}"
+    query_template = "select count(distinct {}) from {} {}"
     query, values = self.__get_query(query_template, *args)
     try:
         vars_ = tuple(self.__sql_values + values)
