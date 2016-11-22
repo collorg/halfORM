@@ -357,17 +357,23 @@ def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
     return [field for field in self._fields.values() if field.is_set()]
 
-def __join_query(self, fkey, op_=' and '):
+def __join_query(self, orig_rel, fkey):
     """Returns the join_query, join_values of a foreign key.
     fkey interface: frel, from_, to_, fields, fk_names
     """
+    op_=' and '
     from_ = self
     if fkey.to_ is self or from_ is None:
         from_ = fkey.from_
     to_ = fkey.to_
     assert id(from_) != id(to_)
+    orig_rel_id = 'r{}'.format(id(orig_rel))
     to_id = 'r{}'.format(id(to_))
     from_id = 'r{}'.format(id(from_))
+    if to_._qrn == orig_rel._qrn:
+        to_id = orig_rel_id
+    if from_._qrn == orig_rel._qrn:
+        from_id = orig_rel_id
     from_fields = ('{}.{}'.format(from_id, name)
                    for name in fkey._fields)
     to_fields = ('{}.{}'.format(to_id, name) for name in fkey.fk_names)
@@ -392,16 +398,7 @@ def __join_query(self, fkey, op_=' and '):
         bounds = op_.join([bounds, constraints_query])
     return str(bounds), constraints_values
 
-def __get_from(self, orig_rel=None, deja_vu=None):
-    """Constructs the __sql_query and gets the __sql_values for self."""
-    def __sql_id(rel):
-        """Returns the FQRN as alias for the sql query."""
-        return "{} as r{}".format(rel.__cast or rel._fqrn, id(rel))
-
-    if deja_vu is None:
-        orig_rel = self
-        self.__sql_query = [__sql_id(self)]
-        deja_vu = {id(self):[(self, None)]}
+def __join(self, orig_rel, deja_vu):
     for rel, fkey in self._joined_to:
         id_rel = id(rel)
         new_rel = id_rel not in deja_vu
@@ -412,12 +409,25 @@ def __get_from(self, orig_rel=None, deja_vu=None):
             continue
         deja_vu[id_rel].append((rel, fkey))
         rel.__get_from(orig_rel, deja_vu)
-        rel.__sql_query, rel.__sql_values = rel.__join_query(fkey)
+        rel.__sql_query, rel.__sql_values = rel.__join_query(orig_rel, fkey)
         if new_rel:
             orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(rel)))
             orig_rel.__sql_query.insert(2, rel.__sql_query)
         if id(orig_rel) != id(rel):
             orig_rel.__sql_values = (rel.__sql_values + orig_rel.__sql_values)
+        rel.__join(orig_rel, deja_vu)
+
+def __sql_id(self):
+    """Returns the FQRN as alias for the sql query."""
+    return "{} as r{}".format(self.__cast or self._fqrn, id(self))
+
+def __get_from(self, orig_rel=None, deja_vu=None):
+    """Constructs the __sql_query and gets the __sql_values for self."""
+    if deja_vu is None:
+        orig_rel = self
+        self.__sql_query = [__sql_id(self)]
+        deja_vu = {id(self):[(self, None)]}
+    self.__join(orig_rel, deja_vu)
 
 def __where_repr(self, query, id_):
     where_repr = []
@@ -621,10 +631,16 @@ def __set__op__(self, op_, right):
     l'opérateur du right ???
     On crée un nouvel objet sans contrainte et on a left et right et opérateur
     """
-    new = relation_factory(None, None, {'fqrn': self._fqrn})()
+    def check_fk(new, jt_list):
+        for rel, fkey in jt_list:
+            if rel is self:
+                rel = new
+            new._joined_to.append((rel, fkey))
+    new = self(**self.to_dict())
     new.__set_op.left = self
     new.__set_op.op_ = op_
     new.__set_op.right = right
+    check_fk(new, self._joined_to + right._joined_to)
     return new
 
 def __and__(self, right):
@@ -726,7 +742,9 @@ COMMON_INTERFACE = {
     '__neg__': __neg__,
     '__contains__': __contains__,
     '__eq__': __eq__,
+    '__sql_id': __sql_id,
     '__join_query': __join_query,
+    '__join': __join,
     'insert': insert,
     '__what_to_insert': __what_to_insert,
     'update': update,
