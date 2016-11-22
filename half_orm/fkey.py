@@ -42,46 +42,47 @@ class FKey(FieldInterface):
         else:
             f_class = model.get_relation_class(f_qrn)
         f_relation = f_class(**kwargs)
+        rev_fkey_name = '__reverse_{}'.format(
+            f_relation._fqrn.replace(".", "_"))
         f_relation.fkeys = {
-            '__reverse': FKey(
-                '__reverse',
+            rev_fkey_name: FKey(
+                rev_fkey_name,
                 f_relation._fqrn.split('.'), self._fields, self._fk_names)}
         _ = {fkey._set_relation(f_relation)
              for fkey in f_relation.fkeys.values()}
-        f_relation.fkeys['__reverse'].set(self._relation)
+        f_relation.fkeys[rev_fkey_name].set(self._relation)
         return f_relation
 
     def set(self, to_):
         self.__set__(self._relation, to_)
 
-    def __set__(self, from_, to_=None):
+    def __set__(self, from_, to_):
         """Sets the value associated with the foreign key.
 
-        The value must be and object of type Relation having the
-        same FQRN as referenced by self.__fk_fqrn.
+        The value must be an object of type Relation having the
+        same FQRN that (or inheriting) the one referenced by self.__fk_fqrn.
         """
-
-        if to_ is None:
-            to_ = self._relation(self.__get_fk_qrn())
-        to_classes = set(type.mro(to_.__class__))
-        object in to_classes and to_classes.remove(object)
-        self_classes = set(type.mro(self._relation.__class__))
-        object in self_classes and self_classes.remove(object)
-        common_classes = to_classes.intersection(self_classes)
-        if (not common_classes or not
-                hasattr(list(common_classes)[0], '_is_half_orm_relation')):
+        try:
+            assert hasattr(to_, '_is_half_orm_relation')
+        except AssertionError:
             raise Exception("Expecting a Relation")
-        #TODO deal with inheritance
-        # if the fqrn differ, we verify that
-        # model.relation(self.__fk_fqrn) inherits to_
-        if False and not self.__fk_fqrn == to_._fqrn:
+        to_classes = set(type.mro(to_.__class__))
+        self_classes = set(type.mro(self._relation.__class__))
+        common_classes = to_classes.intersection(self_classes)
+        object in common_classes and common_classes.remove(object)
+        if (not common_classes):
             raise Exception(
-                "Relations must be of the same type\n{} != {}".format(
-                    self.__fk_fqrn, to_._fqrn))
+                "Type mismatch:\n{} != {}".format(self.__fk_fqrn, to_._fqrn))
         self.from_ = from_
         self.to_ = to_
         self._is_set = to_.is_set()
-        from_._joined_to.insert(0, (to_, self))
+        deja_vu = False
+        for rel, fkey in from_._joined_to:
+            if id(rel) == id(to_):
+                deja_vu = True
+                break
+        if not deja_vu:
+            from_._joined_to.insert(0, (to_, self))
 
     def __get_from(self):
         """Returns the origin of the fkey."""
