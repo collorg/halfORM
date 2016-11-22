@@ -20,13 +20,11 @@ class Test(TestCase):
         self.today = halftest.today
 
         hexchars = 'abcdef'
-        #XXX WARNING! The universe must be defined by a constraint...
-        self.universe = self.pers(last_name=('%', 'like'))
-        self.empty_set = self.pers(last_name='X')
+        self.universe = self.pers()
+        self.empty_set = -self.pers
         self.c1 = hexchars[randint(0, len(hexchars) - 1)]
         self.c2 = hexchars[randint(0, len(hexchars) - 1)]
         self.c3 = hexchars[randint(0, len(hexchars) - 1)]
-        #XXX ... Otherwise, the SQL is buggy.
         self.set_1 = self.pers(last_name=('{}%'.format(self.c1), 'like'))
         self.comp_set_1 = self.pers(
             last_name=('{}%'.format(self.c1), 'not like'))
