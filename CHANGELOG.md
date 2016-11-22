@@ -1,11 +1,28 @@
+# 0.1.0-alpha.5 (2016-11-22)
+
+## Features
+
+- **halfORM:** Catch error if there is some wierd inheritance in PG that Python MRO can't handle. (aa9543e)
+- **field:** Replace \_set_value method by set.
+- **relation:** The ugly yet very useful 1 = 1 patch. (fd3d06f)
+- **fkey:** Refactoring. Reverse key is now named after the relation it references. (5b98194)
+
+## Bug fixes
+
+- **relation:** Disambiguation of column name when using SQL join request.Disambiguation of column name when using SQL join request. (25f9a48)
+- **halfORM:** Fix typo in module_template_1. (664159b)
+- **relation:** Fix bug with FKEYS_PROPERTIES and inheritance. (675171f)
+- **relation:** count must use distinct. (d6ac16b)
+- **relation:** Fix joins with set operators. (e4c885c)
+
 # 0.1.0-alpha.4 (2016-11-14)
 
 ## Features
 
 - **halfORM:** Reduce to two the spaces reserved to the developper in relation modules (85c3d6c, 0cd6d5f)
-- **model:** raise_error parameter is now passed to _connect/reconnect. (6bba6dd)
-- **relation:** Add attribute _qrn (<schema name>.<relation name>) without double quotes. (fd6c07d)
-- **relation:** Add _set_fkeys_properties. (2b0335f)
+- **model:** raise_error parameter is now passed to \_connect/reconnect. (6bba6dd)
+- **relation:** Add attribute \_qrn (<schema name>.<relation name>) without double quotes. (fd6c07d)
+- **relation:** Add \_set_fkeys_properties. (2b0335f)
 
 ## Bug fixes
 
@@ -19,7 +36,7 @@
 - **Relation:** Add a cast method to cast to another relation type. (d662ccd)
 - **halfORM:** The script can now be called without argument inside a half_orm package. (95a4ba0)
 - **Model:** Model.relation replaced by get_relation_class now returns a class. (0998253)
-- **Relation:** __str__ becomes __repr__. (af6498b)
+- **Relation:** \__str__ becomes \__repr__. (af6498b)
 
 ## Bug fixes
 
@@ -33,8 +50,8 @@
 ## Features
 
 - **Fkey:** Add tests for foreign keys. (5158ece)
-- **Relation:** attributes fields and fkeys are renamed _fields and _fkeys. (2e29af0)
-- **Relation:** mogrify is renamed to _mogrify. (3f3541f)
+- **Relation:** attributes fields and fkeys are renamed \_fields and \_fkeys. (2e29af0)
+- **Relation:** mogrify is renamed to \_mogrify. (3f3541f)
 
 ## Bug fixes
 
