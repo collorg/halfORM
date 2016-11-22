@@ -423,7 +423,8 @@ def __where_repr(self, query, id_):
     where_repr = []
     for field in self.__get_set_fields():
         where_repr.append(field.where_repr(query, id_))
-    return "({})".format(" and ".join(where_repr))
+    ret = "({})".format(" and ".join(where_repr) or "1 = 1")
+    return ret
 
 def __select_args(self, *args):
     """Returns the what, where and values needed to construct the queries.
@@ -450,6 +451,8 @@ def __select_args(self, *args):
             if rel.__set_op.op_ is not None:
                 out.append(" {} ".format(rel.__set_op.op_))
                 walk_op(rel.__set_op.right, out, _fields_)
+            if out[-1] == "(":
+                out.append("1 = 1")
             out.append(")")
         else:
             out.append(rel.__where_repr(query, id_))
@@ -458,9 +461,8 @@ def __select_args(self, *args):
     s_where, set_fields = walk_op(self)
     s_where = ''.join(s_where)
     if s_where == '()':
-        s_where = ''
-    if s_where:
-        s_where = ' where {}'.format(s_where)
+        s_where = '(1 = 1)'
+    s_where = ' where {}'.format(s_where)
     return what, s_where, set_fields
 
 def __get_query(self, query_template, *args):
