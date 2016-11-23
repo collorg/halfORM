@@ -304,7 +304,7 @@ def to_json(self, yml_directive=None):
 
 def to_dict(self):
     """Retruns a dictionary containing only the fields that are set."""
-    return {key:field.value for key, field in
+    return {key:(field.value, field.comp()) for key, field in
             self._fields.items() if field.is_set()}
 
 def __repr__(self):
