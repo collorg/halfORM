@@ -640,7 +640,10 @@ def __set__op__(self, op_, right):
     new.__set_op.left = self
     new.__set_op.op_ = op_
     new.__set_op.right = right
-    check_fk(new, self._joined_to + right._joined_to)
+    join_list = self._joined_to
+    if right is not None:
+        join_list += right._joined_to
+    check_fk(new, join_list)
     return new
 
 def __and__(self, right):
