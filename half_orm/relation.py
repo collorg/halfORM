@@ -662,13 +662,8 @@ def __isub__(self, right):
     return self
 
 def __neg__(self):
-    new = relation_factory(None, None, {'fqrn': self._fqrn})(
-        **{field.name():(field.value, field.comp())
-           for field in self._fields.values() if field.value})
+    new = self.__set__op__(self.__set_op.op_, self.__set_op.right)
     new.__set_op.neg = not self.__set_op.neg
-    new.__set_op.left = self.__set_op.left
-    new.__set_op.op_ = self.__set_op.op_
-    new.__set_op.right = self.__set_op.right
     return new
 
 def __xor__(self, right):
