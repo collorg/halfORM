@@ -21,7 +21,7 @@ class Test(TestCase):
 
         hexchars = 'abcdef'
         self.universe = self.pers()
-        self.empty_set = -self.pers
+        self.empty_set = -self.pers()
         self.c1 = hexchars[randint(0, len(hexchars) - 1)]
         self.c2 = hexchars[randint(0, len(hexchars) - 1)]
         self.c3 = hexchars[randint(0, len(hexchars) - 1)]

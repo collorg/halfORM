@@ -76,13 +76,7 @@ class FKey(FieldInterface):
         self.from_ = from_
         self.to_ = to_
         self._is_set = to_.is_set()
-        deja_vu = False
-        for rel, fkey in from_._joined_to:
-            if id(rel) == id(to_):
-                deja_vu = True
-                break
-        if not deja_vu:
-            from_._joined_to.insert(0, (to_, self))
+        from_._joined_to = [(to_, self)]
 
     def __get_from(self):
         """Returns the origin of the fkey."""
@@ -104,6 +98,27 @@ class FKey(FieldInterface):
     def fk_fqrn(self):
         """Returns the FQRN of the relation pointed to."""
         return self.__fk_fqrn
+
+    def _join_query(self, orig_rel):
+        """Returns the join_query, join_values of a foreign key.
+        fkey interface: frel, from_, to_, fields, fk_names
+        """
+        from_ = self.from_
+        to_ = self.to_
+        assert id(from_) != id(to_)
+        orig_rel_id = 'r{}'.format(id(orig_rel))
+        to_id = 'r{}'.format(id(to_))
+        from_id = 'r{}'.format(id(from_))
+        if to_._qrn == orig_rel._qrn:
+            to_id = orig_rel_id
+        if from_._qrn == orig_rel._qrn:
+            from_id = orig_rel_id
+        from_fields = ('{}.{}'.format(from_id, name)
+                       for name in self._fields)
+        to_fields = ('{}.{}'.format(to_id, name) for name in self.fk_names)
+        bounds = " and ".join(['{} = {}'.format(a, b) for
+                           a, b in zip(to_fields, from_fields)])
+        return "({})".format(bounds)
 
     def __repr__(self):
         """Representation of a foreign key

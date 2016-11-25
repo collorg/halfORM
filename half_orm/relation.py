@@ -53,7 +53,6 @@ class SetOp(object):
     - __right is a Relation object. It can be None if the operator is 'neg'.
     """
     def __init__(self, left, op=None, right=None):
-        self.__neg = False
         self.__left = left
         self.__op = op
         self.__right = right
@@ -82,19 +81,10 @@ class SetOp(object):
         self.__right = right
     right = property(__get_right, __set_right)
 
-    def __get_neg(self):
-        """returns the value of self.__neg."""
-        return self.__neg
-    def __set_neg(self, neg):
-        """sets the value of self.__neg. The neg argument is not used."""
-        self.__neg = neg
-    neg = property(__get_neg, __set_neg)
-
     def __repr__(self):
-        return "{}{} {}".format(
-            self.__neg and "NOT " or "",
+        return "{} {}".format(
             self.__op,
-            self.__right._fqrn)
+            self.__right and self.__right._fqrn or None)
 
 class Relation(object):
     """Base class of Table and View classes (see relation_factory)."""
@@ -148,6 +138,7 @@ def __init__(self, **kwargs):
 
         def __len__(self):
             return len(self.__dict__)
+    self.__neg = False
     self._fields = Fields()
     self._fkeys = FKeys()
     self._fields_names = set()
@@ -162,7 +153,7 @@ def __init__(self, **kwargs):
     _ = {self._fields.__dict__[field_name].set(value)
          for field_name, value in kwargs.items()}
     self._joined_to = []
-    self.__query = None
+    self.__query_type = None
     self.__sql_query = []
     self.__sql_values = []
     self.__mogrify = False
@@ -349,73 +340,54 @@ def is_set(self):
     joined_to = False
     for jt_, elt in self._joined_to:
         joined_to |= jt_.is_set()
-    return (joined_to or
-            (self.__set_op.op_ or self.__set_op.neg) or
+    return (joined_to or self.__set_op.op_ or self.__neg or
             bool({field for field in self._fields.values() if field.is_set()}))
 
 def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
     return [field for field in self._fields.values() if field.is_set()]
 
-def __join_query(self, orig_rel, fkey):
-    """Returns the join_query, join_values of a foreign key.
-    fkey interface: frel, from_, to_, fields, fk_names
+def _walk_op(self, id_, out=None, _fields_=None):
+    """Walk the set operators tree and return a list of SQL where
+    representation of the query with a list of the fields of the query.
     """
-    op_=' and '
-    from_ = self
-    if fkey.to_ is self or from_ is None:
-        from_ = fkey.from_
-    to_ = fkey.to_
-    assert id(from_) != id(to_)
-    orig_rel_id = 'r{}'.format(id(orig_rel))
-    to_id = 'r{}'.format(id(to_))
-    from_id = 'r{}'.format(id(from_))
-    if to_._qrn == orig_rel._qrn:
-        to_id = orig_rel_id
-    if from_._qrn == orig_rel._qrn:
-        from_id = orig_rel_id
-    from_fields = ('{}.{}'.format(from_id, name)
-                   for name in fkey._fields)
-    to_fields = ('{}.{}'.format(to_id, name) for name in fkey.fk_names)
-    bounds = op_.join(['{} = {}'.format(a, b) for
-                       a, b in zip(to_fields, from_fields)])
-    constraints_to_query = [
-        field.where_repr('select', id(to_))
-        for field in to_._fields.values() if field.is_set()]
-    constraints_to_values = (
-        field for field in to_._fields.values() if field.is_set())
-    constraints_from_query = [
-        field.where_repr('select', id(from_))
-        for field in from_._fields.values() if field.is_set()]
-    constraints_from_values = (
-        field for field in from_._fields.values() if field.is_set())
-    constraints_query = op_.join(
-        constraints_to_query + constraints_from_query)
-    constraints_values = list(constraints_to_values) + \
-                         list(constraints_from_values)
+    if out is None:
+        out = []
+        _fields_ = []
+    if self.__set_op.op_:
+        if self.__neg:
+            out.append("not (")
+        out.append("(")
+        self.__set_op.left._walk_op(id_, out, _fields_)
+        if self.__set_op.right is not None:
+            out.append(" {} ".format(self.__set_op.op_))
+            right = self.__set_op.right
+            right._walk_op(id_, out, _fields_)
+        out.append(")")
+        if self.__neg:
+            out.append(")")
+    else:
+        out.append(self.__where_repr(id_))
+        _fields_ += self.__get_set_fields()
+    return out, _fields_
 
-    if constraints_query:
-        bounds = op_.join([bounds, constraints_query])
-    return str(bounds), constraints_values
-
-def __join(self, orig_rel, deja_vu):
-    for rel, fkey in self._joined_to:
-        id_rel = id(rel)
-        new_rel = id_rel not in deja_vu
-        if new_rel:
-            deja_vu[id_rel] = []
-        elif (rel, fkey) in deja_vu[id_rel] or rel is orig_rel:
-            #sys.stderr.write("déjà vu in from! {}\n".format(rel._fqrn))
+def _join(self, orig_rel, deja_vu):
+    for fk_rel, fkey in self._joined_to:
+        fk_rel.__get_from(orig_rel, deja_vu)
+        if id(fk_rel) not in deja_vu:
+            deja_vu[id(fk_rel)] = []
+        elif (fk_rel, fkey) in deja_vu[id(fk_rel)] or fk_rel is orig_rel:
+            #sys.stderr.write("déjà vu in from! {}\n".format(fk_rel._fqrn))
             continue
-        deja_vu[id_rel].append((rel, fkey))
-        rel.__get_from(orig_rel, deja_vu)
-        rel.__sql_query, rel.__sql_values = rel.__join_query(orig_rel, fkey)
-        if new_rel:
-            orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(rel)))
-            orig_rel.__sql_query.insert(2, rel.__sql_query)
-        if id(orig_rel) != id(rel):
-            orig_rel.__sql_values = (rel.__sql_values + orig_rel.__sql_values)
-        rel.__join(orig_rel, deja_vu)
+        deja_vu[id(fk_rel)].append((fk_rel, fkey))
+        if fk_rel.__set_op.op_:
+            fk_rel.__get_from(id(self))
+        _, where, values = fk_rel.__where_args()
+        where = " and {}".format(where)
+        orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(fk_rel)))
+        orig_rel.__sql_query.insert(2, fkey._join_query(orig_rel))
+        orig_rel.__sql_query.insert(3, where)
+        orig_rel.__sql_values += values
 
 def __sql_id(self):
     """Returns the FQRN as alias for the sql query."""
@@ -427,59 +399,36 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         orig_rel = self
         self.__sql_query = [__sql_id(self)]
         deja_vu = {id(self):[(self, None)]}
-    self.__join(orig_rel, deja_vu)
+    self._join(orig_rel, deja_vu)
 
-def __where_repr(self, query, id_):
+def __where_repr(self, id_):
     where_repr = []
     for field in self.__get_set_fields():
-        where_repr.append(field.where_repr(query, id_))
+        where_repr.append(field.where_repr(self.__query_type, id_))
     ret = "({})".format(" and ".join(where_repr) or "1 = 1")
+    if self.__neg:
+        ret = "not ({})".format(ret)
     return ret
 
-def __select_args(self, *args):
+def __where_args(self, *args):
     """Returns the what, where and values needed to construct the queries.
     """
-    query = self.__query
     id_ = id(self)
     what = 'r{}.*'.format(id_)
     if args:
         what = ', '.join(['r{}.{}'.format(id_, arg) for arg in args])
-    def walk_op(rel, out=None, _fields_=None):
-        """Walk the set operators tree and return a list of SQL where
-        representation of the query with a list of the fields of the query.
-        """
-        if rel is None:
-            return out, _fields_
-        if out is None:
-            out = []
-            _fields_ = []
-        if rel.__set_op.op_ or rel.__set_op.neg:
-            if rel.__set_op.neg:
-                out.append("not")
-            out.append("(")
-            walk_op(rel.__set_op.left, out, _fields_)
-            if rel.__set_op.op_ is not None:
-                out.append(" {} ".format(rel.__set_op.op_))
-                walk_op(rel.__set_op.right, out, _fields_)
-            if out[-1] == "(":
-                out.append("1 = 1")
-            out.append(")")
-        else:
-            out.append(rel.__where_repr(query, id_))
-            _fields_ += rel.__get_set_fields()
-        return out, _fields_
-    s_where, set_fields = walk_op(self)
+    s_where, set_fields = self._walk_op(id_)
     s_where = ''.join(s_where)
     if s_where == '()':
         s_where = '(1 = 1)'
-    s_where = ' where {}'.format(s_where)
     return what, s_where, set_fields
 
 def __get_query(self, query_template, *args):
     """Prepare the SQL query to be executed."""
     self.__sql_values = []
-    self.__query = 'select'
-    what, where, values = self.__select_args(*args)
+    self.__query_type = 'select'
+    what, where, values = self.__where_args(*args)
+    where = " where {}".format(where)
     if args:
         what = 'distinct {}'.format(what)
     self.__get_from()
@@ -552,8 +501,9 @@ def __update_args(self, **kwargs):
     """Returns the what, where an values for the update query."""
     what_fields = []
     new_values = []
-    self.__query = 'update'
-    _, where, values = self.__select_args()
+    self.__query_type = 'update'
+    _, where, values = self.__where_args()
+    where = " where {}".format(where)
     for field_name, new_value in kwargs.items():
         what_fields.append(field_name)
         new_values.append(new_value)
@@ -588,6 +538,7 @@ def __what_to_insert(self):
 def insert(self):
     """Insert a new tuple into the Relation."""
     query_template = "insert into {} ({}) values ({})"
+    self.__query_type = 'insert'
     fields_names, values = self.__what_to_insert()
     what_to_insert = ", ".join(["%s" for _ in range(len(values))])
     query = query_template.format(self._fqrn, fields_names, what_to_insert)
@@ -599,8 +550,9 @@ def delete(self, delete_all=False):
     """
     assert self.is_set() or delete_all
     query_template = "delete from {} {}"
-    self.__query = 'delete'
-    _, where, values = self.__select_args()
+    self.__query_type = 'delete'
+    _, where, values = self.__where_args()
+    where = " where {}".format(where)
     query = query_template.format(self._fqrn, where)
     self.__cursor.execute(query, tuple(values))
 
@@ -626,7 +578,7 @@ def cast(self, qrn):
     """
     self.__cast = qrn
 
-def __set__op__(self, op_, right):
+def __set__op__(self, op_=None, right=None):
     """Si l'opérateur du self est déjà défini, il faut aller modifier
     l'opérateur du right ???
     On crée un nouvel objet sans contrainte et on a left et right et opérateur
@@ -637,13 +589,14 @@ def __set__op__(self, op_, right):
                 rel = new
             new._joined_to.append((rel, fkey))
     new = self(**self.to_dict())
-    new.__set_op.left = self
-    new.__set_op.op_ = op_
-    new.__set_op.right = right
-    join_list = self._joined_to
+    if op_:
+        new.__set_op.left = self
+        new.__set_op.op_ = op_
+    list_join = self._joined_to
     if right is not None:
-        join_list += right._joined_to
-    check_fk(new, join_list)
+        new.__set_op.right = right
+        list_join += right._joined_to
+    check_fk(new, list_join)
     return new
 
 def __and__(self, right):
@@ -666,7 +619,7 @@ def __isub__(self, right):
 
 def __neg__(self):
     new = self.__set__op__(self.__set_op.op_, self.__set_op.right)
-    new.__set_op.neg = not self.__set_op.neg
+    new.__neg = not self.__neg
     return new
 
 def __xor__(self, right):
@@ -723,7 +676,7 @@ COMMON_INTERFACE = {
     '__get_query': __get_query,
     'is_set': is_set,
     '__where_repr': __where_repr,
-    '__select_args': __select_args,
+    '__where_args': __where_args,
     'select': select,
     '_mogrify': _mogrify,
     '__len__': __len__,
@@ -741,8 +694,8 @@ COMMON_INTERFACE = {
     '__contains__': __contains__,
     '__eq__': __eq__,
     '__sql_id': __sql_id,
-    '__join_query': __join_query,
-    '__join': __join,
+    '_walk_op': _walk_op,
+    '_join': _join,
     'insert': insert,
     '__what_to_insert': __what_to_insert,
     'update': update,
