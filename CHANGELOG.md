@@ -3,8 +3,8 @@
 ## Bug fixes
 
 - **relation:** Refactoring. Fix fkeys on relation with set operations. Need tests. (bd806f3)
-- **relation:** Check if right obj is None in \__set__op__. (4cf0b6a)
-- **relation:** \__neg__ now uses \__set__op__ method. (444763c)
+- **relation:** Check if right obj is None in \_\_set__op__. (4cf0b6a)
+- **relation:** \_\_neg__ now uses \_\_set__op__ method. (444763c)
 - **relation:** Pass the comparison operator with the value in to_dict method. (67e8724)
 - **test:** Universe and empty sets are now correctly defined (1 = 1 patch). (2babe1f)
 
@@ -46,7 +46,7 @@
 - **Relation:** Add a cast method to cast to another relation type. (d662ccd)
 - **halfORM:** The script can now be called without argument inside a half_orm package. (95a4ba0)
 - **Model:** Model.relation replaced by get_relation_class now returns a class. (0998253)
-- **Relation:** \__str__ becomes \__repr__. (af6498b)
+- **Relation:** \_\_str__ becomes \_\_repr__. (af6498b)
 
 ## Bug fixes
 

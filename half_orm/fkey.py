@@ -76,7 +76,7 @@ class FKey(FieldInterface):
         self.from_ = from_
         self.to_ = to_
         self._is_set = to_.is_set()
-        from_._joined_to = [(to_, self)]
+        from_._joined_to[self] = to_
 
     def __get_from(self):
         """Returns the origin of the fkey."""

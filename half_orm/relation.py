@@ -152,7 +152,7 @@ def __init__(self, **kwargs):
         raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
     _ = {self._fields.__dict__[field_name].set(value)
          for field_name, value in kwargs.items()}
-    self._joined_to = []
+    self._joined_to = {}
     self.__query_type = None
     self.__sql_query = []
     self.__sql_values = []
@@ -338,7 +338,7 @@ def is_set(self):
     result of a combination of Relations (using set operators).
     """
     joined_to = False
-    for jt_, elt in self._joined_to:
+    for elt, jt_ in self._joined_to.items():
         joined_to |= jt_.is_set()
     return (joined_to or self.__set_op.op_ or self.__neg or
             bool({field for field in self._fields.values() if field.is_set()}))
@@ -347,7 +347,7 @@ def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
     return [field for field in self._fields.values() if field.is_set()]
 
-def _walk_op(self, id_, out=None, _fields_=None):
+def __walk_op(self, id_, out=None, _fields_=None):
     """Walk the set operators tree and return a list of SQL where
     representation of the query with a list of the fields of the query.
     """
@@ -358,11 +358,14 @@ def _walk_op(self, id_, out=None, _fields_=None):
         if self.__neg:
             out.append("not (")
         out.append("(")
-        self.__set_op.left._walk_op(id_, out, _fields_)
+        left = self.__set_op.left
+        left.__query_type = self.__query_type
+        left.__walk_op(id_, out, _fields_)
         if self.__set_op.right is not None:
-            out.append(" {} ".format(self.__set_op.op_))
+            out.append(" {}\n    ".format(self.__set_op.op_))
             right = self.__set_op.right
-            right._walk_op(id_, out, _fields_)
+            right.__query_type = self.__query_type
+            right.__walk_op(id_, out, _fields_)
         out.append(")")
         if self.__neg:
             out.append(")")
@@ -371,8 +374,9 @@ def _walk_op(self, id_, out=None, _fields_=None):
         _fields_ += self.__get_set_fields()
     return out, _fields_
 
-def _join(self, orig_rel, deja_vu):
-    for fk_rel, fkey in self._joined_to:
+def __join(self, orig_rel, deja_vu):
+    for fkey, fk_rel in self._joined_to.items():
+        fk_rel.__query_type = orig_rel.__query_type
         fk_rel.__get_from(orig_rel, deja_vu)
         if id(fk_rel) not in deja_vu:
             deja_vu[id(fk_rel)] = []
@@ -383,10 +387,10 @@ def _join(self, orig_rel, deja_vu):
         if fk_rel.__set_op.op_:
             fk_rel.__get_from(id(self))
         _, where, values = fk_rel.__where_args()
-        where = " and {}".format(where)
-        orig_rel.__sql_query.insert(1, 'join {} on'.format(__sql_id(fk_rel)))
+        where = " and\n    {}".format(where)
+        orig_rel.__sql_query.insert(1, '\n  join {} on\n   '.format(__sql_id(fk_rel)))
         orig_rel.__sql_query.insert(2, fkey._join_query(orig_rel))
-        orig_rel.__sql_query.insert(3, where)
+        orig_rel.__sql_query.append(where)
         orig_rel.__sql_values += values
 
 def __sql_id(self):
@@ -399,13 +403,13 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         orig_rel = self
         self.__sql_query = [__sql_id(self)]
         deja_vu = {id(self):[(self, None)]}
-    self._join(orig_rel, deja_vu)
+    self.__join(orig_rel, deja_vu)
 
 def __where_repr(self, id_):
     where_repr = []
     for field in self.__get_set_fields():
         where_repr.append(field.where_repr(self.__query_type, id_))
-    ret = "({})".format(" and ".join(where_repr) or "1 = 1")
+    ret = "({})".format(" and\n    ".join(where_repr) or "1 = 1")
     if self.__neg:
         ret = "not ({})".format(ret)
     return ret
@@ -417,7 +421,7 @@ def __where_args(self, *args):
     what = 'r{}.*'.format(id_)
     if args:
         what = ', '.join(['r{}.{}'.format(id_, arg) for arg in args])
-    s_where, set_fields = self._walk_op(id_)
+    s_where, set_fields = self.__walk_op(id_)
     s_where = ''.join(s_where)
     if s_where == '()':
         s_where = '(1 = 1)'
@@ -428,9 +432,8 @@ def __get_query(self, query_template, *args):
     self.__sql_values = []
     self.__query_type = 'select'
     what, where, values = self.__where_args(*args)
-    where = " where {}".format(where)
-    if args:
-        what = 'distinct {}'.format(what)
+    where = "\nwhere\n    {}".format(where)
+    what = 'distinct {}'.format(what)
     self.__get_from()
     return (
         query_template.format(what, ' '.join(self.__sql_query), where), values)
@@ -441,7 +444,7 @@ def select(self, *args):
     - @args are fields names to restrict the returned attributes
     """
     self.__sql_values = []
-    query_template = "select {} from {} {}"
+    query_template = "select\n  {}\nfrom\n  {}\n  {}"
     query, values = self.__get_query(query_template, *args)
     values = tuple(self.__sql_values + values)
     if 'limit' in self.__select_params.keys():
@@ -463,6 +466,7 @@ def select(self, *args):
 
 def _mogrify(self, *args):
     """Prints the select query."""
+    self.__query = "select"
     self.__mogrify = True
     print([elt for elt in self.select(*args)][0])
     self.__mogrify = False
@@ -486,7 +490,8 @@ def __len__(self, *args):
 
     See select for arguments.
     """
-    query_template = "select count(distinct {}) from {} {}"
+    self.__query = "select"
+    query_template = "select\n  count({})\nfrom\n  {}\n  {}"
     query, values = self.__get_query(query_template, *args)
     try:
         vars_ = tuple(self.__sql_values + values)
@@ -587,16 +592,16 @@ def __set__op__(self, op_=None, right=None):
         for rel, fkey in jt_list:
             if rel is self:
                 rel = new
-            new._joined_to.append((rel, fkey))
+            new._joined_to[fkey] = rel
     new = self(**self.to_dict())
     if op_:
         new.__set_op.left = self
         new.__set_op.op_ = op_
-    list_join = self._joined_to
+    dct_join = self._joined_to
     if right is not None:
         new.__set_op.right = right
-        list_join += right._joined_to
-    check_fk(new, list_join)
+        dct_join.update(right._joined_to)
+    check_fk(new, dct_join)
     return new
 
 def __and__(self, right):
@@ -694,8 +699,8 @@ COMMON_INTERFACE = {
     '__contains__': __contains__,
     '__eq__': __eq__,
     '__sql_id': __sql_id,
-    '_walk_op': _walk_op,
-    '_join': _join,
+    '__walk_op': __walk_op,
+    '__join': __join,
     'insert': insert,
     '__what_to_insert': __what_to_insert,
     'update': update,
