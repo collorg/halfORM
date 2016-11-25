@@ -3,8 +3,8 @@
 ## Bug fixes
 
 - **relation:** Refactoring. Fix fkeys on relation with set operations. Need tests. (bd806f3)
-- **relation:** Check if right obj is None in __set__op__. (4cf0b6a)
-- **relation:** __neg__ now uses __set__op__ method. (444763c)
+- **relation:** Check if right obj is None in \__set__op__. (4cf0b6a)
+- **relation:** \__neg__ now uses \__set__op__ method. (444763c)
 - **relation:** Pass the comparison operator with the value in to_dict method. (67e8724)
 - **test:** Universe and empty sets are now correctly defined (1 = 1 patch). (2babe1f)
 
