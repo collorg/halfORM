@@ -433,7 +433,8 @@ def __get_query(self, query_template, *args):
     self.__query_type = 'select'
     what, where, values = self.__where_args(*args)
     where = "\nwhere\n    {}".format(where)
-    what = 'distinct {}'.format(what)
+    if args:
+        what = 'distinct {}'.format(what)
     self.__get_from()
     return (
         query_template.format(what, ' '.join(self.__sql_query), where), values)
@@ -451,6 +452,11 @@ def select(self, *args):
         query = '{} limit {}'.format(query, self.__select_params['limit'])
     if 'offset' in self.__select_params.keys():
         query = "{} offset {}".format(query, self.__select_params['offset'])
+    if 'order_by' in self.__select_params.keys():
+        query = "{} order by {}".format(
+            query,
+            ", ".join(["r{}.{}".format(id(self), field_name)
+                       for field_name in self.__select_params['order_by']]))
     try:
         if not self.__mogrify:
             self.__cursor.execute(query, values)
@@ -491,7 +497,7 @@ def __len__(self, *args):
     See select for arguments.
     """
     self.__query = "select"
-    query_template = "select\n  count({})\nfrom\n  {}\n  {}"
+    query_template = "select\n  distinct count({})\nfrom\n  {}\n  {}"
     query, values = self.__get_query(query_template, *args)
     try:
         vars_ = tuple(self.__sql_values + values)
