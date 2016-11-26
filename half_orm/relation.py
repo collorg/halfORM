@@ -159,9 +159,15 @@ def __init__(self, **kwargs):
     self.__mogrify = False
     self.__set_op = SetOp(self)
     self.__select_params = {}
-    self.__cast = None
+    self.__id_cast = None
     _ = {field._set_relation(self) for field in self._fields.values()}
     _ = {fkey._set_relation(self) for fkey in self._fkeys.values()}
+
+@property
+def id_(self):
+    """Return the __id_cast or the id of the relation.
+    """
+    return self.__id_cast or id(self)
 
 def __set_fields(self):
     """Initialise the fields and fkeys of the relation."""
@@ -338,7 +344,7 @@ def is_set(self):
     result of a combination of Relations (using set operators).
     """
     joined_to = False
-    for elt, jt_ in self._joined_to.items():
+    for _, jt_ in self._joined_to.items():
         joined_to |= jt_.is_set()
     return (joined_to or self.__set_op.op_ or self.__neg or
             bool({field for field in self._fields.values() if field.is_set()}))
@@ -347,7 +353,7 @@ def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
     return [field for field in self._fields.values() if field.is_set()]
 
-def __walk_op(self, id_, out=None, _fields_=None):
+def __walk_op(self, rel_id_, out=None, _fields_=None):
     """Walk the set operators tree and return a list of SQL where
     representation of the query with a list of the fields of the query.
     """
@@ -360,17 +366,17 @@ def __walk_op(self, id_, out=None, _fields_=None):
         out.append("(")
         left = self.__set_op.left
         left.__query_type = self.__query_type
-        left.__walk_op(id_, out, _fields_)
+        left.__walk_op(rel_id_, out, _fields_)
         if self.__set_op.right is not None:
             out.append(" {}\n    ".format(self.__set_op.op_))
             right = self.__set_op.right
             right.__query_type = self.__query_type
-            right.__walk_op(id_, out, _fields_)
+            right.__walk_op(rel_id_, out, _fields_)
         out.append(")")
         if self.__neg:
             out.append(")")
     else:
-        out.append(self.__where_repr(id_))
+        out.append(self.__where_repr(rel_id_))
         _fields_ += self.__get_set_fields()
     return out, _fields_
 
@@ -378,14 +384,14 @@ def __join(self, orig_rel, deja_vu):
     for fkey, fk_rel in self._joined_to.items():
         fk_rel.__query_type = orig_rel.__query_type
         fk_rel.__get_from(orig_rel, deja_vu)
-        if id(fk_rel) not in deja_vu:
-            deja_vu[id(fk_rel)] = []
-        elif (fk_rel, fkey) in deja_vu[id(fk_rel)] or fk_rel is orig_rel:
+        if fk_rel.id_ not in deja_vu:
+            deja_vu[fk_rel.id_] = []
+        elif (fk_rel, fkey) in deja_vu[fk_rel.id_] or fk_rel is orig_rel:
             #sys.stderr.write("déjà vu in from! {}\n".format(fk_rel._fqrn))
             continue
-        deja_vu[id(fk_rel)].append((fk_rel, fkey))
+        deja_vu[fk_rel.id_].append((fk_rel, fkey))
         if fk_rel.__set_op.op_:
-            fk_rel.__get_from(id(self))
+            fk_rel.__get_from(self.id_)
         _, where, values = fk_rel.__where_args()
         where = " and\n    {}".format(where)
         orig_rel.__sql_query.insert(1, '\n  join {} on\n   '.format(__sql_id(fk_rel)))
@@ -395,20 +401,20 @@ def __join(self, orig_rel, deja_vu):
 
 def __sql_id(self):
     """Returns the FQRN as alias for the sql query."""
-    return "{} as r{}".format(self.__cast or self._fqrn, id(self))
+    return "{} as r{}".format(self._fqrn, self.id_)
 
 def __get_from(self, orig_rel=None, deja_vu=None):
     """Constructs the __sql_query and gets the __sql_values for self."""
     if deja_vu is None:
         orig_rel = self
         self.__sql_query = [__sql_id(self)]
-        deja_vu = {id(self):[(self, None)]}
+        deja_vu = {self.id_:[(self, None)]}
     self.__join(orig_rel, deja_vu)
 
-def __where_repr(self, id_):
+def __where_repr(self, rel_id_):
     where_repr = []
     for field in self.__get_set_fields():
-        where_repr.append(field.where_repr(self.__query_type, id_))
+        where_repr.append(field.where_repr(self.__query_type, rel_id_))
     ret = "({})".format(" and\n    ".join(where_repr) or "1 = 1")
     if self.__neg:
         ret = "not ({})".format(ret)
@@ -417,11 +423,11 @@ def __where_repr(self, id_):
 def __where_args(self, *args):
     """Returns the what, where and values needed to construct the queries.
     """
-    id_ = id(self)
-    what = 'r{}.*'.format(id_)
+    rel_id_ = self.id_
+    what = 'r{}.*'.format(rel_id_)
     if args:
-        what = ', '.join(['r{}.{}'.format(id_, arg) for arg in args])
-    s_where, set_fields = self.__walk_op(id_)
+        what = ', '.join(['r{}.{}'.format(rel_id_, arg) for arg in args])
+    s_where, set_fields = self.__walk_op(rel_id_)
     s_where = ''.join(s_where)
     if s_where == '()':
         s_where = '(1 = 1)'
@@ -455,7 +461,7 @@ def select(self, *args):
     if 'order_by' in self.__select_params.keys():
         query = "{} order by {}".format(
             query,
-            ", ".join(["r{}.{}".format(id(self), field_name)
+            ", ".join(["r{}.{}".format(self._id, field_name)
                        for field_name in self.__select_params['order_by']]))
     try:
         if not self.__mogrify:
@@ -486,10 +492,7 @@ def get(self):
     if count != 1:
         raise relation_errors.ExpectedOneError(self, count)
     res = list(self.select())
-    if not self.__cast:
-        return self(**(res[0]))
-    else:
-        return self._model._import_class(self.__cast)(**(res[0]))
+    return self(**(res[0]))
 
 def __len__(self, *args):
     """Retruns the number of tuples matching the intention in the relation.
@@ -568,26 +571,16 @@ def delete(self, delete_all=False):
     self.__cursor.execute(query, tuple(values))
 
 def __call__(self, **kwargs):
-    if not self.__cast:
-        return self.__class__(**kwargs)
-    else:
-        return self._model._import_class(self.__cast)(**kwargs)
-
-def dup(self):
-    """Duplicate a Relation object"""
-    raise NotImplementedError
-    new = relation_factory(None, None, {'fqrn': self._fqrn})(
-        **{field.name():(field.value, field.comp())
-           for field in self._fields.values() if field.value})
-    new.__set_op.op_ = self.__set_op.op_
-    if self.__set_op.right is not None:
-        new.__set_op.right = self.__set_op.right.copy()
-    return new
+    return self.__class__(**kwargs)
 
 def cast(self, qrn):
     """Cast a relation into another relation.
     """
-    self.__cast = qrn
+    new = self._model._import_class(qrn)(**self.to_dict())
+    new.__id_cast = id(self)
+    new._joined_to = self._joined_to
+    new.__set_op = self.__set_op
+    return new
 
 def __set__op__(self, op_=None, right=None):
     """Si l'opérateur du self est déjà défini, il faut aller modifier
@@ -595,7 +588,9 @@ def __set__op__(self, op_=None, right=None):
     On crée un nouvel objet sans contrainte et on a left et right et opérateur
     """
     def check_fk(new, jt_list):
-        for rel, fkey in jt_list:
+        """Sets the _joined_to dictionary for the new relation.
+        """
+        for fkey, rel in jt_list.items():
             if rel is self:
                 rel = new
             new._joined_to[fkey] = rel
@@ -660,8 +655,10 @@ def _set_fkeys_properties(self, *args):
 def _set_fkey_property(self, property_name, fkey_name):
     """Sets the property with property_name on the foreign key."""
     def fget(self):
+        "getter"
         return self._fkeys.__dict__[fkey_name]()
     def fset(self, value):
+        "setter"
         self._fkeys.__dict__[fkey_name].set(value)
     setattr(self.__class__, property_name, property(fget=fget, fset=fset))
 
@@ -673,10 +670,10 @@ def _debug():
 
 COMMON_INTERFACE = {
     '__init__': __init__,
+    'id_': id_,
     '__set_fields': __set_fields,
     'select_params': select_params,
     '__call__': __call__,
-    'dup': dup,
     'cast': cast,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
@@ -735,7 +732,7 @@ def relation_factory(class_name, bases, dct):
                               [elt.replace('.', '') for elt in sfqrn]])
         return "{}_{}".format(rel_kind, class_name)
 
-    bases = (Relation,)
+    bases = [Relation,]
     tbl_attr = {}
     tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
     tbl_attr['_qrn'] = tbl_attr['_fqrn'].split('.', 1)[1].replace('"', '')
@@ -758,7 +755,6 @@ def relation_factory(class_name, bases, dct):
     for parent_fqrn in metadata['inherits']:
         parent_fqrn = ".".join(['"{}"'.format(elt) for elt in parent_fqrn])
         bases.append(relation_factory(None, None, {'fqrn': parent_fqrn}))
-    bases = tuple(bases)
     tbl_attr['__metadata'] = metadata
     if dct.get('model'):
         tbl_attr['_model'] = dct['model']
@@ -779,7 +775,7 @@ def relation_factory(class_name, bases, dct):
     for fct_name, fct in rel_interfaces[kind].items():
         tbl_attr[fct_name] = fct
     class_name = _gen_class_name(rel_class_names[kind], sfqrn)
-    rel_class = type(class_name, bases, tbl_attr)
+    rel_class = type(class_name, tuple(bases), tbl_attr)
     tbl_attr['_model']._relations_['classes'][tuple(sfqrn)] = rel_class
     return rel_class
 

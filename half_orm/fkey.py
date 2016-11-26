@@ -54,6 +54,7 @@ class FKey(FieldInterface):
         return f_relation
 
     def set(self, to_):
+        """Sets the relation associated to the foreign key."""
         self.__set__(self._relation, to_)
 
     def __set__(self, from_, to_):
@@ -69,8 +70,9 @@ class FKey(FieldInterface):
         to_classes = set(type.mro(to_.__class__))
         self_classes = set(type.mro(self._relation.__class__))
         common_classes = to_classes.intersection(self_classes)
-        object in common_classes and common_classes.remove(object)
-        if (not common_classes):
+        if object in common_classes:
+            common_classes.remove(object)
+        if not common_classes:
             raise Exception(
                 "Type mismatch:\n{} != {}".format(self.__fk_fqrn, to_._fqrn))
         self.from_ = from_
@@ -106,9 +108,9 @@ class FKey(FieldInterface):
         from_ = self.from_
         to_ = self.to_
         assert id(from_) != id(to_)
-        orig_rel_id = 'r{}'.format(id(orig_rel))
-        to_id = 'r{}'.format(id(to_))
-        from_id = 'r{}'.format(id(from_))
+        orig_rel_id = 'r{}'.format(orig_rel.id_)
+        to_id = 'r{}'.format(to_.id_)
+        from_id = 'r{}'.format(from_.id_)
         if to_._qrn == orig_rel._qrn:
             to_id = orig_rel_id
         if from_._qrn == orig_rel._qrn:
@@ -117,7 +119,7 @@ class FKey(FieldInterface):
                        for name in self._fields)
         to_fields = ('{}.{}'.format(to_id, name) for name in self.fk_names)
         bounds = " and ".join(['{} = {}'.format(a, b) for
-                           a, b in zip(to_fields, from_fields)])
+                               a, b in zip(to_fields, from_fields)])
         return "({})".format(bounds)
 
     def __repr__(self):
