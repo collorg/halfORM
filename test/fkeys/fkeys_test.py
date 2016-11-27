@@ -14,7 +14,7 @@ class Test(TestCase):
         self.comment = halftest.comment
 
     def post_fkeys_names_test(self):
-        self.assertEqual(self.post._fkeys._fkeys_names, ['author'])
+        self.assertEqual(self.post._fkeys._fkeys_names, ['__reverse_fkey_halftest_blog_comment', 'author'])
 
     def comment_fkeys_names_test(self):
         self.assertEqual(self.comment._fkeys._fkeys_names, ['post', 'author'])

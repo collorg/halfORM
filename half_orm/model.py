@@ -24,9 +24,9 @@ About QRN and FQRN:
 
 """
 
-from configparser import ConfigParser
-from collections import OrderedDict
 import sys
+from collections import OrderedDict
+from configparser import ConfigParser
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -89,7 +89,7 @@ class Model(object):
     def _deja_vu(dbname):
         """Returns None if the database hasn't been loaded yet.
         Otherwise, it returns the Model object already loaded.
-        The Model object is shared between all the relations in the
+        The Model object is shared between all_ the relations in the
         database. The Model object is loaded only once for a given database.
         """
         return Model.__deja_vu.get(dbname)
@@ -195,8 +195,8 @@ class Model(object):
         byid = metadata['byid'] = {}
         with self._connection.cursor() as cur:
             cur.execute(REQUEST)
-            all = [elt for elt in cur.fetchall()]
-            for dct in all:
+            all_ = [elt for elt in cur.fetchall()]
+            for dct in all_:
                 table_key = (
                     self.__dbname,
                     dct['schemaname'], dct['relationname'])
@@ -205,16 +205,16 @@ class Model(object):
                 if table_key not in byname:
                     byid[tableid] = {}
                     byid[tableid]['sfqrn'] = table_key
-                    byid[tableid]['fields'] = {}
+                    byid[tableid]['fields'] = OrderedDict()
+                    byid[tableid]['fkeys'] = OrderedDict()
                     byname[table_key] = OrderedDict()
                     byname[table_key]['description'] = description
                     byname[table_key]['fields'] = OrderedDict()
+                    byname[table_key]['fkeys'] = OrderedDict()
                     byname[table_key]['fields_by_num'] = OrderedDict()
-            for dct in all:
-                table_key = (
-                    self.__dbname,
-                    dct['schemaname'], dct['relationname'])
+            for dct in all_:
                 tableid = dct['tableid']
+                table_key = byid[tableid]['sfqrn']
                 fieldname = dct.pop('fieldname')
                 fieldnum = dct['fieldnum']
                 tablekind = dct.pop('tablekind')
@@ -225,10 +225,21 @@ class Model(object):
                 byname[table_key]['fields'][fieldname] = dct
                 byname[table_key]['fields_by_num'][fieldnum] = dct
                 byid[tableid]['fields'][fieldnum] = fieldname
-                if ((tablekind, table_key) not in self._relations_['list']):
+                if (tablekind, table_key) not in self._relations_['list']:
                     self._relations_['list'].append((tablekind, table_key))
-        #pp = PrettyPrinter()
-        #pp.pprint(metadata)
+            for dct in all_:
+                tableid = dct['tableid']
+                table_key = byid[tableid]['sfqrn']
+                fkeyname = dct['fkeyname']
+                if fkeyname and not fkeyname in byname[table_key]['fkeys']:
+                    fkeytableid = dct['fkeytableid']
+                    ftable_key = byid[fkeytableid]['sfqrn']
+                    fields = [byid[tableid]['fields'][num] for num in dct['keynum']]
+                    ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
+                    rev_fkey_name = '__reverse_fkey_{}_{}_{}'.format(*table_key)
+                    byname[table_key]['fkeys'][fkeyname] = (ftable_key, ffields, fields)
+                    byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
+
         self._relations_['list'].sort()
         return metadata
 
@@ -261,7 +272,7 @@ class Model(object):
         return module.__dict__[class_name]
 
     def _relations(self):
-        """List all the relations in the database"""
+        """List all_ the relations in the database"""
         for relation in self._relations_['list']:
             yield "{} {}.{}.{}".format(relation[0], *relation[1])
 

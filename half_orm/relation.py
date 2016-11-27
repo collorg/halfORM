@@ -181,23 +181,14 @@ def __set_fields(self):
         self._fields._fields_names.append(pyfield_name)
         setattr(self._fields, pyfield_name, Field(field_name, f_metadata))
         self._fields_names.add(pyfield_name)
-    for field_name, f_metadata in dbm['byname'][self.__sfqrn]['fields'].items():
-        fkeyname = f_metadata.get('fkeyname')
-        if fkeyname:
-            pyfkeyname = (
-                iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname)
-        if fkeyname and not hasattr(self._fkeys, pyfkeyname):
-            ft_ = dbm['byid'][f_metadata['fkeytableid']]
-            ft_sfqrn = ft_['sfqrn']
-            fields_names = [flds[elt-1]
-                            for elt in f_metadata['keynum']]
-            ft_fields_names = [ft_['fields'][elt]
-                               for elt in f_metadata['fkeynum']]
-            self._fkeys._fkeys_names.append(pyfkeyname)
-            setattr(
-                self._fkeys,
-                pyfkeyname,
-                FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names))
+    for fkeyname, f_metadata in dbm['byname'][self.__sfqrn]['fkeys'].items():
+        ft_sfqrn, ft_fields_names, fields_names = f_metadata
+        pyfkeyname = iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname
+        self._fkeys._fkeys_names.append(pyfkeyname)
+        setattr(
+            self._fkeys,
+            pyfkeyname,
+            FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names))
 
 def select_params(self, **kwargs):
     """Sets the limit and offset on the relation (used by select)."""
@@ -595,6 +586,7 @@ def __set__op__(self, op_=None, right=None):
                 rel = new
             new._joined_to[fkey] = rel
     new = self(**self.to_dict())
+    new.__id_cast = self.__id_cast
     if op_:
         new.__set_op.left = self
         new.__set_op.op_ = op_
