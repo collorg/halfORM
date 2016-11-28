@@ -236,7 +236,7 @@ class Model(object):
                     ftable_key = byid[fkeytableid]['sfqrn']
                     fields = [byid[tableid]['fields'][num] for num in dct['keynum']]
                     ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
-                    rev_fkey_name = '__reverse_fkey_{}_{}_{}'.format(*table_key)
+                    rev_fkey_name = '_reverse_fkey_{}_{}_{}'.format(*table_key).replace(".", "_")
                     byname[table_key]['fkeys'][fkeyname] = (ftable_key, ffields, fields)
                     byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
 
@@ -255,8 +255,6 @@ class Model(object):
         @qtn is the <schema>.<table> name of the relation
         @kwargs is a dictionary {field_name:value}
         """
-        import importlib
-
         schema, table = qtn.rsplit('.', 1)
         fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
         fqrn, _ = _normalize_fqrn(fqrn)

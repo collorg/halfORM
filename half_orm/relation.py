@@ -37,13 +37,13 @@ from half_orm.transaction import Transaction
 class UnknownAttributeError(Exception):
     """Unknown attribute error"""
     def __init__(self, msg):
-        super(self.__class__, self).__init__(
+        super().__init__(
             "ERROR! Unknown attribute: {}.".format(msg))
 
 class ExpectedOneElementError(Exception):
     """Expected one element error"""
     def __init__(self, msg):
-        super(self.__class__, self).__init__(
+        super().__init__(
             "ERROR! More than one element for a non list item: {}.".format(msg))
 
 class SetOp(object):
@@ -95,7 +95,7 @@ class Relation(object):
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
 def __init__(self, **kwargs):
-    """The arguments name must correspond to the attributes of the relation.
+    """The arguments names must correspond to the columns names of the relation.
     """
     class FKeys(object):
         """Class of the Relation._fkeys attribute.
@@ -162,6 +162,9 @@ def __init__(self, **kwargs):
     self.__id_cast = None
     _ = {field._set_relation(self) for field in self._fields.values()}
     _ = {fkey._set_relation(self) for fkey in self._fkeys.values()}
+    if not self.__fkeys_properties:
+        self._set_fkeys_properties()
+        self.__fkeys_properties = True
 
 @property
 def id_(self):
@@ -291,7 +294,14 @@ def to_json(self, yml_directive=None):
     return json.dumps(res, default=handler)
 
 def to_dict(self):
-    """Retruns a dictionary containing only the fields that are set."""
+    """Retruns a dictionary containing only the values of the fields
+    that are set."""
+    return {key:field.value for key, field in
+            self._fields.items() if field.is_set()}
+
+def _to_dict_val_comp(self):
+    """Retruns a dictionary containing the values and comparators of the fields
+    that are set."""
     return {key:(field.value, field.comp()) for key, field in
             self._fields.items() if field.is_set()}
 
@@ -567,7 +577,7 @@ def __call__(self, **kwargs):
 def cast(self, qrn):
     """Cast a relation into another relation.
     """
-    new = self._model._import_class(qrn)(**self.to_dict())
+    new = self._model._import_class(qrn)(**self._to_dict_val_comp())
     new.__id_cast = id(self)
     new._joined_to = self._joined_to
     new.__set_op = self.__set_op
@@ -585,7 +595,7 @@ def __set__op__(self, op_=None, right=None):
             if rel is self:
                 rel = new
             new._joined_to[fkey] = rel
-    new = self(**self.to_dict())
+    new = self(**self._to_dict_val_comp())
     new.__id_cast = self.__id_cast
     if op_:
         new.__set_op.left = self
@@ -637,12 +647,14 @@ def __eq__(self, right):
 def __ne__(self, right):
     return not self == right
 
-def _set_fkeys_properties(self, *args):
+def _set_fkeys_properties(self):
     """Property generator for fkeys.
     @args is a list of tuples (proerty_name, fkey_name)
     """
-    for property_name, fkey_name in args:
-        self._set_fkey_property(property_name, fkey_name)
+    fkp = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES'], 0)
+    if hasattr(fkp, 'FKEYS_PROPERTIES'):
+        for property_name, fkey_name in fkp.FKEYS_PROPERTIES:
+            self._set_fkey_property(property_name, fkey_name)
 
 def _set_fkey_property(self, property_name, fkey_name):
     """Sets the property with property_name on the foreign key."""
@@ -672,6 +684,7 @@ COMMON_INTERFACE = {
     'group_by':group_by,
     'to_json': to_json,
     'to_dict': to_dict,
+    '_to_dict_val_comp': _to_dict_val_comp,
     '__get_from': __get_from,
     '__get_query': __get_query,
     'is_set': is_set,
@@ -726,6 +739,7 @@ def relation_factory(class_name, bases, dct):
 
     bases = [Relation,]
     tbl_attr = {}
+    tbl_attr['__fkeys_properties'] = False
     tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
     tbl_attr['_qrn'] = tbl_attr['_fqrn'].split('.', 1)[1].replace('"', '')
     attr_names = ['_dbname', '_schemaname', '_relationname']

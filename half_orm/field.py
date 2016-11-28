@@ -18,7 +18,7 @@ class Field(FieldInterface):
         self._value = None #FIXME should be __value but __set__ doesn't work!
         self.__unaccent = False
         self.__comp = '='
-        super(Field, self).__init__(name)
+        super().__init__(name)
 
     def __repr__(self):
         md_ = self.__metadata

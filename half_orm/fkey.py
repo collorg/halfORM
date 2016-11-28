@@ -19,7 +19,7 @@ class FKey(FieldInterface):
         self._fk_to = None
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
         self._cast = None
-        super(FKey, self).__init__(fk_name, fk_names, fields)
+        super().__init__(fk_name, fk_names, fields)
 
     def __get_fk_qrn(self):
         """Returns QRN from FQRN."""
@@ -42,7 +42,7 @@ class FKey(FieldInterface):
         else:
             f_class = model.get_relation_class(f_qrn)
         f_relation = f_class(**kwargs)
-        rev_fkey_name = '__reverse_{}'.format(
+        rev_fkey_name = '_reverse_{}'.format(
             f_relation._fqrn.replace(".", "_"))
         f_relation.fkeys = {
             rev_fkey_name: FKey(

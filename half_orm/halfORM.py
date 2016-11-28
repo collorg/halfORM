@@ -30,13 +30,10 @@ MODULE_TEMPLATE_2 = open(
     '{}/halfORM_templates/module_template_2'.format(HALFORM_PATH)).read()
 MODULE_TEMPLATE_3 = open(
     '{}/halfORM_templates/module_template_3'.format(HALFORM_PATH)).read()
-MODULE_TEMPLATE_4 = open(
-    '{}/halfORM_templates/module_template_4'.format(HALFORM_PATH)).read()
 WARING_TEMPLATE = open(
     '{}/halfORM_templates/warning'.format(HALFORM_PATH)).read()
 MODULE_FORMAT = (
-    "{rt1}{bc_}{global_user_s_code}{ec_}"
-    "{rt2}{rt3}{rt4}\n        {bc_}{user_s_code}")
+    "{rt1}{bc_}{global_user_s_code}{ec_}{rt2}{rt3}\n        {bc_}{user_s_code}")
 AP_DESCRIPTION = """Generates python package from a PG database"""
 AP_EPILOG = """"""
 DO_NOT_REMOVE = ['db_connector.py', '__init__.py']
@@ -120,8 +117,7 @@ def assemble_module_template(module_path):
         global_user_s_code = module_code.rsplit(END_CODE)[0].split(BEGIN_CODE)[1]
         global_user_s_code = global_user_s_code.replace('{', '{{').replace('}', '}}')
     return module_template.format(
-        rt1=MODULE_TEMPLATE_1, rt2=MODULE_TEMPLATE_2,
-        rt3=MODULE_TEMPLATE_3, rt4=MODULE_TEMPLATE_4,
+        rt1=MODULE_TEMPLATE_1, rt2=MODULE_TEMPLATE_2, rt3=MODULE_TEMPLATE_3,
         bc_=BEGIN_CODE, ec_=END_CODE,
         global_user_s_code=global_user_s_code, user_s_code=user_s_code)
 
