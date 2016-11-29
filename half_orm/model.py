@@ -260,13 +260,15 @@ class Model(object):
         fqrn, _ = _normalize_fqrn(fqrn)
         return relation_factory('Table', (), {'fqrn': fqrn, 'model': self})
 
-    def _import_class(self, qtn):
+    def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
         """
-        module_path = '{}.{}'.format(self._scope, qtn.replace('"', ''))
+        module_path = '{}.{}'.format(scope or self._scope, qtn.replace('"', ''))
         class_name = camel_case(qtn.split('.')[-1])
         module = __import__(
             module_path, globals(), locals(), [class_name], 0)
+        if scope:
+            self._scope = scope
         return module.__dict__[class_name]
 
     def _relations(self):

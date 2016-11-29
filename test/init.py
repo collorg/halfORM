@@ -19,20 +19,21 @@ To drop halftest database and user when you're done with the tests:
 - dropdb halftest; dropuser halftest
 """
 
-model = Model(config_file='{}/halftest.ini'.format(path))
+model = Model(config_file='{}/halftest.ini'.format(path), scope="halftest")
 
 def name(letter, integer):
     return '{}{}'.format(letter, chr(ord('a') + integer))
 
 class HalfTest:
     def __init__(self):
+        assert model._scope == "halftest"
         self.dbname = model._dbname
         self.today = date.today()
-        self.pers = model.get_relation_class("actor.person")()
-        self.relation = model.get_relation_class
-        self.post = model.get_relation_class("blog.post")()
-        self.comment = model.get_relation_class("blog.comment")()
-        self.event = model.get_relation_class("blog.event")()
+        self.pers = model._import_class("actor.person")()
+        self.relation = model._import_class
+        self.post = model._import_class("blog.post")()
+        self.comment = model._import_class("blog.comment")()
+        self.event = model._import_class("blog.event")()
 
         @self.pers.Transaction
         def insert_pers(pers):

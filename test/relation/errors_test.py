@@ -18,4 +18,4 @@ class Test(TestCase):
             self.pers.unknown
         self.assertEqual(
             cm.exception.args[0],
-            "'Table_HalftestActorPerson' object has no attribute 'unknown'")
+            "'Person' object has no attribute 'unknown'")

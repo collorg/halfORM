@@ -46,6 +46,48 @@ class ExpectedOneElementError(Exception):
         super().__init__(
             "ERROR! More than one element for a non list item: {}.".format(msg))
 
+class FKeys(object):
+    """Class of the Relation._fkeys attribute.
+    Each foreign key of the PostgreSQL relation is accessible as an attribute
+    of Relation._fkeys with the foreign key's name.
+    """
+    def __init__(self):
+        self._fkeys_names = []
+
+    def values(self):
+        """Yields the foreign keys (FKey objects)"""
+        for fkey_name in self._fkeys_names:
+            yield self.__dict__[fkey_name]
+
+    def __len__(self):
+        return len(self.__dict__)
+
+class Fields(object):
+    """Class of the Relation._fields attribute.
+    Each attribute of the PostgreSQL relation is accessible as an attribute
+    of Relation._fields with the field's name.
+    """
+    def __init__(self):
+        self._fields_names = []
+
+    def items(self):
+        """Yields the (fields names, Field objects)"""
+        for field_name in self._fields_names:
+            yield field_name, self.__dict__[field_name]
+
+    def keys(self):
+        """Yields the fields names."""
+        for field_name in self._fields_names:
+            yield field_name
+
+    def values(self):
+        """Yields the fields (Field objects)"""
+        for field_name in self._fields_names:
+            yield self.__dict__[field_name]
+
+    def __len__(self):
+        return len(self.__dict__)
+
 class SetOp(object):
     """SetOp class stores the set operations made on the Relation class objects
 
@@ -93,55 +135,33 @@ class Relation(object):
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
+#def __new__(cls, **kwargs):
+#    return super(cls.__class__, cls).__new__(cls)
+
 def __init__(self, **kwargs):
     """The arguments names must correspond to the columns names of the relation.
     """
-    class FKeys(object):
-        """Class of the Relation._fkeys attribute.
-        Each foreign key of the PostgreSQL relation is accessible as an attribute
-        of Relation._fkeys with the foreign key's name.
-        """
-        def __init__(self):
-            self._fkeys_names = []
-
-        def values(self):
-            """Yields the foreign keys (FKey objects)"""
-            for fkey_name in self._fkeys_names:
-                yield self.__dict__[fkey_name]
-
-        def __len__(self):
-            return len(self.__dict__)
-
-    class Fields(object):
-        """Class of the Relation._fields attribute.
-        Each attribute of the PostgreSQL relation is accessible as an attribute
-        of Relation._fields with the field's name.
-        """
-        def __init__(self):
-            self._fields_names = []
-
-        def items(self):
-            """Yields the (fields names, Field objects)"""
-            for field_name in self._fields_names:
-                yield field_name, self.__dict__[field_name]
-
-        def keys(self):
-            """Yields the fields names."""
-            for field_name in self._fields_names:
-                yield field_name
-
-        def values(self):
-            """Yields the fields (Field objects)"""
-            for field_name in self._fields_names:
-                yield self.__dict__[field_name]
-
-        def __len__(self):
-            return len(self.__dict__)
     self.__neg = False
     self._fields = Fields()
     self._fkeys = FKeys()
     self._fields_names = set()
     self.__set_fields()
+    if not self.__fkeys_properties:
+        self._set_fkeys_properties()
+        self.__fkeys_properties = True
+    if self.__base_classes is None:
+        self.__class__.__base_classes = []
+    for cls in self.__class__.mro():
+        if not id(cls) in self.__base_classes:
+            self.__class__.__base_classes.append(id(cls))
+            if issubclass(cls, Relation):
+                obj = cls()
+                if not hasattr(obj, '_fkeys'):
+                    continue
+                for fkey_name in obj._fkeys._fkeys_names:
+                    if not hasattr(self._fkeys, fkey_name):
+                        self._fkeys._fkeys_names.append(fkey_name)
+                        setattr(self._fkeys, fkey_name, obj._fkeys.__dict__[fkey_name])
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     kwk_ = set(kwargs.keys())
@@ -161,9 +181,6 @@ def __init__(self, **kwargs):
     self.__id_cast = None
     _ = {field._set_relation(self) for field in self._fields.values()}
     _ = {fkey._set_relation(self) for fkey in self._fkeys.values()}
-    if not self.__fkeys_properties:
-        self._set_fkeys_properties()
-        self.__fkeys_properties = True
 
 @property
 def id_(self):
@@ -672,6 +689,7 @@ def _debug():
 #### END of Relation methods definition
 
 COMMON_INTERFACE = {
+#    '__new__': __new__,
     '__init__': __init__,
     'id_': id_,
     '__set_fields': __set_fields,
@@ -738,6 +756,7 @@ def relation_factory(class_name, bases, dct):
 
     bases = [Relation,]
     tbl_attr = {}
+    tbl_attr['__base_classes'] = None
     tbl_attr['__fkeys_properties'] = False
     tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
     tbl_attr['_qrn'] = tbl_attr['_fqrn'].split('.', 1)[1].replace('"', '')
