@@ -1,0 +1,3 @@
+[halfORM]
+config_file = halftest
+package_name = halftest
