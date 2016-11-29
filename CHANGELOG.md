@@ -1,3 +1,18 @@
+# 0.1.0-alpha.7 (2016-11-29)
+
+## Features
+
+- **relation:** Inherit foreign keys. (acb51ba)
+- **test:** Add halftest package. (f2d91af)
+- **model, relation:** Add reverse foreign keys. (50edf5f)
+- **relation:** cast method now returns the casted relation. (bbde48a)
+- **relation:** Add order_by select parameter. (57791c7)
+
+## Bug fixes
+
+- **fkeys:** Use issubclass instead of hasattr. (2aaf58e)
+- **relation, fkey:** Fix relations with multiple foreign keys. (1a69e16)
+
 # 0.1.0-alpha.6 (2016-11-25)
 
 ## Bug fixes
