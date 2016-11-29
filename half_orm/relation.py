@@ -88,8 +88,7 @@ class SetOp(object):
 
 class Relation(object):
     """Base class of Table and View classes (see relation_factory)."""
-    _is_half_orm_relation = True
-
+    pass
 
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.

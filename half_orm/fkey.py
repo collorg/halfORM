@@ -63,8 +63,9 @@ class FKey(FieldInterface):
         The value must be an object of type Relation having the
         same FQRN that (or inheriting) the one referenced by self.__fk_fqrn.
         """
+        from half_orm.relation import Relation
         try:
-            assert hasattr(to_, '_is_half_orm_relation')
+            assert issubclass(to_.__class__, Relation)
         except AssertionError:
             raise Exception("Expecting a Relation")
         to_classes = set(type.mro(to_.__class__))
