@@ -236,7 +236,8 @@ class Model(object):
                     ftable_key = byid[fkeytableid]['sfqrn']
                     fields = [byid[tableid]['fields'][num] for num in dct['keynum']]
                     ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
-                    rev_fkey_name = '_reverse_fkey_{}_{}_{}'.format(*table_key).replace(".", "_")
+                    rev_fkey_name = '_reverse_fkey_{}'.format(
+                        "_".join(list(table_key) + fields)).replace(".", "_")
                     byname[table_key]['fkeys'][fkeyname] = (ftable_key, ffields, fields)
                     byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
 

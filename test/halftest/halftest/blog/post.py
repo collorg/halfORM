@@ -44,7 +44,7 @@ class Post( __RCLS):
     - author_last_name:  (text)
     - author_birth_date: (date)
     FOREIGN KEYS:
-    - _reverse_fkey_halftest_blog_comment: (id)
+    - _reverse_fkey_halftest_blog_comment_post_id: (id)
      ↳ "halftest"."blog"."comment"(post_id)
     - author: (author_first_name, author_last_name, author_birth_date)
      ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)

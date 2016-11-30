@@ -47,9 +47,11 @@ class Event(BlogPost, __RCLS):
     - begin:             (timestamp)
     - end:               (timestamp)
     - location:          (text)
-    FOREIGN KEY:
+    FOREIGN KEYS:
     - author: (author_first_name, author_last_name, author_birth_date)
      ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+    - _reverse_fkey_halftest_blog_comment_post_id: (id)
+     ↳ "halftest"."blog"."comment"(post_id)
     """
     def __init__(self, **kwargs):
         super(Event, self).__init__(**kwargs)

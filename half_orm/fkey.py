@@ -42,8 +42,8 @@ class FKey(FieldInterface):
         else:
             f_class = model.get_relation_class(f_qrn)
         f_relation = f_class(**kwargs)
-        rev_fkey_name = '_reverse_{}'.format(
-            f_relation._fqrn.replace(".", "_"))
+        rev_fkey_name = '_reverse_{}_{}'.format(
+            f_relation._fqrn.replace(".", "_"), "_".join(self._fk_names))
         f_relation.fkeys = {
             rev_fkey_name: FKey(
                 rev_fkey_name,
