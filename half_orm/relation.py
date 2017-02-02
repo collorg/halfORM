@@ -175,7 +175,6 @@ def __init__(self, **kwargs):
     self.__query_type = None
     self.__sql_query = []
     self.__sql_values = []
-    self.__mogrify = False
     self.__set_op = SetOp(self)
     self.__select_params = {}
     self.__id_cast = None
@@ -495,10 +494,8 @@ def select(self, *args):
 
 def _mogrify(self, *args):
     """Prints the select query."""
-    self.__query = "select"
-    self.__mogrify = True
-    print([elt for elt in self.select(*args)][0])
-    self.__mogrify = False
+    query, values = self.__prep_select(*args)
+    return self.__cursor.mogrify(query, values).decode('utf-8')
 
 def get(self):
     """Returns the Relation object extracted.
