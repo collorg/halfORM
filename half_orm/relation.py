@@ -141,6 +141,7 @@ class Relation(object):
 def __init__(self, **kwargs):
     """The arguments names must correspond to the columns names of the relation.
     """
+    self.__only = True
     self.__neg = False
     self._fields = Fields()
     self._fkeys = FKeys()
@@ -186,6 +187,16 @@ def id_(self):
     """Return the __id_cast or the id of the relation.
     """
     return self.__id_cast or id(self)
+
+def __set_only(self, value):
+    """Set the value of self.__only. Restrict the values of a query to
+    the elements of the relation (no inherited values).
+    """
+    assert value in [True, False]
+    self.__only = value
+    print(self.__only)
+
+only = property(fset=__set_only)
 
 def __set_fields(self):
     """Initialise the fields and fkeys of the relation."""
@@ -458,15 +469,13 @@ def __get_query(self, query_template, *args):
         what = 'distinct {}'.format(what)
     self.__get_from()
     return (
-        query_template.format(what, ' '.join(self.__sql_query), where), values)
+        query_template.format(
+            what, self.__only and "only" or "", ' '.join(self.__sql_query), where),
+            values)
 
-def select(self, *args):
-    """Generator. Yiels the result of the query as a dictionary.
-
-    - @args are fields names to restrict the returned attributes
-    """
+def __prep_select(self, *args):
     self.__sql_values = []
-    query_template = "select\n  {}\nfrom\n  {}\n  {}"
+    query_template = "select\n  {}\nfrom\n  {} {}\n  {}"
     query, values = self.__get_query(query_template, *args)
     values = tuple(self.__sql_values + values)
     if 'limit' in self.__select_params.keys():
@@ -476,14 +485,18 @@ def select(self, *args):
     if 'order_by' in self.__select_params.keys():
         query = "{} order by {}".format(
             query,
-            ", ".join(["r{}.{}".format(self._id, field_name)
+            ", ".join(["r{}.{}".format(self.id_, field_name)
                        for field_name in self.__select_params['order_by']]))
+    return query, values
+
+def select(self, *args):
+    """Generator. Yiels the result of the query as a dictionary.
+
+    - @args are fields names to restrict the returned attributes
+    """
+    query, values = self.__prep_select(*args)
     try:
-        if not self.__mogrify:
-            self.__cursor.execute(query, values)
-        else:
-            yield self.__cursor.mogrify(query, values).decode('utf-8')
-            return
+        self.__cursor.execute(query, values)
     except Exception as err:
         sys.stderr.write(
             "QUERY: {}\nVALUES: {}\n".format(query, values))
@@ -513,7 +526,7 @@ def __len__(self, *args):
     See select for arguments.
     """
     self.__query = "select"
-    query_template = "select\n  distinct count({})\nfrom\n  {}\n  {}"
+    query_template = "select\n  distinct count({})\nfrom {}\n  {}\n  {}"
     query, values = self.__get_query(query_template, *args)
     try:
         vars_ = tuple(self.__sql_values + values)
@@ -694,6 +707,8 @@ COMMON_INTERFACE = {
     'cast': cast,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
+    '__set_only': __set_only,
+    'only': only,
     'group_by':group_by,
     'to_json': to_json,
     'to_dict': to_dict,
@@ -703,6 +718,7 @@ COMMON_INTERFACE = {
     'is_set': is_set,
     '__where_repr': __where_repr,
     '__where_args': __where_args,
+    '__prep_select': __prep_select,
     'select': select,
     '_mogrify': _mogrify,
     '__len__': __len__,
