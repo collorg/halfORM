@@ -192,7 +192,6 @@ def __set_fields(self):
     from .field import Field
     from .fkey import FKey
     dbm = self._model._metadata
-    flds = list(dbm['byname'][self.__sfqrn]['fields'].keys())
     for field_name, f_metadata in dbm['byname'][self.__sfqrn]['fields'].items():
         pyfield_name = (
             iskeyword(field_name) and "{}_".format(field_name) or field_name)
