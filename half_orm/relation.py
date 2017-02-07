@@ -194,7 +194,6 @@ def __set_only(self, value):
     """
     assert value in [True, False]
     self.__only = value
-    print(self.__only)
 
 only = property(fset=__set_only)
 
