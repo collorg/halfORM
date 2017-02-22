@@ -26,7 +26,7 @@ class Test(TestCase):
             relation_errors.ExpectedOneError, pers.get)
 
     def expected_one_error_test_many(self):
-        pers = self.pers(last_name=('%', 'like'))
+        pers = self.pers(last_name=('like', '%'))
         self.assertRaises(
             relation_errors.ExpectedOneError, pers.get)
 
@@ -40,15 +40,15 @@ class Test(TestCase):
         n = 'abcdef'[randint(0, 5)]
         p = chr(ord('a') + range(10)[randint(0, 9)])
         pers = self.pers(
-            last_name=('{}%'.format(n), 'ilike'),
-            first_name=('%{}'.format(p), 'ilike'),
+            last_name=('ilike', '{}%'.format(n)),
+            first_name=('ilike', '%{}'.format(p)),
             birth_date=self.today)
         self.assertEqual(len(pers), 1)
         for dct in pers.select():
             self.pers(**dct).get()
 
     def update_test(self):
-        pers = self.pers(last_name=('a%', 'like'))
+        pers = self.pers(last_name=('like', 'a%'))
         self.assertEqual(len(pers), 10)
         pers.update(last_name=pers._fields.last_name.value.upper())
         self.assertEqual(len(pers), 10)

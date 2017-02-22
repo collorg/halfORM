@@ -326,7 +326,7 @@ def to_dict(self):
 def _to_dict_val_comp(self):
     """Retruns a dictionary containing the values and comparators of the fields
     that are set."""
-    return {key:(field.value, field.comp()) for key, field in
+    return {key:(field.comp(), field.value) for key, field in
             self._fields.items() if field.is_set()}
 
 def __repr__(self):

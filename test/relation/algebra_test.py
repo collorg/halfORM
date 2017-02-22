@@ -25,13 +25,13 @@ class Test(TestCase):
         self.c1 = hexchars[randint(0, len(hexchars) - 1)]
         self.c2 = hexchars[randint(0, len(hexchars) - 1)]
         self.c3 = hexchars[randint(0, len(hexchars) - 1)]
-        self.set_1 = self.pers(last_name=('{}%'.format(self.c1), 'like'))
+        self.set_1 = self.pers(last_name=('like', '{}%'.format(self.c1)))
         self.comp_set_1 = self.pers(
-            last_name=('{}%'.format(self.c1), 'not like'))
-        self.set_2 = self.pers(last_name=('_{}%'.format(self.c2), 'like'))
+            last_name=('not like', '{}%'.format(self.c1)))
+        self.set_2 = self.pers(last_name=('like', '_{}%'.format(self.c2)))
         self.subset_1_2 = self.pers(
-            last_name=('{}{}%'.format(self.c1, self.c2), 'like'))
-        self.set_3 = self.pers(last_name=('__{}%'.format(self.c3), 'like'))
+            last_name=('like', '{}{}%'.format(self.c1, self.c2)))
+        self.set_3 = self.pers(last_name=('like', '__{}%'.format(self.c3)))
 
     def and_test_1(self):
         a = self.set_1

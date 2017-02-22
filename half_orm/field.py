@@ -78,7 +78,7 @@ class Field(FieldInterface):
         is_field = isinstance(value, Field)
         if isinstance(value, tuple):
             assert len(value) == 2
-            value, comp = value
+            comp, value = value
         if value is NULL and comp is None:
             comp = 'is'
         if value is NULL:
@@ -113,6 +113,8 @@ class Field(FieldInterface):
 
     def comp(self):
         "Returns the comparator associated to the value."
+        if self.__comp == '%':
+            return '%%'
         return self.__comp
 
     @property
