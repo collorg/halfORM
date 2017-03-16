@@ -786,6 +786,7 @@ def relation_factory(class_name, bases, dct):
     except KeyError:
         raise model_errors.UnknownRelation(sfqrn)
     if metadata['inherits']:
+        metadata['inherits'].sort()
         bases = []
     for parent_fqrn in metadata['inherits']:
         parent_fqrn = ".".join(['"{}"'.format(elt) for elt in parent_fqrn])
