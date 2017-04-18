@@ -477,15 +477,15 @@ def __prep_select(self, *args):
     query_template = "select\n  {}\nfrom\n  {} {}\n  {}"
     query, values = self.__get_query(query_template, *args)
     values = tuple(self.__sql_values + values)
-    if 'limit' in self.__select_params.keys():
-        query = '{} limit {}'.format(query, self.__select_params['limit'])
-    if 'offset' in self.__select_params.keys():
-        query = "{} offset {}".format(query, self.__select_params['offset'])
     if 'order_by' in self.__select_params.keys():
         query = "{} order by {}".format(
             query,
             ", ".join(["r{}.{}".format(self.id_, field_name)
                        for field_name in self.__select_params['order_by']]))
+    if 'limit' in self.__select_params.keys():
+        query = '{} limit {}'.format(query, self.__select_params['limit'])
+    if 'offset' in self.__select_params.keys():
+        query = "{} offset {}".format(query, self.__select_params['offset'])
     return query, values
 
 def select(self, *args):
