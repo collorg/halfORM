@@ -5,7 +5,7 @@ PostgreSQL database.
 REQUEST = """
 SELECT
     a.attrelid AS tableid,
-    array_agg( i.inhseqno::TEXT || ':' || i.inhparent::TEXT ) AS inherits,
+    array_agg( distinct i.inhseqno::TEXT || ':' || i.inhparent::TEXT ) AS inherits,
     c.relkind AS tablekind,
     n.nspname AS schemaname,
     c.relname AS relationname,
