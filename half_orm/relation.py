@@ -141,7 +141,7 @@ class Relation(object):
 def __init__(self, **kwargs):
     """The arguments names must correspond to the columns names of the relation.
     """
-    self.__only = True
+    self.__only = False
     self.__neg = False
     self._fields = Fields()
     self._fkeys = FKeys()
@@ -188,6 +188,9 @@ def id_(self):
     """
     return self.__id_cast or id(self)
 
+def __get_only(self):
+    "Returns the value of self.__only"
+    return self.__only
 def __set_only(self, value):
     """Set the value of self.__only. Restrict the values of a query to
     the elements of the relation (no inherited values).
@@ -195,7 +198,7 @@ def __set_only(self, value):
     assert value in [True, False]
     self.__only = value
 
-only = property(fset=__set_only)
+only = property(__get_only, __set_only)
 
 def __set_fields(self):
     """Initialise the fields and fkeys of the relation."""
@@ -293,8 +296,9 @@ def group_by(self, yml_directive):
     inner_group_by(data, directive, grouped_data)
     return grouped_data
 
-def to_json(self, yml_directive=None):
+def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
     """Returns a JSON representation of the set returned by the select query.
+    if kwargs, returns {res_field_name: [list of elements]}.update(kwargs)
     """
     import json
 
@@ -315,13 +319,16 @@ def to_json(self, yml_directive=None):
         res = self.group_by(yml_directive)
     else:
         res = [elt for elt in self.select()]
+    if kwargs:
+        res = {res_field_name: res}
+        res.update(kwargs)
     return json.dumps(res, default=handler)
 
 def to_dict(self):
     """Retruns a dictionary containing only the values of the fields
     that are set."""
     return {key:field.value for key, field in
-            self._fields.items() if field.is_set()}
+        self._fields.items() if field.is_set()}
 
 def _to_dict_val_comp(self):
     """Retruns a dictionary containing the values and comparators of the fields
