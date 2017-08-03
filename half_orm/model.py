@@ -83,7 +83,8 @@ class Model(object):
         self._scope = scope and scope.split('.')[0]
         self._relations_['list'] = []
         self._relations_['classes'] = {}
-        self._connect(raise_error=raise_error)
+        self.__raise_error = raise_error
+        self._connect(raise_error=self.__raise_error)
 
     @staticmethod
     def _deja_vu(dbname):
@@ -102,9 +103,9 @@ class Model(object):
         try:
             self.execute_query("select 1")
             return True
-        except psycopg2.OperationalError:
+        except (psycopg2.OperationalError, psycopg2.InterfaceError):
             try:
-                self._connect()
+                self._connect(raise_error=self.__raise_error)
             except psycopg2.OperationalError as err:
                 sys.stderr.write('{}\n'.format(err))
                 sys.stderr.flush()
