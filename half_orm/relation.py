@@ -583,12 +583,13 @@ def __what_to_insert(self):
 
 def insert(self):
     """Insert a new tuple into the Relation."""
-    query_template = "insert into {} ({}) values ({})"
+    query_template = "insert into {} ({}) values ({}) returning *"
     self.__query_type = 'insert'
     fields_names, values = self.__what_to_insert()
     what_to_insert = ", ".join(["%s" for _ in range(len(values))])
     query = query_template.format(self._fqrn, fields_names, what_to_insert)
     self.__cursor.execute(query, tuple(values))
+    return self.__cursor.fetchall()
 
 def delete(self, delete_all=False):
     """Removes a set of tuples from the relation.
