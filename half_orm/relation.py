@@ -471,8 +471,6 @@ def __get_query(self, query_template, *args):
     self.__query_type = 'select'
     what, where, values = self.__where_args(*args)
     where = "\nwhere\n    {}".format(where)
-    if args:
-        what = 'distinct {}'.format(what)
     self.__get_from()
     return (
         query_template.format(
@@ -481,7 +479,7 @@ def __get_query(self, query_template, *args):
 
 def __prep_select(self, *args):
     self.__sql_values = []
-    query_template = "select\n  {}\nfrom\n  {} {}\n  {}"
+    query_template = "select\n distinct {}\nfrom\n  {} {}\n  {}"
     query, values = self.__get_query(query_template, *args)
     values = tuple(self.__sql_values + values)
     if 'order_by' in self.__select_params.keys():
@@ -523,8 +521,7 @@ def get(self):
     count = len(self)
     if count != 1:
         raise relation_errors.ExpectedOneError(self, count)
-    res = list(self.select())
-    return self(**(res[0]))
+    return self(**(next(self.select())))
 
 def __len__(self, *args):
     """Retruns the number of tuples matching the intention in the relation.
