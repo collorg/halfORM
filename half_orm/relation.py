@@ -152,17 +152,26 @@ def __init__(self, **kwargs):
         self.__fkeys_properties = True
     if self.__base_classes is None:
         self.__class__.__base_classes = []
-    for cls in self.__class__.mro():
-        if not id(cls) in self.__base_classes:
-            self.__class__.__base_classes.append(id(cls))
-            if issubclass(cls, Relation):
-                obj = cls()
-                if not hasattr(obj, '_fkeys'):
-                    continue
-                for fkey_name in obj._fkeys._fkeys_names:
-                    if not hasattr(self._fkeys, fkey_name):
-                        self._fkeys._fkeys_names.append(fkey_name)
-                        setattr(self._fkeys, fkey_name, obj._fkeys.__dict__[fkey_name])
+    if not self.__cls_fkeys_dict:
+        self.__class__.__cls_fkeys_dict = {'_fkeys_names': []}
+        for cls in self.__class__.mro():
+            if not id(cls) in self.__base_classes:
+                self.__class__.__base_classes.append(id(cls))
+                if issubclass(cls, Relation):
+                    obj = cls()
+                    if not hasattr(obj, '_fkeys'):
+                        continue
+                    for fkey_name in obj._fkeys._fkeys_names:
+                        if not hasattr(self._fkeys, fkey_name):
+                            self._fkeys._fkeys_names.append(fkey_name)
+                            setattr(self._fkeys, fkey_name, obj._fkeys.__dict__[fkey_name])
+                        self.__class__.__cls_fkeys_dict['_fkeys_names'].append(fkey_name)
+                        self.__class__.__cls_fkeys_dict[fkey_name] = obj._fkeys.__dict__[fkey_name]
+    else:
+        for fkey_name in self.__class__.__cls_fkeys_dict['_fkeys_names']:
+            if not hasattr(self._fkeys, fkey_name):
+                self._fkeys._fkeys_names.append(fkey_name)
+                setattr(self._fkeys, fkey_name, self.__class__.__cls_fkeys_dict[fkey_name])
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     kwk_ = set(kwargs.keys())
@@ -770,6 +779,7 @@ def relation_factory(class_name, bases, dct):
 
     bases = [Relation,]
     tbl_attr = {}
+    tbl_attr['__cls_fkeys_dict'] = {}
     tbl_attr['__base_classes'] = None
     tbl_attr['__fkeys_properties'] = False
     tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
