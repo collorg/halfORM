@@ -484,9 +484,7 @@ def __prep_select(self, *args):
     values = tuple(self.__sql_values + values)
     if 'order_by' in self.__select_params.keys():
         query = "{} order by {}".format(
-            query,
-            ", ".join(["r{}.{}".format(self.id_, isinstance(field_name, tuple) and " ".join(field_name) or field_name)
-                       for field_name in self.__select_params['order_by']]))
+            query, self.__select_params['order_by'])
     if 'limit' in self.__select_params.keys():
         query = '{} limit {}'.format(query, self.__select_params['limit'])
     if 'offset' in self.__select_params.keys():
