@@ -436,7 +436,7 @@ def __join(self, orig_rel, deja_vu):
         _, where, values = fk_rel.__where_args()
         where = " and\n    {}".format(where)
         orig_rel.__sql_query.insert(1, '\n  join {} on\n   '.format(__sql_id(fk_rel)))
-        orig_rel.__sql_query.insert(2, fkey._join_query(orig_rel))
+        orig_rel.__sql_query.insert(2, fkey._join_query(self))
         orig_rel.__sql_query.append(where)
         orig_rel.__sql_values += values
 
