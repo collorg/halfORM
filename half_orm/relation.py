@@ -689,10 +689,10 @@ def _set_fkeys_properties(self):
     """
     fkp = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES'], 0)
     if hasattr(fkp, 'FKEYS_PROPERTIES'):
-        for property_name, fkey_name in fkp.FKEYS_PROPERTIES:
-            self._set_fkey_property(property_name, fkey_name)
+        for prop in fkp.FKEYS_PROPERTIES:
+            self._set_fkey_property(*prop)
 
-def _set_fkey_property(self, property_name, fkey_name):
+def _set_fkey_property(self, property_name, fkey_name, cast=None):
     """Sets the property with property_name on the foreign key."""
     def fget(self):
         "getter"
@@ -701,6 +701,8 @@ def _set_fkey_property(self, property_name, fkey_name):
         "setter"
         self._fkeys.__dict__[fkey_name].set(value)
     setattr(self.__class__, property_name, property(fget=fget, fset=fset))
+    if cast:
+        self._fkeys.__dict__[fkey_name].cast(cast)
 
 def _debug():
     """For debug usage"""
