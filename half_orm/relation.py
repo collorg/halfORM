@@ -25,6 +25,7 @@ Double quotes can be ommited even if there are dots in the schema name for
 both FQRN and QRN. The _normalize_fqrn function add double quotes to the FQRN.
 """
 
+from collections import OrderedDict
 from keyword import iskeyword
 import datetime
 import sys
@@ -132,7 +133,7 @@ class SetOp(object):
             self.__op,
             self.__right and self.__right._fqrn or None)
 
-class Relation(object):
+class Relation(OrderedDict):
     """Base class of Table and View classes (see relation_factory)."""
     pass
 
@@ -232,6 +233,13 @@ def __set_fields(self):
             self._fkeys,
             pyfkeyname,
             FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names))
+    self.__dict__.update(self._fields.__dict__)
+
+def __setitem__(self, key, value):
+    self._fields.__dict__[key].set(value)
+
+def __getitem__(self, key):
+    return self._fields.__dict__[key]
 
 def select_params(self, **kwargs):
     """Sets the limit and offset on the relation (used by select)."""
@@ -732,6 +740,8 @@ COMMON_INTERFACE = {
     '__init__': __init__,
     'id_': id_,
     '__set_fields': __set_fields,
+    '__setitem__': __setitem__,
+    '__getitem__': __getitem__,
     'select_params': select_params,
     '__call__': __call__,
     'cast': cast,
