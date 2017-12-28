@@ -123,6 +123,10 @@ class FKey(FieldInterface):
                                a, b in zip(to_fields, from_fields)])
         return "({})".format(bounds)
 
+    def _prep_select(self):
+        if self._is_set:
+            return self._fields, self.to_._prep_select(*self.fk_names)
+
     def __repr__(self):
         """Representation of a foreign key
         """

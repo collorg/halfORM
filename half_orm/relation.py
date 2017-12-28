@@ -54,6 +54,10 @@ class FKeys(object):
     def __init__(self):
         self._fkeys_names = []
 
+    def __iter__(self):
+        for fkey_name in self._fkeys_names:
+            yield self.__dict__[fkey_name]
+
     def values(self):
         """Yields the foreign keys (FKey objects)"""
         for fkey_name in self._fkeys_names:
@@ -486,7 +490,7 @@ def __get_query(self, query_template, *args):
             what, self.__only and "only" or "", ' '.join(self.__sql_query), where),
             values)
 
-def __prep_select(self, *args):
+def _prep_select(self, *args):
     self.__sql_values = []
     query_template = "select\n distinct {}\nfrom\n  {} {}\n  {}"
     query, values = self.__get_query(query_template, *args)
@@ -505,7 +509,7 @@ def select(self, *args):
 
     - @args are fields names to restrict the returned attributes
     """
-    query, values = self.__prep_select(*args)
+    query, values = self._prep_select(*args)
     try:
         self.__cursor.execute(query, values)
     except Exception as err:
@@ -517,7 +521,7 @@ def select(self, *args):
 
 def _mogrify(self, *args):
     """Prints the select query."""
-    query, values = self.__prep_select(*args)
+    query, values = self._prep_select(*args)
     return self.__cursor.mogrify(query, values).decode('utf-8')
 
 def get(self):
@@ -583,15 +587,28 @@ def __what_to_insert(self):
     set_fields = self.__get_set_fields()
     if set_fields:
         fields_names = ['"{}"'.format(field.name()) for field in set_fields]
-    return ", ".join(fields_names), set_fields
+    fk_fields = []
+    fk_queries = []
+    fk_values = []
+    for fkey in self._fkeys:
+        fk_prep_select = fkey._prep_select()
+        if fk_prep_select is not None:
+            fk_fields += fk_prep_select[0]
+            fk_queries.append(fk_prep_select[1][0])
+            fk_values += fk_prep_select[1][1]
+    return fields_names, set_fields, fk_fields, fk_queries, fk_values
 
 def insert(self):
     """Insert a new tuple into the Relation."""
     query_template = "insert into {} ({}) values ({}) returning *"
     self.__query_type = 'insert'
-    fields_names, values = self.__what_to_insert()
-    what_to_insert = ", ".join(["%s" for _ in range(len(values))])
-    query = query_template.format(self._fqrn, fields_names, what_to_insert)
+    fields_names, values, fk_fields, fk_query, fk_values = self.__what_to_insert()
+    what_to_insert = ["%s" for _ in range(len(values))]
+    if fk_fields:
+        fields_names += fk_fields
+        what_to_insert += ["({})".format(query) for query in fk_query]
+        values += fk_values
+    query = query_template.format(self._fqrn, ", ".join(fields_names), ", ".join(what_to_insert))
     self.__cursor.execute(query, tuple(values))
     return self.__cursor.fetchall()
 
@@ -731,7 +748,7 @@ COMMON_INTERFACE = {
     'is_set': is_set,
     '__where_repr': __where_repr,
     '__where_args': __where_args,
-    '__prep_select': __prep_select,
+    '_prep_select': _prep_select,
     'select': select,
     '_mogrify': _mogrify,
     '__len__': __len__,
