@@ -67,32 +67,6 @@ class FKeys(object):
     def __len__(self):
         return len(self.__dict__)
 
-class Fields(object):
-    """Class of the Relation._fields attribute.
-    Each attribute of the PostgreSQL relation is accessible as an attribute
-    of Relation._fields with the field's name.
-    """
-    def __init__(self):
-        self._fields_names = []
-
-    def items(self):
-        """Yields the (fields names, Field objects)"""
-        for field_name in self._fields_names:
-            yield field_name, self.__dict__[field_name]
-
-    def keys(self):
-        """Yields the fields names."""
-        for field_name in self._fields_names:
-            yield field_name
-
-    def values(self):
-        """Yields the fields (Field objects)"""
-        for field_name in self._fields_names:
-            yield self.__dict__[field_name]
-
-    def __len__(self):
-        return len(self.__dict__)
-
 class SetOp(object):
     """SetOp class stores the set operations made on the Relation class objects
 
@@ -148,9 +122,7 @@ def __init__(self, **kwargs):
     """
     self.__only = False
     self.__neg = False
-    self._fields = Fields()
     self._fkeys = FKeys()
-    self._fields_names = set()
     self.__set_fields()
     if not self.__fkeys_properties:
         self._set_fkeys_properties()
@@ -184,7 +156,7 @@ def __init__(self, **kwargs):
         assert kwk_.intersection(self._fields_names) == kwk_
     except:
         raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
-    _ = {self._fields.__dict__[field_name].set(value)
+    _ = {self[field_name].set(value)
          for field_name, value in kwargs.items()}
     self._joined_to = {}
     self.__query_type = None
@@ -193,7 +165,7 @@ def __init__(self, **kwargs):
     self.__set_op = SetOp(self)
     self.__select_params = {}
     self.__id_cast = None
-    _ = {field._set_relation(self) for field in self._fields.values()}
+    _ = {field._set_relation(self) for field in self.values()}
     _ = {fkey._set_relation(self) for fkey in self._fkeys.values()}
 
 @property
@@ -201,6 +173,10 @@ def id_(self):
     """Return the __id_cast or the id of the relation.
     """
     return self.__id_cast or id(self)
+
+@property
+def _fields_names(self):
+    return self.keys()
 
 def __get_only(self):
     "Returns the value of self.__only"
@@ -222,9 +198,7 @@ def __set_fields(self):
     for field_name, f_metadata in dbm['byname'][self.__sfqrn]['fields'].items():
         pyfield_name = (
             iskeyword(field_name) and "{}_".format(field_name) or field_name)
-        self._fields._fields_names.append(pyfield_name)
-        setattr(self._fields, pyfield_name, Field(field_name, f_metadata))
-        self._fields_names.add(pyfield_name)
+        self[pyfield_name] = Field(field_name, f_metadata)
     for fkeyname, f_metadata in dbm['byname'][self.__sfqrn]['fkeys'].items():
         ft_sfqrn, ft_fields_names, fields_names = f_metadata
         pyfkeyname = iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname
@@ -233,13 +207,6 @@ def __set_fields(self):
             self._fkeys,
             pyfkeyname,
             FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names))
-    self.__dict__.update(self._fields.__dict__)
-
-def __setitem__(self, key, value):
-    self._fields.__dict__[key].set(value)
-
-def __getitem__(self, key):
-    return self._fields.__dict__[key]
 
 def select_params(self, **kwargs):
     """Sets the limit and offset on the relation (used by select)."""
@@ -349,13 +316,13 @@ def to_dict(self):
     """Retruns a dictionary containing only the values of the fields
     that are set."""
     return {key:field.value for key, field in
-        self._fields.items() if field.is_set()}
+        self.items() if field.is_set()}
 
 def _to_dict_val_comp(self):
     """Retruns a dictionary containing the values and comparators of the fields
     that are set."""
     return {key:(field.comp(), field.value) for key, field in
-            self._fields.items() if field.is_set()}
+            self.items() if field.is_set()}
 
 def __repr__(self):
     rel_kind = self.__kind
@@ -376,10 +343,10 @@ def __repr__(self):
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
     ret.append('FIELDS:')
     mx_fld_n_len = 0
-    for field_name in self._fields.keys():
+    for field_name in self.keys():
         if len(field_name) > mx_fld_n_len:
             mx_fld_n_len = len(field_name)
-    for field_name, field in self._fields.items():
+    for field_name, field in self.items():
         ret.append('- {}:{}{}'.format(
             field_name,
             ' ' * (mx_fld_n_len + 1 - len(field_name)),
@@ -400,11 +367,11 @@ def is_set(self):
     for _, jt_ in self._joined_to.items():
         joined_to |= jt_.is_set()
     return (joined_to or self.__set_op.op_ or self.__neg or
-            bool({field for field in self._fields.values() if field.is_set()}))
+            bool({field for field in self.values() if field.is_set()}))
 
 def __get_set_fields(self):
     """Retruns a list containing only the fields that are set."""
-    return [field for field in self._fields.values() if field.is_set()]
+    return [field for field in self.values() if field.is_set()]
 
 def __walk_op(self, rel_id_, out=None, _fields_=None):
     """Walk the set operators tree and return a list of SQL where
@@ -587,7 +554,7 @@ def update(self, update_all=False, **kwargs):
     query = query_template.format(self._fqrn, what, where)
     self.__cursor.execute(query, tuple(values))
     for field_name, value in kwargs.items():
-        self._fields.__dict__[field_name].set(value)
+        self[field_name].set(value)
 
 def __what_to_insert(self):
     """Returns the field names and values to be inserted."""
@@ -739,9 +706,8 @@ COMMON_INTERFACE = {
 #    '__new__': __new__,
     '__init__': __init__,
     'id_': id_,
+    '_fields_names': _fields_names,
     '__set_fields': __set_fields,
-    '__setitem__': __setitem__,
-    '__getitem__': __getitem__,
     'select_params': select_params,
     '__call__': __call__,
     'cast': cast,
