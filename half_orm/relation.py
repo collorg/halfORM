@@ -525,6 +525,11 @@ def update(self, update_all=False, **kwargs):
 
     query_template = "update {} set {} {}"
     what, where, values = self.__update_args(**kwargs)
+    _, _, fk_fields, fk_query, fk_values = self.__what_to_insert()
+    if fk_fields:
+        fk_where = " and ".join(["({}) in ({})".format(a, b) for a, b in zip(fk_fields, fk_query)])
+        where = "{} and {}".format(where, fk_where)
+        values += fk_values
     query = query_template.format(self._fqrn, what, where)
     self.__cursor.execute(query, tuple(values))
     for field_name, value in kwargs.items():
