@@ -569,12 +569,16 @@ def delete(self, delete_all=False):
     query_template = "delete from {} {}"
     self.__query_type = 'delete'
     _, where, values = self.__where_args()
+    _, values, fk_fields, fk_query, fk_values = self.__what_to_insert()
+    where = " where {}".format(where)
     if where == "(1 = 1)" and not delete_all:
         raise RuntimeError
-    where = " where {}".format(where)
+    if fk_fields:
+        fk_where = " and ".join(["({}) in ({})".format(a, b) for a, b in zip(fk_fields, fk_query)])
+        where = "{} and {}".format(where, fk_where)
+        values += fk_values
     query = query_template.format(self._fqrn, where)
-    print(query)
-    #self.__cursor.execute(query, tuple(values))
+    self.__cursor.execute(query, tuple(values))
 
 def __call__(self, **kwargs):
     return self.__class__(**kwargs)
