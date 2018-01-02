@@ -47,26 +47,6 @@ class ExpectedOneElementError(Exception):
         super().__init__(
             "ERROR! More than one element for a non list item: {}.".format(msg))
 
-class FKeys(object):
-    """Class of the Relation._fkeys attribute.
-    Each foreign key of the PostgreSQL relation is accessible as an attribute
-    of Relation._fkeys with the foreign key's name.
-    """
-    def __init__(self):
-        self._fkeys_names = []
-
-    def __iter__(self):
-        for fkey_name in self._fkeys_names:
-            yield self.__dict__[fkey_name]
-
-    def values(self):
-        """Yields the foreign keys (FKey objects)"""
-        for fkey_name in self._fkeys_names:
-            yield self.__dict__[fkey_name]
-
-    def __len__(self):
-        return len(self.__dict__)
-
 class SetOp(object):
     """SetOp class stores the set operations made on the Relation class objects
 
@@ -122,7 +102,7 @@ def __init__(self, **kwargs):
     """
     self.__only = False
     self.__neg = False
-    self._fkeys = FKeys()
+    self._fkeys = OrderedDict()
     self.__set_fields()
     if not self.__fkeys_properties:
         self._set_fkeys_properties()
@@ -138,17 +118,15 @@ def __init__(self, **kwargs):
                     obj = cls()
                     if not hasattr(obj, '_fkeys'):
                         continue
-                    for fkey_name in obj._fkeys._fkeys_names:
-                        if not hasattr(self._fkeys, fkey_name):
-                            self._fkeys._fkeys_names.append(fkey_name)
-                            setattr(self._fkeys, fkey_name, obj._fkeys.__dict__[fkey_name])
+                    for fkey_name in obj._fkeys.keys():
+                        if not fkey_name in self._fkeys:
+                            self._fkeys[fkey_name] = obj._fkeys[fkey_name]
                         self.__class__.__cls_fkeys_dict['_fkeys_names'].append(fkey_name)
-                        self.__class__.__cls_fkeys_dict[fkey_name] = obj._fkeys.__dict__[fkey_name]
+                        self.__class__.__cls_fkeys_dict[fkey_name] = obj._fkeys[fkey_name]
     else:
         for fkey_name in self.__class__.__cls_fkeys_dict['_fkeys_names']:
-            if not hasattr(self._fkeys, fkey_name):
-                self._fkeys._fkeys_names.append(fkey_name)
-                setattr(self._fkeys, fkey_name, self.__class__.__cls_fkeys_dict[fkey_name])
+            if not fkey_name in self._fkeys:
+                self._fkeys[fkey_name] = self.__class__.__cls_fkeys_dict[fkey_name]
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     kwk_ = set(kwargs.keys())
@@ -202,11 +180,7 @@ def __set_fields(self):
     for fkeyname, f_metadata in dbm['byname'][self.__sfqrn]['fkeys'].items():
         ft_sfqrn, ft_fields_names, fields_names = f_metadata
         pyfkeyname = iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname
-        self._fkeys._fkeys_names.append(pyfkeyname)
-        setattr(
-            self._fkeys,
-            pyfkeyname,
-            FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names))
+        self._fkeys[pyfkeyname] = FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names)
 
 def select_params(self, **kwargs):
     """Sets the limit and offset on the relation (used by select)."""
@@ -351,8 +325,8 @@ def __repr__(self):
             field_name,
             ' ' * (mx_fld_n_len + 1 - len(field_name)),
             repr(field)))
-    if self._fkeys._fkeys_names:
-        plur = len(self._fkeys._fkeys_names) > 1 and  'S' or ''
+    if self._fkeys.keys():
+        plur = len(self._fkeys) > 1 and  'S' or ''
         ret.append('FOREIGN KEY{}:'.format(plur))
         for fkey in self._fkeys.values():
             ret.append(repr(fkey))
@@ -565,7 +539,7 @@ def __what_to_insert(self):
     fk_fields = []
     fk_queries = []
     fk_values = []
-    for fkey in self._fkeys:
+    for fkey in self._fkeys.values():
         fk_prep_select = fkey._prep_select()
         if fk_prep_select is not None:
             fk_fields += fk_prep_select[0]
@@ -595,9 +569,12 @@ def delete(self, delete_all=False):
     query_template = "delete from {} {}"
     self.__query_type = 'delete'
     _, where, values = self.__where_args()
+    if where == "(1 = 1)" and not delete_all:
+        raise RuntimeError
     where = " where {}".format(where)
     query = query_template.format(self._fqrn, where)
-    self.__cursor.execute(query, tuple(values))
+    print(query)
+    #self.__cursor.execute(query, tuple(values))
 
 def __call__(self, **kwargs):
     return self.__class__(**kwargs)
@@ -688,13 +665,13 @@ def _set_fkey_property(self, property_name, fkey_name, cast=None):
     """Sets the property with property_name on the foreign key."""
     def fget(self):
         "getter"
-        return self._fkeys.__dict__[fkey_name]()
+        return self._fkeys[fkey_name]()
     def fset(self, value):
         "setter"
-        self._fkeys.__dict__[fkey_name].set(value)
+        self._fkeys[fkey_name].set(value)
     setattr(self.__class__, property_name, property(fget=fget, fset=fset))
     if cast:
-        self._fkeys.__dict__[fkey_name].cast(cast)
+        self._fkeys[fkey_name].cast(cast)
 
 def _debug():
     """For debug usage"""

@@ -24,7 +24,7 @@ class Test(TestCase):
     def is_set_test_fkey(self):
         set_pers = self.pers(id=1)
         set_post = self.post()
-        set_post._fkeys.author.set(set_pers)
+        set_post._fkeys['author'].set(set_pers)
         self.assertTrue(set_post.is_set())
 
     def is_set_test_op(self):
