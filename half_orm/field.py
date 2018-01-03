@@ -5,20 +5,28 @@
 
 from psycopg2.extensions import register_adapter, adapt
 
-from half_orm.field_interface import FieldInterface
 from half_orm.null import NULL
 
-class Field(FieldInterface):
+class Field():
     """The class Field is for Relation internal usage. It is called by
     the RelationFactory metaclass for each field in the relation considered.
     """
-    def __init__(self, name, metadata):
-        self._relation = None
+    def __init__(self, name, relation, metadata):
+        self.__relation = relation
+        self.__name = name
+        self.__is_set = False
         self.__metadata = metadata
-        self._value = None #FIXME should be __value but __set__ doesn't work!
+        self.__value = None
         self.__unaccent = False
         self.__comp = '='
-        super().__init__(name)
+
+    @property
+    def _relation(self):
+        return self.__relation
+
+    def is_set(self):
+        """Returns if the field is set or not."""
+        return self.__is_set
 
     def __repr__(self):
         md_ = self.__metadata
@@ -26,13 +34,13 @@ class Field(FieldInterface):
             md_['fieldtype'], md_['pkey'] and 'PK' or ('{}{}'.format(
                 md_['uniq'] and 'UNIQUE ' or '',
                 md_['notnull'] and 'NOT NULL' or '')))
-        if self._is_set:
+        if self.__is_set:
             repr_ = "{} ({} {} {})".format(
-                repr_, self.name(), self.__comp, self._value)
+                repr_, self.__name, self.__comp, self.__value)
         return repr_.strip()
 
     def __str__(self):
-        return str(self._value)
+        return str(self.__value)
 
     def _praf(self, query, id_):
         """Returns field_name prefixed with relation alias if the query is
@@ -40,15 +48,15 @@ class Field(FieldInterface):
         """
         id_ = 'r{}'.format(id_)
         if query == 'select':
-            return '{}.{}'.format(id_, self.name())
-        return '"{}"'.format(self.name())
+            return '{}.{}'.format(id_, self.__name)
+        return '"{}"'.format(self.__name)
 
     def where_repr(self, query, id_):
         """Returns the SQL representation of the field for the where clause
         """
         where_repr = ''
         comp_str = '%s'
-        if isinstance(self._value, (list, tuple)):
+        if isinstance(self.__value, (list, tuple)):
             if self.type_[0] != '_': # not an array type
                 comp_str = 'any(%s)'
         if not self.unaccent:
@@ -62,11 +70,11 @@ class Field(FieldInterface):
     @property
     def value(self):
         "Returns the value of the field object"
-        return self._value
+        return self.__value
 
     def set(self, value):
         "Sets the value of the field object"
-        self.__set__(self._relation, value)
+        self.__set__(self.__relation, value)
 
     def __set__(self, obj, value):
         """Sets the value (and the comparator) associated with the field."""
@@ -74,8 +82,7 @@ class Field(FieldInterface):
             # None is not a value use Null class to set to Null
             return
         comp = None
-        self._relation = obj
-        is_field = isinstance(value, Field)
+        self.__relation = obj
         if isinstance(value, tuple):
             assert len(value) == 2
             comp, value = value
@@ -84,18 +91,9 @@ class Field(FieldInterface):
         if value is NULL:
             assert comp == 'is' or comp == 'is not'
         elif comp is None:
-            if not is_field:
-                comp = '='
-            else:
-                value.from_ = value._relation
-                value.to_ = self._relation
-                value.to_._joined_to.insert(0, (value.from_, value))
-                value.fields = [value.name()]
-                value.fk_names = [self.name()]
-                comp = 'in'
-        if not is_field:
-            self._is_set = True
-        self._value = value
+            comp = '='
+        self.__is_set = True
+        self.__value = value
         self.__comp = comp
 
     @property
@@ -120,10 +118,10 @@ class Field(FieldInterface):
     @property
     def relation(self):
         """Returns the relation for which self is an attribute."""
-        return self._relation
+        return self.__relation
 
     def _psycopg_adapter(self):
-        """Return the SQL representation of self._value"""
-        return adapt(self._value)
+        """Return the SQL representation of self.__value"""
+        return adapt(self.__value)
 
 register_adapter(Field, Field._psycopg_adapter)

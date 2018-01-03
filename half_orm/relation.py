@@ -34,6 +34,8 @@ import yaml
 
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
+from half_orm.field import Field
+from half_orm.fkey import FKey
 
 class UnknownAttributeError(Exception):
     """Unknown attribute error"""
@@ -134,8 +136,7 @@ def __init__(self, **kwargs):
         assert kwk_.intersection(self._fields_names) == kwk_
     except:
         raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
-    _ = {self[field_name].set(value)
-         for field_name, value in kwargs.items()}
+    _ = {self[field_name].set(value) for field_name, value in kwargs.items()}
     self._joined_to = {}
     self.__query_type = None
     self.__sql_query = []
@@ -143,8 +144,6 @@ def __init__(self, **kwargs):
     self.__set_op = SetOp(self)
     self.__select_params = {}
     self.__id_cast = None
-    _ = {field._set_relation(self) for field in self.values()}
-    _ = {fkey._set_relation(self) for fkey in self._fkeys.values()}
 
 @property
 def id_(self):
@@ -170,17 +169,15 @@ only = property(__get_only, __set_only)
 
 def __set_fields(self):
     """Initialise the fields and fkeys of the relation."""
-    from .field import Field
-    from .fkey import FKey
     dbm = self._model._metadata
     for field_name, f_metadata in dbm['byname'][self.__sfqrn]['fields'].items():
         pyfield_name = (
             iskeyword(field_name) and "{}_".format(field_name) or field_name)
-        self[pyfield_name] = Field(field_name, f_metadata)
+        self[pyfield_name] = Field(field_name, self, f_metadata)
     for fkeyname, f_metadata in dbm['byname'][self.__sfqrn]['fkeys'].items():
         ft_sfqrn, ft_fields_names, fields_names = f_metadata
         pyfkeyname = iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname
-        self._fkeys[pyfkeyname] = FKey(fkeyname, ft_sfqrn, ft_fields_names, fields_names)
+        self._fkeys[pyfkeyname] = FKey(fkeyname, self, ft_sfqrn, ft_fields_names, fields_names)
 
 def select_params(self, **kwargs):
     """Sets the limit and offset on the relation (used by select)."""
@@ -192,7 +189,7 @@ def group_by(self, yml_directive):
     description.
     """
     def inner_group_by(data, directive, grouped_data, gdata=None):
-        """reccursive fonction to actually group the data in grouped_data."""
+        """recursive fonction to actually group the data in grouped_data."""
         deja_vu_key = set()
         if gdata is None:
             gdata = grouped_data
@@ -289,8 +286,7 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
 def to_dict(self):
     """Retruns a dictionary containing only the values of the fields
     that are set."""
-    return {key:field.value for key, field in
-        self.items() if field.is_set()}
+    return {key:field.value for key, field in self.items() if field.is_set()}
 
 def _to_dict_val_comp(self):
     """Retruns a dictionary containing the values and comparators of the fields
@@ -540,7 +536,7 @@ def __what_to_insert(self):
     fields_names = []
     set_fields = self.__get_set_fields()
     if set_fields:
-        fields_names = ['"{}"'.format(field.name()) for field in set_fields]
+        fields_names = ['"{}"'.format(name) for name, field in self.items() if field.is_set()]
     fk_fields = []
     fk_queries = []
     fk_values = []

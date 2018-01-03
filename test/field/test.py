@@ -30,7 +30,7 @@ class Test(TestCase):
         self.assertEqual(isinstance(pers['first_name'], Field), True)
 
     def fields_names_test(self):
-        field_names = {elt.name() for elt in self.pers.values()}
+        field_names = set(self.pers.keys())
         print(field_names)
         self.assertEqual(
             field_names,
