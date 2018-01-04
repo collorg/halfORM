@@ -169,15 +169,14 @@ only = property(__get_only, __set_only)
 
 def __set_fields(self):
     """Initialise the fields and fkeys of the relation."""
-    dbm = self._model._metadata
-    for field_name, f_metadata in dbm['byname'][self.__sfqrn]['fields'].items():
-        pyfield_name = (
-            iskeyword(field_name) and "{}_".format(field_name) or field_name)
-        self[pyfield_name] = Field(field_name, self, f_metadata)
-    for fkeyname, f_metadata in dbm['byname'][self.__sfqrn]['fkeys'].items():
+    metadata = self._model._metadata['byname'][self.__sfqrn]
+    self.__fields_names = {key for key in metadata['fields']}
+    for field_name, f_metadata in metadata['fields'].items():
+        self[field_name] = Field(field_name, self, f_metadata)
+    for fkeyname, f_metadata in metadata['fkeys'].items():
         ft_sfqrn, ft_fields_names, fields_names = f_metadata
-        pyfkeyname = iskeyword(fkeyname) and "{}_".format(fkeyname) or fkeyname
-        self._fkeys[pyfkeyname] = FKey(fkeyname, self, ft_sfqrn, set(ft_fields_names), set(fields_names))
+        self._fkeys[fkeyname] = FKey(
+            fkeyname, self, ft_sfqrn, set(ft_fields_names), set(fields_names))
 
 def select_params(self, **kwargs):
     """Sets the limit and offset on the relation (used by select)."""
