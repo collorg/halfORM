@@ -678,13 +678,11 @@ def _set_fkey_property(self, property_name, fkey_name, cast=None):
     """Sets the property with property_name on the foreign key."""
     def fget(self):
         "getter"
-        return self._fkeys[fkey_name]()
+        return self._fkeys[fkey_name](__cast__=cast)
     def fset(self, value):
         "setter"
         self._fkeys[fkey_name].set(value)
     setattr(self.__class__, property_name, property(fget=fget, fset=fset))
-    if cast:
-        self._fkeys[fkey_name].cast(cast)
 
 def _debug():
     """For debug usage"""
