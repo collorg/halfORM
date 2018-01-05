@@ -110,12 +110,12 @@ def __init__(self, **kwargs):
         self._set_fkeys_properties()
         self.__fkeys_properties = True
     if self.__base_classes is None:
-        self.__class__.__base_classes = set()
+        self.__class__.__base_classes = []
     if not self.__cls_fkeys_dict:
-        self.__class__.__cls_fkeys_dict = {'_fkeys_names': set()}
+        self.__class__.__cls_fkeys_dict = {'_fkeys_names': []}
         for cls in self.__class__.mro():
             if not id(cls) in self.__base_classes:
-                self.__class__.__base_classes.add(id(cls))
+                self.__class__.__base_classes.append(id(cls))
                 if issubclass(cls, Relation):
                     obj = cls()
                     if not hasattr(obj, '_fkeys'):
@@ -123,7 +123,7 @@ def __init__(self, **kwargs):
                     for fkey_name in obj._fkeys.keys():
                         if not fkey_name in self._fkeys:
                             self._fkeys[fkey_name] = obj._fkeys[fkey_name]
-                        self.__class__.__cls_fkeys_dict['_fkeys_names'].add(fkey_name)
+                        self.__class__.__cls_fkeys_dict['_fkeys_names'].append(fkey_name)
                         self.__class__.__cls_fkeys_dict[fkey_name] = obj._fkeys[fkey_name]
     else:
         for fkey_name in self.__class__.__cls_fkeys_dict['_fkeys_names']:
