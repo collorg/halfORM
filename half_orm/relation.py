@@ -430,13 +430,12 @@ def __get_query(self, query_template, *args):
     where = "\nwhere\n    {}".format(where)
     self.__get_from()
     # remove duplicates
-    sql_query = self.__sql_query[:]
     for idx, elt in reversed(list(enumerate(self.__sql_query))):
-        if elt.find('\n  join ') == 0 and sql_query.count(elt) > 1:
-            sql_query[idx] = '  and\n'
+        if elt.find('\n  join ') == 0 and self.__sql_query.count(elt) > 1:
+            self.__sql_query[idx] = '  and\n'
     return (
         query_template.format(
-            what, self.__only and "only" or "", ' '.join(sql_query), where),
+            what, self.__only and "only" or "", ' '.join(self.__sql_query), where),
             values)
 
 def _prep_select(self, *args):
