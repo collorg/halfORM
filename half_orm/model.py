@@ -284,15 +284,21 @@ class Model(object):
         If a qualified relation name (<schema name>.<table name>) is
         passed, prints only the description of the corresponding relation.
         """
+        def get_fqrn(key):
+            return ".".join(['"{}"'.format(elt) for elt in key[1:]])
+
         if not qrn:
             entry = self.__metadata[self.__dbname]['byname']
             for key in entry:
-                fqrn = ".".join(['"{}"'.format(elt) for elt in key[1:]])
+                fqrn = get_fqrn(key)
                 if verbose:
                     print(relation_factory(
                         'Table', (), {'fqrn': fqrn, 'model': self})())
                 else:
                     print('{} {}'.format(entry[key]['tablekind'], fqrn))
+                    if entry[key]['inherits']:
+                        print("   inherits({})".format(
+                            ", ".join([get_fqrn(elt) for elt in entry[key]['inherits']])))
         else:
             fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
             print(relation_factory(
