@@ -1,20 +1,19 @@
 **THIS PROJECT IS IN ALPHA STAGE. I'm looking for testers/contributors to validate the API.**
 
-# Welcome to halfORM, the PostgreSQL/Python3 relation/object mapper carefully designed to **NOT** address any of the data definition language part of SQL.
+# halfORM: PostgreSQL to Python made easy
 
-```half_orm``` is a really simple relational object mapper for PostgreSQL (9+) fully written in Python3. It manages [the table inheritance of PostgreSQL](https://www.postgresql.org/docs/current/static/tutorial-inheritance.html) and more... See the complete tour of ```half_orm``` in 30 minutes bellow.
-
+```half_orm``` maps an existing PostgreSQL database to Python objects with [inheritance as defined in PostgreSQL](https://www.postgresql.org/docs/current/static/tutorial-inheritance.html).
 ## Why half?
 The SQL language is divided in two different parts:
 - the data definition language part (DDL) to manipulate the structure of a database,
 - the data manipulation language par (DML) used for selecting, inserting, deleting and updating data in a database.
 
-The half part of ```half_orm``` name indicates that only the DML part is addressed. This makes ```half_orm``` easy to learn and use. See the complete tour of ```half_orm``` in 30 minutes bellow.
+The half part of ```half_orm``` name indicates that only the DML part is addressed. This makes ```half_orm``` easy to learn and use.
 
 # Installation (tested on Linux/Mac OSX)
 See [the installation instructions file](INSTALL.md).
 
-# The full API
+# Getting started
 
 ## The config file
 Before we can begin, we need a configuration file to access the database. This file contains the database name, user name and password, host and port informations. See the example: [test/halftest.ini](test/halftest.ini)
@@ -25,15 +24,62 @@ Keep it in a safe place. By default, ```half_orm``` looks for these files in
 The examples bellow use the [halftest example database](test/sql/halftest.sql).
 To install the ```halftest``` database see [the installation instructions file](INSTALL.md).
 
-The ```halftest``` has:
-- for tables:
- - ```actor.person```
- - ```blog.post```
- - ```blog.event``` **inherits ```blog.post```**
- - ```blog.comment```
-- one view:
- - ```blog.view.post_comment```
+### Connecting to the database (the Model class)
+```python
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*-
 
+from half_orm.model import Model
+
+model = Model('halftest')
+```
+
+### Get a rapid description of the database structure (the `Model.desc` method)
+```python
+model.desc()
+```
+displays:
+```
+r "actor"."person"
+r "blog"."comment"
+r "blog"."event"
+   inherits("blog"."post")
+r "blog"."post"
+v "blog.view"."post_comment"
+```
+`r` stands for relation, `v` for view. We can see that `blog.event` inherits from `blog.post`.
+
+### Get the class of a relation/view (the `Model.get_relation_class` method)
+
+```python
+Person = model.get_relation_class('actor.person')
+```
+Just print an instance of the class to get a full description of the corresponding relation:
+```python
+print(Person())
+```
+displays:
+```python
+__RCLS: <class 'half_orm.relation.Table_HalftestActorPerson'>
+This class allows you to manipulate the data in the PG relation/view:
+TABLE: "halftest"."actor"."person"
+DESCRIPTION:
+The table actor.person contains the persons of the blogging system.
+The id attribute is a serial. Just pass first_name, last_name and birth_date
+to insert a new person.
+FIELDS:
+- id:         (int4) UNIQUE NOT NULL
+- first_name: (text) PK
+- last_name:  (text) PK
+- birth_date: (date) PK
+FOREIGN KEYS:
+- _reverse_fkey_halftest_blog_comment_author_id: (id)
+ ↳ "halftest"."blog"."comment"(author_id)
+- _reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date: (last_name, birth_date, first_name)
+ ↳ "halftest"."blog"."event"(author_first_name, author_last_name, author_birth_date)
+- _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: (last_name, birth_date, first_name)
+ ↳ "halftest"."blog"."post"(author_first_name, author_last_name, author_birth_date)
+```
 
 # The halfORM script
 

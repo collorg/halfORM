@@ -26,7 +26,6 @@ both FQRN and QRN. The _normalize_fqrn function add double quotes to the FQRN.
 """
 
 from collections import OrderedDict
-from keyword import iskeyword
 import datetime
 import sys
 import uuid
