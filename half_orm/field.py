@@ -80,7 +80,7 @@ class Field():
         """Sets the value (and the comparator) associated with the field."""
         if value is None:
             # None is not a value use Null class to set to Null
-            return
+            raise ValueError("None is not a value use unset method or NULL value.")
         comp = None
         self.__relation = obj
         if isinstance(value, tuple):
@@ -95,6 +95,12 @@ class Field():
         self.__is_set = True
         self.__value = value
         self.__comp = comp
+
+    def unset(self):
+        "Unset a field"
+        self.__is_set = False
+        self.__value = None
+        self.__comp = '='
 
     @property
     def type_(self):
