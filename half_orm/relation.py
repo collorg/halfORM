@@ -135,7 +135,7 @@ def __init__(self, **kwargs):
         assert kwk_.intersection(self._fields_names) == kwk_
     except:
         raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
-    _ = {self[field_name].set(value) for field_name, value in kwargs.items()}
+    _ = {self[field_name].set(value) for field_name, value in kwargs.items() if value is not None}
     self._joined_to = {}
     self.__query_type = None
     self.__sql_query = []
@@ -176,11 +176,6 @@ def __set_fields(self):
         ft_sfqrn, ft_fields_names, fields_names = f_metadata
         self._fkeys[fkeyname] = FKey(
             fkeyname, self, ft_sfqrn, set(ft_fields_names), set(fields_names))
-
-def select_params(self, **kwargs):
-    """Sets the limit and offset on the relation (used by select)."""
-    self.__select_params.update(kwargs)
-    return self
 
 def group_by(self, yml_directive):
     """Returns an aggregation of the data according to the yml directive
@@ -434,12 +429,15 @@ def __get_query(self, query_template, *args):
             self.__sql_query[idx] = '  and\n'
     return (
         query_template.format(
-            what, self.__only and "only" or "", ' '.join(self.__sql_query), where),
-            values)
+            what,
+            self.__only and "only" or "",
+            ' '.join(self.__sql_query), where),
+        values)
 
 def _prep_select(self, *args):
     self.__sql_values = []
-    query_template = "select\n distinct {}\nfrom\n  {} {}\n  {}"
+    query_template = "select\n {} {{}}\nfrom\n  {{}} {{}}\n  {{}}".format(
+        self.__select_params.get('distinct', ''))
     query, values = self.__get_query(query_template, *args)
     values = tuple(self.__sql_values + values)
     if 'order_by' in self.__select_params.keys():
@@ -450,6 +448,30 @@ def _prep_select(self, *args):
     if 'offset' in self.__select_params.keys():
         query = "{} offset {}".format(query, self.__select_params['offset'])
     return query, values
+
+def distinct(self):
+    """Set distinct in SQL select request."""
+    self.__select_params['distinct'] = 'distinct'
+    return self
+
+def order_by(self, _order_):
+    """Set SQL order by according to the "order" string passed
+
+    @order string example :
+    "field1, field2 desc, field3, field4 desc"
+    """
+    self.__select_params['order_by'] = _order_
+    return self
+
+def limit(self, _limit_):
+    """Set limit for the next SQL select request."""
+    self.__select_params['limit'] = _limit_
+    return self
+
+def offset(self, _offset_):
+    """Set the offset for the next SQL select request."""
+    self.__select_params['offset'] = _offset_
+    return self
 
 def select(self, *args):
     """Generator. Yiels the result of the query as a dictionary.
@@ -689,7 +711,10 @@ COMMON_INTERFACE = {
     'id_': id_,
     '_fields_names': _fields_names,
     '__set_fields': __set_fields,
-    'select_params': select_params,
+    'order_by': order_by,
+    'limit': limit,
+    'offset': offset,
+    'distinct': distinct,
     '__call__': __call__,
     'cast': cast,
     '__get_set_fields': __get_set_fields,
