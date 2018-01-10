@@ -463,8 +463,7 @@ def select(self, *args):
         sys.stderr.write(
             "QUERY: {}\nVALUES: {}\n".format(query, values))
         raise err
-    for elt in self.__cursor.fetchall():
-        yield elt
+    return self.__cursor
 
 def _mogrify(self, *args):
     """Prints the select query."""
