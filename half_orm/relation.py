@@ -1,18 +1,11 @@
 #-*- coding: utf-8 -*-
 # pylint: disable=protected-access, too-few-public-methods, no-member
 
-"""This module provides: relation, relation_factory
+"""This module provides: get_relation_class
 
-The relation function allows you to directly instanciate a Relation object
-given its fully qualified relation name:
-- relation(<FQRN>)
-
-The relation_factory can be used to create classes to manipulate the relations
-of the database:
-```
-class MyClass(metaclass=relation_factory):
-    fqrn = '<FQRN>'
-```
+The get_relation_class function allows you to directly instanciate a Relation object
+given its fully qualified get_relation_class name:
+- get_relation_class(<FQRN>)
 
 About QRN and FQRN:
 - FQRN stands for: Fully Qualified Relation Name. It is composed of:
@@ -89,7 +82,7 @@ class SetOp(object):
             self.__right and self.__right._fqrn or None)
 
 class Relation(OrderedDict):
-    """Base class of Table and View classes (see relation_factory)."""
+    """Base class of Table and View classes (see _factory)."""
     pass
 
 #### THE following METHODS are included in Relation class according to
@@ -767,7 +760,7 @@ VIEW_INTERFACE = COMMON_INTERFACE
 MVIEW_INTERFACE = COMMON_INTERFACE
 FDATA_INTERFACE = COMMON_INTERFACE
 
-def relation_factory(class_name, bases, dct):
+def _factory(class_name, bases, dct):
     """Function to build a Relation class corresponding to a PostgreSQL
     relation.
     """
@@ -804,7 +797,7 @@ def relation_factory(class_name, bases, dct):
         bases = []
     for parent_fqrn in metadata['inherits']:
         parent_fqrn = ".".join(['"{}"'.format(elt) for elt in parent_fqrn])
-        bases.append(relation_factory(None, None, {'fqrn': parent_fqrn}))
+        bases.append(_factory(None, None, {'fqrn': parent_fqrn}))
     tbl_attr['__metadata'] = metadata
     if dct.get('model'):
         tbl_attr['_model'] = dct['model']
@@ -828,15 +821,6 @@ def relation_factory(class_name, bases, dct):
     rel_class = type(class_name, tuple(bases), tbl_attr)
     tbl_attr['_model']._relations_['classes'][tuple(sfqrn)] = rel_class
     return rel_class
-
-def relation(_fqrn, **kwargs):
-    """This function is used to instanciate a Relation object using
-    its FQRN (Fully qualified relation name):
-    <database name>.<schema name>.<relation name>.
-    If the <schema name> comprises a dot it must be enclosed in double
-    quotes. Dots are not allowed in <database name> and <relation name>.
-    """
-    return relation_factory(None, None, {'fqrn': _fqrn})(**kwargs)
 
 def _normalize_fqrn(_fqrn):
     """

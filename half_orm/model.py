@@ -32,7 +32,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from half_orm import model_errors
-from half_orm.relation import _normalize_fqrn, _normalize_qrn, relation_factory
+from half_orm.relation import _normalize_fqrn, _normalize_qrn, _factory
 
 __all__ = ["Model", "camel_case"]
 
@@ -69,7 +69,7 @@ class Model(object):
         """Model constructor
 
         Use @config_file in your scripts. The @dbname parameter is
-        reserved to the relation_factory metaclass.
+        reserved to the _factory metaclass.
         """
         assert bool(config_file) != bool(dbname)
         self.__config_file = config_file
@@ -260,7 +260,7 @@ class Model(object):
         schema, table = qtn.rsplit('.', 1)
         fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
         fqrn, _ = _normalize_fqrn(fqrn)
-        return relation_factory('Table', (), {'fqrn': fqrn, 'model': self})
+        return _factory('Table', (), {'fqrn': fqrn, 'model': self})
 
     def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
@@ -292,7 +292,7 @@ class Model(object):
             for key in entry:
                 fqrn = get_fqrn(key)
                 if verbose:
-                    print(relation_factory(
+                    print(_factory(
                         'Table', (), {'fqrn': fqrn, 'model': self})())
                 else:
                     print('{} {}'.format(entry[key]['tablekind'], fqrn))
@@ -301,7 +301,7 @@ class Model(object):
                             ", ".join([get_fqrn(elt) for elt in entry[key]['inherits']])))
         else:
             fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
-            print(relation_factory(
+            print(_factory(
                 'Table', (), {'fqrn': fqrn, 'model': self})())
 
     def __str__(self):
