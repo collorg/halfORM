@@ -278,30 +278,38 @@ class Model(object):
         for relation in self._relations_['list']:
             yield "{} {}.{}.{}".format(relation[0], *relation[1])
 
-    def desc(self, qrn=None, verbose=False):
-        """Prints the description of the relations of the model
+    def desc(self, qrn=None, type_=None):
+        """Returns the list of the relations of the model.
+
+        Each line contains:
+        - the relation type: 'r' relation, 'v' view, 'm' materialized view,
+        - the quoted FQRN (Fully qualified relation name) "<schema name>"."<relation name>"
+        - the list of the FQRN of the inherited relations.
 
         If a qualified relation name (<schema name>.<table name>) is
         passed, prints only the description of the corresponding relation.
         """
         def get_fqrn(key):
+            "returns the quoted version of the FQRN"
             return ".".join(['"{}"'.format(elt) for elt in key[1:]])
 
         if not qrn:
+            ret_val = []
             entry = self.__metadata[self.__dbname]['byname']
             for key in entry:
+                inh = []
+                tablekind = entry[key]['tablekind']
                 fqrn = get_fqrn(key)
-                if verbose:
-                    print(_factory(
-                        'Table', (), {'fqrn': fqrn, 'model': self})())
-                else:
-                    print('{} {}'.format(entry[key]['tablekind'], fqrn))
-                    if entry[key]['inherits']:
-                        print("   inherits({})".format(
-                            ", ".join([get_fqrn(elt) for elt in entry[key]['inherits']])))
+                if entry[key]['inherits']:
+                    inh = [get_fqrn(elt) for elt in entry[key]['inherits']]
+                if type_:
+                    if tablekind != type_:
+                        continue
+                ret_val.append((tablekind, fqrn, inh))
+            return ret_val
         else:
             fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
-            print(_factory(
+            return str(_factory(
                 'Table', (), {'fqrn': fqrn, 'model': self})())
 
     def __str__(self):
