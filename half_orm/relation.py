@@ -162,7 +162,6 @@ only = property(__get_only, __set_only)
 def __set_fields(self):
     """Initialise the fields and fkeys of the relation."""
     metadata = self._model._metadata['byname'][self.__sfqrn]
-    self.__fields_names = [key for key in metadata['fields']]
     for field_name, f_metadata in metadata['fields'].items():
         self[field_name] = Field(field_name, self, f_metadata)
     for fkeyname, f_metadata in metadata['fkeys'].items():
