@@ -162,13 +162,13 @@ only = property(__get_only, __set_only)
 def __set_fields(self):
     """Initialise the fields and fkeys of the relation."""
     metadata = self._model._metadata['byname'][self.__sfqrn]
-    self.__fields_names = {key for key in metadata['fields']}
+    self.__fields_names = [key for key in metadata['fields']]
     for field_name, f_metadata in metadata['fields'].items():
         self[field_name] = Field(field_name, self, f_metadata)
     for fkeyname, f_metadata in metadata['fkeys'].items():
         ft_sfqrn, ft_fields_names, fields_names = f_metadata
         self._fkeys[fkeyname] = FKey(
-            fkeyname, self, ft_sfqrn, set(ft_fields_names), set(fields_names))
+            fkeyname, self, ft_sfqrn, ft_fields_names, fields_names)
 
 def group_by(self, yml_directive):
     """Returns an aggregation of the data according to the yml directive
