@@ -71,6 +71,7 @@ class Model(object):
         Use @config_file in your scripts. The @dbname parameter is
         reserved to the _factory metaclass.
         """
+        self.__backend_pid = None
         assert bool(config_file) != bool(dbname)
         self.__config_file = config_file
         self._dbinfo = {}
@@ -162,8 +163,15 @@ class Model(object):
         self.__cursor = self.__conn.cursor()
         self.__metadata[self.__dbname] = self.__get_metadata()
         self.__deja_vu[self.__dbname] = self
+        self.__backend_pid = self.execute_query(
+            "select pg_backend_pid()").fetchone()['pg_backend_pid']
 
     reconnect = _connect
+
+    @property
+    def _pg_backend_pid(self):
+        "backend PID"
+        return self.__backend_pid
 
     @property
     def _dbname(self):
