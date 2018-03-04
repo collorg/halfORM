@@ -21,10 +21,10 @@ setup(
     license='GPL',
     packages=['half_orm'],
     package_data={'half_orm': ['halfORM_templates/*']},
-    install_requires=['psycopg2>=2.7.3', 'PyYAML'],
+    install_requires=['psycopg2-binary', 'PyYAML'],
     entry_points={
         'console_scripts': [
-            'halfORM=half_orm.halfORM:main',
+            'hop=half_orm.hop:main',
         ],
     },
 )

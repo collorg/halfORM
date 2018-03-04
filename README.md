@@ -81,12 +81,12 @@ FOREIGN KEYS:
  ↳ "halftest"."blog"."post"(author_first_name, author_last_name, author_birth_date)
 ```
 
-# The halfORM script
+# The hop script
 
 Assuming that you have copied [test/halftest.ini](test/halftest.ini) in ```/etc/half_orm/halftest``` and created the ```halftest``` database,
 just run:
 ```sh
-$ halfORM -c halftest -p halftest
+$ hop -c halftest -p halftest
 ```
 The script generates for you a package with one python module for each relation
 in your database. Install the package:
@@ -163,8 +163,8 @@ FIELDS:
 - birth_date: (date) PK
 ```
 The structure of the relation is displayed as retreived from the database at
-the time the ```halfORM``` command has been run. As the structure of your
-database evolve, you can rerun the ```halfORM``` script whithout any argument
+the time the ```hop``` command has been run. As the structure of your
+database evolve, you can rerun the ```hop``` script whithout any argument
 anywhere in the source of the package to keep in sync your modules.
 
 With a Relation object, you can use the following methods to manipulate the
