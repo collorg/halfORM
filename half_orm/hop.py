@@ -75,7 +75,7 @@ def init_package(model, package_dir, package_name):
     os.makedirs('{}/.halfORM'.format(package_name))
     open('{}/.halfORM/config'.format(package_name), 'w').write(
         CONFIG_TEMPLATE.format(
-            config_file=model._dbname, package_name=package_name))
+            config_file=model._dbinfo['user'], package_name=package_name))
     readme_file_name = '{}/README.rst'.format(package_name)
     cmd = " ".join(sys.argv)
     readme = README.format(cmd=cmd, dbname=dbname, package_name=package_name)
