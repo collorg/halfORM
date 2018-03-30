@@ -223,7 +223,7 @@ def main():
     )
     parser.add_argument(
         "-c", "--config_file", nargs="?", const=None,
-        help="half_orm config file (in /etc/half_orm)")
+        help="half_orm config file (in /etc/half_orm if no / in the name provided)")
     args = parser.parse_args()
     if config_file and args.config_file:
         sys.stderr.write(
@@ -244,10 +244,12 @@ def main():
     model = Model(config_file)
 
     try:
-        open('/etc/half_orm/{}'.format(config_file))
+        base = '/etc/half_orm/'
+        if config_file.find('/') != -1:
+            base = ''
+        open('{}{}'.format(base, config_file))
     except FileNotFoundError as err:
         sys.stderr.write('{}\n'.format(err))
-        sys.stderr.write('Config file must be in /etc/half_orm/ directory!\n')
         sys.exit(1)
 
     package_dir = "{}/{}".format(rel_package or package_name, package_name)
