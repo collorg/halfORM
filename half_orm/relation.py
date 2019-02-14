@@ -446,6 +446,12 @@ def distinct(self):
     self.__select_params['distinct'] = 'distinct'
     return self
 
+def unaccent(self, *fields_names):
+    for field_name in fields_names:
+        assert isinstance(self[field_name], Field)
+        self[field_name].unaccent = True
+    return self
+
 def order_by(self, _order_):
     """Set SQL order by according to the "order" string passed
 
@@ -707,6 +713,7 @@ COMMON_INTERFACE = {
     'limit': limit,
     'offset': offset,
     'distinct': distinct,
+    'unaccent': unaccent,
     '__call__': __call__,
     'cast': cast,
     '__get_set_fields': __get_set_fields,
