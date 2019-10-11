@@ -500,13 +500,33 @@ def get(self):
         raise relation_errors.ExpectedOneError(self, count)
     return self(**(next(self.select())))
 
-def __len__(self, *args):
+def __len__(self):
     """Retruns the number of tuples matching the intention in the relation.
 
     See select for arguments.
     """
     self.__query = "select"
     query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {}"
+    query, values = self.__get_query(query_template)
+    try:
+        vars_ = tuple(self.__sql_values + values)
+        self.__cursor.execute(query, vars_)
+    except Exception as err:
+        print(query, vars_)
+        self._mogrify()
+        raise err
+    return self.__cursor.fetchone()['count']
+
+def count(self, *args, distinct=False):
+    """Retruns the number of tuples matching the intention in the relation.
+
+    See select for arguments.
+    """
+    self.__query = "select"
+    if distinct:
+        query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {}"
+    else:
+        query_template = "select\n  count({})\nfrom {}\n  {}\n  {}"
     query, values = self.__get_query(query_template, *args)
     try:
         vars_ = tuple(self.__sql_values + values)
@@ -733,6 +753,7 @@ COMMON_INTERFACE = {
     'select': select,
     '_mogrify': _mogrify,
     '__len__': __len__,
+    'count': count,
     'get': get,
     '__set__op__': __set__op__,
     '__and__': __and__,
