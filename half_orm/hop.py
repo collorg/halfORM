@@ -228,7 +228,7 @@ def main():
     if config_file and args.config_file:
         sys.stderr.write(
             "You are in a halfORM package directory.\n"
-            "Try halfORM without argument.\n")
+            "Try hop without argument.\n")
         sys.exit(1)
     if args.config_file:
         config_file = args.config_file
@@ -239,7 +239,7 @@ def main():
     except AssertionError:
         sys.stderr.write(
             "You're not in a halfORM package directory.\n"
-            "Try halfORM --help.\n")
+            "Try hop --help.\n")
         sys.exit(1)
     model = Model(config_file)
 
