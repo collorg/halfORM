@@ -56,15 +56,20 @@ class Field():
         """
         where_repr = ''
         comp_str = '%s'
+        comp = self.comp()
+        if comp == '@@':
+            comp_str = 'websearch_to_tsquery(%s)'
         if isinstance(self.__value, (list, tuple)):
             if self.type_[0] != '_': # not an array type
                 comp_str = 'any(%s)'
+                if comp == '@@':
+                    comp_str = 'any(websearch_to_tsquery(%s))'
         if not self.unaccent:
             where_repr = "{} {} {}".format(
-                self._praf(query, id_), self.comp(), comp_str)
+                self._praf(query, id_), comp, comp_str)
         else:
             where_repr = "unaccent({}) {} unaccent({})".format(
-                self._praf(query, id_), self.comp(), comp_str)
+                self._praf(query, id_), comp, comp_str)
         return where_repr
 
     @property

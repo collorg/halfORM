@@ -718,8 +718,8 @@ def _set_fkey_property(self, property_name, fkey_name, cast=None):
     setattr(self.__class__, property_name, property(fget=fget, fset=fset))
 
 def _debug():
-    """For debug usage"""
-    pass
+    """For debug purpose"""
+
 
 #### END of Relation methods definition
 
