@@ -88,9 +88,6 @@ class Relation(OrderedDict):
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
-#def __new__(cls, **kwargs):
-#    return super(cls.__class__, cls).__new__(cls)
-
 def __init__(self, **kwargs):
     """The arguments names must correspond to the columns names of the relation.
     """
@@ -717,14 +714,18 @@ def _set_fkey_property(self, property_name, fkey_name, cast=None):
         self._fkeys[fkey_name].set(value)
     setattr(self.__class__, property_name, property(fget=fget, fset=fset))
 
-def _debug():
-    """For debug purpose"""
+def __enter__(self):
+    return self.select()
 
+def __exit__(self, *exc):
+    return False
+
+def _debug(object):
+    """For debug purpose"""
 
 #### END of Relation methods definition
 
 COMMON_INTERFACE = {
-#    '__new__': __new__,
     '__init__': __init__,
     'id_': id_,
     '_fields_names': _fields_names,
@@ -778,6 +779,8 @@ COMMON_INTERFACE = {
     'Transaction': Transaction,
     '_set_fkeys_properties': _set_fkeys_properties,
     '_set_fkey_property': _set_fkey_property,
+    '__enter__': __enter__,
+    '__exit__': __exit__,
     # test
     '_debug': _debug,
 }
