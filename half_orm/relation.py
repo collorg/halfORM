@@ -23,11 +23,11 @@ import datetime
 import sys
 import uuid
 import yaml
+import logging
 
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
 from half_orm.field import Field
-from half_orm.fkey import FKey
 
 class UnknownAttributeError(Exception):
     """Unknown attribute error"""
@@ -41,7 +41,7 @@ class ExpectedOneElementError(Exception):
         super().__init__(
             "ERROR! More than one element for a non list item: {}.".format(msg))
 
-class SetOp(object):
+class SetOp:
     """SetOp class stores the set operations made on the Relation class objects
 
     - __op is one of {'or', 'and', 'sub', 'neg'}
@@ -83,28 +83,36 @@ class SetOp(object):
 
 class Relation(OrderedDict):
     """Base class of Table and View classes (see _factory)."""
-    pass
 
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
 def __init__(self, **kwargs):
+    _fqrn = ""
     """The arguments names must correspond to the columns names of the relation.
     """
     self.__only = False
     self.__neg = False
     self._fkeys = OrderedDict()
     self.__set_fields()
+    self._joined_to = {}
+    self.__query = ""
+    self.__query_type = None
+    self.__sql_query = []
+    self.__sql_values = []
+    self.__set_op = SetOp(self)
+    self.__select_params = {}
+    self.__id_cast = None
     if not self.__fkeys_properties:
         self._set_fkeys_properties()
         self.__fkeys_properties = True
     if self.__base_classes is None:
-        self.__class__.__base_classes = []
+        self.__class__.__base_classes = set()
     if not self.__cls_fkeys_dict:
         self.__class__.__cls_fkeys_dict = {'_fkeys_names': []}
         for cls in self.__class__.mro():
             if not id(cls) in self.__base_classes:
-                self.__class__.__base_classes.append(id(cls))
+                self.__class__.__base_classes.add(id(cls))
                 if issubclass(cls, Relation):
                     obj = cls()
                     if not hasattr(obj, '_fkeys'):
@@ -121,18 +129,15 @@ def __init__(self, **kwargs):
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     kwk_ = set(kwargs.keys())
-    try:
-        assert kwk_.intersection(self._fields_names) == kwk_
-    except:
+    if kwk_.intersection(self._fields_names) != kwk_:
         raise UnknownAttributeError(str(kwk_.difference(self._fields_names)))
     _ = {self[field_name].set(value) for field_name, value in kwargs.items() if value is not None}
-    self._joined_to = {}
-    self.__query_type = None
-    self.__sql_query = []
-    self.__sql_values = []
-    self.__set_op = SetOp(self)
-    self.__select_params = {}
-    self.__id_cast = None
+    self.__isfrozen = True
+
+def __setattr__(self, key, value):
+    if self.__isfrozen and not key in self.__dict__:
+        raise TypeError("%r is a frozen class" % self.__class__.__name__)
+    object.__setattr__(self, key, value)
 
 @property
 def id_(self):
@@ -151,16 +156,20 @@ def __set_only(self, value):
     """Set the value of self.__only. Restrict the values of a query to
     the elements of the relation (no inherited values).
     """
-    assert value in [True, False]
+    if not value in {True, False}:
+        raise ValueError(f'{value} is not a bool!')
     self.__only = value
 
 only = property(__get_only, __set_only)
 
 def __set_fields(self):
     """Initialise the fields and fkeys of the relation."""
+    from half_orm.fkey import FKey
+
     metadata = self._model._metadata['byname'][self.__sfqrn]
     for field_name, f_metadata in metadata['fields'].items():
         self[field_name] = Field(field_name, self, f_metadata)
+        self.__setattr__(field_name, self[field_name])
     for fkeyname, f_metadata in metadata['fkeys'].items():
         ft_sfqrn, ft_fields_names, fields_names = f_metadata
         self._fkeys[fkeyname] = FKey(
@@ -247,14 +256,13 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
         """Replacement of default handler for json.dumps."""
         if hasattr(obj, 'isoformat'):
             return str(obj.isoformat())
-        elif isinstance(obj, uuid.UUID):
+        if isinstance(obj, uuid.UUID):
             return str(obj)
-        elif isinstance(obj, datetime.timedelta):
+        if isinstance(obj, datetime.timedelta):
             return obj.total_seconds()
-        else:
-            raise TypeError(
-                'Object of type {} with value of '
-                '{} is not JSON serializable'.format(type(obj), repr(obj)))
+        raise TypeError(
+            'Object of type {} with value of '
+            '{} is not JSON serializable'.format(type(obj), repr(obj)))
 
     if yml_directive:
         res = self.group_by(yml_directive)
@@ -304,7 +312,7 @@ def __repr__(self):
             ' ' * (mx_fld_n_len + 1 - len(field_name)),
             repr(field)))
     if self._fkeys.keys():
-        plur = len(self._fkeys) > 1 and  'S' or ''
+        plur = 'S' if len(self._fkeys) > 1 else ''
         ret.append('FOREIGN KEY{}:'.format(plur))
         for fkey in self._fkeys.values():
             ret.append(repr(fkey))
@@ -444,8 +452,10 @@ def distinct(self):
     return self
 
 def unaccent(self, *fields_names):
+    "Sets unaccent for each field listed in fields_names"
     for field_name in fields_names:
-        assert isinstance(self[field_name], Field)
+        if not isinstance(self[field_name], Field):
+            raise ValueError(f'{field_name} is not a Field!')
         self[field_name].unaccent = True
     return self
 
@@ -492,9 +502,9 @@ def get(self):
 
     Raises an exception if no or more than one element is found.
     """
-    count = len(self)
-    if count != 1:
-        raise relation_errors.ExpectedOneError(self, count)
+    _count = len(self)
+    if _count != 1:
+        raise relation_errors.ExpectedOneError(self, _count)
     return self(**(next(self.select())))
 
 def __len__(self):
@@ -514,13 +524,13 @@ def __len__(self):
         raise err
     return self.__cursor.fetchone()['count']
 
-def count(self, *args, distinct=False):
+def count(self, *args, _distinct=False):
     """Retruns the number of tuples matching the intention in the relation.
 
     See select for arguments.
     """
     self.__query = "select"
-    if distinct:
+    if _distinct:
         query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {}"
     else:
         query_template = "select\n  count({})\nfrom {}\n  {}\n  {}"
@@ -555,7 +565,10 @@ def update(self, update_all=False, **kwargs):
     """
     if not kwargs:
         return # no new value update. Should we raise an error here?
-    assert self.is_set() or update_all
+    if not (self.is_set() or update_all):
+        raise RuntimeError(
+            f'Attempt to update all rows of {self.__class__.__name__}'
+            ' without update_all being set to True!')
 
     query_template = "update {} set {} {}"
     what, where, values = self.__update_args(**kwargs)
@@ -604,7 +617,10 @@ def delete(self, delete_all=False):
     """Removes a set of tuples from the relation.
     To empty the relation, delete_all must be set to True.
     """
-    assert self.is_set() or delete_all
+    if not (self.is_set() or delete_all):
+        raise ValueError(
+            f'Attempt to delete all rows from {self.__class__.__name__}'
+            ' without delete_all being set to True!')
     query_template = "delete from {} {}"
     self.__query_type = 'delete'
     _, where, values = self.__where_args()
@@ -699,34 +715,44 @@ def _set_fkeys_properties(self):
     """Property generator for fkeys.
     @args is a list of tuples (proerty_name, fkey_name)
     """
-    fkp = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES'], 0)
+    fkp = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES', 'FKEYS'], 0)
     if hasattr(fkp, 'FKEYS_PROPERTIES'):
         for prop in fkp.FKEYS_PROPERTIES:
             self._set_fkey_property(*prop)
+    if hasattr(fkp, 'FKEYS'):
+        for prop in fkp.FKEYS:
+            self._set_fkey_property(*prop)
 
-def _set_fkey_property(self, property_name, fkey_name, cast=None):
+def _set_fkey_property(self, property_name, fkey_name, _cast=None):
     """Sets the property with property_name on the foreign key."""
     def fget(self):
         "getter"
-        return self._fkeys[fkey_name](__cast__=cast)
+        return self._fkeys[fkey_name](__cast__=_cast)
     def fset(self, value):
         "setter"
-        self._fkeys[fkey_name].set(value)
+        try:
+            self._fkeys[fkey_name].set(value)
+        except KeyError as err:
+            logging.error(f'ERR {err}\nFKeys for {self.__class__.__name__} are: {self._fkeys.keys()}')
+            raise err
     setattr(self.__class__, property_name, property(fget=fget, fset=fset))
 
 def __enter__(self):
+    "with entering"
     return self.select()
 
 def __exit__(self, *exc):
+    "with exiting"
     return False
 
-def _debug(object):
+def _debug(obj):
     """For debug purpose"""
 
 #### END of Relation methods definition
 
 COMMON_INTERFACE = {
     '__init__': __init__,
+    '__setattr__': __setattr__,
     'id_': id_,
     '_fields_names': _fields_names,
     '__set_fields': __set_fields,
@@ -832,6 +858,7 @@ def _factory(class_name, bases, dct):
     if dct.get('model'):
         tbl_attr['_model'] = dct['model']
     tbl_attr['__sfqrn'] = tuple(sfqrn)
+    tbl_attr['__isfrozen'] = False
     rel_class_names = {
         'r': 'Table',
         'v': 'View',

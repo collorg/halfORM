@@ -133,7 +133,7 @@ def update_this_module(
     except TypeError as err:
         sys.stderr.write("{}\n{}\n".format(err, fqtn))
         sys.stderr.flush()
-        return
+        return None
 
     path[0] = package_dir
     module_path = '{}.py'.format('/'.join(
@@ -233,10 +233,8 @@ def main():
     if args.config_file:
         config_file = args.config_file
         package_name = (
-            args.package_name and args.package_name or args.config_file)
-    try:
-        assert config_file
-    except AssertionError:
+            args.package_name if args.package_name else args.config_file)
+    if not config_file:
         sys.stderr.write(
             "You're not in a halfORM package directory.\n"
             "Try hop --help.\n")

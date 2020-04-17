@@ -55,7 +55,7 @@ def camel_case(name):
 psycopg2.extras.register_uuid()
 #from pprint import PrettyPrinter
 
-class Model(object):
+class Model:
     """Model class
 
     The model establishes a connection to the database and allows to
@@ -72,12 +72,13 @@ class Model(object):
         reserved to the _factory metaclass.
         """
         self.__backend_pid = None
-        assert bool(config_file) != bool(dbname)
+        if bool(config_file) == bool(dbname):
+            raise RuntimeError("You can't specify config_file with bdname!")
         self.__config_file = config_file
         self._dbinfo = {}
         self.__dbname = dbname
-        if dbname:
-            self = self.__deja_vu[dbname]
+        if Model._deja_vu(dbname):
+            self.__dict__.update(Model._deja_vu(dbname))
             return
         self.__conn = None
         self.__cursor = None
@@ -131,14 +132,10 @@ class Model(object):
                  '/etc/half_orm/{}'.format(self.__config_file)]):
             raise model_errors.MissingConfigFile(self.__config_file)
         params = dict(config['database'].items())
-        if config_file:
-            try:
-                assert params['name'] == self.__dbname
-            except AssertionError as err:
-                sys.stderr.write(
-                    "Can't reconnect to another database {} != {}".format(
-                        params['name'], self.__dbname))
-                raise err
+        if config_file and params['name'] != self.__dbname:
+            raise RuntimeError(
+                "Can't reconnect to another database {} != {}".format(
+                    params['name'], self.__dbname))
         needed_params = {'name', 'host', 'user', 'password', 'port'}
         self.__dbname = params['name']
         self._dbinfo['name'] = params['name']
@@ -315,10 +312,9 @@ class Model(object):
                         continue
                 ret_val.append((tablekind, fqrn, inh))
             return ret_val
-        else:
-            fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
-            return str(_factory(
-                'Table', (), {'fqrn': fqrn, 'model': self})())
+        fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
+        return str(_factory(
+            'Table', (), {'fqrn': fqrn, 'model': self})())
 
     def __str__(self):
         out = []
