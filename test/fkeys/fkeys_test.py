@@ -60,3 +60,11 @@ class Test(TestCase):
         post = self.post()
         author = post._fkeys['author']()
         self.assertFalse(author.is_set())
+
+    def check_FKEYS_class_test(self):
+        pers = self.pers()
+        self.assertEqual(pers._post.__class__.__name__, self.post.__class__.__name__)
+        self.assertEqual(pers._comment.__class__.__name__, self.comment.__class__.__name__)
+        post = self.post()
+        self.assertEqual(post.fk_author.__class__.__name__, self.pers.__class__.__name__)
+        self.assertEqual(post.comment_fk.__class__.__name__, self.comment.__class__.__name__)
