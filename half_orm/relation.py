@@ -23,7 +23,6 @@ import datetime
 import sys
 import uuid
 import yaml
-import logging
 
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
@@ -95,6 +94,7 @@ def __init__(self, **kwargs):
     self.__neg = False
     self._fkeys = OrderedDict()
     self.__set_fields()
+    self.__set_fkeys()
     self._joined_to = {}
     self.__query = ""
     self.__query_type = None
@@ -103,29 +103,6 @@ def __init__(self, **kwargs):
     self.__set_op = SetOp(self)
     self.__select_params = {}
     self.__id_cast = None
-    if not self.__fkeys_properties:
-        self._set_fkeys_properties()
-        self.__fkeys_properties = True
-    if self.__base_classes is None:
-        self.__class__.__base_classes = set()
-    if not self.__cls_fkeys_dict:
-        self.__class__.__cls_fkeys_dict = {'_fkeys_names': []}
-        for cls in self.__class__.mro():
-            if not id(cls) in self.__base_classes:
-                self.__class__.__base_classes.add(id(cls))
-                if issubclass(cls, Relation):
-                    obj = cls()
-                    if not hasattr(obj, '_fkeys'):
-                        continue
-                    for fkey_name in obj._fkeys.keys():
-                        if not fkey_name in self._fkeys:
-                            self._fkeys[fkey_name] = obj._fkeys[fkey_name]
-                        self.__class__.__cls_fkeys_dict['_fkeys_names'].append(fkey_name)
-                        self.__class__.__cls_fkeys_dict[fkey_name] = obj._fkeys[fkey_name]
-    else:
-        for fkey_name in self.__class__.__cls_fkeys_dict['_fkeys_names']:
-            if not fkey_name in self._fkeys:
-                self._fkeys[fkey_name] = self.__class__.__cls_fkeys_dict[fkey_name]
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     kwk_ = set(kwargs.keys())
@@ -163,17 +140,46 @@ def __set_only(self, value):
 only = property(__get_only, __set_only)
 
 def __set_fields(self):
-    """Initialise the fields and fkeys of the relation."""
-    from half_orm.fkey import FKey
+    """Initialise the fields of the relation."""
+    fields_metadata = self._model._metadata['byname'][self.__sfqrn]['fields']
 
-    metadata = self._model._metadata['byname'][self.__sfqrn]
-    for field_name, f_metadata in metadata['fields'].items():
+    for field_name, f_metadata in fields_metadata.items():
         self[field_name] = Field(field_name, self, f_metadata)
         self.__setattr__(field_name, self[field_name])
-    for fkeyname, f_metadata in metadata['fkeys'].items():
+
+def __set_fkeys(self):
+    """Initialisation of the foreign keys of the relation"""
+    from half_orm.fkey import FKey
+
+    fkeys_metadata = self._model._metadata['byname'][self.__sfqrn]['fkeys']
+    for fkeyname, f_metadata in fkeys_metadata.items():
         ft_sfqrn, ft_fields_names, fields_names = f_metadata
         self._fkeys[fkeyname] = FKey(
             fkeyname, self, ft_sfqrn, ft_fields_names, fields_names)
+
+    if not self.__fkeys_properties:
+        self._set_fkeys_properties()
+        self.__fkeys_properties = True
+    if not self.__cls_fkeys_dict:
+        self.__class__.__cls_fkeys_dict = {'_fkeys_names': []}
+        for cls in self.__class__.mro():
+            if not id(cls) in self.__base_classes:
+                self.__class__.__base_classes.add(id(cls))
+                if issubclass(cls, Relation):
+                    if cls == self.__class__:
+                        continue
+                    obj = cls()
+                    if not hasattr(obj, '_fkeys'):
+                        continue
+                    for fkey_name in obj._fkeys.keys():
+                        if not fkey_name in self._fkeys:
+                            self._fkeys[fkey_name] = obj._fkeys[fkey_name]
+                        self.__class__.__cls_fkeys_dict['_fkeys_names'].append(fkey_name)
+                        self.__class__.__cls_fkeys_dict[fkey_name] = obj._fkeys[fkey_name]
+    else:
+        for fkey_name in self.__class__.__cls_fkeys_dict['_fkeys_names']:
+            if not fkey_name in self._fkeys:
+                self._fkeys[fkey_name] = self.__class__.__cls_fkeys_dict[fkey_name]
 
 def group_by(self, yml_directive):
     """Returns an aggregation of the data according to the yml directive
@@ -731,9 +737,10 @@ def _set_fkey_property(self, property_name, fkey_name, _cast=None):
     def fset(self, value):
         "setter"
         try:
-            self._fkeys[fkey_name].set(value)
+            if value.is_set():
+                self._fkeys[fkey_name].set(value)
         except KeyError as err:
-            logging.error(f'ERR {err}\nFKeys for {self.__class__.__name__} are: {self._fkeys.keys()}')
+            sys.stderr.write(f'ERR {err}\nFKeys for {self.__class__.__name__} are: {self._fkeys.keys()}\n')
             raise err
     setattr(self.__class__, property_name, property(fget=fget, fset=fset))
 
@@ -756,6 +763,7 @@ COMMON_INTERFACE = {
     'id_': id_,
     '_fields_names': _fields_names,
     '__set_fields': __set_fields,
+    '__set_fkeys': __set_fkeys,
     'order_by': order_by,
     'limit': limit,
     'offset': offset,
@@ -830,7 +838,7 @@ def _factory(class_name, bases, dct):
     bases = [Relation,]
     tbl_attr = {}
     tbl_attr['__cls_fkeys_dict'] = {}
-    tbl_attr['__base_classes'] = None
+    tbl_attr['__base_classes'] = set()
     tbl_attr['__fkeys_properties'] = False
     tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
     tbl_attr['_qrn'] = tbl_attr['_fqrn'].split('.', 1)[1].replace('"', '')
