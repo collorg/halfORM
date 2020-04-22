@@ -112,8 +112,16 @@ def __init__(self, **kwargs):
     self.__isfrozen = True
 
 def __setattr__(self, key, value):
-    if self.__isfrozen and not key in self.__dict__:
-        raise TypeError("%r is a frozen class" % self.__class__.__name__)
+    """Sets an attribute as long as __isfrozen is False
+
+    The foreign keys properties are not detected by hasattr
+    hence the line `_ = self.__dict__[key]` to double check if
+    the attribute is really present.
+    """
+    if not hasattr(self, '__isfrozen'):
+        object.__setattr__(self, '__isfrozen', False)
+    if self.__isfrozen and not hasattr(self, key):
+        raise AttributeError(key)
     object.__setattr__(self, key, value)
 
 @property
@@ -866,7 +874,6 @@ def _factory(class_name, bases, dct):
     if dct.get('model'):
         tbl_attr['_model'] = dct['model']
     tbl_attr['__sfqrn'] = tuple(sfqrn)
-    tbl_attr['__isfrozen'] = False
     rel_class_names = {
         'r': 'Table',
         'v': 'View',

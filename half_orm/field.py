@@ -48,7 +48,7 @@ class Field():
         """
         id_ = 'r{}'.format(id_)
         if query == 'select':
-            return '{}.{}'.format(id_, self.__name)
+            return '{}."{}"'.format(id_, self.__name)
         return '"{}"'.format(self.__name)
 
     def where_repr(self, query, id_):
