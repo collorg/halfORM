@@ -22,12 +22,12 @@ class Test(TestCase):
         self.assertEqual(list(self.comment._fkeys.keys()), ['post', 'author'])
 
     def post_author_fkey_type_test(self):
-        author = self.post._fkeys['author']()
+        author = self.post.author_
         print(author.__class__, self.pers.__class__)
         self.assertTrue(isinstance(author, halftest.pers.__class__))
 
     def comment_author_fkey_type_test(self):
-        author = self.comment._fkeys['author']()
+        author = self.comment.author_
         print(author.__class__, self.pers.__class__)
         self.assertTrue(isinstance(author, halftest.pers.__class__))
 
@@ -40,7 +40,7 @@ class Test(TestCase):
         post = self.post()
         self.assertFalse(post.is_set())
         pers = self.pers(last_name=('a%', 'like'))
-        post._fkeys['author'].set(pers)
+        post.author_ = pers
         self.assertTrue(post.is_set())
 
     def is_not_set_test(self):
@@ -48,17 +48,17 @@ class Test(TestCase):
         self.assertFalse(post.is_set())
         pers = self.pers()
         self.assertFalse(pers.is_set())
-        post._fkeys['author'].set(pers)
+        post.author_ = pers
         self.assertFalse(post.is_set())
 
     def is_set_reverse_test(self):
         post = self.post(title="toto")
-        author = post._fkeys['author']()
+        author = post.author_
         self.assertTrue(author.is_set())
 
     def is_not_set_reverse_test(self):
         post = self.post()
-        author = post._fkeys['author']()
+        author = post.author_
         self.assertFalse(author.is_set())
 
     def check_FKEYS_class_test(self):
@@ -66,5 +66,5 @@ class Test(TestCase):
         self.assertEqual(pers._post.__class__.__name__, self.post.__class__.__name__)
         self.assertEqual(pers._comment.__class__.__name__, self.comment.__class__.__name__)
         post = self.post()
-        self.assertEqual(post.fk_author.__class__.__name__, self.pers.__class__.__name__)
+        self.assertEqual(post.author_.__class__.__name__, self.pers.__class__.__name__)
         self.assertEqual(post.comment_fk.__class__.__name__, self.comment.__class__.__name__)

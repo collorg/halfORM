@@ -24,7 +24,7 @@ from halftest.db_connector import base_relation_class
 
 #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
 FKEYS_PROPERTIES = [
-    ('fk_author', 'author'),
+    ('author_', 'author'),
     ('comment_fk', '_reverse_fkey_halftest_blog_comment_post_id')
 ]
 #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!

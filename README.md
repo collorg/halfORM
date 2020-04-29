@@ -8,10 +8,7 @@ The SQL language is divided in two different parts:
 - the data definition language part (DDL) to manipulate the structure of a database,
 - the data manipulation language par (DML) used for selecting, inserting, deleting and updating data in a database.
 
-The half part of ```half_orm``` name indicates that only the DML part is addressed. This makes ```half_orm``` easy to learn and use.
-
-# Installation (tested on Linux/Mac OSX)
-See [the installation instructions file](INSTALL.md).
+```half_orm``` only deals with the DML part. Basically the `INSERT`, `SELECT`, `UPDATE` and `DELETE` commands. This makes ```half_orm``` easy to learn and use.
 
 # Getting started
 
@@ -193,6 +190,9 @@ Take a look at [the algebra test file](test/relation/algebra_test.py).
 You can get the number of elements in a relation whith ```len```.
 
 Most of the snippets bellow are extracted from the example script: [test/halftest_doc.py](test/halftest_doc.py).
+
+# Installation (tested on Linux/Mac OSX)
+See [the installation instructions file](INSTALL.md).
 
 # WORK IN PROGRESS
 

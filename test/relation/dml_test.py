@@ -50,5 +50,5 @@ class Test(TestCase):
     def update_test(self):
         pers = self.pers(last_name=('like', 'a%'))
         self.assertEqual(len(pers), 10)
-        pers.update(last_name=pers['last_name'].value.upper())
+        pers.update(last_name=pers.last_name.value.upper())
         self.assertEqual(len(pers), 10)

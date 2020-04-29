@@ -11,7 +11,6 @@ __all__ = ['NULL']
 
 class Null:
     """The Null class"""
-    pass
 
 def adapt_null(_):
     """NULL adapter"""

@@ -6,6 +6,7 @@ from datetime import date
 from half_orm.model import Model
 
 path = os.path.dirname(__file__)
+sys.path.insert(0, f'{path}/halftest')
 
 README = """
 Create the database halftest First:

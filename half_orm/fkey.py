@@ -3,7 +3,7 @@
 
 """This module provides the FKey class."""
 
-class FKey():
+class FKey:
     """Foreign key class
 
     A foreign key is set by assigning to it a Relation object of the
@@ -33,20 +33,18 @@ class FKey():
         model = self.__relation._model
         f_qrn = self.__get_fk_qrn()
         f_cast = None
-        get_rel = model._scope and model._import_class or model.get_relation_class
+        get_rel = model._import_class  if model._scope else model.get_relation_class
         if self.__name.find('_reverse_fkey_') == 0 and __cast__:
             self.__relation = get_rel(__cast__)(**self.__relation.to_dict())
         else:
             f_cast = __cast__
         f_relation = get_rel(f_cast or f_qrn)(**kwargs)
-        rev_fkey_name = '_reverse_{}_{}'.format(
-            f_relation._fqrn.replace(".", "_"), "_".join(self.__fk_names))
-        f_relation.fkeys = {
-            rev_fkey_name: FKey(
+        rev_fkey_name = '_reverse_{}'.format(f_relation.id_)
+        f_relation._fkeys[rev_fkey_name] = FKey(
                 rev_fkey_name,
                 f_relation,
-                f_relation._fqrn.split('.'), self.__fields, self.__fk_names)}
-        f_relation.fkeys[rev_fkey_name].set(self.__relation)
+                f_relation._fqrn.split('.'), self.__fields, self.__fk_names)
+        f_relation._fkeys[rev_fkey_name].set(self.__relation)
         return f_relation
 
     def set(self, to_):
@@ -60,9 +58,8 @@ class FKey():
         same FQRN that (or inheriting) the one referenced by self.__fk_fqrn.
         """
         from half_orm.relation import Relation
-        try:
-            assert issubclass(to_.__class__, Relation)
-        except AssertionError:
+
+        if not issubclass(to_.__class__, Relation):
             raise Exception("Expecting a Relation")
         to_classes = set(type.mro(to_.__class__))
         self_classes = set(type.mro(self.__relation.__class__))
@@ -100,7 +97,8 @@ class FKey():
         """
         from_ = self.__fk_from
         to_ = self.to_
-        assert id(from_) != id(to_)
+        if id(from_) == id(to_):
+            raise RuntimeError("You can't join a relation with itself!")
         orig_rel_id = 'r{}'.format(orig_rel.id_)
         to_id = 'r{}'.format(to_.id_)
         from_id = 'r{}'.format(from_.id_)
@@ -118,6 +116,7 @@ class FKey():
     def _prep_select(self):
         if self.__is_set:
             return self.__fields, self.to_._prep_select(*self.fk_names)
+        return None
 
     def __get_fk_names(self):
         """Returns the names of the fields in the foreign table."""

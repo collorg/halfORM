@@ -12,6 +12,12 @@ import sys
 from keyword import iskeyword
 
 from half_orm.model import Model, camel_case
+from half_orm import relation_errors
+
+class ClassInstanciationError(Exception):
+    "Failed to instanciate a relation class"
+    def __init__(self, msg):
+        super().__init__(msg)
 
 HALFORM_PATH = os.path.dirname(__file__)
 BEGIN_CODE = "#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!\n"
@@ -75,7 +81,7 @@ def init_package(model, package_dir, package_name):
     os.makedirs('{}/.halfORM'.format(package_name))
     open('{}/.halfORM/config'.format(package_name), 'w').write(
         CONFIG_TEMPLATE.format(
-            config_file=model._dbinfo['user'], package_name=package_name))
+            config_file=model._dbinfo['name'], package_name=package_name))
     readme_file_name = '{}/README.rst'.format(package_name)
     cmd = " ".join(sys.argv)
     readme = README.format(cmd=cmd, dbname=dbname, package_name=package_name)
@@ -133,7 +139,7 @@ def update_this_module(
     except TypeError as err:
         sys.stderr.write("{}\n{}\n".format(err, fqtn))
         sys.stderr.flush()
-        return
+        return None
 
     path[0] = package_dir
     module_path = '{}.py'.format('/'.join(
@@ -189,7 +195,8 @@ def update_init_files(package_dir, warning, files_list):
         for file in files:
             path_ = "{}/{}".format(root, file)
             if path_ not in files_list and file not in DO_NOT_REMOVE:
-                print("REMOVING: {}".format(path_))
+                if path_.find('__pycache__') == -1:
+                    print("REMOVING: {}".format(path_))
                 os.remove(path_)
                 continue
             if (re.findall('.py$', file) and
@@ -203,9 +210,37 @@ def update_init_files(package_dir, warning, files_list):
                 '__all__ = [\n    {}\n]\n'.format(",\n    ".join(
                     ["'{}'".format(elt) for elt in all_])))
 
+def test_package(model, package_dir, package_name):
+    """Basic testing of each relation module in the package.
+    The class should instanciate.
+    """
+    import importlib
+
+    dbname = model._dbname
+    open('{}/db_connector.py'.format(package_dir), 'w').write(
+        DB_CONNECTOR_TEMPLATE.format(dbname=dbname, package_name=package_name))
+    for relation in model._relations():
+        fqtn = relation.split('.')[1:]
+        module_name = f'.{fqtn[-1]}'
+        class_name = camel_case(fqtn[-1])
+        fqtn = '.'.join(fqtn[:-1])
+        file_path = f'.{package_dir.split("/")[1]}.{fqtn}'
+
+        try:
+            module = importlib.import_module(module_name, file_path)
+            _ = module.__dict__[class_name]()
+        except relation_errors.DuplicateAttributeError as err:
+            print(err)
+        except relation_errors.IsFrozenError as err:
+            print(err)
+        except Exception as err:
+            print(f'ERROR in class {file_path}.{class_name}!\n{err}')
+
 def main():
     """Script entry point"""
     import argparse
+
+    sys.path.insert(0, os.getcwd())
 
     rel_package = None
     config_file, package_name = load_config_file()
@@ -224,6 +259,9 @@ def main():
     parser.add_argument(
         "-c", "--config_file", nargs="?", const=None,
         help="half_orm config file (in /etc/half_orm if no / in the name provided)")
+    parser.add_argument(
+        "-t", "--test", nargs="?", const="test", help="Test some common pitfalls."
+    )
     args = parser.parse_args()
     if config_file and args.config_file:
         sys.stderr.write(
@@ -233,10 +271,8 @@ def main():
     if args.config_file:
         config_file = args.config_file
         package_name = (
-            args.package_name and args.package_name or args.config_file)
-    try:
-        assert config_file
-    except AssertionError:
+            args.package_name if args.package_name else args.config_file)
+    if not config_file:
         sys.stderr.write(
             "You're not in a halfORM package directory.\n"
             "Try hop --help.\n")
@@ -260,6 +296,7 @@ def main():
         init_package(model, package_dir, package_name)
     files_list = update_modules(model, package_dir, package_name, warning)
     update_init_files(package_dir, warning, files_list)
+    test_package(model, package_dir, package_name)
 
 if __name__ == '__main__':
     main()

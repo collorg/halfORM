@@ -48,7 +48,7 @@ class Field():
         """
         id_ = 'r{}'.format(id_)
         if query == 'select':
-            return '{}.{}'.format(id_, self.__name)
+            return '{}."{}"'.format(id_, self.__name)
         return '"{}"'.format(self.__name)
 
     def where_repr(self, query, id_):
@@ -77,26 +77,35 @@ class Field():
         "Returns the value of the field object"
         return self.__value
 
-    def set(self, value):
+    def set(self, *args):
         "Sets the value of the field object"
-        self.__set__(self.__relation, value)
+        self.__set__(self.__relation, *args)
 
-    def __set__(self, obj, value):
+    def __set__(self, obj, *args):
         """Sets the value (and the comparator) associated with the field."""
-        if value is None:
-            # None is not a value use Null class to set to Null
-            raise ValueError("None is not a value use unset method or NULL value.")
-        comp = None
-        self.__relation = obj
-        if isinstance(value, tuple):
-            assert len(value) == 2
-            comp, value = value
-        if value is NULL and comp is None:
-            comp = 'is'
+        if len(args) == 1:
+            value = args[0]
+            if value is None:
+                # None is not a value use Null class to set to Null
+                raise ValueError("None is not a value use unset method or NULL value.")
+            comp = None
+            self.__relation = obj
+            if isinstance(value, tuple):
+                if len(value) != 2:
+                    raise ValueError(f"Can't match {value} with (comp, value)!")
+                comp, value = value
+            if value is NULL and comp is None:
+                comp = 'is'
+            elif comp is None:
+                comp = '='
+        elif len(args) == 2:
+            # The first argument IS comp.
+            comp, value = args
+        else:
+            raise RuntimeError('')
         if value is NULL:
-            assert comp == 'is' or comp == 'is not'
-        elif comp is None:
-            comp = '='
+            if not comp in {'is', 'is not'}:
+                raise ValueError("comp should be 'is' or 'is not' with NULL value!")
         self.__is_set = True
         self.__value = value
         self.__comp = comp
@@ -115,7 +124,8 @@ class Field():
     def __get_unaccent(self):
         return self.__unaccent
     def __set_unaccent(self, value):
-        assert isinstance(value, bool)
+        if not isinstance(value, bool):
+            raise RuntimeError('unaccent argument must be of boolean type!')
         self.__unaccent = value
 
     unaccent = property(__get_unaccent, __set_unaccent)
