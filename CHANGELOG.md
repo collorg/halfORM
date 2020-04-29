@@ -1,3 +1,30 @@
+# 0.2 (2020-04-29)
+
+## Features
+
+- Columns of a relation are now regular attributs of the Relation class.
+  This is a breaking change.
+- no more need to install halftest package (pip3) to test half_orm.
+- with context on a relation now enters a transaction.
+
+## Bug fixes
+
+- allow weird column names: `a = 1` is a regular column name in PostgreSQL.
+  Of course, you can't use the doted notation to handle such column with
+  half_orm. Instead, use `rel.__dict__['a = 1']`.
+- reverse fkeys 
+
+## Breaking Changes
+
+- Relation class is not inheriting from OrderedDict anymore.
+  If `rel` is a Relation object, `rel['col']` must be replaced by `rel.col`.
+- A Relation object `rel` is frozen after initialisation (`__init__`),
+  meaning you can't add attributes to it. This is to prevent errors due
+  to typos in the expression `rel.col = 'a'` vs. `rel.cal = 'a'`. If
+  `cal` column doesn't exist in the relation, an exception is raised.
+  If you need to add an attribute to a class inheriting from Relation,
+  you can use `_unfreeze` and `_freeze` methods.
+
 # 0.1.0-alpha.7 (2016-11-29)
 
 ## Features
