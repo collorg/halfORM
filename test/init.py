@@ -53,9 +53,9 @@ class HalfTest:
             self.post.delete(delete_all=True)
             insert_pers(self.pers)
 
-if 1:#try:
+try:
     halftest = HalfTest()
-else:#except Exception as err:
+except Exception as err:
     sys.stderr.write('{}\n'.format(err))
     sys.stderr.write(README.format(path))
     sys.exit(1)

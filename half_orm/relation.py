@@ -511,9 +511,9 @@ def distinct(self):
 def unaccent(self, *fields_names):
     "Sets unaccent for each field listed in fields_names"
     for field_name in fields_names:
-        if not isinstance(self[field_name], Field):
+        if not isinstance(self.__dict__[field_name], Field):
             raise ValueError(f'{field_name} is not a Field!')
-        self[field_name].unaccent = True
+        self.__dict__[field_name].unaccent = True
     return self
 
 def order_by(self, _order_):
