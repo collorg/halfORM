@@ -55,11 +55,12 @@ def load_config_file(base_dir=None, ref_dir=None):
     if not base_dir:
         ref_dir = os.path.abspath(os.path.curdir)
         base_dir = ref_dir
-    if os.path.exists('.halfORM/config'):
-        config.read('.halfORM/config')
-        config_file = config['halfORM']['config_file']
-        package_name = config['halfORM']['package_name']
-        return (config_file, package_name)
+    for base in ['hop', 'halfORM']:
+        if os.path.exists('.{}/config'.format(base)):
+            config.read('.{}/config'.format(base))
+            config_file = config['halfORM']['config_file']
+            package_name = config['halfORM']['package_name']
+            return (config_file, package_name)
     if os.path.abspath(os.path.curdir) != '/':
         os.chdir('..')
         cur_dir = os.path.abspath(os.path.curdir)
@@ -78,11 +79,11 @@ def init_package(model, package_dir, package_name):
         setup_file_name = '{}/setup.py'.format(package_name)
         if not os.path.exists(setup_file_name):
             open(setup_file_name, 'w').write(setup)
-    os.makedirs('{}/.halfORM'.format(package_name))
-    open('{}/.halfORM/config'.format(package_name), 'w').write(
+    os.makedirs('{}/.hop'.format(package_name))
+    open('{}/.hop/config'.format(package_name), 'w').write(
         CONFIG_TEMPLATE.format(
             config_file=model._dbinfo['name'], package_name=package_name))
-    readme_file_name = '{}/README.rst'.format(package_name)
+    readme_file_name = '{}/README.md'.format(package_name)
     cmd = " ".join(sys.argv)
     readme = README.format(cmd=cmd, dbname=dbname, package_name=package_name)
     open(readme_file_name, 'w').write(readme)
