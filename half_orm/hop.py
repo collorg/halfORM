@@ -44,6 +44,22 @@ AP_DESCRIPTION = """Generates python package from a PG database"""
 AP_EPILOG = """"""
 DO_NOT_REMOVE = ['db_connector.py', '__init__.py']
 
+def hop_update():
+    """Rename some files an directories. hop upgrade.
+    """
+    if os.path.exists('.halfORM'):
+        os.rename('.halfORM', '.hop')
+        sys.stderr.write('WARNING! Renaming .halfORM to .hop.')
+    if os.path.exists('README.rst'):
+        os.rename('README.rst', 'README.md')
+    lines = []
+    with open('setup.py') as setup_file:
+        for line in setup_file:
+            if line.find('README.rst'):
+                line = line.replace('README.rst', 'README.md')
+            lines.append(line)
+    open('setup.py', 'w').write(''.join(lines))
+
 def load_config_file(base_dir=None, ref_dir=None):
     """Try to retrieve halfORM configuration file of the package.
     This method is called when no half_orm config file is provided.
@@ -297,6 +313,7 @@ def main():
         init_package(model, package_dir, package_name)
     files_list = update_modules(model, package_dir, package_name, warning)
     update_init_files(package_dir, warning, files_list)
+    hop_update()
     test_package(model, package_dir, package_name)
 
 if __name__ == '__main__':
