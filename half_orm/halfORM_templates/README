@@ -7,9 +7,9 @@ with the command:
 It is the exact representation of the model of the `{dbname}` database.
 
 Run the `hop` command in this directory of any subdirectory to synchronise
-the modules in this package with any change in your model.
+the modules in this package with any changes in your model.
 
-If you manually add any file to this package, make sure it's name
+If you manually add any file to this package, make sure its name
 does not conflict with a relation name in your model.
 
 # Usage
