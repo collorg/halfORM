@@ -86,8 +86,8 @@ class Field():
         if len(args) == 1:
             value = args[0]
             if value is None:
-                # None is not a value use Null class to set to Null
-                raise ValueError("None is not a value use unset method or NULL value.")
+                self.unset()
+                return
             comp = None
             self.__relation = obj
             if isinstance(value, tuple):
@@ -101,6 +101,8 @@ class Field():
         elif len(args) == 2:
             # The first argument IS comp.
             comp, value = args
+            if value is None:
+                raise ValueError("Can't have a None value with a comparator!")
         else:
             raise RuntimeError('')
         if value is NULL:
