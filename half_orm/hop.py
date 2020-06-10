@@ -313,8 +313,9 @@ def main():
         init_package(model, package_dir, package_name)
     files_list = update_modules(model, package_dir, package_name, warning)
     update_init_files(package_dir, warning, files_list)
-    hop_update()
-    test_package(model, package_dir, package_name)
+    if not args.config_file:
+        hop_update()
+        test_package(model, package_dir, package_name)
 
 if __name__ == '__main__':
     main()
