@@ -383,7 +383,7 @@ def is_set(self):
     joined_to = False
     for _, jt_ in self._joined_to.items():
         joined_to |= jt_.is_set()
-    return (joined_to or self.__set_op.op_ or self.__neg or
+    return (joined_to or bool(self.__set_op.op_) or bool(self.__neg) or
             bool({field for field in self._fields.values() if field.is_set()}))
 
 def __get_set_fields(self):
