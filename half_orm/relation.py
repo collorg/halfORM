@@ -331,12 +331,12 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
     return json.dumps(res, default=handler)
 
 def to_dict(self):
-    """Retruns a dictionary containing only the values of the fields
+    """Returns a dictionary containing only the values of the fields
     that are set."""
     return {key:field.value for key, field in self._fields.items() if field.is_set()}
 
 def _to_dict_val_comp(self):
-    """Retruns a dictionary containing the values and comparators of the fields
+    """Returns a dictionary containing the values and comparators of the fields
     that are set."""
     return {key:(field.comp(), field.value) for key, field in
             self._fields.items() if field.is_set()}
@@ -387,7 +387,7 @@ def is_set(self):
             bool({field for field in self._fields.values() if field.is_set()}))
 
 def __get_set_fields(self):
-    """Retruns a list containing only the fields that are set."""
+    """Returns a list containing only the fields that are set."""
     return [field for field in self._fields.values() if field.is_set()]
 
 def __walk_op(self, rel_id_, out=None, _fields_=None):
@@ -565,7 +565,7 @@ def get(self):
     return self(**(next(self.select())))
 
 def __len__(self):
-    """Retruns the number of tuples matching the intention in the relation.
+    """Returns the number of tuples matching the intention in the relation.
 
     See select for arguments.
     """
@@ -582,7 +582,7 @@ def __len__(self):
     return self.__cursor.fetchone()['count']
 
 def count(self, *args, _distinct=False):
-    """Retruns the number of tuples matching the intention in the relation.
+    """Returns the number of tuples matching the intention in the relation.
 
     See select for arguments.
     """
