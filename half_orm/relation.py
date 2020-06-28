@@ -34,6 +34,7 @@ import datetime
 import sys
 import uuid
 import yaml
+from typing import Generator
 
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
@@ -535,7 +536,7 @@ def offset(self, _offset_):
     self.__select_params['offset'] = _offset_
     return self
 
-def select(self, *args):
+def select(self, *args) -> Generator[any, None, None]:
     """Generator. Yields the result of the query as a dictionary.
 
     - @args are fields names to restrict the returned attributes
@@ -896,7 +897,7 @@ def _factory(class_name, bases, dct):
     if rel_class:
         return rel_class
     if not tbl_attr['_model']:
-        tbl_attr['_model'] = model.Model(dbname)
+        tbl_attr['_model'] = model.Model(dbname=dbname)
     try:
         metadata = tbl_attr['_model']._metadata['byname'][tuple(sfqrn)]
     except KeyError:
