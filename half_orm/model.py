@@ -25,6 +25,7 @@ About QRN and FQRN:
 """
 
 import sys
+import os
 from collections import OrderedDict
 from configparser import ConfigParser
 
@@ -72,14 +73,65 @@ class Model:
         reserved to the _factory metaclass.
         """
         self.__backend_pid = None
-        if bool(config_file) == bool(dbname):
-            raise RuntimeError("You can't specify config_file with bdname!")
-        self.__config_file = config_file
-        self._dbinfo = {}
-        self.__dbname = dbname
-        if Model._deja_vu(dbname):
-            self.__dict__.update(Model._deja_vu(dbname))
-            return
+
+        dbinfo = {}
+
+        # Helper function to convert the string-based dsn to a dict
+        dsntodict = lambda dsn: dict(
+            map(lambda x:
+                map(lambda y: y.strip("'\""),
+                x.split('=')
+                ),
+            dsn.split()))
+
+
+        if not dbname:
+            # If it is user-called
+
+            if os.environ.get('HALFORM_DSN'):
+                # If the parameters are in the environment variables,
+                # put them into the dict
+                dbinfo = dsntodict(os.environ.get('HALFORM_DSN'))
+
+            elif config_file is not None:
+                # If the parameters are in a configuration file
+                config = ConfigParser()
+
+                # Try to read the data from config_file, or from /etc/half_orm/{config_file}
+                if not config.read(
+                        [self.__config_file,
+                        '/etc/half_orm/{}'.format(self.__config_file)]):
+                    raise model_errors.MissingConfigFile(self.__config_file)
+
+                # Conversion of the ini-file configuration to a dict
+                dbinfo = dict(config['database'].items())
+
+            else:
+                raise Exception("Missing database configuration")
+
+        elif config_file is not None:
+            raise RuntimeError("You can't specify config_file with dbname!")
+
+        else:
+            # If it is _factory called, we check if it is already defined in deja_vu
+
+            self.__dbname = dbname
+            if Model._deja_vu(dbname):
+                Model.__deja_vu['dbname'] = self
+                return
+            else:
+                # @TODO : What to do if there's no existing database and no configuration?
+                raise Exception(f'The database {dbname} is not yet defined')
+
+        needed_params = {'dbname', 'user'}
+        missing_params = []
+        [ (missing_params.append(key) if key not in dbinfo.keys() else None) for key in needed_params ]
+        if len(missing_params) > 0:
+            raise model_errors.MissingParameters(
+                missing_params, filename=config_file)
+
+        self._dbinfo = dbinfo
+        self.__dbname = dbinfo['dbname']
         self.__conn = None
         self.__cursor = None
         self._scope = scope and scope.split('.')[0]
@@ -113,7 +165,7 @@ class Model:
                 sys.stderr.flush()
             return False
 
-    def _connect(self, config_file=None, raise_error=True):
+    def _connect(self, raise_error=True):
         """Setup a new connection to the database.
 
         If a config_file is provided, the connection is made with the new
@@ -124,38 +176,18 @@ class Model:
         if self.__conn is not None:
             if not self.__conn.closed:
                 self.__conn.close()
-        if config_file:
-            self.__config_file = config_file
-        config = ConfigParser()
-        if not config.read(
-                [self.__config_file,
-                 '/etc/half_orm/{}'.format(self.__config_file)]):
-            raise model_errors.MissingConfigFile(self.__config_file)
-        params = dict(config['database'].items())
-        if config_file and params['name'] != self.__dbname:
-            raise RuntimeError(
-                "Can't reconnect to another database {} != {}".format(
-                    params['name'], self.__dbname))
-        needed_params = {'name', 'host', 'user', 'password', 'port'}
-        self.__dbname = params['name']
-        self._dbinfo['name'] = params['name']
-        self._dbinfo['user'] = params['user']
-        self._dbinfo['host'] = params['host']
-        self._dbinfo['port'] = params['port']
-        missing_params = needed_params.symmetric_difference(set(params.keys()))
-        if missing_params:
-            raise model_errors.MalformedConfigFile(
-                self.__config_file, missing_params)
+
         try:
-            self.__conn = psycopg2.connect(
-                'dbname={name} host={host} user={user} '
-                'password={password} port={port}'.format(**params),
+            self.__conn = psycopg2.connect(**self._dbinfo,
                 cursor_factory=RealDictCursor)
         except psycopg2.OperationalError as err:
             if raise_error:
                 raise err.__class__(err)
             sys.stderr.write("{}\n".format(err))
             sys.stderr.flush()
+        except Exception as e:
+            print(self._dbinfo)
+            print(e)
         self.__conn.autocommit = True
         self.__cursor = self.__conn.cursor()
         self.__metadata[self.__dbname] = self.__get_metadata()
@@ -242,8 +274,9 @@ class Model:
                     ftable_key = byid[fkeytableid]['sfqrn']
                     fields = [byid[tableid]['fields'][num] for num in dct['keynum']]
                     ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
+                    fqdn_ = list(filter(lambda x: x is not None, list(table_key) + fields))
                     rev_fkey_name = '_reverse_fkey_{}'.format(
-                        "_".join(list(table_key) + fields)).replace(".", "_")
+                        "_".join(fqdn_)).replace(".", "_")
                     byname[table_key]['fkeys'][fkeyname] = (ftable_key, ffields, fields)
                     byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
 
@@ -263,7 +296,7 @@ class Model:
         @kwargs is a dictionary {field_name:value}
         """
         schema, table = qtn.rsplit('.', 1)
-        fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
+        fqrn = '.'.join([self._dbinfo['dbname'], '"{}"'.format(schema), table])
         fqrn, _ = _normalize_fqrn(fqrn)
         return _factory('Table', (), {'fqrn': fqrn, 'model': self})
 
