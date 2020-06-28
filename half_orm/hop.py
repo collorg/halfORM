@@ -268,34 +268,42 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=AP_DESCRIPTION,
         epilog=AP_EPILOG)
-    #group = parser.add_mutually_exclusive_group()
+
     parser.add_argument(
         "-p", "--package_name", nargs="?", const="",
         help="Python package name default to DB_NAME"
     )
+
     parser.add_argument(
         "-c", "--config_file", nargs="?", const=None,
-        help="half_orm config file (in /etc/half_orm if no / in the name provided)")
+        help="half_orm config file (in /etc/half_orm if no / in the name provided)"
+    )
+
     parser.add_argument(
         "-t", "--test", nargs="?", const="test", help="Test some common pitfalls."
     )
+
     args = parser.parse_args()
     if config_file and args.config_file:
         sys.stderr.write(
             "You are in a halfORM package directory.\n"
             "Try hop without argument.\n")
         sys.exit(1)
+
     if args.config_file:
         config_file = args.config_file
+
         package_name = (
             args.package_name if args.package_name else args.config_file)
-    if not config_file:
+
+    try:
+        if config_file
+        model = Model()
+    except Exception as e:
         sys.stderr.write(
             "You're not in a halfORM package directory.\n"
             "Try hop --help.\n")
         sys.exit(1)
-    model = Model(config_file)
-
     try:
         base = '/etc/half_orm/'
         if config_file.find('/') != -1:
