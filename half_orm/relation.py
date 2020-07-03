@@ -34,6 +34,7 @@ import datetime
 import sys
 import uuid
 import yaml
+from typing import Generator
 
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
@@ -331,12 +332,12 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
     return json.dumps(res, default=handler)
 
 def to_dict(self):
-    """Retruns a dictionary containing only the values of the fields
+    """Returns a dictionary containing only the values of the fields
     that are set."""
     return {key:field.value for key, field in self._fields.items() if field.is_set()}
 
 def _to_dict_val_comp(self):
-    """Retruns a dictionary containing the values and comparators of the fields
+    """Returns a dictionary containing the values and comparators of the fields
     that are set."""
     return {key:(field.comp(), field.value) for key, field in
             self._fields.items() if field.is_set()}
@@ -347,7 +348,7 @@ def __repr__(self):
     if self._model._scope:
         ret.append("CLASS: {}".format(self.__class__))
         ret.append("DATABASE:")
-        ret.append("- NAME: {}".format(self._model._dbinfo['name']))
+        ret.append("- NAME: {}".format(self._model._dbinfo['dbname']))
         ret.append("- USER: {}".format(self._model._dbinfo['user']))
         ret.append("- HOST: {}".format(self._model._dbinfo['host']))
         ret.append("- PORT: {}".format(self._model._dbinfo['port']))
@@ -387,7 +388,7 @@ def is_set(self):
             bool({field for field in self._fields.values() if field.is_set()}))
 
 def __get_set_fields(self):
-    """Retruns a list containing only the fields that are set."""
+    """Returns a list containing only the fields that are set."""
     return [field for field in self._fields.values() if field.is_set()]
 
 def __walk_op(self, rel_id_, out=None, _fields_=None):
@@ -535,7 +536,7 @@ def offset(self, _offset_):
     self.__select_params['offset'] = _offset_
     return self
 
-def select(self, *args):
+def select(self, *args) -> Generator[any, None, None]:
     """Generator. Yields the result of the query as a dictionary.
 
     - @args are fields names to restrict the returned attributes
@@ -565,7 +566,7 @@ def get(self):
     return self(**(next(self.select())))
 
 def __len__(self):
-    """Retruns the number of tuples matching the intention in the relation.
+    """Returns the number of tuples matching the intention in the relation.
 
     See select for arguments.
     """
@@ -582,7 +583,7 @@ def __len__(self):
     return self.__cursor.fetchone()['count']
 
 def count(self, *args, _distinct=False):
-    """Retruns the number of tuples matching the intention in the relation.
+    """Returns the number of tuples matching the intention in the relation.
 
     See select for arguments.
     """
@@ -896,7 +897,7 @@ def _factory(class_name, bases, dct):
     if rel_class:
         return rel_class
     if not tbl_attr['_model']:
-        tbl_attr['_model'] = model.Model(dbname)
+        tbl_attr['_model'] = model.Model(dbname=dbname)
     try:
         metadata = tbl_attr['_model']._metadata['byname'][tuple(sfqrn)]
     except KeyError:
