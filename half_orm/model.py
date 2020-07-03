@@ -94,6 +94,7 @@ class Model:
                 dbinfo = dsntodict(os.environ.get('HALFORM_DSN'))
 
             elif config_file is not None:
+                self.__config_file = config_file
                 # If the parameters are in a configuration file
                 config = ConfigParser()
 
@@ -105,6 +106,8 @@ class Model:
 
                 # Conversion of the ini-file configuration to a dict
                 dbinfo = dict(config['database'].items())
+                if 'name' in dbinfo.keys():
+                    dbinfo['dbname'] = dbinfo.pop('name')
 
             else:
                 raise Exception("Missing database configuration")

@@ -348,7 +348,7 @@ def __repr__(self):
     if self._model._scope:
         ret.append("CLASS: {}".format(self.__class__))
         ret.append("DATABASE:")
-        ret.append("- NAME: {}".format(self._model._dbinfo['name']))
+        ret.append("- NAME: {}".format(self._model._dbinfo['dbname']))
         ret.append("- USER: {}".format(self._model._dbinfo['user']))
         ret.append("- HOST: {}".format(self._model._dbinfo['host']))
         ret.append("- PORT: {}".format(self._model._dbinfo['port']))

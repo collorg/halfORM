@@ -98,7 +98,7 @@ def init_package(model, package_dir, package_name):
     os.makedirs('{}/.hop'.format(package_name))
     open('{}/.hop/config'.format(package_name), 'w').write(
         CONFIG_TEMPLATE.format(
-            config_file=model._dbinfo['name'], package_name=package_name))
+            config_file=model._dbinfo['dbname'], package_name=package_name))
     readme_file_name = '{}/README.md'.format(package_name)
     cmd = " ".join(sys.argv)
     readme = README.format(cmd=cmd, dbname=dbname, package_name=package_name)
@@ -297,13 +297,17 @@ def main():
             args.package_name if args.package_name else args.config_file)
 
     try:
-        if config_file
-        model = Model()
+        if config_file:
+            model = Model(config_file=config_file)
+        else:
+            model = Model()
     except Exception as e:
+        print(e)
         sys.stderr.write(
             "You're not in a halfORM package directory.\n"
             "Try hop --help.\n")
         sys.exit(1)
+
     try:
         base = '/etc/half_orm/'
         if config_file.find('/') != -1:
