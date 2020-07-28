@@ -98,7 +98,7 @@ def init_package(model, package_dir, package_name):
     os.makedirs('{}/.hop'.format(package_name))
     open('{}/.hop/config'.format(package_name), 'w').write(
         CONFIG_TEMPLATE.format(
-            config_file=model._dbinfo['dbname'], package_name=package_name))
+            config_file=model._dbinfo['name'], package_name=package_name))
     readme_file_name = '{}/README.md'.format(package_name)
     cmd = " ".join(sys.argv)
     readme = README.format(cmd=cmd, dbname=dbname, package_name=package_name)
