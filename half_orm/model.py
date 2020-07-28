@@ -27,6 +27,9 @@ About QRN and FQRN:
 import sys
 from collections import OrderedDict
 from configparser import ConfigParser
+from os import environ
+
+CONF_DIR = environ.get('HALFORM_CONF_DIR', '/etc/half_orm')
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -129,7 +132,7 @@ class Model:
         config = ConfigParser()
         if not config.read(
                 [self.__config_file,
-                 '/etc/half_orm/{}'.format(self.__config_file)]):
+                 '{}/{}'.format(CONF_DIR, self.__config_file)]):
             raise model_errors.MissingConfigFile(self.__config_file)
         params = dict(config['database'].items())
         if config_file and params['name'] != self.__dbname:
