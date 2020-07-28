@@ -7,18 +7,19 @@ class MissingConfigFile(Exception):
         Exception.__init__(self, 'Missing config file exception: {}'.format(
             filename))
 
-class MissingParameters(Exception):
-    """The database configuration is missing some parameters
+class MalformedConfigFile(Exception):
+    """The config file is malformed.
+
+    The missing parameters are indicated in the error message.
     """
-    def __init__(self, missing_params, filename=None):
-        filename = 'ENVIRONMENT' if filename is None else filename
-        super().__init__(
+    def __init__(self, filename, missing_params):
+        self.filename = filename
+        Exception.__init__(
             self,
-            ('Missing parameters exception: {}\n'
+            ('Malformed config file exception: {}\n'
              'Missing parameters: {}').format(
                  filename, '\n - '.join([''] + list(missing_params))))
 
-        
 class UnknownDatabase(Exception):
     """The database dbname couldn't be found. Connexion error ?"""
     def __init__(self, dbname):
