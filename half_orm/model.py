@@ -139,21 +139,20 @@ class Model:
             raise RuntimeError(
                 "Can't reconnect to another database {} != {}".format(
                     params['name'], self.__dbname))
-        needed_params = {'name', 'host', 'user', 'password', 'port'}
         self.__dbname = params['name']
         self._dbinfo['name'] = params['name']
-        self._dbinfo['user'] = params['user']
-        self._dbinfo['host'] = params['host']
-        self._dbinfo['port'] = params['port']
-        missing_params = needed_params.symmetric_difference(set(params.keys()))
-        if missing_params:
+        self._dbinfo['user'] = params.get('user')
+        self._dbinfo['password'] = params.get('password')
+        self._dbinfo['host'] = params.get('host')
+        self._dbinfo['port'] = params.get('port')
+        if 'name' not in self._dbinfo:
             raise model_errors.MalformedConfigFile(
-                self.__config_file, missing_params)
+                self.__config_file, {'name'})
         try:
+            params = dict(self._dbinfo)
+            params['dbname'] = params.pop('name')
             self.__conn = psycopg2.connect(
-                'dbname={name} host={host} user={user} '
-                'password={password} port={port}'.format(**params),
-                cursor_factory=RealDictCursor)
+                **params, cursor_factory=RealDictCursor)
         except psycopg2.OperationalError as err:
             if raise_error:
                 raise err.__class__(err)
