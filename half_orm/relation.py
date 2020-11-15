@@ -29,6 +29,8 @@ The following methods can be chained on the object before a select.
 - offset: sets the offset for the select method.
 """
 
+import psycopg2
+
 from collections import OrderedDict
 import datetime
 import sys
@@ -137,6 +139,14 @@ def __setattr__(self, key, value):
         self.__dict__[key].set(value)
         return
     object.__setattr__(self, key, value)
+
+def __execute(self, query, values):
+    try:
+        return self.__cursor.execute(query, values)
+    except (psycopg2.OperationalError, psycopg2.InterfaceError):
+        self._model.ping()
+        self.__cursor = self._model._connection.cursor()
+        return self.__cursor.execute(query, values)
 
 @property
 def id_(self):
@@ -543,7 +553,7 @@ def select(self, *args) -> Generator[any, None, None]:
     """
     query, values = self._prep_select(*args)
     try:
-        self.__cursor.execute(query, values)
+        self.__execute(query, values)
     except Exception as err:
         sys.stderr.write(
             "QUERY: {}\nVALUES: {}\n".format(query, values))
@@ -575,7 +585,7 @@ def __len__(self):
     query, values = self.__get_query(query_template)
     try:
         vars_ = tuple(self.__sql_values + values)
-        self.__cursor.execute(query, vars_)
+        self.__execute(query, vars_)
     except Exception as err:
         print(query, vars_)
         self._mogrify()
@@ -595,7 +605,7 @@ def count(self, *args, _distinct=False):
     query, values = self.__get_query(query_template, *args)
     try:
         vars_ = tuple(self.__sql_values + values)
-        self.__cursor.execute(query, vars_)
+        self.__execute(query, vars_)
     except Exception as err:
         print(query, vars_)
         self._mogrify()
@@ -636,7 +646,7 @@ def update(self, update_all=False, **kwargs):
         where = "{} and {}".format(where, fk_where)
         values += fk_values
     query = query_template.format(self._fqrn, what, where)
-    self.__cursor.execute(query, tuple(values))
+    self.__execute(query, tuple(values))
     for field_name, value in kwargs.items():
         self._fields[field_name].set(value)
 
@@ -669,7 +679,7 @@ def insert(self):
         what_to_insert += ["({})".format(query) for query in fk_query]
         values += fk_values
     query = query_template.format(self._fqrn, ", ".join(fields_names), ", ".join(what_to_insert))
-    self.__cursor.execute(query, tuple(values))
+    self.__execute(query, tuple(values))
     return self.__cursor.fetchall()
 
 def delete(self, delete_all=False):
@@ -692,7 +702,7 @@ def delete(self, delete_all=False):
         where = "{} and {}".format(where, fk_where)
         values += fk_values
     query = query_template.format(self._fqrn, where)
-    self.__cursor.execute(query, tuple(values))
+    self.__execute(query, tuple(values))
 
 def __call__(self, **kwargs):
     return self.__class__(**kwargs)
@@ -807,6 +817,7 @@ COMMON_INTERFACE = {
     '_freeze': _freeze,
     '_unfreeze': _unfreeze,
     '__setattr__': __setattr__,
+    '__execute': __execute,
     'id_': id_,
     '__set_fields': __set_fields,
     '__set_fkeys': __set_fkeys,

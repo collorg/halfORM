@@ -84,7 +84,6 @@ class Model:
             self.__dict__.update(Model._deja_vu(dbname))
             return
         self.__conn = None
-        self.__cursor = None
         self._scope = scope and scope.split('.')[0]
         self._relations_['list'] = []
         self._relations_['classes'] = {}
@@ -159,7 +158,6 @@ class Model:
             sys.stderr.write("{}\n".format(err))
             sys.stderr.flush()
         self.__conn.autocommit = True
-        self.__cursor = self.__conn.cursor()
         self.__metadata[self.__dbname] = self.__get_metadata()
         self.__deja_vu[self.__dbname] = self
         self.__backend_pid = self.execute_query(
