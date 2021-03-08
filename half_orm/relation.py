@@ -631,7 +631,12 @@ def update(self, update_all=False, **kwargs):
     The object self must be set unless update_all is True.
     The constraints of the relations are updated with kwargs.
     """
-    if not kwargs:
+    update_args = dict(kwargs)
+    for key, value in kwargs.items():
+        # None values are first removed
+        if value is None:
+            update_args.pop(key)
+    if not update_args:
         return # no new value update. Should we raise an error here?
     if not (self.is_set() or update_all):
         raise RuntimeError(
@@ -639,7 +644,7 @@ def update(self, update_all=False, **kwargs):
             ' without update_all being set to True!')
 
     query_template = "update {} set {} {}"
-    what, where, values = self.__update_args(**kwargs)
+    what, where, values = self.__update_args(**update_args)
     _, _, fk_fields, fk_query, fk_values = self.__what_to_insert()
     if fk_fields:
         fk_where = " and ".join(["({}) in ({})".format(a, b) for a, b in zip(fk_fields, fk_query)])
@@ -647,7 +652,7 @@ def update(self, update_all=False, **kwargs):
         values += fk_values
     query = query_template.format(self._fqrn, what, where)
     self.__execute(query, tuple(values))
-    for field_name, value in kwargs.items():
+    for field_name, value in update_args.items():
         self._fields[field_name].set(value)
 
 def __what_to_insert(self):
