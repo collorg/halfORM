@@ -11,8 +11,11 @@ import os
 import sys
 from keyword import iskeyword
 
+import psycopg2
+
 from half_orm.model import Model, camel_case, CONF_DIR
 from half_orm import relation_errors
+from half_orm.hopatch import patch
 
 class ClassInstanciationError(Exception):
     "Failed to instanciate a relation class"
@@ -36,7 +39,7 @@ MODULE_TEMPLATE_2 = open(
     '{}/halfORM_templates/module_template_2'.format(HALFORM_PATH)).read()
 MODULE_TEMPLATE_3 = open(
     '{}/halfORM_templates/module_template_3'.format(HALFORM_PATH)).read()
-WARING_TEMPLATE = open(
+WARNING_TEMPLATE = open(
     '{}/halfORM_templates/warning'.format(HALFORM_PATH)).read()
 MODULE_FORMAT = (
     "{rt1}{bc_}{global_user_s_code}{ec_}{rt2}{rt3}\n        {bc_}{user_s_code}")
@@ -103,6 +106,7 @@ def init_package(model, package_dir, package_name):
     cmd = " ".join(sys.argv)
     readme = README.format(cmd=cmd, dbname=dbname, package_name=package_name)
     open(readme_file_name, 'w').write(readme)
+    os.mkdir('{}/{}'.format(package_dir, package_name))
 
 def get_inheritance_info(rel, package_name):
     """Returns inheritance informations for the rel relation.
@@ -259,58 +263,67 @@ def main():
 
     sys.path.insert(0, os.getcwd())
 
-    rel_package = None
-    config_file, package_name = load_config_file()
-    if config_file:
-        rel_package = "."
-
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=AP_DESCRIPTION,
         epilog=AP_EPILOG)
-    #group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group()
     parser.add_argument(
-        "-p", "--package_name", nargs="?", const="",
-        help="Python package name default to DB_NAME"
+        "-p", "--patch", type=bool, const=True, default=False,
+        nargs="?", help="Install or use the patch system"
     )
     parser.add_argument(
-        "-c", "--config_file", nargs="?", const=None,
-        help="half_orm config file (in /etc/half_orm if no / in the name provided)")
+        "-c", "--create", nargs="?", const=None,
+        help="half_orm config file name")
     parser.add_argument(
         "-t", "--test", nargs="?", const="test", help="Test some common pitfalls."
     )
     args = parser.parse_args()
-    if config_file and args.config_file:
+    rel_package = None
+    # on cherche un fichier de conf .hop/config dans l'arbre.
+    config_file, package_name = load_config_file()
+    if config_file:
+        rel_package = "."
+
+    if config_file and args.create:
         sys.stderr.write(
-            "You are in a halfORM package directory.\n"
-            "Try hop without argument.\n")
+            "You are in a halfORM package directory.\n")
         sys.exit(1)
-    if args.config_file:
-        config_file = args.config_file
-        package_name = (
-            args.package_name if args.package_name else args.config_file)
+    if args.create:
+        config_file = args.create
     if not config_file:
         sys.stderr.write(
             "You're not in a halfORM package directory.\n"
             "Try hop --help.\n")
         sys.exit(1)
-    model = Model(config_file)
-
     try:
-        open('{}{}'.format(CONF_DIR, config_file))
-    except FileNotFoundError as err:
-        sys.stderr.write('{}\n'.format(err))
+        model = Model(config_file)
+    except psycopg2.OperationalError:
+        sys.stderr.write(f'The database {config_file} does not exist.\n')
         sys.exit(1)
 
+    try:
+        open('{}/{}'.format(CONF_DIR, config_file))
+    except FileNotFoundError as err:
+        sys.stderr.write('ERROR! No such config file: {}\n'.format(err))
+        sys.exit(1)
+    if args.patch:
+        patch(model._dbname)
+        sys.exit()
+
+    if args.create:
+        package_dir = args.create
+        package_name = args.create
+        init_package(model, args.create, args.create)
+        os.chdir(args.create)
+        patch(args.create, create=True)
+        os.chdir('..')
     package_dir = "{}/{}".format(rel_package or package_name, package_name)
+    warning = WARNING_TEMPLATE.format(package_name=package_name)
 
-    warning = WARING_TEMPLATE.format(package_name=package_name)
-
-    if not rel_package:
-        init_package(model, package_dir, package_name)
     files_list = update_modules(model, package_dir, package_name, warning)
     update_init_files(package_dir, warning, files_list)
-    if not args.config_file:
+    if not args.create:
         hop_update()
         test_package(model, package_dir, package_name)
 

@@ -20,7 +20,9 @@ setup(
     url='https://github.com/collorg/half_orm',
     license='GPL',
     packages=['half_orm'],
-    package_data={'half_orm': ['halfORM_templates/*']},
+    package_data={'half_orm': [
+        'halfORM_templates/*',
+        'halfORM_db_patch_system/*']},
     install_requires=['psycopg2-binary', 'PyYAML'],
     entry_points={
         'console_scripts': [
