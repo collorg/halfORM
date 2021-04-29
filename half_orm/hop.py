@@ -11,7 +11,7 @@ import os
 import sys
 from keyword import iskeyword
 
-from half_orm.model import Model, camel_case
+from half_orm.model import Model, camel_case, CONF_DIR
 from half_orm import relation_errors
 
 class ClassInstanciationError(Exception):
@@ -297,10 +297,7 @@ def main():
     model = Model(config_file)
 
     try:
-        base = '/etc/half_orm/'
-        if config_file.find('/') != -1:
-            base = ''
-        open('{}{}'.format(base, config_file))
+        open('{}{}'.format(CONF_DIR, config_file))
     except FileNotFoundError as err:
         sys.stderr.write('{}\n'.format(err))
         sys.exit(1)
