@@ -3,7 +3,7 @@
 # pylint: disable=invalid-name, protected-access
 
 """\
-Generates a python package from a PostgreSQL database
+Generates/Synchronises/Patches a python package from a PostgreSQL database
 """
 
 import re
@@ -15,7 +15,7 @@ import psycopg2
 
 from half_orm.model import Model, camel_case, CONF_DIR
 from half_orm import relation_errors
-from half_orm.hopatch import patch
+from .patch import patch
 
 class ClassInstanciationError(Exception):
     "Failed to instanciate a relation class"
@@ -25,25 +25,27 @@ class ClassInstanciationError(Exception):
 HALFORM_PATH = os.path.dirname(__file__)
 BEGIN_CODE = "#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!\n"
 END_CODE = "#<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!\n"
-README = open('{}/halfORM_templates/README'.format(HALFORM_PATH)).read()
+README = open('{}/templates/README'.format(HALFORM_PATH)).read()
 CONFIG_TEMPLATE = open(
-    '{}/halfORM_templates/config'.format(HALFORM_PATH)).read()
+    '{}/templates/config'.format(HALFORM_PATH)).read()
 SETUP_TEMPLATE = open(
-    '{}/halfORM_templates/setup.py'.format(HALFORM_PATH)).read()
+    '{}/templates/setup.py'.format(HALFORM_PATH)).read()
 DB_CONNECTOR_TEMPLATE = open(
-    '{}/halfORM_templates/db_connector.py'.format(HALFORM_PATH)).read()
+    '{}/templates/db_connector.py'.format(HALFORM_PATH)).read()
 MODULE_TEMPLATE_1 = open(
-    '{}/halfORM_templates/module_template_1'.format(HALFORM_PATH)
+    '{}/templates/module_template_1'.format(HALFORM_PATH)
     ).read()
 MODULE_TEMPLATE_2 = open(
-    '{}/halfORM_templates/module_template_2'.format(HALFORM_PATH)).read()
+    '{}/templates/module_template_2'.format(HALFORM_PATH)).read()
 MODULE_TEMPLATE_3 = open(
-    '{}/halfORM_templates/module_template_3'.format(HALFORM_PATH)).read()
+    '{}/templates/module_template_3'.format(HALFORM_PATH)).read()
 WARNING_TEMPLATE = open(
-    '{}/halfORM_templates/warning'.format(HALFORM_PATH)).read()
+    '{}/templates/warning'.format(HALFORM_PATH)).read()
 MODULE_FORMAT = (
     "{rt1}{bc_}{global_user_s_code}{ec_}{rt2}{rt3}\n        {bc_}{user_s_code}")
-AP_DESCRIPTION = """Generates python package from a PG database"""
+AP_DESCRIPTION = """
+Generates/Synchronises/Patches a python package from a PostgreSQL database
+"""
 AP_EPILOG = """"""
 DO_NOT_REMOVE = ['db_connector.py', '__init__.py']
 
@@ -264,10 +266,8 @@ def main():
     sys.path.insert(0, os.getcwd())
 
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
         description=AP_DESCRIPTION,
         epilog=AP_EPILOG)
-    group = parser.add_mutually_exclusive_group()
     parser.add_argument(
         "-p", "--patch", type=bool, const=True, default=False,
         nargs="?", help="Install or use the patch system"
@@ -275,10 +275,17 @@ def main():
     parser.add_argument(
         "-c", "--create", nargs="?", const=None,
         help="half_orm config file name")
+    # group = parser.add_mutually_exclusive_group()
+    # group.add_argument('--patch')
+    # group.add_argument('--create')
     parser.add_argument(
         "-t", "--test", nargs="?", const="test", help="Test some common pitfalls."
     )
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except IndexError:
+        parser.print_help()
+        sys.exit(1)
     rel_package = None
     # on cherche un fichier de conf .hop/config dans l'arbre.
     config_file, package_name = load_config_file()

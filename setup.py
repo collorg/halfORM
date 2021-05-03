@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 
-import sys
 import os
 import codecs
 from setuptools import setup
@@ -19,11 +18,11 @@ setup(
     author_email='joel.maizi@collorg.org',
     url='https://github.com/collorg/half_orm',
     license='GPL',
-    packages=['half_orm'],
+    packages=['half_orm', 'half_orm/hop'],
     package_data={'half_orm': [
-        'halfORM_templates/*',
-        'halfORM_db_patch_system/*']},
-    install_requires=['psycopg2-binary', 'PyYAML'],
+        'hop/templates/*',
+        'hop/db_patch_system/*']},
+    install_requires=['psycopg2-binary', 'PyYAML', 'pydash'],
     entry_points={
         'console_scripts': [
             'hop=half_orm.hop:main',

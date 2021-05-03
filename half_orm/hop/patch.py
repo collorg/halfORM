@@ -12,16 +12,14 @@ Le numéro de patch dans la table meta.release sera 9999.9999.<no de patch>
 L'option -i n'est pas utilisable si patch.yml positionne PRODUCTION à True.
 """
 
-import pydash
-import argparse
 from datetime import date
-import subprocess
 import os
-import psycopg2
 import sys
-import yaml
+import subprocess
+import psycopg2
+import pydash
 from half_orm.model_errors import UnknownRelation
-from half_orm.model import Model, CONF_DIR
+from half_orm.model import Model
 
 CONFIG_FILE = 'patch.yml'
 PATCH_YML_TMPL = """db_connection_file_name: {}
@@ -83,9 +81,9 @@ def get_sha1_commit(patch_script):
 
 def save_database():
     """Dumps the database"""
-    if not os.path.isdir('./svg'):
-        os.mkdir('./svg')
-    svg_file = f'./svg/{MODEL._dbname}-{CURRENT}.sql'
+    if not os.path.isdir('./Svg'):
+        os.mkdir('./Svg')
+    svg_file = f'./Svg/{MODEL._dbname}-{CURRENT}.sql'
     if os.path.isfile(svg_file):
         sys.stderr.write(f"Oops! there is already a dump for the {CURRENT} release.\n")
         sys.stderr.write(f"Please remove {svg_file} if you realy want to proceed.\n")
@@ -184,17 +182,46 @@ def exit_(retval=0):
     "Exit after restoring ORIGDIR"
     sys.exit(retval)
 
-def initialisation():
+def tests_init():
+    if not os.path.exists('./Tests'):
+        os.mkdir('./Tests')
+
+def patch_init():
     "Initialise le système de patch en créant les tables meta.release et meta.last_release"
-    #TODO: voir si les tables sont déjà présentes
+
     print(f"Initialising the patch system for the '{DBNAME}' database.")
-    sql_dir = f"{MODULE_DIR}/halfORM_db_patch_system"
+    sql_dir = f"{MODULE_DIR}/db_patch_system"
+    release = True
+    last_release = True
+    release_issue = True
+    try:
+        MODEL.get_relation_class('meta.release')
+    except UnknownRelation:
+        release = False
+    try:
+        MODEL.get_relation_class('meta.last_release')
+    except UnknownRelation:
+        last_release = False
+    try:
+        MODEL.get_relation_class('meta.release_issue')
+    except UnknownRelation:
+        release_issue = False
+    patch_confict = release or last_release or release_issue
+    if patch_confict:
+        sys.stderr.write('Does the database have a patch system?\n')
+        sys.stderr.write('Not installing the patch system!\n')
+        return
+    if not os.path.exists('./Patches'):
+        os.mkdir('./Patches')
+        open('./Patches/README', 'w').write(open(f"{sql_dir}/README").read())
     MODEL.execute_query(open(f"{sql_dir}/meta.release.sql").read())
     MODEL.execute_query(open(f"{sql_dir}/meta.last_release.sql").read())
     MODEL.execute_query(open(f"{sql_dir}/meta.release_issue.sql").read())
     MODEL.execute_query(
         "insert into meta.release values (0,0,0, '', 0, now(),'First release', '{}')".format(
             date.today()))
+    
+    print('Patch system installed!')
 
 def patch(dbname, create=False):
     "Main"
@@ -213,7 +240,7 @@ def patch(dbname, create=False):
     if create:
         CURRENT = 'pre-patch'
         save_database()
-        initialisation()
+        patch_init()
     else:
         next_ = get_next_release()
         if next_:
