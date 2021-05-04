@@ -2,16 +2,19 @@
 #-*- coding: utf-8 -*-
 # pylint: disable=invalid-name, protected-access
 
-"""\
+"""
 Generates/Synchronises/Patches a python package from a PostgreSQL database
 """
 
 import re
 import os
+import subprocess
 import sys
 from keyword import iskeyword
 
 import psycopg2
+from git import Repo
+import half_orm
 
 from half_orm.model import Model, camel_case, CONF_DIR
 from half_orm import relation_errors
@@ -22,25 +25,26 @@ class ClassInstanciationError(Exception):
     def __init__(self, msg):
         super().__init__(msg)
 
+BASE_DIR = os.getcwd()
+
 HALFORM_PATH = os.path.dirname(__file__)
 BEGIN_CODE = "#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!\n"
 END_CODE = "#<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!\n"
-README = open('{}/templates/README'.format(HALFORM_PATH)).read()
-CONFIG_TEMPLATE = open(
-    '{}/templates/config'.format(HALFORM_PATH)).read()
-SETUP_TEMPLATE = open(
-    '{}/templates/setup.py'.format(HALFORM_PATH)).read()
-DB_CONNECTOR_TEMPLATE = open(
-    '{}/templates/db_connector.py'.format(HALFORM_PATH)).read()
-MODULE_TEMPLATE_1 = open(
-    '{}/templates/module_template_1'.format(HALFORM_PATH)
-    ).read()
-MODULE_TEMPLATE_2 = open(
-    '{}/templates/module_template_2'.format(HALFORM_PATH)).read()
-MODULE_TEMPLATE_3 = open(
-    '{}/templates/module_template_3'.format(HALFORM_PATH)).read()
-WARNING_TEMPLATE = open(
-    '{}/templates/warning'.format(HALFORM_PATH)).read()
+
+TEMPLATES_DIR = f'{HALFORM_PATH}/templates'
+
+os.chdir(TEMPLATES_DIR)
+README = open('README').read()
+CONFIG_TEMPLATE = open('config').read()
+SETUP_TEMPLATE = open('setup.py').read()
+DB_CONNECTOR_TEMPLATE = open('db_connector.py').read()
+MODULE_TEMPLATE_1 = open('module_template_1').read()
+MODULE_TEMPLATE_2 = open('module_template_2').read()
+MODULE_TEMPLATE_3 = open('module_template_3').read()
+WARNING_TEMPLATE = open('warning').read()
+GIT_IGNORE = open('.gitignore').read()
+os.chdir(BASE_DIR)
+
 MODULE_FORMAT = (
     "{rt1}{bc_}{global_user_s_code}{ec_}{rt2}{rt3}\n        {bc_}{user_s_code}")
 AP_DESCRIPTION = """
@@ -90,25 +94,38 @@ def load_config_file(base_dir=None, ref_dir=None):
     os.chdir(ref_dir)
     return None, None
 
-def init_package(model, package_dir, package_name):
-    """Initialize different files in the package directory.
+def init_package(model, dir, name):
+    """Initialises the package directory.
     """
     dbname = model._dbname
-    if not os.path.exists(package_name):
-        os.makedirs(package_dir)
-        setup = SETUP_TEMPLATE.format(dbname=dbname, package_name=package_name)
-        setup_file_name = '{}/setup.py'.format(package_name)
+    if not os.path.exists(name):
+        os.makedirs(dir)
+        setup = SETUP_TEMPLATE.format(dbname=dbname, package_name=name)
+        setup_file_name = f'{name}/setup.py'
         if not os.path.exists(setup_file_name):
             open(setup_file_name, 'w').write(setup)
-    os.makedirs('{}/.hop'.format(package_name))
-    open('{}/.hop/config'.format(package_name), 'w').write(
+    os.makedirs(f'{name}/.hop')
+    open(f'{name}/.hop/config', 'w').write(
         CONFIG_TEMPLATE.format(
-            config_file=model._dbinfo['name'], package_name=package_name))
-    readme_file_name = '{}/README.md'.format(package_name)
+            config_file=model._dbinfo['name'], package_name=name))
     cmd = " ".join(sys.argv)
-    readme = README.format(cmd=cmd, dbname=dbname, package_name=package_name)
-    open(readme_file_name, 'w').write(readme)
-    os.mkdir('{}/{}'.format(package_dir, package_name))
+    readme = README.format(cmd=cmd, dbname=dbname, package_name=name)
+    open(f'{name}/README.md', 'w').write(readme)
+    open(f'{name}/.gitignore', 'w').write(GIT_IGNORE)
+    os.mkdir(f'{name}/{name}')
+    os.chdir(name)
+    if not os.path.isdir('.git'):
+        Repo.init('.')
+    repo = Repo('.')
+    patch(name, create=True)
+    model.reconnect() # we get the new stuff here
+    subprocess.run(['hop']) # hop adds the new stuff
+    try:
+        repo.head.commit
+    except ValueError:
+        repo.git.add('.')
+        repo.git.commit(m='First release')
+    os.chdir('..')
 
 def get_inheritance_info(rel, package_name):
     """Returns inheritance informations for the rel relation.
@@ -318,21 +335,20 @@ def main():
         patch(model._dbname)
         sys.exit()
 
+    name = None
     if args.create:
         package_dir = args.create
         package_name = args.create
-        init_package(model, args.create, args.create)
-        os.chdir(args.create)
-        patch(args.create, create=True)
-        os.chdir('..')
-    package_dir = "{}/{}".format(rel_package or package_name, package_name)
-    warning = WARNING_TEMPLATE.format(package_name=package_name)
+        init_package(model, package_dir, package_name)
+    name = name or package_name
+    package_dir = "{}/{}".format(rel_package or name, name)
+    warning = WARNING_TEMPLATE.format(package_name=name)
 
-    files_list = update_modules(model, package_dir, package_name, warning)
+    files_list = update_modules(model, package_dir, name, warning)
     update_init_files(package_dir, warning, files_list)
-    if not args.create:
-        hop_update()
-        test_package(model, package_dir, package_name)
+    # if not args.create:
+    #     hop_update()
+    #     test_package(model, package_dir, name)
 
 if __name__ == '__main__':
     main()

@@ -18,11 +18,15 @@ setup(
     author_email='joel.maizi@collorg.org',
     url='https://github.com/collorg/half_orm',
     license='GPL',
-    packages=['half_orm', 'half_orm/hop'],
+    packages=['half_orm'],
     package_data={'half_orm': [
         'hop/templates/*',
         'hop/db_patch_system/*']},
-    install_requires=['psycopg2-binary', 'PyYAML', 'pydash'],
+    install_requires=[
+        'psycopg2-binary',
+        'PyYAML',
+        'pydash',
+        'GitPython'],
     entry_points={
         'console_scripts': [
             'hop=half_orm.hop:main',

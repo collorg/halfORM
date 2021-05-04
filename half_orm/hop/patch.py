@@ -21,10 +21,6 @@ import pydash
 from half_orm.model_errors import UnknownRelation
 from half_orm.model import Model
 
-CONFIG_FILE = 'patch.yml'
-PATCH_YML_TMPL = """db_connection_file_name: {}
-production: {}
-"""
 CURRENT = ''
 ARGS = ''
 CONF = ''

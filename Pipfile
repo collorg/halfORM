@@ -13,3 +13,4 @@ pydash = "5"
 [dev-packages]
 nose = "1.3"
 half-orm = {editable = true, path = "."}
+gitpython = "3"
