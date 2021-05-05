@@ -5,7 +5,9 @@ create table meta.release (
     minor int check (minor >= 0),
     patch int check (patch >= 0),
     pre_release text check (pre_release in ('alpha', 'beta', 'rc', '')) default '',
-    pre_release_num int check (pre_release_num >= 0) default 0,
+    pre_release_num text check (
+        pre_release_num = '' or pre_release_num ~ '^\d+$') default '',
+    "date" date default current_date,
     "time" time(0) with time zone default current_time,
     changelog text,
     commit text,

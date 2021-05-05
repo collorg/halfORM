@@ -157,9 +157,12 @@ def apply_issue(issue, release, commit=None, bundled_issue=None):
 def get_next_release():
     global CURRENT
     "Renvoie en fonction de part le numéro de la prochaine release"
-    last_release = MODEL.get_relation_class('meta.view.last_release')().get().to_dict()
+    last_release = next(MODEL.get_relation_class('meta.view.last_release')().select())
     CURRENT = '{major}.{minor}.{patch}'.format(**last_release)
-    print("LAST RELEASE: {major}.{minor}.{patch} at {time}".format(**last_release))
+    msg = "LAST RELEASE: {major}.{minor}.{patch} at {time}"
+    if 'date' in last_release:
+        msg = "LAST RELEASE: {major}.{minor}.{patch}: {date} at {time}"
+    print(msg.format(**last_release))
     to_zero = []
     for part in ['patch', 'minor', 'major']:
         next_release = dict(last_release)
@@ -167,10 +170,14 @@ def get_next_release():
         for sub_part in to_zero:
             next_release[sub_part] = 0
         next_release_path = '{major}/{minor}/{patch}'.format(**next_release)
-        print("Trying {}".format(next_release_path.replace("/", ".")))
+        next_release_s = '{major}.{minor}.{patch}'.format(**next_release)
+        print(f"Trying {next_release_s}")
         if os.path.exists('Patches/{}'.format(next_release_path)):
             print("FOUND PATCH: {major}.{minor}.{patch}".format(**next_release))
-            return {'release':next_release, 'path': next_release_path}
+            return {
+                'release':next_release,
+                'release_s': next_release_s,
+                'path': next_release_path}
         to_zero.append(part)
 
 def exit_(retval=0):
@@ -214,10 +221,10 @@ def patch_init():
     MODEL.execute_query(open(f"{sql_dir}/meta.last_release.sql").read())
     MODEL.execute_query(open(f"{sql_dir}/meta.release_issue.sql").read())
     MODEL.execute_query(
-        "insert into meta.release values (0,0,0, '', 0, now(),'First release', '{}')".format(
+        "insert into meta.release values (0,0,0, '', 0, now(), now(),'First release', '{}')".format(
             date.today()))
     
-    print('Patch system installed!')
+    print('Patch system initialized !')
 
 def patch(dbname, create=False):
     "Main"
@@ -237,6 +244,7 @@ def patch(dbname, create=False):
         CURRENT = 'pre-patch'
         save_database()
         patch_init()
+        return "0.0.0"
     else:
         next_ = get_next_release()
         if next_:
@@ -244,3 +252,4 @@ def patch(dbname, create=False):
         else:
             print("No patch to apply!")
             sys.exit(1)
+    return next_['release_s']

@@ -5,7 +5,7 @@ create table meta.release_issue (
     release_minor int not null,
     release_patch int not null,
     release_pre_release text not null,
-    release_pre_release_num int not null,
+    release_pre_release_num text not null,
     foreign key (
         release_major,
         release_minor,

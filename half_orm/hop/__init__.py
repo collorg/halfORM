@@ -94,12 +94,12 @@ def load_config_file(base_dir=None, ref_dir=None):
     os.chdir(ref_dir)
     return None, None
 
-def init_package(model, dir, name):
+def init_package(model, base_dir, name):
     """Initialises the package directory.
     """
     dbname = model._dbname
     if not os.path.exists(name):
-        os.makedirs(dir)
+        os.makedirs(base_dir)
         setup = SETUP_TEMPLATE.format(dbname=dbname, package_name=name)
         setup_file_name = f'{name}/setup.py'
         if not os.path.exists(setup_file_name):
@@ -117,14 +117,15 @@ def init_package(model, dir, name):
     if not os.path.isdir('.git'):
         Repo.init('.')
     repo = Repo('.')
-    patch(name, create=True)
-    model.reconnect() # we get the new stuff here
+    release = patch(name, create=True)
+    print(release)
+    model.reconnect() # we get the new stuff from db metadata here
     subprocess.run(['hop']) # hop adds the new stuff
     try:
         repo.head.commit
     except ValueError:
         repo.git.add('.')
-        repo.git.commit(m='First release')
+        repo.git.commit(m='[0.0.0] First release')
     os.chdir('..')
 
 def get_inheritance_info(rel, package_name):
