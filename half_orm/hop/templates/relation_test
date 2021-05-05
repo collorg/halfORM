@@ -1,0 +1,14 @@
+"""Test file for the {module} module.
+"""
+
+from unittest import TestCase
+from half_orm.relation import Relation
+from {module} import {class_name}
+
+class Test(TestCase):
+
+    def setUp(self):
+        self.rel = Relation()
+
+    def is_relation_test(self):
+        self.assertTrue(issubclass({class_name}, Relation))

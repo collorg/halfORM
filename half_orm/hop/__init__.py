@@ -42,6 +42,7 @@ MODULE_TEMPLATE_1 = open('module_template_1').read()
 MODULE_TEMPLATE_2 = open('module_template_2').read()
 MODULE_TEMPLATE_3 = open('module_template_3').read()
 WARNING_TEMPLATE = open('warning').read()
+TEST = open('relation_test').read()
 GIT_IGNORE = open('.gitignore').read()
 os.chdir(BASE_DIR)
 
@@ -195,9 +196,10 @@ def update_this_module(
     module_template = assemble_module_template(module_path)
     inheritance_import, inherited_classes = get_inheritance_info(
         rel, package_name)
+    module = f"{package_name}.{fqtn}"
     open(module_path, 'w').write(
         module_template.format(
-            module="{}.{}".format(package_name, fqtn),
+            module=module,
             package_name=package_name,
             documentation="\n".join(["    {}".format(line)
                                      for line in str(rel).split("\n")]),
@@ -206,6 +208,11 @@ def update_this_module(
             class_name=camel_case(module_name),
             fqtn=fqtn,
             warning=warning))
+    test_path = module_path.replace('.py', '_test.py')
+    if not os.path.exists(test_path):
+        open(test_path, 'w').write(
+            TEST.format(module=module, class_name=camel_case(module_name))
+        )
     return module_path
 
 def update_modules(model, package_dir, package_name, warning):
@@ -222,6 +229,9 @@ def update_modules(model, package_dir, package_name, warning):
             model, relation, package_dir, package_name, dirs_list, warning)
         if module_path:
             files_list.append(module_path)
+            if module_path.find('__init__.py') == -1:
+                test_file_path = module_path.replace('.py', '_test.py')
+                files_list.append(test_file_path)
 
     return files_list
 
@@ -236,13 +246,14 @@ def update_init_files(package_dir, warning, files_list):
         for file in files:
             path_ = "{}/{}".format(root, file)
             if path_ not in files_list and file not in DO_NOT_REMOVE:
-                if path_.find('__pycache__') == -1:
+                if path_.find('__pycache__') == -1 and path_.find('_test.py') == -1:
                     print("REMOVING: {}".format(path_))
                 os.remove(path_)
                 continue
             if (re.findall('.py$', file) and
                     file != '__init__.py' and
-                    file != '__pycache__'):
+                    file != '__pycache__' and
+                    file.find('_test.py') == -1):
                 all_.append(file.replace('.py', ''))
         all_.sort()
         with open('{}/__init__.py'.format(root), 'w') as init_file:
