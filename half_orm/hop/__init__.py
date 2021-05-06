@@ -13,8 +13,7 @@ import sys
 from keyword import iskeyword
 
 import psycopg2
-from git import Repo
-import half_orm
+from git import Repo, GitCommandError
 
 from half_orm.model import Model, camel_case, CONF_DIR
 from half_orm import relation_errors
@@ -116,17 +115,23 @@ def init_package(model, base_dir, name):
     os.mkdir(f'{name}/{name}')
     os.chdir(name)
     if not os.path.isdir('.git'):
-        Repo.init('.')
+        try:
+            Repo.init('.', initial_branch='main')
+            print("Initializing git with a 'main' branch.")
+        except GitCommandError:
+            Repo.init('.')
+            print("Initializing git with a 'master' branch.")
     repo = Repo('.')
     release = patch(name, create=True)
-    print(release)
     model.reconnect() # we get the new stuff from db metadata here
-    subprocess.run(['hop']) # hop adds the new stuff
+    subprocess.run(['hop']) # hop creates/updates the modules
     try:
         repo.head.commit
     except ValueError:
         repo.git.add('.')
         repo.git.commit(m='[0.0.0] First release')
+    print("Switching to the 'devel' branch.")
+    repo.git.checkout(b='devel')
     os.chdir('..')
 
 def get_inheritance_info(rel, package_name):
