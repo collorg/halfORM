@@ -18,7 +18,7 @@ setup(
     author_email='joel.maizi@collorg.org',
     url='https://github.com/collorg/half_orm',
     license='GPL',
-    packages=['half_orm'],
+    packages=['half_orm', 'half_orm/hop'],
     package_data={'half_orm': [
         'hop/templates/*',
         'hop/db_patch_system/*']},
