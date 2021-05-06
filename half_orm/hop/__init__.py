@@ -11,11 +11,13 @@ import os
 import subprocess
 import sys
 from keyword import iskeyword
+from getpass import getpass
 
 import psycopg2
 from git import Repo, GitCommandError
 
 from half_orm.model import Model, camel_case, CONF_DIR
+from half_orm.model_errors import MissingConfigFile
 from half_orm import relation_errors
 from .patch import patch
 
@@ -25,6 +27,15 @@ class ClassInstanciationError(Exception):
         super().__init__(msg)
 
 BASE_DIR = os.getcwd()
+
+TMPL_CONF_FILE = """[database]
+name = {name}
+user = {user}
+password = {password}
+host = {host}
+port = {port}
+production = {production}
+"""
 
 HALFORM_PATH = os.path.dirname(__file__)
 BEGIN_CODE = "#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!\n"
@@ -293,6 +304,43 @@ def test_package(model, package_dir, package_name):
         except Exception as err:
             print(f'ERROR in class {file_path}.{class_name}!\n{err}')
 
+def set_config_file(dbname: str) -> dict:
+    """Asks for the connection parameters. Returns a dictionary with the params.
+    """
+    if not os.access(CONF_DIR, os.W_OK):
+        sys.stderr.write(f"You don't have write acces to {CONF_DIR}.\n")
+        if CONF_DIR == '/etc/half_orm':
+            sys.stderr.write(
+                "Set the HALFORM_CONF_DIR environment variable if you want to use a\n"
+                "different directory.\n")
+        sys.exit(1)
+    print(f'Input the connection parameters to the {dbname} database.')
+    user = os.environ['USER']
+    user = input(f'User ({user}): ') or user
+    password = getpass('Password: ')
+    host = input('Host (localhost): ') or 'localhost'
+    port = input('Port (5432): ') or 5432
+    production = input('Production (False): ') or False
+    res = {
+        'name': dbname,
+        'user': user,
+        'password': password,
+        'host': host,
+        'port': port,
+        'production': production
+        }
+    open(f'{CONF_DIR}/{dbname}', 'w').write(TMPL_CONF_FILE.format(**res))
+    try:
+        return Model(dbname)
+    except psycopg2.OperationalError:
+        sys.stderr.write(f'The {dbname} database does not exist.\n')
+        create = input('Do you want to create it (N/y): ') or "n"
+        if create.upper() == 'Y':
+            subprocess.run(['createdb', dbname])
+            model = Model(dbname)
+            return model
+        sys.exit(1)
+
 def main():
     """Script entry point"""
     import argparse
@@ -342,6 +390,8 @@ def main():
     except psycopg2.OperationalError:
         sys.stderr.write(f'The database {config_file} does not exist.\n')
         sys.exit(1)
+    except MissingConfigFile:
+        model = set_config_file(args.create)
 
     try:
         open('{}/{}'.format(CONF_DIR, config_file))
