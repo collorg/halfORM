@@ -3,7 +3,20 @@
 # pylint: disable=invalid-name, protected-access
 
 """
-Generates/Synchronises/Patches a python package from a PostgreSQL database
+Generates/Patches/Synchronizes a hop Python package with a PostgreSQL database
+with the `hop` command.
+
+`hop -c <dbname>` creates a hop project for the <dbname> database. It adds to
+your database a patch system (by creating the relations: meta.release,
+meta.release_issue and the view "meta.view".last_release).
+
+In the dbname directory generated, the hop command helps you patch, test and
+deal with CI.
+
+On the 'devel' or any private branch hop applies patches if any, runs tests.
+On the 'main' or 'master' branch, hop checks that your git repo is in sync with
+the remote origin, synchronizes with devel branch if needed and tags your git
+history with the last release applied.
 """
 
 import re
@@ -39,16 +52,12 @@ END_CODE = "#<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!\n"
 TEMPLATES_DIR = f'{HALFORM_PATH}/templates'
 
 os.chdir(TEMPLATES_DIR)
-README = open('README').read()
-CONFIG_TEMPLATE = open('config').read()
-SETUP_TEMPLATE = open('setup.py').read()
 DB_CONNECTOR_TEMPLATE = open('db_connector.py').read()
 MODULE_TEMPLATE_1 = open('module_template_1').read()
 MODULE_TEMPLATE_2 = open('module_template_2').read()
 MODULE_TEMPLATE_3 = open('module_template_3').read()
 WARNING_TEMPLATE = open('warning').read()
 TEST = open('relation_test').read()
-GIT_IGNORE = open('.gitignore').read()
 os.chdir(BASE_DIR)
 
 MODULE_FORMAT = (
@@ -103,6 +112,14 @@ def load_config_file(base_dir=None, ref_dir=None):
 def init_package(model, base_dir, name):
     """Initialises the package directory.
     """
+    curdir = os.path.abspath(os.curdir)
+    os.chdir(TEMPLATES_DIR)
+    README = open('README').read()
+    CONFIG_TEMPLATE = open('config').read()
+    SETUP_TEMPLATE = open('setup.py').read()
+    GIT_IGNORE = open('.gitignore').read()
+    PIPFILE = open('Pipfile').read()
+    os.chdir(curdir)
     dbname = model._dbname
     if not os.path.exists(name):
         os.makedirs(base_dir)
@@ -110,6 +127,7 @@ def init_package(model, base_dir, name):
         setup_file_name = f'{name}/setup.py'
         if not os.path.exists(setup_file_name):
             open(setup_file_name, 'w').write(setup)
+        open(f'{name}/Pipfile', 'w').write(PIPFILE)
     os.makedirs(f'{name}/.hop')
     open(f'{name}/.hop/config', 'w').write(
         CONFIG_TEMPLATE.format(
