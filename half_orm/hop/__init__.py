@@ -21,11 +21,6 @@ from half_orm.model_errors import MissingConfigFile
 from half_orm import relation_errors
 from .patch import patch
 
-class ClassInstanciationError(Exception):
-    "Failed to instanciate a relation class"
-    def __init__(self, msg):
-        super().__init__(msg)
-
 BASE_DIR = os.getcwd()
 
 TMPL_CONF_FILE = """[database]
