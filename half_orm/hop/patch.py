@@ -221,10 +221,10 @@ def patch_init():
     MODEL.execute_query(open(f"{sql_dir}/meta.last_release.sql").read())
     MODEL.execute_query(open(f"{sql_dir}/meta.release_issue.sql").read())
     MODEL.execute_query(
-        "insert into meta.release values (0,0,0, '', 0, now(), now(),'First release', '{}')".format(
+        "insert into meta.release values (0,0,0, '', 0, now(), now(),'[0.0.0] First release', '{}')".format(
             date.today()))
     
-    print('Patch system initialized !')
+    print("Patch system initialized at release '0.0.0'.")
 
 def patch(dbname, create=False):
     "Main"
