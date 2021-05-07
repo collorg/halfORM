@@ -32,7 +32,7 @@ from git import Repo, GitCommandError
 from half_orm.model import Model, camel_case, CONF_DIR
 from half_orm.model_errors import MissingConfigFile
 from half_orm import relation_errors
-from .patch import patch
+from .patch import Patch
 
 BASE_DIR = os.getcwd()
 
@@ -67,6 +67,8 @@ Generates/Synchronises/Patches a python package from a PostgreSQL database
 """
 AP_EPILOG = """"""
 DO_NOT_REMOVE = ['db_connector.py', '__init__.py']
+
+MODEL = None
 
 def hop_update():
     """Rename some files an directories. hop upgrade.
@@ -146,7 +148,7 @@ def init_package(model, base_dir, name):
             Repo.init('.')
             print("Initializing git with a 'master' branch.")
     repo = Repo('.')
-    release = patch(name, create=True)
+    release = Patch(model, create_mode=True).patch()
     model.reconnect() # we get the new stuff from db metadata here
     subprocess.run(['hop']) # hop creates/updates the modules
     try:
@@ -412,7 +414,7 @@ def main():
         sys.stderr.write('ERROR! No such config file: {}\n'.format(err))
         sys.exit(1)
     if args.patch:
-        patch(model._dbname)
+        Patch(model).patch()
         sys.exit()
 
     name = None
