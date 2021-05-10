@@ -56,6 +56,7 @@ DB_CONNECTOR_TEMPLATE = open('db_connector.py').read()
 MODULE_TEMPLATE_1 = open('module_template_1').read()
 MODULE_TEMPLATE_2 = open('module_template_2').read()
 MODULE_TEMPLATE_3 = open('module_template_3').read()
+FKEYS_PROPS = open('fkeys_properties').read()
 WARNING_TEMPLATE = open('warning').read()
 TEST = open('relation_test').read()
 os.chdir(BASE_DIR)
@@ -160,6 +161,14 @@ def init_package(model, base_dir, name):
     repo.git.checkout(b='devel')
     os.chdir('..')
 
+def get_fkeys(rel):
+    """
+    """
+    fks = '\n    '.join([f"('', '{key}')" for key in rel._fkeys])
+    if fks:
+        return FKEYS_PROPS.format(fks)
+    return ''
+
 def get_inheritance_info(rel, package_name):
     """Returns inheritance informations for the rel relation.
     """
@@ -231,6 +240,7 @@ def update_this_module(
     open(module_path, 'w').write(
         module_template.format(
             module=module,
+            fkeys_properties=get_fkeys(rel),
             package_name=package_name,
             documentation="\n".join(["    {}".format(line)
                                      for line in str(rel).split("\n")]),
