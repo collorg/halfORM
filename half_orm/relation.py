@@ -216,6 +216,7 @@ def _set_fkeys_properties(self):
     """
     fkp = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES', 'FKEYS'], 0)
     if hasattr(fkp, 'FKEYS_PROPERTIES'):
+        sys.stderr.write('Deprecation warning! Please replace FKEYS_PROPERTIES with FKEYS')
         for prop in fkp.FKEYS_PROPERTIES:
             self._set_fkey_property(*prop)
     if hasattr(fkp, 'FKEYS'):
@@ -224,6 +225,9 @@ def _set_fkeys_properties(self):
 
 def _set_fkey_property(self, property_name, fkey_name, _cast=None):
     """Sets the property with property_name on the foreign key."""
+    if property_name == '':
+        # Do nothing
+        return
     def fget(self):
         "getter"
         return self._fkeys[fkey_name](__cast__=_cast)

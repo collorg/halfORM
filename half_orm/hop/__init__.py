@@ -164,7 +164,7 @@ def init_package(model, base_dir, name):
 def get_fkeys(rel):
     """
     """
-    fks = '\n    '.join([f"('', '{key}')" for key in rel._fkeys])
+    fks = '\n    '.join([f"('', '{key}')," for key in rel._fkeys])
     if fks:
         return FKEYS_PROPS.format(fks)
     return ''
