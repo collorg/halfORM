@@ -356,6 +356,10 @@ def main():
     parser.add_argument(
         "-c", "--create", nargs="?", const=None,
         help="half_orm config file name")
+    parser.add_argument(
+        "-i", "--ignore-tests", type=bool, const=True, default=False,
+        nargs="?", help="Ignore the results of the basic tests."
+    )
     # group = parser.add_mutually_exclusive_group()
     # group.add_argument('--patch')
     # group.add_argument('--create')
@@ -410,7 +414,7 @@ def main():
     package_dir = "{}/{}".format(rel_package or name, name)
     warning = WARNING_TEMPLATE.format(package_name=name)
 
-    if tests(model, package_dir):
+    if tests(model, package_dir) or args.ignore_tests:
         files_list = update_modules(model, package_dir, name, warning)
         update_init_files(package_dir, warning, files_list)
     else:
