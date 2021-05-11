@@ -29,14 +29,15 @@ The following methods can be chained on the object before a select.
 - offset: sets the offset for the select method.
 """
 
-import psycopg2
 
 from collections import OrderedDict
 import datetime
 import sys
 import uuid
-import yaml
+import psycopg2
 from typing import Generator
+
+import yaml
 
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
@@ -216,7 +217,9 @@ def _set_fkeys_properties(self):
     """
     fkp = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES', 'FKEYS'], 0)
     if hasattr(fkp, 'FKEYS_PROPERTIES'):
-        sys.stderr.write('Deprecation warning! Please replace FKEYS_PROPERTIES with FKEYS')
+        sys.stderr.write(
+            'WARNING! Depreciation:'
+            f'Please replace FKEYS_PROPERTIES with FKEYS in {self.__class__}\n')
         for prop in fkp.FKEYS_PROPERTIES:
             self._set_fkey_property(*prop)
     if hasattr(fkp, 'FKEYS'):
@@ -242,8 +245,7 @@ def _set_fkey_property(self, property_name, fkey_name, _cast=None):
             raise err
     if self.__dict__.get(property_name):
         raise relation_errors.DuplicateAttributeError(
-            f"ERROR! Can't set '{property_name}' as a FKEY property. "
-            f"It's already an attribute of {self.__class__}.")
+            f"ERROR: Can't set '{property_name}' as a FKEY property in {self.__class__}!")
     self._fkeys_prop.append(property_name)
     setattr(self.__class__, property_name, property(fget=fget, fset=fset))
 
@@ -359,17 +361,9 @@ def _to_dict_val_comp(self):
 def __repr__(self):
     rel_kind = self.__kind
     ret = []
-    if self._model._scope:
-        ret.append("CLASS: {}".format(self.__class__))
-        ret.append("DATABASE:")
-        ret.append("- NAME: {}".format(self._model._dbinfo['name']))
-        ret.append("- USER: {}".format(self._model._dbinfo['user']))
-        ret.append("- HOST: {}".format(self._model._dbinfo['host']))
-        ret.append("- PORT: {}".format(self._model._dbinfo['port']))
-    else:
-        ret.append("__RCLS: {}".format(self.__class__))
-        ret.append(
-            "This class allows you to manipulate the data in the PG relation:")
+    ret.append("__RCLS: {}".format(self.__class__))
+    ret.append(
+        "This class allows you to manipulate the data in the PG relation:")
     ret.append("{}: {}".format(rel_kind.upper(), self._fqrn))
     if self.__metadata['description']:
         ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
@@ -890,7 +884,7 @@ VIEW_INTERFACE = COMMON_INTERFACE
 MVIEW_INTERFACE = COMMON_INTERFACE
 FDATA_INTERFACE = COMMON_INTERFACE
 
-def _factory(class_name, bases, dct):
+def _factory(class_name, bases, dct, reload=False):
     """Function to build a Relation class corresponding to a PostgreSQL
     relation.
     """

@@ -31,8 +31,8 @@ from git import Repo, GitCommandError
 
 from half_orm.model import Model, camel_case, CONF_DIR
 from half_orm.model_errors import MissingConfigFile
-from half_orm import relation_errors
 from .patch import Patch
+from .test import tests
 
 BASE_DIR = os.getcwd()
 
@@ -303,32 +303,6 @@ def update_init_files(package_dir, warning, files_list):
                 '__all__ = [\n    {}\n]\n'.format(",\n    ".join(
                     ["'{}'".format(elt) for elt in all_])))
 
-def test_package(model, package_dir, package_name):
-    """Basic testing of each relation module in the package.
-    The class should instanciate.
-    """
-    import importlib
-
-    dbname = model._dbname
-    open('{}/db_connector.py'.format(package_dir), 'w').write(
-        DB_CONNECTOR_TEMPLATE.format(dbname=dbname, package_name=package_name))
-    for relation in model._relations():
-        fqtn = relation.split('.')[1:]
-        module_name = f'.{fqtn[-1]}'
-        class_name = camel_case(fqtn[-1])
-        fqtn = '.'.join(fqtn[:-1])
-        file_path = f'.{package_dir.split("/")[1]}.{fqtn}'
-
-        try:
-            module = importlib.import_module(module_name, file_path)
-            _ = module.__dict__[class_name]()
-        except relation_errors.DuplicateAttributeError as err:
-            print(err)
-        except relation_errors.IsFrozenError as err:
-            print(err)
-        except Exception as err:
-            print(f'ERROR in class {file_path}.{class_name}!\n{err}')
-
 def set_config_file(dbname: str) -> dict:
     """Asks for the connection parameters. Returns a dictionary with the params.
     """
@@ -436,11 +410,12 @@ def main():
     package_dir = "{}/{}".format(rel_package or name, name)
     warning = WARNING_TEMPLATE.format(package_name=name)
 
-    files_list = update_modules(model, package_dir, name, warning)
-    update_init_files(package_dir, warning, files_list)
-    # if not args.create:
-    #     hop_update()
-    #     test_package(model, package_dir, name)
+    if tests(model, package_dir):
+        files_list = update_modules(model, package_dir, name, warning)
+        update_init_files(package_dir, warning, files_list)
+    else:
+        print("\nPlease correct the errors before proceeding!")
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
