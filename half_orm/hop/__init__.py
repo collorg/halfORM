@@ -151,7 +151,7 @@ def init_package(model, base_dir, name):
     repo = Repo('.')
     release = Patch(model, create_mode=True).patch()
     model.reconnect() # we get the new stuff from db metadata here
-    subprocess.run(['hop']) # hop creates/updates the modules
+    subprocess.run(['hop', '-i']) # hop creates/updates the modules & ignore tests
     try:
         repo.head.commit
     except ValueError:
@@ -413,13 +413,13 @@ def main():
     name = name or package_name
     package_dir = "{}/{}".format(rel_package or name, name)
     warning = WARNING_TEMPLATE.format(package_name=name)
-
-    if tests(model, package_dir) or args.ignore_tests:
-        files_list = update_modules(model, package_dir, name, warning)
-        update_init_files(package_dir, warning, files_list)
-    else:
-        print("\nPlease correct the errors before proceeding!")
-        sys.exit(1)
+    if not args.create:
+        if args.ignore_tests or tests(model, package_dir):
+            files_list = update_modules(model, package_dir, name, warning)
+            update_init_files(package_dir, warning, files_list)
+        else:
+            print("\nPlease correct the errors before proceeding!")
+            sys.exit(1)
 
 if __name__ == '__main__':
     main()
