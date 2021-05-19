@@ -58,6 +58,7 @@ MODULE_TEMPLATE_2 = open('module_template_2').read()
 MODULE_TEMPLATE_3 = open('module_template_3').read()
 FKEYS_PROPS = open('fkeys_properties').read()
 WARNING_TEMPLATE = open('warning').read()
+BASE_TEST = open('base_test').read()
 TEST = open('relation_test').read()
 os.chdir(BASE_DIR)
 
@@ -67,7 +68,7 @@ AP_DESCRIPTION = """
 Generates/Synchronises/Patches a python package from a PostgreSQL database
 """
 AP_EPILOG = """"""
-DO_NOT_REMOVE = ['db_connector.py', '__init__.py']
+DO_NOT_REMOVE = ['db_connector.py', '__init__.py', 'base_test.py']
 
 MODEL = None
 
@@ -263,8 +264,12 @@ def update_modules(model, package_dir, package_name, warning):
     files_list = []
 
     dbname = model._dbname
-    open('{}/db_connector.py'.format(package_dir), 'w').write(
+    open(f'{package_dir}/db_connector.py', 'w').write(
         DB_CONNECTOR_TEMPLATE.format(dbname=dbname, package_name=package_name))
+    if not os.path.exists(f'{package_dir}/base_test.py'):
+        open(f'{package_dir}/base_test.py', 'w').write(
+            BASE_TEST.format(package_name=package_name)
+        )
     for relation in model._relations():
         module_path = update_this_module(
             model, relation, package_dir, package_name, dirs_list, warning)
