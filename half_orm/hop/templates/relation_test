@@ -1,7 +1,7 @@
 """Test file for the {module} module.
 """
 
-from {module}.base_test import BaseTest
+from {package_name}.base_test import BaseTest
 from {module} import {class_name}
 
 class Test(BaseTest):

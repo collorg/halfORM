@@ -253,7 +253,10 @@ def update_this_module(
     test_path = module_path.replace('.py', '_test.py')
     if not os.path.exists(test_path):
         open(test_path, 'w').write(
-            TEST.format(module=module, class_name=camel_case(module_name))
+            TEST.format(
+                package_name=package_name,
+                module=module,
+                class_name=camel_case(module_name))
         )
     return module_path
 
