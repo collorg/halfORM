@@ -13,6 +13,7 @@ meta.release_issue and the view "meta.view".last_release).
 In the dbname directory generated, the hop command helps you patch, test and
 deal with CI.
 
+TODO:
 On the 'devel' or any private branch hop applies patches if any, runs tests.
 On the 'main' or 'master' branch, hop checks that your git repo is in sync with
 the remote origin, synchronizes with devel branch if needed and tags your git
@@ -287,12 +288,17 @@ def update_modules(model, package_dir, package_name, warning):
 def update_init_files(package_dir, warning, files_list):
     """Update __all__ lists in __init__ files.
     """
+    skip = set()
     for root, dirs, files in os.walk(package_dir):
         all_ = []
         for dir_ in dirs:
-            if dir_ != '__pycache__':
+            if dir_ != '__pycache__' and not dir_[0].isupper():
                 all_.append(dir_)
+            else:
+                skip.add(dir_)
         for file in files:
+            if root.split('/')[-1] in skip:
+                continue
             path_ = "{}/{}".format(root, file)
             if path_ not in files_list and file not in DO_NOT_REMOVE:
                 if path_.find('__pycache__') == -1 and path_.find('_test.py') == -1:
