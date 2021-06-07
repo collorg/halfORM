@@ -1,0 +1,1 @@
+create view "meta.view".penultimate_release as with sub as (select major, minor, patch, row_number() over (order by major desc, minor desc, patch desc) as rn from meta.release) select major, minor, patch from sub where rn = 2;

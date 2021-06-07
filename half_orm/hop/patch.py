@@ -22,10 +22,11 @@ from half_orm.model_errors import UnknownRelation
 
 
 class Patch:
-    def __init__(self, model, create_mode=False):
+    def __init__(self, model, create_mode=False, init_mode=False):
         self.model = model
         self.__dbname = self.model._dbname
         self.__create_mode = create_mode
+        self.__init_mode = init_mode
         self.__orig_dir = os.path.abspath('.')
         self.__module_dir = os.path.dirname(__file__)
         self.__last_release_s = None
@@ -36,7 +37,7 @@ class Patch:
     def patch(self):
         """
         """
-        if self.__create_mode:
+        if self.__create_mode or self.__init_mode:
             self.__last_release_s = 'pre-patch'
             self.save_database()
             return self._init()

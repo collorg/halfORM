@@ -153,7 +153,7 @@ def init_package(model, base_dir, name):
     repo = Repo('.')
     release = Patch(model, create_mode=True).patch()
     model.reconnect() # we get the new stuff from db metadata here
-    subprocess.run(['hop', '-i']) # hop creates/updates the modules & ignore tests
+    subprocess.run(['hop', '-f']) # hop creates/updates the modules & ignore tests
     try:
         repo.head.commit
     except ValueError:
@@ -371,8 +371,12 @@ def main():
         "-c", "--create", nargs="?", const=None,
         help="half_orm config file name")
     parser.add_argument(
-        "-i", "--ignore-tests", type=bool, const=True, default=False,
-        nargs="?", help="Ignore the results of the basic tests."
+        "-f", "--force", type=bool, const=True, default=False,
+        nargs="?", help="Force the update of the packages."
+    )
+    parser.add_argument(
+        "-i", "--init", nargs="?", const=None,
+        help="Init patch system and apply all patches."
     )
     # group = parser.add_mutually_exclusive_group()
     # group.add_argument('--patch')
@@ -395,8 +399,9 @@ def main():
         sys.stderr.write(
             "You are in a halfORM package directory.\n")
         sys.exit(1)
-    if args.create:
-        config_file = args.create
+    if args.create or args.init:
+        config_file = args.create or args.init
+
     if not config_file:
         sys.stderr.write(
             "You're not in a halfORM package directory.\n"
@@ -418,6 +423,9 @@ def main():
     if args.patch:
         Patch(model).patch()
         sys.exit()
+    if args.init:
+        Patch(model, init_mode=True).patch()
+        sys.exit()
 
     name = None
     if args.create:
@@ -428,7 +436,7 @@ def main():
     package_dir = "{}/{}".format(rel_package or name, name)
     warning = WARNING_TEMPLATE.format(package_name=name)
     if not args.create:
-        if args.ignore_tests or tests(model, package_dir):
+        if args.force or tests(model, package_dir):
             files_list = update_modules(model, package_dir, name, warning)
             update_init_files(package_dir, warning, files_list)
         else:
