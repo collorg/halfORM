@@ -288,17 +288,16 @@ def update_modules(model, package_dir, package_name, warning):
 def update_init_files(package_dir, warning, files_list):
     """Update __all__ lists in __init__ files.
     """
-    skip = set()
+    exp = re.compile('/[A-Z]')
     for root, dirs, files in os.walk(package_dir):
         all_ = []
+        if exp.search(root):
+            continue
+
         for dir_ in dirs:
-            if dir_ != '__pycache__' and not dir_[0].isupper():
+            if dir_ != '__pycache__':
                 all_.append(dir_)
-            else:
-                skip.add(dir_)
         for file in files:
-            if root.split('/')[-1] in skip:
-                continue
             path_ = "{}/{}".format(root, file)
             if path_ not in files_list and file not in DO_NOT_REMOVE:
                 if path_.find('__pycache__') == -1 and path_.find('_test.py') == -1:
