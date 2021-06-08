@@ -211,6 +211,7 @@ class Patch:
         sql_dir = f"{self.__module_dir}/db_patch_system"
         release = True
         last_release = True
+        penultimate_release = True
         release_issue = True
         try:
             self.model.get_relation_class('meta.release')
@@ -221,10 +222,14 @@ class Patch:
         except UnknownRelation:
             last_release = False
         try:
+            self.model.get_relation_class('meta.penultimate_release')
+        except UnknownRelation:
+            penultimate_release = False
+        try:
             self.model.get_relation_class('meta.release_issue')
         except UnknownRelation:
             release_issue = False
-        patch_confict = release or last_release or release_issue
+        patch_confict = release or last_release or release_issue or penultimate_release
         if patch_confict:
             sys.stderr.write('Does the database have a patch system?\n')
             sys.stderr.write('Not installing the patch system!\n')
@@ -234,6 +239,7 @@ class Patch:
             open('./Patches/README', 'w').write(open(f"{sql_dir}/README").read())
         self.model.execute_query(open(f"{sql_dir}/meta.release.sql").read())
         self.model.execute_query(open(f"{sql_dir}/meta.last_release.sql").read())
+        self.model.execute_query(open(f"{sql_dir}/meta.view.penultimate_release.sql").read())
         self.model.execute_query(open(f"{sql_dir}/meta.release_issue.sql").read())
         self.model.execute_query(
             "insert into meta.release values (0,0,0, '', 0, now(), now(),'[0.0.0] First release', '{}')".format(
