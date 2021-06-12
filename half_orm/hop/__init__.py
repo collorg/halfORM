@@ -6,9 +6,8 @@
 Generates/Patches/Synchronizes a hop Python package with a PostgreSQL database
 with the `hop` command.
 
-`hop -c <dbname>` creates a hop project for the <dbname> database. It adds to
-your database a patch system (by creating the relations: meta.release,
-meta.release_issue and the view "meta.view".last_release).
+Initiate a new project and repository with the `hop create <project_name>` command.
+The <project_name> directory should not exist when using this command.
 
 In the dbname directory generated, the hop command helps you patch, test and
 deal with CI.
@@ -29,6 +28,8 @@ from getpass import getpass
 
 import psycopg2
 from git import Repo, GitCommandError
+
+import click
 
 from half_orm.model import Model, camel_case, CONF_DIR
 from half_orm.model_errors import MissingConfigFile
@@ -65,9 +66,6 @@ os.chdir(BASE_DIR)
 
 MODULE_FORMAT = (
     "{rt1}{bc_}{global_user_s_code}{ec_}{rt2}{rt3}\n        {bc_}{user_s_code}")
-AP_DESCRIPTION = """
-Generates/Synchronises/Patches a python package from a PostgreSQL database
-"""
 AP_EPILOG = """"""
 DO_NOT_REMOVE = ['db_connector.py', '__init__.py', 'base_test.py']
 
@@ -104,18 +102,21 @@ def load_config_file(base_dir=None, ref_dir=None):
         if os.path.exists('.{}/config'.format(base)):
             config.read('.{}/config'.format(base))
             config_file = config['halfORM']['config_file']
-            package_name = config['halfORM']['package_name']
-            return (config_file, package_name)
+            return config_file
+
     if os.path.abspath(os.path.curdir) != '/':
         os.chdir('..')
         cur_dir = os.path.abspath(os.path.curdir)
         return load_config_file(cur_dir, ref_dir)
     # restore reference directory.
     os.chdir(ref_dir)
-    return None, None
+    return None
 
-def init_package(model, base_dir, name):
+def init_package(model, project_name: str):
     """Initialises the package directory.
+
+    model (Model): The loaded model instance
+    project_name (str): The project name (hop create argument)
     """
     curdir = os.path.abspath(os.curdir)
     os.chdir(TEMPLATES_DIR)
@@ -124,44 +125,47 @@ def init_package(model, base_dir, name):
     SETUP_TEMPLATE = open('setup.py').read()
     GIT_IGNORE = open('.gitignore').read()
     PIPFILE = open('Pipfile').read()
-    os.chdir(curdir)
+    project_path = os.path.join(curdir, project_name)
+    if not os.path.exists(project_path):
+        os.makedirs(project_path)
+    else:
+        raise Exception(f'The path {project_path} already exists')
+
+    os.chdir(project_path)
+
     dbname = model._dbname
-    if not os.path.exists(name):
-        os.makedirs(base_dir)
-        setup = SETUP_TEMPLATE.format(dbname=dbname, package_name=name)
-        setup_file_name = f'{name}/setup.py'
-        if not os.path.exists(setup_file_name):
-            open(setup_file_name, 'w').write(setup)
-        open(f'{name}/Pipfile', 'w').write(PIPFILE)
-    os.makedirs(f'{name}/.hop')
-    open(f'{name}/.hop/config', 'w').write(
+    setup = SETUP_TEMPLATE.format(dbname=dbname, package_name=project_name)
+    open('./setup.py', 'w').write(setup)
+    open('./Pipfile', 'w').write(PIPFILE)
+    os.makedirs('./.hop')
+    open(f'./.hop/config', 'w').write(
         CONFIG_TEMPLATE.format(
-            config_file=model._dbinfo['name'], package_name=name))
+            config_file=project_name, package_name=project_name))
     cmd = " ".join(sys.argv)
-    readme = README.format(cmd=cmd, dbname=dbname, package_name=name)
-    open(f'{name}/README.md', 'w').write(readme)
-    open(f'{name}/.gitignore', 'w').write(GIT_IGNORE)
-    os.mkdir(f'{name}/{name}')
-    os.chdir(name)
-    if not os.path.isdir('.git'):
-        try:
-            Repo.init('.', initial_branch='main')
-            print("Initializing git with a 'main' branch.")
-        except GitCommandError:
-            Repo.init('.')
-            print("Initializing git with a 'master' branch.")
+    readme = README.format(cmd=cmd, dbname=dbname, package_name=project_name)
+    open('./README.md', 'w').write(readme)
+    open('./.gitignore', 'w').write(GIT_IGNORE)
+    os.mkdir(f'./{project_name}')
+    try:
+        Repo.init('.', initial_branch='main')
+        print("Initializing git with a 'main' branch.")
+    except GitCommandError:
+        Repo.init('.')
+        print("Initializing git with a 'master' branch.")
+
     repo = Repo('.')
-    release = Patch(model, create_mode=True).patch()
+    Patch(model, create_mode=True).patch()
     model.reconnect() # we get the new stuff from db metadata here
-    subprocess.run(['hop', '-f']) # hop creates/updates the modules & ignore tests
+    subprocess.run(['hop', 'update', '-f']) # hop creates/updates the modules & ignore tests
+
     try:
         repo.head.commit
     except ValueError:
         repo.git.add('.')
         repo.git.commit(m='[0.0.0] First release')
+
     print("Switching to the 'devel' branch.")
     repo.git.checkout(b='devel')
-    os.chdir('..')
 
 def get_fkeys(rel):
     """
@@ -261,15 +265,17 @@ def update_this_module(
         )
     return module_path
 
-def update_modules(model, package_dir, package_name, warning):
+def update_modules(model, warning):
     """Synchronize the modules with the structure of the relation in PG.
     """
     dirs_list = []
     files_list = []
 
     dbname = model._dbname
+    package_dir = package_name = model.package_name
     open(f'{package_dir}/db_connector.py', 'w').write(
         DB_CONNECTOR_TEMPLATE.format(dbname=dbname, package_name=package_name))
+
     if not os.path.exists(f'{package_dir}/base_test.py'):
         open(f'{package_dir}/base_test.py', 'w').write(
             BASE_TEST.format(package_name=package_name)
@@ -316,9 +322,15 @@ def update_init_files(package_dir, warning, files_list):
                 '__all__ = [\n    {}\n]\n'.format(",\n    ".join(
                     ["'{}'".format(elt) for elt in all_])))
 
-def set_config_file(dbname: str) -> dict:
-    """Asks for the connection parameters. Returns a dictionary with the params.
+def set_config_file(project_name: str):
+    """ Asks for the connection parameters. Returns a dictionary with the params.
     """
+
+
+    conf_path = os.path.join(CONF_DIR,project_name)
+    if os.path.isfile(conf_path):
+        return Model(project_name)
+
     if not os.access(CONF_DIR, os.W_OK):
         sys.stderr.write(f"You don't have write acces to {CONF_DIR}.\n")
         if CONF_DIR == '/etc/half_orm':
@@ -326,6 +338,7 @@ def set_config_file(dbname: str) -> dict:
                 "Set the HALFORM_CONF_DIR environment variable if you want to use a\n"
                 "different directory.\n")
         sys.exit(1)
+    dbname = input(f'Database ({project_name}): ') or project_name
     print(f'Input the connection parameters to the {dbname} database.')
     user = os.environ['USER']
     user = input(f'User ({user}): ') or user
@@ -333,6 +346,7 @@ def set_config_file(dbname: str) -> dict:
     host = input('Host (localhost): ') or 'localhost'
     port = input('Port (5432): ') or 5432
     production = input('Production (False): ') or False
+
     res = {
         'name': dbname,
         'user': user,
@@ -340,107 +354,111 @@ def set_config_file(dbname: str) -> dict:
         'host': host,
         'port': port,
         'production': production
-        }
-    open(f'{CONF_DIR}/{dbname}', 'w').write(TMPL_CONF_FILE.format(**res))
+    }
+    open(f'{CONF_DIR}/{project_name}', 'w').write(TMPL_CONF_FILE.format(**res))
+
     try:
-        return Model(dbname)
+        return Model(project_name)
     except psycopg2.OperationalError:
         sys.stderr.write(f'The {dbname} database does not exist.\n')
         create = input('Do you want to create it (N/y): ') or "n"
         if create.upper() == 'Y':
             subprocess.run(['createdb', dbname])
-            model = Model(dbname)
+            model = Model(project_name)
             return model
         sys.exit(1)
 
-def main():
-    """Script entry point"""
-    import argparse
+@click.group(invoke_without_command=True)
+@click.option('-v', '--version', is_flag=True)
+def main(version):
+    """
+    Generates/Synchronises/Patches a python package from a PostgreSQL database
+    """
+    from half_orm import __version__
+    if version:
+        click.echo(f'halfORM {__version__}')
+        sys.exit()
 
-    sys.path.insert(0, os.getcwd())
+    sys.path.insert(0, '.')
 
-    parser = argparse.ArgumentParser(
-        description=AP_DESCRIPTION,
-        epilog=AP_EPILOG)
-    parser.add_argument(
-        "-p", "--patch", type=bool, const=True, default=False,
-        nargs="?", help="Install or use the patch system"
-    )
-    parser.add_argument(
-        "-c", "--create", nargs="?", const=None,
-        help="half_orm config file name")
-    parser.add_argument(
-        "-f", "--force", type=bool, const=True, default=False,
-        nargs="?", help="Force the update of the packages."
-    )
-    parser.add_argument(
-        "-i", "--init", nargs="?", const=None,
-        help="Init patch system and apply all patches."
-    )
-    # group = parser.add_mutually_exclusive_group()
-    # group.add_argument('--patch')
-    # group.add_argument('--create')
-    parser.add_argument(
-        "-t", "--test", nargs="?", const="test", help="Test some common pitfalls."
-    )
-    try:
-        args = parser.parse_args()
-    except IndexError:
-        parser.print_help()
-        sys.exit(1)
-    rel_package = None
+
+
+@main.command()
+@click.argument('package_name')
+def create(package_name):
+    """ Creates a hop project named <package_name>
+    It adds to your database a patch system (by creating the relations:
+    meta.release, meta.release_issue and the view "meta.view".last_release)
+    """
+    click.echo(f'hop create {package_name}')
     # on cherche un fichier de conf .hop/config dans l'arbre.
-    config_file, package_name = load_config_file()
-    if config_file:
-        rel_package = "."
+    model = set_config_file(package_name)
 
-    if config_file and args.create:
-        sys.stderr.write(
-            "You are in a halfORM package directory.\n")
-        sys.exit(1)
-    if args.create or args.init:
-        config_file = args.create or args.init
+    init_package(model, package_name)
+
+
+def get_model():
+    config_file = load_config_file()
 
     if not config_file:
         sys.stderr.write(
             "You're not in a halfORM package directory.\n"
             "Try hop --help.\n")
         sys.exit(1)
+
     try:
-        model = Model(config_file)
-    except psycopg2.OperationalError:
+        return Model(config_file)
+    except psycopg2.OperationalError as exc:
         sys.stderr.write(f'The database {config_file} does not exist.\n')
-        sys.exit(1)
+        raise exc
     except MissingConfigFile:
-        model = set_config_file(args.create)
-
-    try:
-        open('{}/{}'.format(CONF_DIR, config_file))
-    except FileNotFoundError as err:
-        sys.stderr.write('ERROR! No such config file: {}\n'.format(err))
+        sys.stderr.write(f'Cannot find the half_orm config file for this database.\n')
         sys.exit(1)
-    if args.patch:
-        Patch(model).patch()
-        sys.exit()
-    if args.init:
-        Patch(model, init_mode=True).patch()
-        sys.exit()
 
-    name = None
-    if args.create:
-        package_dir = args.create
-        package_name = args.create
-        init_package(model, package_dir, package_name)
-    name = name or package_name
-    package_dir = "{}/{}".format(rel_package or name, name)
-    warning = WARNING_TEMPLATE.format(package_name=name)
-    if not args.create:
-        if args.force or tests(model, package_dir):
-            files_list = update_modules(model, package_dir, name, warning)
-            update_init_files(package_dir, warning, files_list)
-        else:
-            print("\nPlease correct the errors before proceeding!")
-            sys.exit(1)
+
+@main.command()
+def init():
+    """ Initialize a cloned hop project by applying the base patch
+    """
+    model = get_model()
+    Patch(model, init_mode=True).patch()
+    sys.exit()
+
+
+@main.command()
+def patch():
+    """ Apply the next patch
+    """
+
+    model = get_model()
+    Patch(model).patch()
+
+
+    sys.exit()
+
+
+@main.command()
+@click.option('-f', '--force', is_flag=True, help='Updates the package without testing')
+def update(force):
+    model = get_model()
+    if force or tests(model):
+        files_list = update_modules(model, '')
+        update_init_files(model.package_name, '', files_list)
+    else:
+        print("\nPlease correct the errors before proceeding!")
+        sys.exit(1)
+
+
+@main.command()
+def test():
+    """ Test some common pitfalls.
+    """
+    model = get_model()
+    if tests(model):
+        click.echo('Tests OK')
+    else:
+        click.echo('Tests failed')
+
 
 if __name__ == '__main__':
     main()

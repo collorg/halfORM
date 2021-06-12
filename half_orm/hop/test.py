@@ -20,7 +20,7 @@ def check_FKEYS(module, rel):
             if not key[1] in rel._fkeys:
                 raise Exception(f"FKEYS: '{key[1]}' not found in {rel.__class__.__name__}._fkeys.")
 
-def tests(model, package_dir):
+def tests(model):
     """Basic testing of each relation module in the package.
     Should instanciate each relation in the model.
     """
@@ -30,9 +30,11 @@ def tests(model, package_dir):
         module_name = f'.{fqtn[-1]}'
         class_name = camel_case(fqtn[-1])
         fqtn = '.'.join(fqtn[:-1])
-        file_path = f'.{package_dir.split("/")[1]}.{fqtn}'
+        file_path = f'.{model.package_name}.{fqtn}'
+        rel = False
 
         try:
+            print(f'importlib {module_name} {file_path}')
             module = importlib.import_module(module_name, file_path)
             rel = module.__dict__[class_name]()
             check_FKEYS(module, rel)
@@ -41,6 +43,9 @@ def tests(model, package_dir):
         except relation_errors.IsFrozenError as err:
             error = set_error(err)
         except Exception as err:
-            error = set_error(f'ERROR in class {rel.__class__}! {err}')
+            if rel:
+                error = set_error(f'ERROR in class {rel.__class__}! {err}')
+            else:
+                raise err
 
     return not error

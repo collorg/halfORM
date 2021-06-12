@@ -8,7 +8,7 @@ from half_orm.model import Model
 
 __all__ = ['base_relation_class']
 
-MODEL = Model('{dbname}', scope=__name__)
+MODEL = Model('{package_name}', scope=__name__)
 
 def base_relation_class(qrn):
     """Returns the class corresponding to the QRN (qualified relation name).
