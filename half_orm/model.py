@@ -24,6 +24,7 @@ About QRN and FQRN:
 
 """
 
+import os
 import sys
 from collections import OrderedDict
 from configparser import ConfigParser
@@ -68,7 +69,7 @@ class Model:
     __metadata = {}
     _relations_ = {}
     def __init__(self,
-                 config_file=None, dbname=None, scope=None, raise_error=True):
+                 config_file, dbname=None, scope=None, raise_error=True):
         """Model constructor
 
         Use @config_file in your scripts. The @dbname parameter is
@@ -78,6 +79,7 @@ class Model:
         if bool(config_file) == bool(dbname):
             raise RuntimeError("You can't specify config_file with bdname!")
         self.__config_file = config_file
+        self.__config = {}
         self._dbinfo = {}
         self.__dbname = dbname
         if Model._deja_vu(dbname):
@@ -130,9 +132,10 @@ class Model:
             self.__config_file = config_file
         config = ConfigParser()
         if not config.read(
-                [self.__config_file,
-                 '{}/{}'.format(CONF_DIR, self.__config_file)]):
+                [os.path.join('.hop', 'config'),
+                 os.path.join(CONF_DIR, self.__config_file)]):
             raise model_errors.MissingConfigFile(self.__config_file)
+        self.__config = dict(config.items('halfORM')) if config.has_section('halfORM') else {}
         params = dict(config['database'].items())
         if config_file and params['name'] != self.__dbname:
             raise RuntimeError(
@@ -315,6 +318,10 @@ class Model:
         fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
         return str(_factory(
             'Table', (), {'fqrn': fqrn, 'model': self})())
+
+    @property
+    def package_name(self):
+        return self.__config.get('package_name')
 
     def __str__(self):
         out = []
