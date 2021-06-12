@@ -31,7 +31,7 @@ setup(
         'click'],
     entry_points={
         'console_scripts': [
-            'hop=half_orm.hop:main',
+            'hop=half_orm.hop.__init__:main',
         ],
     },
     classifiers=[
