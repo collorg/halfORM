@@ -130,12 +130,17 @@ class Model:
                 self.__conn.close()
         if config_file:
             self.__config_file = config_file
+
         config = ConfigParser()
         if not config.read(
-                [os.path.join('.hop', 'config'),
-                 os.path.join(CONF_DIR, self.__config_file)]):
-            raise model_errors.MissingConfigFile(self.__config_file)
+                [os.path.join('.hop', 'config')]):
+            print( model_errors.MissingConfigFile(os.path.join('.hop', 'config')) )
+
         self.__config = dict(config.items('halfORM')) if config.has_section('halfORM') else {}
+        if not config.read(
+                [os.path.join(CONF_DIR, self.__config_file)]):
+            raise model_errors.MissingConfigFile(os.path.join(CONF_DIR, self.__config_file))
+
         params = dict(config['database'].items())
         if config_file and params['name'] != self.__dbname:
             raise RuntimeError(
