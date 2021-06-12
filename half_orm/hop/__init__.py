@@ -343,8 +343,13 @@ def set_config_file(project_name: str):
     user = os.environ['USER']
     user = input(f'User ({user}): ') or user
     password = getpass('Password: ')
-    host = input('Host (localhost): ') or 'localhost'
-    port = input('Port (5432): ') or 5432
+    if len(password) == 0 and \
+        (input('Is it an ident login with a local account? [Y/n]') or 'Y') == 'Y':
+            host = port = ''
+    else:
+        host = input('Host (localhost): ') or 'localhost'
+        port = input('Port (5432): ') or 5432
+
     production = input('Production (False): ') or False
 
     res = {
