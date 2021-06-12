@@ -26,7 +26,8 @@ setup(
         'psycopg2-binary',
         'PyYAML',
         'pydash',
-        'GitPython'],
+        'GitPython',
+        'click'],
     entry_points={
         'console_scripts': [
             'hop=half_orm.hop:main',

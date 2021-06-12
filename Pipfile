@@ -9,6 +9,7 @@ python_version = "3.8"
 [packages]
 psycopg2-binary = ">=2, <3"
 pydash = "5"
+click = "*"
 pyyaml = "*"
 
 [dev-packages]
