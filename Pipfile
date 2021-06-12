@@ -7,7 +7,7 @@ name = "pypi"
 python_version = "3.8"
 
 [packages]
-psycopg2 = "2.8"
+psycopg2-binary = ">=2, <3"
 pydash = "5"
 
 [dev-packages]
