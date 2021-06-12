@@ -3,6 +3,7 @@
 import os
 import codecs
 from setuptools import setup
+from half_orm import __version__
 
 def read(name):
     return codecs.open(
@@ -10,7 +11,7 @@ def read(name):
 
 setup(
     name='half_orm',
-    version='0.4.4',
+    version=__version__,
     description="A simple Python ORM only dealing with the DML part of SQL.",
     long_description=read('README.md'),
     keywords='',
