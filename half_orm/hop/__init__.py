@@ -25,6 +25,7 @@ import subprocess
 import sys
 from keyword import iskeyword
 from getpass import getpass
+from configparser import ConfigParser
 
 import psycopg2
 from git import Repo, GitCommandError
@@ -92,8 +93,7 @@ def load_config_file(base_dir=None, ref_dir=None):
     This method is called when no half_orm config file is provided.
     It changes to the package base directory if the config file exists.
     """
-    import configparser
-    config = configparser.ConfigParser()
+    config = ConfigParser()
 
     if not base_dir:
         ref_dir = os.path.abspath(os.path.curdir)
@@ -327,44 +327,47 @@ def set_config_file(project_name: str):
     """
 
 
-    conf_path = os.path.join(CONF_DIR,project_name)
-    if os.path.isfile(conf_path):
-        return Model(project_name)
+    conf_path = os.path.join(CONF_DIR, project_name)
+    if not os.path.isfile(conf_path):
+        if not os.access(CONF_DIR, os.W_OK):
+            sys.stderr.write(f"You don't have write acces to {CONF_DIR}.\n")
+            if CONF_DIR == '/etc/half_orm':
+                sys.stderr.write(
+                    "Set the HALFORM_CONF_DIR environment variable if you want to use a\n"
+                    "different directory.\n")
+            sys.exit(1)
+        dbname = input(f'Database ({project_name}): ') or project_name
+        print(f'Input the connection parameters to the {dbname} database.')
+        user = os.environ['USER']
+        user = input(f'User ({user}): ') or user
+        password = getpass('Password: ')
+        if len(password) == 0 and \
+            (input('Is it an ident login with a local account? [Y/n]') or 'Y') == 'Y':
+                host = port = ''
+        else:
+            host = input('Host (localhost): ') or 'localhost'
+            port = input('Port (5432): ') or 5432
 
-    if not os.access(CONF_DIR, os.W_OK):
-        sys.stderr.write(f"You don't have write acces to {CONF_DIR}.\n")
-        if CONF_DIR == '/etc/half_orm':
-            sys.stderr.write(
-                "Set the HALFORM_CONF_DIR environment variable if you want to use a\n"
-                "different directory.\n")
-        sys.exit(1)
-    dbname = input(f'Database ({project_name}): ') or project_name
-    print(f'Input the connection parameters to the {dbname} database.')
-    user = os.environ['USER']
-    user = input(f'User ({user}): ') or user
-    password = getpass('Password: ')
-    if len(password) == 0 and \
-        (input('Is it an ident login with a local account? [Y/n]') or 'Y') == 'Y':
-            host = port = ''
-    else:
-        host = input('Host (localhost): ') or 'localhost'
-        port = input('Port (5432): ') or 5432
+        production = input('Production (False): ') or False
 
-    production = input('Production (False): ') or False
+        res = {
+            'name': dbname,
+            'user': user,
+            'password': password,
+            'host': host,
+            'port': port,
+            'production': production
+        }
+        open(f'{CONF_DIR}/{project_name}', 'w').write(TMPL_CONF_FILE.format(**res))
 
-    res = {
-        'name': dbname,
-        'user': user,
-        'password': password,
-        'host': host,
-        'port': port,
-        'production': production
-    }
-    open(f'{CONF_DIR}/{project_name}', 'w').write(TMPL_CONF_FILE.format(**res))
 
     try:
         return Model(project_name)
     except psycopg2.OperationalError:
+        config = ConfigParser()
+        config.read([ conf_path ])
+        dbname = config.get('database', 'name')
+
         sys.stderr.write(f'The {dbname} database does not exist.\n')
         create = input('Do you want to create it (N/y): ') or "n"
         if create.upper() == 'Y':

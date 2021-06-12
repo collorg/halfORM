@@ -34,7 +34,6 @@ def tests(model):
         rel = False
 
         try:
-            print(f'importlib {module_name} {file_path}')
             module = importlib.import_module(module_name, file_path)
             rel = module.__dict__[class_name]()
             check_FKEYS(module, rel)
