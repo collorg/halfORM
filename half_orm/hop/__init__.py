@@ -428,7 +428,12 @@ def get_model():
 def init():
     """ Initialize a cloned hop project by applying the base patch
     """
-    model = get_model()
+    try:
+        model = get_model()
+    except psycopg2.OperationalError as exc:
+        config_file = load_config_file()
+        model = set_config_file(config_file)
+
     Patch(model, init_mode=True).patch()
     sys.exit()
 
