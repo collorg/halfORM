@@ -19,6 +19,8 @@ the remote origin, synchronizes with devel branch if needed and tags your git
 history with the last release applied.
 """
 
+__version__ = '0.0.1'
+
 import re
 import os
 import subprocess
@@ -216,7 +218,7 @@ def assemble_module_template(module_path):
         global_user_s_code=global_user_s_code, user_s_code=user_s_code)
 
 def update_this_module(
-        model, relation, package_dir, package_name, dirs_list, warning):
+        model, relation, package_dir, package_name, dirs_list):
     """Updates the module."""
     _, fqtn = relation.split()
     path = fqtn.split('.')
@@ -245,6 +247,7 @@ def update_this_module(
     module = f"{package_name}.{fqtn}"
     open(module_path, 'w').write(
         module_template.format(
+            hop_release = __version__,
             module=module,
             fkeys_properties=get_fkeys(rel),
             package_name=package_name,
@@ -254,7 +257,7 @@ def update_this_module(
             inherited_classes=inherited_classes,
             class_name=camel_case(module_name),
             fqtn=fqtn,
-            warning=warning))
+            warning=WARNING_TEMPLATE))
     test_path = module_path.replace('.py', '_test.py')
     if not os.path.exists(test_path):
         open(test_path, 'w').write(
@@ -265,7 +268,7 @@ def update_this_module(
         )
     return module_path
 
-def update_modules(model, warning):
+def update_modules(model):
     """Synchronize the modules with the structure of the relation in PG.
     """
     dirs_list = []
@@ -282,7 +285,7 @@ def update_modules(model, warning):
         )
     for relation in model._relations():
         module_path = update_this_module(
-            model, relation, package_dir, package_name, dirs_list, warning)
+            model, relation, package_dir, package_name, dirs_list)
         if module_path:
             files_list.append(module_path)
             if module_path.find('__init__.py') == -1:
@@ -291,7 +294,7 @@ def update_modules(model, warning):
 
     return files_list
 
-def update_init_files(package_dir, warning, files_list):
+def update_init_files(package_dir, files_list):
     """Update __all__ lists in __init__ files.
     """
     exp = re.compile('/[A-Z]')
@@ -317,7 +320,7 @@ def update_init_files(package_dir, warning, files_list):
                 all_.append(file.replace('.py', ''))
         all_.sort()
         with open('{}/__init__.py'.format(root), 'w') as init_file:
-            init_file.write('"""{}"""\n\n'.format(warning))
+            init_file.write('"""{}"""\n\n'.format(WARNING_TEMPLATE))
             init_file.write(
                 '__all__ = [\n    {}\n]\n'.format(",\n    ".join(
                     ["'{}'".format(elt) for elt in all_])))
@@ -342,7 +345,7 @@ def set_config_file(project_name: str):
         user = input(f'User ({user}): ') or user
         password = getpass('Password: ')
         if len(password) == 0 and \
-            (input('Is it an ident login with a local account? [Y/n]') or 'Y') == 'Y':
+            (input('Is it an ident login with a local account? [Y/n] ') or 'Y').upper() == 'Y':
                 host = port = ''
         else:
             host = input('Host (localhost): ') or 'localhost'
@@ -453,10 +456,10 @@ def patch():
 @main.command()
 @click.option('-f', '--force', is_flag=True, help='Updates the package without testing')
 def update(force):
-    model = get_model()
     if force or tests(model):
-        files_list = update_modules(model, '')
-        update_init_files(model.package_name, '', files_list)
+        model = get_model()
+        files_list = update_modules(model)
+        update_init_files(model.package_name, files_list)
     else:
         print("\nPlease correct the errors before proceeding!")
         sys.exit(1)
