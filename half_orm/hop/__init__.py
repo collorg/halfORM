@@ -456,8 +456,8 @@ def patch():
 @main.command()
 @click.option('-f', '--force', is_flag=True, help='Updates the package without testing')
 def update(force):
+    model = get_model()
     if force or tests(model):
-        model = get_model()
         files_list = update_modules(model)
         update_init_files(model.package_name, files_list)
     else:
