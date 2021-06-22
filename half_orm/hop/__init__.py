@@ -218,7 +218,7 @@ def assemble_module_template(module_path):
         global_user_s_code=global_user_s_code, user_s_code=user_s_code)
 
 def update_this_module(
-        model, relation, package_dir, package_name, dirs_list):
+        model, relation, package_dir, package_name, dirs_list, warning):
     """Updates the module."""
     _, fqtn = relation.split()
     path = fqtn.split('.')
@@ -257,7 +257,7 @@ def update_this_module(
             inherited_classes=inherited_classes,
             class_name=camel_case(module_name),
             fqtn=fqtn,
-            warning=WARNING_TEMPLATE))
+            warning=warning))
     test_path = module_path.replace('.py', '_test.py')
     if not os.path.exists(test_path):
         open(test_path, 'w').write(
@@ -283,18 +283,21 @@ def update_modules(model):
         open(f'{package_dir}/base_test.py', 'w').write(
             BASE_TEST.format(package_name=package_name)
         )
+
+    warning = WARNING_TEMPLATE.format(package_name=package_name)
+
     for relation in model._relations():
         module_path = update_this_module(
-            model, relation, package_dir, package_name, dirs_list)
+            model, relation, package_dir, package_name, dirs_list, warning)
         if module_path:
             files_list.append(module_path)
             if module_path.find('__init__.py') == -1:
                 test_file_path = module_path.replace('.py', '_test.py')
                 files_list.append(test_file_path)
 
-    return files_list
+    update_init_files(package_dir, files_list, warning)
 
-def update_init_files(package_dir, files_list):
+def update_init_files(package_dir, files_list, warning):
     """Update __all__ lists in __init__ files.
     """
     exp = re.compile('/[A-Z]')
@@ -320,7 +323,7 @@ def update_init_files(package_dir, files_list):
                 all_.append(file.replace('.py', ''))
         all_.sort()
         with open('{}/__init__.py'.format(root), 'w') as init_file:
-            init_file.write('"""{}"""\n\n'.format(WARNING_TEMPLATE))
+            init_file.write('"""{}"""\n\n'.format(warning))
             init_file.write(
                 '__all__ = [\n    {}\n]\n'.format(",\n    ".join(
                     ["'{}'".format(elt) for elt in all_])))
@@ -458,8 +461,7 @@ def patch():
 def update(force):
     model = get_model()
     if force or tests(model):
-        files_list = update_modules(model)
-        update_init_files(model.package_name, files_list)
+        update_modules(model)
     else:
         print("\nPlease correct the errors before proceeding!")
         sys.exit(1)
