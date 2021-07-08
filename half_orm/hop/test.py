@@ -37,6 +37,8 @@ def tests(model):
             module = importlib.import_module(module_name, file_path)
             rel = module.__dict__[class_name]()
             check_FKEYS(module, rel)
+        except ModuleNotFoundError as err:
+            error = set_error(err)
         except relation_errors.DuplicateAttributeError as err:
             error = set_error(err)
         except relation_errors.IsFrozenError as err:

@@ -23,7 +23,7 @@ halfORM ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 from halftest.db_connector import base_relation_class
 
 #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
-FKEYS_PROPERTIES = [
+FKEYS = [
     ('_comment', '_reverse_fkey_halftest_blog_comment_author_id'),
     ('_event', '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date'),
     ('_post', '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date')
