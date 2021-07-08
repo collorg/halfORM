@@ -19,7 +19,7 @@ class FKey:
         self.__fk_from = None
         self.__fk_to = None
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
-        self.__fields = fields or set()
+        self.__fields = {f'"{name}"' for name in fields} or set()
 
     def __get_fk_qrn(self):
         """Returns QRN from FQRN."""
