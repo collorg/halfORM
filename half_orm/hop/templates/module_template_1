@@ -1,6 +1,5 @@
-#-*- coding: utf-8 -*-
-# pylint: disable=wrong-import-order
 # hop relase: {hop_release}
+# pylint: disable=wrong-import-order
 
 """The module {module} povides the {class_name} class.
 
