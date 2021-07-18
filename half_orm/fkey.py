@@ -129,7 +129,9 @@ class FKey:
     def __repr__(self):
         """Representation of a foreign key
         """
-        fields = '({})'.format(', '.join(self.__fields))
+        fields = list(self.__fields)
+        fields.sort()
+        fields = '({})'.format(', '.join(fields))
         repr_ = u"- {}: {}\n ↳ {}({})".format(
             self.__name,
             fields, self.__fk_fqrn, ', '.join(self.fk_names))
