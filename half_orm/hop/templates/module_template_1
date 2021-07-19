@@ -1,4 +1,4 @@
-# hop relase: {hop_release}
+# hop release: {hop_release}
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module {module} povides the {class_name} class.
