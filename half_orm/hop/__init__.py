@@ -19,7 +19,7 @@ the remote origin, synchronizes with devel branch if needed and tags your git
 history with the last release applied.
 """
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 import re
 import os
@@ -67,8 +67,15 @@ BASE_TEST = open('base_test').read()
 TEST = open('relation_test').read()
 os.chdir(BASE_DIR)
 
+HOP_RELEASE_RE = re.compile("(?<=^# hop release: ).*$")
+
 MODULE_FORMAT = (
-    "{rt1}{bc_}{global_user_s_code}{ec_}{rt2}{rt3}\n        {bc_}{user_s_code}")
+    "{rt1}" +
+    "{bc_}{global_user_s_code}{ec_}" +
+    "{rt2}" +
+    "    {bc_}{user_s_class_attr}\n    {ec_}" +
+    "{rt3}\n        " +
+    "{bc_}{user_s_code}")
 AP_EPILOG = """"""
 DO_NOT_REMOVE = ['db_connector.py', '__init__.py', 'base_test.py']
 
@@ -169,6 +176,16 @@ def init_package(model, project_name: str):
     print("Switching to the 'devel' branch.")
     repo.git.checkout(b='devel')
 
+def get_hop_version(template1):
+    """ Returns the release number of hop module (major, minor, release)
+    """
+    line = template1.split('\n')[0]
+    match = re.search(HOP_RELEASE_RE, line)
+    major = minor = release = 0
+    if match:
+        major, minor, release = [int(val) for val in match.group(0).split('.')]
+    return (major, minor, release)
+
 def get_fkeys(rel):
     """
     """
@@ -208,14 +225,26 @@ def assemble_module_template(module_path):
     module_template = MODULE_FORMAT
     if os.path.exists(module_path):
         module_code = open(module_path).read()
+        part1 = module_code.split(BEGIN_CODE)[0]
         user_s_code = module_code.rsplit(BEGIN_CODE, 1)[1]
         user_s_code = user_s_code.replace('{', '{{').replace('}', '}}')
         global_user_s_code = module_code.rsplit(END_CODE)[0].split(BEGIN_CODE)[1]
         global_user_s_code = global_user_s_code.replace('{', '{{').replace('}', '}}')
+        if get_hop_version(part1) >= (0, 0, 2):
+            user_s_class_attr = module_code.split(BEGIN_CODE)[2].split(END_CODE)[0]
+            # remove last spaces
+            user_s_class_attr = user_s_class_attr.rstrip()
+            user_s_class_attr = user_s_class_attr.replace('{', '{{').replace('}', '}}')
+        else:
+            user_s_class_attr = ''
+    else:
+        print('mais ou est passé charlie')
     return module_template.format(
         rt1=MODULE_TEMPLATE_1, rt2=MODULE_TEMPLATE_2, rt3=MODULE_TEMPLATE_3,
         bc_=BEGIN_CODE, ec_=END_CODE,
-        global_user_s_code=global_user_s_code, user_s_code=user_s_code)
+        global_user_s_code=global_user_s_code,
+        user_s_class_attr=user_s_class_attr,
+        user_s_code=user_s_code)
 
 def update_this_module(
         model, relation, package_dir, package_name, dirs_list, warning):
