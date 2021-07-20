@@ -1,117 +1,395 @@
-create user halftest password 'halftest';
-create database halftest owner halftest;
-comment on database halftest is
-'Database used to test half_orm. Sort of blogging database';
+--
+-- PostgreSQL database dump
+--
 
-\c halftest
+-- Dumped from database version 13.3 (Debian 13.3-1.pgdg100+1)
+-- Dumped by pg_dump version 13.3 (Debian 13.3-1.pgdg100+1)
 
-create schema actor;
-grant all on schema actor to halftest;
-create sequence actor.id_person;
-create table actor.person(
-    id int default nextval('actor.id_person') unique not null,
-    first_name text,
-    last_name text,
-    birth_date date,
-    primary key(first_name, last_name, birth_date)
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: actor; Type: SCHEMA; Schema: -; Owner: joel
+--
+
+CREATE SCHEMA actor;
+
+
+ALTER SCHEMA actor OWNER TO joel;
+
+--
+-- Name: blog; Type: SCHEMA; Schema: -; Owner: joel
+--
+
+CREATE SCHEMA blog;
+
+
+ALTER SCHEMA blog OWNER TO joel;
+
+--
+-- Name: blog.view; Type: SCHEMA; Schema: -; Owner: joel
+--
+
+CREATE SCHEMA "blog.view";
+
+
+ALTER SCHEMA "blog.view" OWNER TO joel;
+
+--
+-- Name: meta.view; Type: SCHEMA; Schema: -; Owner: joel
+--
+
+CREATE SCHEMA "meta.view";
+
+
+ALTER SCHEMA "meta.view" OWNER TO joel;
+
+--
+-- Name: plpython3u; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS plpython3u WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpython3u; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpython3u IS 'PL/Python3U untrusted procedural language';
+
+
+--
+-- Name: id_person; Type: SEQUENCE; Schema: actor; Owner: joel
+--
+
+CREATE SEQUENCE actor.id_person
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE actor.id_person OWNER TO joel;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: person; Type: TABLE; Schema: actor; Owner: joel
+--
+
+CREATE TABLE actor.person (
+    id integer DEFAULT nextval('actor.id_person'::regclass) NOT NULL,
+    first_name text NOT NULL,
+    last_name text NOT NULL,
+    birth_date date NOT NULL
 );
-comment on table actor.person is
-'The table actor.person contains the persons of the blogging system.
+
+
+ALTER TABLE actor.person OWNER TO joel;
+
+--
+-- Name: TABLE person; Type: COMMENT; Schema: actor; Owner: joel
+--
+
+COMMENT ON TABLE actor.person IS 'The table actor.person contains the persons of the blogging system.
 The id attribute is a serial. Just pass first_name, last_name and birth_date
 to insert a new person.';
-grant all on table actor.person to halftest;
-grant all on table actor.id_person to halftest;
 
-create schema blog;
-grant all on schema blog to halftest;
-create sequence blog.post_id;
-create table blog.post(
-    id int default nextval('blog.post_id') unique not null,
+
+--
+-- Name: id_comment; Type: SEQUENCE; Schema: blog; Owner: joel
+--
+
+CREATE SEQUENCE blog.id_comment
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE blog.id_comment OWNER TO joel;
+
+--
+-- Name: comment; Type: TABLE; Schema: blog; Owner: joel
+--
+
+CREATE TABLE blog.comment (
+    id integer DEFAULT nextval('blog.id_comment'::regclass) NOT NULL,
+    content text,
+    post_id integer,
+    author_id integer,
+    "a = 1" text
+);
+
+
+ALTER TABLE blog.comment OWNER TO joel;
+
+--
+-- Name: TABLE comment; Type: COMMENT; Schema: blog; Owner: joel
+--
+
+COMMENT ON TABLE blog.comment IS 'The table blog.comment contains all the comments
+made by a person on a post.';
+
+
+--
+-- Name: post_id; Type: SEQUENCE; Schema: blog; Owner: joel
+--
+
+CREATE SEQUENCE blog.post_id
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE blog.post_id OWNER TO joel;
+
+--
+-- Name: post; Type: TABLE; Schema: blog; Owner: joel
+--
+
+CREATE TABLE blog.post (
+    id integer DEFAULT nextval('blog.post_id'::regclass) NOT NULL,
     title text,
     content text,
     author_first_name text,
     author_last_name text,
-    author_birth_date date,
-    primary key(id)
+    author_birth_date date
 );
-alter table blog.post add constraint "author"
-    foreign key(author_first_name, author_last_name, author_birth_date)
-    references actor.person(first_name, last_name, birth_date)
-	on update cascade on delete cascade;
-grant all on table blog.post to halftest;
-grant all on table blog.post_id to halftest;
-comment on table blog.post is
-'The table blog.post contains all the post
+
+
+ALTER TABLE blog.post OWNER TO joel;
+
+--
+-- Name: TABLE post; Type: COMMENT; Schema: blog; Owner: joel
+--
+
+COMMENT ON TABLE blog.post IS 'The table blog.post contains all the post
 made by a person in the blogging system.';
 
-create table blog.event(
-    id int default nextval('blog.post_id') unique not null,
-    "begin" timestamp(0),
-    "end" timestamp(0),
-    location text,
-    primary key(id)
-) inherits(blog.post);
-alter table blog.event add constraint "author"
-    foreign key(author_first_name, author_last_name, author_birth_date)
-    references actor.person(first_name, last_name, birth_date)
-	on update cascade on delete cascade;
-grant all on table blog.event to halftest;
-comment on table blog.event is
-'The table blog.event contains all the events
+
+--
+-- Name: event; Type: TABLE; Schema: blog; Owner: joel
+--
+
+CREATE TABLE blog.event (
+    id integer DEFAULT nextval('blog.post_id'::regclass),
+    begin timestamp(0) without time zone,
+    "end" timestamp(0) without time zone,
+    location text
+)
+INHERITS (blog.post);
+
+
+ALTER TABLE blog.event OWNER TO joel;
+
+--
+-- Name: TABLE event; Type: COMMENT; Schema: blog; Owner: joel
+--
+
+COMMENT ON TABLE blog.event IS 'The table blog.event contains all the events
 of the blogging system. It inherits blog.post.
 It''s just here to illustrate the inheriance in half_orm';
 
-create sequence blog.id_comment;
-create table blog.comment(
-    id int default nextval('blog.id_comment') unique not null,
-    content text,
-    post_id int,
-    author_id int,
-    primary key(id)
-);
-alter table blog.comment add constraint "author"
-    foreign key(author_id) references actor.person(id)
-	on update cascade on delete cascade;
-alter table blog.comment add constraint "post"
-    foreign key(post_id)
-    references blog.post
-	on update cascade on delete cascade;
-grant all on table blog.comment to halftest;
-grant all on table blog.id_comment to halftest;
-comment on table blog.comment is
-'The table blog.comment contains all the comments
-made by a person on a post.';
 
-create schema "blog.view"
-grant all on schema "blog.view" to halftest;
+--
+-- Name: post_comment; Type: VIEW; Schema: blog.view; Owner: joel
+--
 
-create view "blog.view".post_comment as
-select
-    post.title as post_title,
-    auth_p.id as author_post_id,
-    auth_p.first_name as author_post_first_name,
-    auth_p.last_name as author_post_last_name,
-    comment.id as comment_id,
-    comment.content as comment_content,
-    comment.post_id as post_id,
-    auth_c.id as author_comment_id,
-    auth_c.first_name as author_comment_first_name,
-    auth_c.last_name as author_comment_last_name
-from
-    blog.post
-    join actor.person as auth_p on
-    post.author_first_name = auth_p.first_name and
-    post.author_last_name = auth_p.last_name and
-    post.author_birth_date = auth_p.birth_date
-    left join blog.comment on
-    post.id = comment.post_id
-    left join actor.person as auth_c on
-    comment.author_id = auth_c.id;
+CREATE VIEW "blog.view".post_comment AS
+ SELECT post.title AS post_title,
+    auth_p.id AS author_post_id,
+    auth_p.first_name AS author_post_first_name,
+    auth_p.last_name AS author_post_last_name,
+    comment.id AS comment_id,
+    comment.content AS comment_content,
+    comment.post_id,
+    auth_c.id AS author_comment_id,
+    auth_c.first_name AS author_comment_first_name,
+    auth_c.last_name AS author_comment_last_name
+   FROM (((blog.post
+     JOIN actor.person auth_p ON (((post.author_first_name = auth_p.first_name) AND (post.author_last_name = auth_p.last_name) AND (post.author_birth_date = auth_p.birth_date))))
+     LEFT JOIN blog.comment ON ((post.id = comment.post_id)))
+     LEFT JOIN actor.person auth_c ON ((comment.author_id = auth_c.id)));
 
-grant all on "blog.view".post_comment to halftest;
-comment on view "blog.view".post_comment is
-'This view joins:
+
+ALTER TABLE "blog.view".post_comment OWNER TO joel;
+
+--
+-- Name: VIEW post_comment; Type: COMMENT; Schema: blog.view; Owner: joel
+--
+
+COMMENT ON VIEW "blog.view".post_comment IS 'This view joins:
 - comment,
 - author of the comment,
 - post,
 - author of the post.';
+
+
+--
+-- Name: person person_id_key; Type: CONSTRAINT; Schema: actor; Owner: joel
+--
+
+ALTER TABLE ONLY actor.person
+    ADD CONSTRAINT person_id_key UNIQUE (id);
+
+
+--
+-- Name: person person_pkey; Type: CONSTRAINT; Schema: actor; Owner: joel
+--
+
+ALTER TABLE ONLY actor.person
+    ADD CONSTRAINT person_pkey PRIMARY KEY (first_name, last_name, birth_date);
+
+
+--
+-- Name: comment comment_pkey; Type: CONSTRAINT; Schema: blog; Owner: joel
+--
+
+ALTER TABLE ONLY blog.comment
+    ADD CONSTRAINT comment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: event event_pkey; Type: CONSTRAINT; Schema: blog; Owner: joel
+--
+
+ALTER TABLE ONLY blog.event
+    ADD CONSTRAINT event_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: post post_pkey; Type: CONSTRAINT; Schema: blog; Owner: joel
+--
+
+ALTER TABLE ONLY blog.post
+    ADD CONSTRAINT post_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: post author; Type: FK CONSTRAINT; Schema: blog; Owner: joel
+--
+
+ALTER TABLE ONLY blog.post
+    ADD CONSTRAINT author FOREIGN KEY (author_first_name, author_last_name, author_birth_date) REFERENCES actor.person(first_name, last_name, birth_date) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: comment author; Type: FK CONSTRAINT; Schema: blog; Owner: joel
+--
+
+ALTER TABLE ONLY blog.comment
+    ADD CONSTRAINT author FOREIGN KEY (author_id) REFERENCES actor.person(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: event author; Type: FK CONSTRAINT; Schema: blog; Owner: joel
+--
+
+ALTER TABLE ONLY blog.event
+    ADD CONSTRAINT author FOREIGN KEY (author_first_name, author_last_name, author_birth_date) REFERENCES actor.person(first_name, last_name, birth_date) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: comment post; Type: FK CONSTRAINT; Schema: blog; Owner: joel
+--
+
+ALTER TABLE ONLY blog.comment
+    ADD CONSTRAINT post FOREIGN KEY (post_id) REFERENCES blog.post(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: SCHEMA actor; Type: ACL; Schema: -; Owner: joel
+--
+
+GRANT ALL ON SCHEMA actor TO halftest;
+
+
+--
+-- Name: SCHEMA blog; Type: ACL; Schema: -; Owner: joel
+--
+
+GRANT ALL ON SCHEMA blog TO halftest;
+
+
+--
+-- Name: SCHEMA "blog.view"; Type: ACL; Schema: -; Owner: joel
+--
+
+GRANT ALL ON SCHEMA "blog.view" TO halftest;
+
+
+--
+-- Name: SEQUENCE id_person; Type: ACL; Schema: actor; Owner: joel
+--
+
+GRANT ALL ON SEQUENCE actor.id_person TO halftest;
+
+
+--
+-- Name: TABLE person; Type: ACL; Schema: actor; Owner: joel
+--
+
+GRANT ALL ON TABLE actor.person TO halftest;
+
+
+--
+-- Name: SEQUENCE id_comment; Type: ACL; Schema: blog; Owner: joel
+--
+
+GRANT ALL ON SEQUENCE blog.id_comment TO halftest;
+
+
+--
+-- Name: TABLE comment; Type: ACL; Schema: blog; Owner: joel
+--
+
+GRANT ALL ON TABLE blog.comment TO halftest;
+
+
+--
+-- Name: SEQUENCE post_id; Type: ACL; Schema: blog; Owner: joel
+--
+
+GRANT ALL ON SEQUENCE blog.post_id TO halftest;
+
+
+--
+-- Name: TABLE post; Type: ACL; Schema: blog; Owner: joel
+--
+
+GRANT ALL ON TABLE blog.post TO halftest;
+
+
+--
+-- Name: TABLE event; Type: ACL; Schema: blog; Owner: joel
+--
+
+GRANT ALL ON TABLE blog.event TO halftest;
+
+
+--
+-- Name: TABLE post_comment; Type: ACL; Schema: blog.view; Owner: joel
+--
+
+GRANT ALL ON TABLE "blog.view".post_comment TO halftest;
+
+
+--
+-- PostgreSQL database dump complete
+--
+

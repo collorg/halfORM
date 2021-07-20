@@ -6,5 +6,5 @@ from {module} import {class_name}
 
 class Test(BaseTest):
 
-    def is_relation_test(self):
+    def test_is_relation(self):
         self.assertTrue(issubclass({class_name}, self.Relation))

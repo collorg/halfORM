@@ -13,37 +13,37 @@ class Test(TestCase):
         self.post = halftest.post
         self.comment = halftest.comment
 
-    def post_fkeys_names_test(self):
+    def test_post_fkeys_names(self):
         self.assertEqual(
             list(self.post._fkeys.keys()),
             ['_reverse_fkey_halftest_blog_comment_post_id', 'author'])
 
-    def comment_fkeys_names_test(self):
+    def test_comment_fkeys_names(self):
         self.assertEqual(list(self.comment._fkeys.keys()), ['post', 'author'])
 
-    def post_author_fkey_type_test(self):
+    def test_post_author_fkey_type(self):
         author = self.post.author_
         print(author.__class__, self.pers.__class__)
         self.assertTrue(isinstance(author, halftest.pers.__class__))
 
-    def comment_author_fkey_type_test(self):
+    def test_comment_author_fkey_type(self):
         author = self.comment.author_
         print(author.__class__, self.pers.__class__)
         self.assertTrue(isinstance(author, halftest.pers.__class__))
 
-    def comment_post_fkey_type_test(self):
+    def test_comment_post_fkey_type(self):
         post = self.comment._fkeys['post']()
         print(post.__class__, self.pers.__class__)
         self.assertTrue(isinstance(post, halftest.post.__class__))
 
-    def is_set_test(self):
+    def test_is_set(self):
         post = self.post()
         self.assertFalse(post.is_set())
         pers = self.pers(last_name=('a%', 'like'))
         post.author_ = pers
         self.assertTrue(post.is_set())
 
-    def is_not_set_test(self):
+    def test_is_not_set(self):
         post = self.post()
         self.assertFalse(post.is_set())
         pers = self.pers()
@@ -51,17 +51,17 @@ class Test(TestCase):
         post.author_ = pers
         self.assertFalse(post.is_set())
 
-    def is_set_reverse_test(self):
+    def test_is_set_reverse(self):
         post = self.post(title="toto")
         author = post.author_
         self.assertTrue(author.is_set())
 
-    def is_not_set_reverse_test(self):
+    def test_is_not_set_reverse(self):
         post = self.post()
         author = post.author_
         self.assertFalse(author.is_set())
 
-    def check_FKEYS_class_test(self):
+    def test_check_FKEYS_class(self):
         pers = self.pers()
         self.assertEqual(pers._post.__class__.__name__, self.post.__class__.__name__)
         self.assertEqual(pers._comment.__class__.__name__, self.comment.__class__.__name__)

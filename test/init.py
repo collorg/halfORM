@@ -20,7 +20,7 @@ To drop halftest database and user when you're done with the tests:
 - dropdb halftest; dropuser halftest
 """
 
-model = Model(config_file='{}/halftest.ini'.format(path), scope="halftest")
+model = Model('halftest', scope="halftest")
 
 def name(letter, integer):
     return '{}{}'.format(letter, chr(ord('a') + integer))
@@ -53,9 +53,9 @@ class HalfTest:
             self.post.delete(delete_all=True)
             insert_pers(self.pers)
 
-try:
+if 1:#try:
     halftest = HalfTest()
-except Exception as err:
+else:#except Exception as err:
     sys.stderr.write('{}\n'.format(err))
     sys.stderr.write(README.format(path))
     sys.exit(1)

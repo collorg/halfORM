@@ -12,7 +12,7 @@ class Test(TestCase):
         self.post = halftest.post()
         self.relation = halftest.relation
 
-    def isinstance_test(self):
+    def test_isinstance(self):
         pers = self.pers()
         print(pers.__class__, self.pers.__class__)
         print(id(pers.__class__), id(self.pers.__class__))

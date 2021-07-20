@@ -13,10 +13,10 @@ click = "*"
 pyyaml = "*"
 
 [dev-packages]
-nose = "1.3"
 half-orm = {editable = true, path = "."}
 gitpython = "3"
 coverage = "*"
+pytest = "*"
 
 [scripts]
 hop = "python -m half_orm.hop.__init__"

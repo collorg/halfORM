@@ -12,11 +12,11 @@ class Test(TestCase):
     def setUp(self):
         pass
 
-    def missing_config_file_test(self):
+    def test_missing_config_file(self):
         self.assertRaises(
             model_errors.MissingConfigFile, model.Model, "missing")
 
-    def __unknown_relation_test(self):
+    def __test_unknown_relation(self):
         self.assertRaises(
             model_errors.UnknownRelation,
             halftest.relation, "blog.unknown")

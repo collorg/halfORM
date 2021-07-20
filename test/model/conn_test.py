@@ -10,10 +10,10 @@ class Test(TestCase):
     def reset(self):
         pass
 
-    def connection_test(self):
+    def test_connection(self):
         self.assertEqual(halftest.dbname, 'halftest')
 
-    def relation_instanciation_test(self):
+    def test_relation_instanciation(self):
         person = halftest.relation("actor.person")
         self.assertEqual(person._fqrn, '"halftest"."actor"."person"')
         post = halftest.relation("blog.post")

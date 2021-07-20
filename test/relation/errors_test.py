@@ -13,7 +13,7 @@ class Test(TestCase):
     def setUp(self):
         self.pers = halftest.pers
 
-    def unknown_field_test(self):
+    def test_unknown_field(self):
         with self.assertRaises(AttributeError) as cm:
             self.pers.unknown
         self.assertEqual(

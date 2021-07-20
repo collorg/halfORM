@@ -16,27 +16,28 @@ class Test(TestCase):
         self.post = halftest.post
         self.today = halftest.today
 
-    def count_test(self):
+    def test_count(self):
         self.pers._mogrify()
+        print(list(self.pers.select()))
         self.assertEqual(len(self.pers()), 60)
 
-    def expected_one_error_test_0(self):
+    def test_expected_one_error_0(self):
         pers = self.pers(last_name="this name doesn't exist")
         self.assertRaises(
             relation_errors.ExpectedOneError, pers.get)
 
-    def expected_one_error_test_many(self):
+    def test_expected_one_error_many(self):
         pers = self.pers(last_name=('like', '%'))
         self.assertRaises(
             relation_errors.ExpectedOneError, pers.get)
 
-    def insert_error_test(self):
+    def test_insert_error(self):
         pers = self.pers(last_name='ba')
         self.assertEqual(len(pers), 1)
         pers = pers.get()
         self.assertRaises(psycopg2.IntegrityError, pers.insert)
 
-    def select_test(self):
+    def test_select(self):
         n = 'abcdef'[randint(0, 5)]
         p = chr(ord('a') + range(10)[randint(0, 9)])
         pers = self.pers(
@@ -47,8 +48,16 @@ class Test(TestCase):
         for dct in pers.select():
             self.pers(**dct).get()
 
-    def update_test(self):
+    def test_update(self):
         pers = self.pers(last_name=('like', 'a%'))
         self.assertEqual(len(pers), 10)
-        pers.update(last_name=pers.last_name.value.upper())
+        @pers.Transaction
+        def update(pers, fct):
+            for elt in pers.select():
+                pers = self.pers.__class__(**elt)
+                pers.update(last_name=fct(pers.last_name.value))
+            
+        update(pers, str.upper)
+        pers = self.pers(last_name=('like', 'A%'))
         self.assertEqual(len(pers), 10)
+        update(pers, str.lower)
