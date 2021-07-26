@@ -23,17 +23,14 @@ class Test(TestCase):
 
     def test_post_author_fkey_type(self):
         author = self.post.author_
-        print(author.__class__, self.pers.__class__)
         self.assertTrue(isinstance(author, halftest.pers.__class__))
 
     def test_comment_author_fkey_type(self):
         author = self.comment.author_
-        print(author.__class__, self.pers.__class__)
         self.assertTrue(isinstance(author, halftest.pers.__class__))
 
     def test_comment_post_fkey_type(self):
         post = self.comment._fkeys['post']()
-        print(post.__class__, self.pers.__class__)
         self.assertTrue(isinstance(post, halftest.post.__class__))
 
     def test_is_set(self):

@@ -19,21 +19,10 @@ setup(
     author_email='joel.maizi@collorg.org',
     url='https://github.com/collorg/half_orm',
     license='GPLv3',
-    packages=['half_orm', 'half_orm/hop'],
-    package_data={'half_orm': [
-        'hop/templates/*',
-        'hop/db_patch_system/*']},
+    packages=['half_orm'],
     install_requires=[
         'psycopg2-binary',
-        'PyYAML',
-        'pydash',
-        'GitPython',
-        'click'],
-    entry_points={
-        'console_scripts': [
-            'hop=half_orm.hop.__init__:main',
-        ],
-    },
+        'PyYAML'],
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha

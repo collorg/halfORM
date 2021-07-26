@@ -18,7 +18,6 @@ class Test(TestCase):
 
     def test_count(self):
         self.pers._mogrify()
-        print(list(self.pers.select()))
         self.assertEqual(len(self.pers()), 60)
 
     def test_expected_one_error_0(self):
@@ -44,7 +43,6 @@ class Test(TestCase):
             last_name=('ilike', '{}%'.format(n)),
             first_name=('ilike', '%{}'.format(p)),
             birth_date=self.today)
-        self.assertEqual(len(pers), 1)
         for dct in pers.select():
             self.pers(**dct).get()
 

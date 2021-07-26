@@ -14,6 +14,4 @@ class Test(TestCase):
 
     def test_isinstance(self):
         pers = self.pers()
-        print(pers.__class__, self.pers.__class__)
-        print(id(pers.__class__), id(self.pers.__class__))
         self.assertTrue(isinstance(pers, self.pers.__class__))

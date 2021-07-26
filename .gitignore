@@ -7,6 +7,8 @@ tmp
 build/
 dist/
 half_orm.egg-info/
+halftest.egg-info/
 .vscode/
 .noseids
 .pdbrc
+pyproject.toml
