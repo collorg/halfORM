@@ -16,7 +16,7 @@ setup(
     keywords='',
     author='Joël Maïzi',
     author_email='joel.maizi@collorg.org',
-    url='https://github.com/collorg/half_orm',
+    url='https://github.com/collorg/halfORM',
     license='GNU General Public License v3 (GPLv3)',
     packages=['half_orm'],
     install_requires=[
