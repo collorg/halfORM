@@ -18,3 +18,5 @@ gitpython = "3"
 coverage = "*"
 pytest = "*"
 halftest = {path = "./test/halftest", editable = "true"}
+build = "*"
+twine = "*"
