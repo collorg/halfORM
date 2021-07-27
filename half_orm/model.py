@@ -132,9 +132,6 @@ class Model:
             self.__config_file = config_file
 
         config = ConfigParser()
-        if not config.read(
-                [os.path.join('.hop', 'config')]):
-            print( model_errors.MissingConfigFile(os.path.join('.hop', 'config')) )
 
         self.__config = dict(config.items('halfORM')) if config.has_section('halfORM') else {}
         if not config.read(
