@@ -11,7 +11,7 @@ def read(name):
 setup(
     name='half_orm',
     version=read('half_orm/version.txt').strip(),
-    description="A simple Python ORM only dealing with the DML part of SQL.",
+    description="A simple PostgreSQL-Python relation-object mapper.",
     long_description=read('README.md'),
     keywords='',
     author='Joël Maïzi',
