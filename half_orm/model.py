@@ -208,6 +208,7 @@ class Model:
             cur.execute(REQUEST)
             all_ = [elt for elt in cur.fetchall()]
             for dct in all_:
+                print(dct.keys())
                 table_key = (
                     self.__dbname,
                     dct['schemaname'], dct['relationname'])
@@ -246,10 +247,13 @@ class Model:
                     fkeytableid = dct['fkeytableid']
                     ftable_key = byid[fkeytableid]['sfqrn']
                     fields = [byid[tableid]['fields'][num] for num in dct['keynum']]
+                    confupdtype = dct['fkey_confupdtype']
+                    confdeltype = dct['fkey_confdeltype']
                     ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
                     rev_fkey_name = '_reverse_fkey_{}'.format(
                         "_".join(list(table_key) + fields)).replace(".", "_")
-                    byname[table_key]['fkeys'][fkeyname] = (ftable_key, ffields, fields)
+                    byname[table_key]['fkeys'][fkeyname] = (
+                        ftable_key, ffields, fields, confupdtype, confdeltype)
                     byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
 
         self._relations_['list'].sort()
@@ -320,10 +324,6 @@ class Model:
         fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
         return str(_factory(
             'Table', (), {'fqrn': fqrn, 'model': self})())
-
-    @property
-    def package_name(self):
-        return self.__config.get('package_name')
 
     def __str__(self):
         out = []

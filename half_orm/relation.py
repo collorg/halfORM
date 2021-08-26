@@ -94,6 +94,7 @@ def __init__(self, **kwargs):
     """The arguments names must correspond to the columns names of the relation.
     """
     self._fields = {}
+    self._pkey = {}
     self._fkeys = OrderedDict()
     self._fkeys_prop = []
     self.__only = False
@@ -176,6 +177,8 @@ def __set_fields(self):
         field = Field(field_name, self, f_metadata)
         self._fields[field_name] = field
         self.__setattr__(field_name, field)
+        if field.is_pk():
+            self._pkey[field_name] = field
 
 def __set_fkeys(self):
     """Initialisation of the foreign keys of the relation"""
@@ -183,9 +186,9 @@ def __set_fkeys(self):
 
     fkeys_metadata = self._model._metadata['byname'][self.__sfqrn]['fkeys']
     for fkeyname, f_metadata in fkeys_metadata.items():
-        ft_sfqrn, ft_fields_names, fields_names = f_metadata
+        # ft_sfqrn, ft_fields_names, fields_names, confupdtype, confdeltype = f_metadata
         self._fkeys[fkeyname] = FKey(
-            fkeyname, self, ft_sfqrn, ft_fields_names, fields_names)
+            fkeyname, self, *f_metadata)
 
     if not self.__fkeys_properties:
         self._set_fkeys_properties()

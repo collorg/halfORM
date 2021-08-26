@@ -11,13 +11,15 @@ class FKey:
     It is then used to construct the join query for Relation.select
     method.
     """
-    def __init__(self, fk_name, relation, fk_sfqrn, fk_names=None, fields=None):
+    def __init__(self, fk_name, relation, fk_sfqrn, fk_names=None, fields=None, confupdtype=None, confdeltype=None):
         self.__relation = relation
         self.__name = fk_name
         self.__is_set = False
         self.__fk_names = fk_names or []
         self.__fk_from = None
         self.__fk_to = None
+        self.__confupdtype = confupdtype
+        self.__confdeltype = confdeltype
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
         self.__fields = {f'"{name}"' for name in fields} or set()
 
@@ -90,6 +92,14 @@ class FKey:
     def fk_fqrn(self):
         """Returns the FQRN of the relation pointed to."""
         return self.__fk_fqrn
+
+    @property
+    def confupdtype(self):
+        return self.__confupdtype
+
+    @property
+    def confdeltype(self):
+        return self.__confdeltype
 
     def _join_query(self, orig_rel):
         """Returns the join_query, join_values of a foreign key.

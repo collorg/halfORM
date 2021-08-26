@@ -8,3 +8,6 @@ class Test(BaseTest):
 
     def test_is_relation(self):
         self.assertTrue(issubclass(Comment, self.Relation))
+
+    def test_fk_author_deltype(self):
+        self.hotAssertOnDeleteCascade(Comment, 'author')

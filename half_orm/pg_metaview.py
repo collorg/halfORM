@@ -24,7 +24,9 @@ SELECT
     cn_fk.conname AS fkeyname,
     cn_fk.conkey AS keynum,
     cn_fk.confrelid AS fkeytableid,
-    cn_fk.confkey AS fkeynum
+    cn_fk.confkey AS fkeynum,
+    cn_fk.confupdtype as fkey_confupdtype,
+    cn_fk.confdeltype as fkey_confdeltype
 FROM
     pg_class c -- table
     LEFT JOIN pg_description tdesc ON
@@ -82,7 +84,9 @@ GROUP BY
     cn_fk.conname,
     cn_fk.conkey,
     cn_fk.confrelid,
-    cn_fk.confkey
+    cn_fk.confkey,
+    cn_fk.confupdtype,
+    cn_fk.confdeltype
 ORDER BY
     n.nspname, c.relname, a.attnum
 """

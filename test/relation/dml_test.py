@@ -6,11 +6,12 @@ from random import randint
 import psycopg2
 import sys
 from unittest import TestCase
+from half_orm.hotest import HoTestCase
 
 from ..init import halftest
 from half_orm import relation_errors, model
 
-class Test(TestCase):
+class Test(HoTestCase):
     def setUp(self):
         self.pers = halftest.pers
         self.post = halftest.post
