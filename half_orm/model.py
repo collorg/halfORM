@@ -208,7 +208,6 @@ class Model:
             cur.execute(REQUEST)
             all_ = [elt for elt in cur.fetchall()]
             for dct in all_:
-                print(dct.keys())
                 table_key = (
                     self.__dbname,
                     dct['schemaname'], dct['relationname'])
