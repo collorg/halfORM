@@ -265,7 +265,7 @@ class Model:
         return cursor
 
     def get_relation_class(self, qtn):
-        """Retuns the class corresponding to the fqrn relation in the database.
+        """Returns the class corresponding to the fqrn relation in the database.
 
         @qtn is the <schema>.<table> name of the relation
         @kwargs is a dictionary {field_name:value}
@@ -274,6 +274,16 @@ class Model:
         fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
         fqrn, _ = _normalize_fqrn(fqrn)
         return _factory('Table', (), {'fqrn': fqrn, 'model': self})
+
+    def has_relation(self, qtn):
+        """Checks if the qtn is a relation in the database
+
+        @qtn is in the form <schema>.<table>
+        Returns True if the relation exists, False otherwise.
+        Also works for views and materialized views.
+        """
+        schema, table = qtn.rsplit('.', 1)
+        return (self.__dbname, schema, table) in self.__metadata[self._dbname]['byname']
 
     def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
