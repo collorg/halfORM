@@ -10,7 +10,7 @@ The SQL language is divided in two different parts:
 
 ```half_orm``` only deals with the DML part. Basically the `INSERT`, `SELECT`, `UPDATE` and `DELETE` commands. This makes ```half_orm``` easy to learn and use. In a way, ```half_orm``` is more a ```ROM```  (relation-object mapper) than an ```ORM```.
 
-# Be up and running with `half_orm` in less than an hour
+# Be up and running with `half_orm` in half an hour
 
 You have a PostgreSQL database ready at hand (not  in production of course this is alpha!!!)
 ## Install ```half_orm```
@@ -78,6 +78,13 @@ r "blog"."post"
 v "blog.view"."post_comment"
 ```
 
+## Check if a relation exists in the database
+
+```py
+>>> my_db.has_relation('blog.view.post_comment')
+True
+```
+
 ## Get the class of a relation (the `Model.get_relation_class` method)
 
 To work with a table of your database, you must instanciate the corresponding class:
@@ -120,6 +127,7 @@ It provides you with information extracted from the database metadata:
 * description: the comment on the relationship if there is one,
 * fields: the list of columns, their types and contraints
 * foreign keys: the list of FKs if any. A `_reverse_*` FK is a FK made on the current relation.
+
 
 ## Constraining a relation
 
@@ -423,93 +431,11 @@ g_posts = gaston._fkeys['_reverse_fkey_halftest_blog_post_author_first_name_auth
 
 That's it! You've learn pretty much everything there is to know with `half_orm`.
 
+# Next: `hop`, the `half_orm` packager
+
+The [`hop`](https://github.com/collorg/halfORM_packager) command, provided by the package [`half_orm_packager`](https://github.com/collorg/halfORM_packager), allows you to ***create*** a Python package corresponding to the model of your database, to ***patch*** the model and the corresponding Python code, to ***test*** your database model and your business code. For more information, see https://github.com/collorg/halfORM_packager.
+
 # Want to contribute?
 
-* Fork me on Github: https://github.com/collorg/halfORM
-
-# Next `hop`: the `half_orm` packager
-
-Working with `half_orm` is fun, but we want to upgrade our databases, test the associated half_orm code.
-The upcoming ```half_orm_packager``` will soon provide the `hop` command
-that was removed from this package.
-
-# Experimental
-
-Not sure we will keep what's bellow.
-
-You can now write this script:
-
-```python
-#!/usr/bin/env python3
-#-*- coding: utf-8 -*-
-
-from halform.db_connector import model
-from halform.blog.view.post_comment import PostComment
-
-model.reconnect('halftest_read_only_pc') # a role with only read rights
-
-post_gaston = PostComment(author_post_first_name="Lagaffe")
-posts_by_author = """
-   ...: author:
-   ...:   author_post_first_name: first_name
-   ...:   author_post_last_name: last_name
-   ...:   posts:
-   ...:     - post_id: id
-   ...:       post_title: title
-   ...: """
-post_gaston.to_json(posts_by_author)
-```
-## to_json
-the ```to_json``` method returns a json representation of the returned data.
-It accepts a ```yml_directive``` that allows you to aggregate your data according
-to your needs. For instance:
-
-```python
-yml_directive = """
-authors:
-   author_first_name: first_name
-   author_last_name: last_name
-   posts:
-     - title: title
-"""
-post = halftest.relation('blog.post', last_name="Lagaffe")
-post.to_json(yml_directive)
-```
-Would return the list of posts grouped by author. You can have more than one
-level of aggregation.
-
-```json
-'[{"authors":[{"first_name": "Gaston", "last_name": "Lagaffe", "posts":[{"title": "Bof!"}, {"title": "Menfin!!!"}]}]}]'
-```
-
-In fact, this feature is very handy with SQL views. For example with the view
-["blog.view".post_comment](test/sql/halftest.sql) you can get:
-
-The list of posts with the comments on those posts
-```yml
-posts:
-  - post_title: title
-    author:
-      author_post_first_name: first_name
-      author_post_last_name: last_name
-    comments:
-      - comment_content: comment_content
-        author:
-          author_comment_first_name: first_name
-          author_comment_last_name: last_name   
-```
-
-or the list of authors with their posts and the comments on thoses posts
-```yml
-authors:
-  - author_post_first_name: first_name
-    author_post_last_name: last_name
-    posts:
-      - post_title: title
-        comments:
-        - comment_content: content
-          author:
-            author_comment_last_name: last_name
-            author_comment_first_name: first_name
-```
+Fork me on Github: https://github.com/collorg/halfORM
 
