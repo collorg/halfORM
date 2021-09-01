@@ -593,6 +593,23 @@ def __len__(self):
         raise err
     return self.__cursor.fetchone()['count']
 
+def is_empty(self):
+    """Returns True if the relation is empty, False otherwise.
+
+    Same as __len__ but limits the request to 1 element (faster).
+    Use it instead of len(relation) == 0.
+    """
+    self.__query = "select"
+    query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {} limit 1"
+    query, values = self.__get_query(query_template)
+    try:
+        vars_ = tuple(self.__sql_values + values)
+        self.__execute(query, vars_)
+    except Exception as err:
+        print(query, vars_)
+        raise err
+    return self.__cursor.fetchone()['count'] != 1
+
 def count(self, *args, _distinct=False):
     """Returns the number of tuples matching the intention in the relation.
 
@@ -838,6 +855,7 @@ COMMON_INTERFACE = {
     '__repr__': __repr__,
     '__set_only': __set_only,
     'only': only,
+    'is_empty': is_empty,
     'group_by':group_by,
     'to_json': to_json,
     'to_dict': to_dict,
