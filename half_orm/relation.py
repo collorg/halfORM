@@ -950,6 +950,7 @@ def _factory(class_name, bases, dct, reload=False):
     tbl_attr['__sfqrn'] = tuple(sfqrn)
     rel_class_names = {
         'r': 'Table',
+        'p': 'Partioned table',
         'v': 'View',
         'm': 'Materialized view',
         'f': 'Foreign data'}
@@ -958,6 +959,7 @@ def _factory(class_name, bases, dct, reload=False):
     tbl_attr['_fkeys'] = []
     rel_interfaces = {
         'r': TABLE_INTERFACE,
+        'p': TABLE_INTERFACE,
         'v': VIEW_INTERFACE,
         'm': MVIEW_INTERFACE,
         'f': FDATA_INTERFACE}

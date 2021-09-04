@@ -62,6 +62,7 @@ WHERE
       OR c.relkind = 'v'::"char" -- view
       OR c.relkind = 'm' -- materialized view
       OR c.relkind = 'f' -- foreign table/view/mat. view
+      OR c.relkind = 'p' -- patitioned table
     ) AND
     a.attnum > 0 -- AND
 GROUP BY

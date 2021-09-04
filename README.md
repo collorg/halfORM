@@ -8,9 +8,10 @@ The SQL language is divided in two different parts:
 
 ```half_orm``` only deals with the DML part. Basically the `INSERT`, `SELECT`, `UPDATE` and `DELETE` commands. This makes ```half_orm``` easy to learn and use. In a way, ```half_orm``` is more a ```ROM```  (relation-object mapper) than an ```ORM```.
 
-# Be up and running with `half_orm` in half an hour
+# Learn `half_orm` in half an hour
 
-You have a PostgreSQL database ready at hand (not  in production of course this is alpha!!!)
+You have a PostgreSQL database ready at hand (you can try half_orm with [pagila](https://github.com/devrimgunduz/pagila))
+
 ## Install ```half_orm```
 
 run ```pip install half_orm``` in a virtual environment.
@@ -60,11 +61,13 @@ database. Each row has the form:
 <relation type> <"schema name"."relation name">
 ```
 
-Where ```relation type``` is one of `r`, `v`, `m`: 
+Where ```relation type``` is one of `r`, `p`, `v`, `m`, `f`: 
 
 * `r` for a relation,
+* `p` for a partitioned table,
 * `v` for a view,
-* `m` for a materialized view.
+* `m` for a materialized view,
+* `f` for foreign data.
 
 for instance (using the halftest database):
 
