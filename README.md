@@ -1,5 +1,3 @@
-**THIS PROJECT IS IN ALPHA STAGE. I'm looking for testers/contributors.**
-
 # A simple PostgreSQL-Python relation-object mapper.
 
 ```half_orm``` maps an existing PostgreSQL database to Python objects with [inheritance as defined in PostgreSQL](https://www.postgresql.org/docs/current/static/tutorial-inheritance.html).
@@ -190,6 +188,14 @@ my_selection |= Person(first_name=('ilike', 'A%'))
 
 # DML. The ```insert```, ```select```, ```update```,```delete``` methods.
 
+These methods trigger their corresponding SQL querie on the database. 
+For debugging purposes, you can activate the print the SQL query built 
+by half_orm when the DML method is invoked using the _mogrify() method.
+
+```py
+persons._mogrify()
+persons.select()
+```
 
 ## Insert
 To insert a tuple in the relation, use the ```insert``` method as shown bellow:
@@ -263,15 +269,18 @@ You can also get a subset of the attributes:
 
 ### Select one: the `get` method
 the `get` method returns an object whose fields are constrained with the values of the corresponding row in the database.
-It raises an [ExcpetedOneError Exception](https://github.com/collorg/halfORM/blob/master/half_orm/relation_errors.py) if 0 or more than 1 rows match the intention.
+It raises an [ExpectedOneError](https://github.com/collorg/halfORM/blob/master/half_orm/relation_errors.py)
+Exception if 0 or more than 1 rows match the intention.
 
 ```py
 gaston = Person(last_name='Lagaffe').get()
+```
 
-# is equivalent to
+is equivalent to
 
+```py
 people = Person(last_name='Lagaffe')
-if len(people) == 0 or len(people) > 1:
+if people.is_empty() or len(people) > 1:
     raise ExcpetedOneError
 gaston = Person(**next(people.select()))
 ```
@@ -428,6 +437,19 @@ g_comments = gaston._fkeys['_reverse_fkey_halftest_blog_comment_author_id']()
 g_events = gaston._fkeys['_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date']()
 g_posts = gaston._fkeys['_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date']()
 ```
+
+## Last: SQL queries
+
+If you realy need to invoke a SQL query not managed by half_orm, use
+the `Model.execute_query` method:
+
+```py
+from half_orm.model import Model
+halftest = Model('halftest')
+halftest.execute_query('select 1')
+```
+
+By the way, this is the code used in the `Model.ping` method that makes sure the connection is established and attempts a reconnection if it is not.
 
 That's it! You've learn pretty much everything there is to know with `half_orm`.
 

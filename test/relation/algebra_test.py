@@ -81,7 +81,7 @@ class Test(TestCase):
         (a & empty)._mogrify()
         empty._mogrify()
         self.assertTrue(a & empty == empty)
-        self.assertTrue(len(empty) == 0)
+        self.assertTrue(empty.is_empty())
 
     def test_and_neutral_elt(self):
         a = self.set_1

@@ -111,6 +111,7 @@ def __init__(self, **kwargs):
     self.__id_cast = None
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
+    self.__mogrify = False
     kwk_ = set(kwargs.keys())
     if kwk_.intersection(self._fields.keys()) != kwk_:
         raise relation_errors.UnknownAttributeError(str(kwk_.difference(self._fields.keys())))
@@ -144,6 +145,8 @@ def __setattr__(self, key, value):
 
 def __execute(self, query, values):
     try:
+        if self.__mogrify:
+            print(self.__cursor.mogrify(query, values).decode('utf-8'))
         return self.__cursor.execute(query, values)
     except (psycopg2.OperationalError, psycopg2.InterfaceError):
         self._model.ping()
@@ -561,10 +564,10 @@ def select(self, *args) -> Generator[any, None, None]:
         raise err
     return self.__cursor
 
-def _mogrify(self, *args):
+def _mogrify(self):
     """Prints the select query."""
-    query, values = self._prep_select(*args)
-    return self.__cursor.mogrify(query, values).decode('utf-8')
+    self.__mogrify = True
+    return self
 
 def get(self):
     """Returns the Relation object extracted.
@@ -588,9 +591,8 @@ def __len__(self):
         vars_ = tuple(self.__sql_values + values)
         self.__execute(query, vars_)
     except Exception as err:
-        print(query, vars_)
         self._mogrify()
-        raise err
+        self.__execute(query, vars_)
     return self.__cursor.fetchone()['count']
 
 def is_empty(self):
@@ -625,9 +627,8 @@ def count(self, *args, _distinct=False):
         vars_ = tuple(self.__sql_values + values)
         self.__execute(query, vars_)
     except Exception as err:
-        print(query, vars_)
         self._mogrify()
-        raise err
+        self.__execute(query, vars_)
     return self.__cursor.fetchone()['count']
 
 def __update_args(self, **kwargs):
