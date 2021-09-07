@@ -117,6 +117,13 @@ class Model:
                 sys.stderr.flush()
             return False
 
+    def disconnect(self):
+        """Disconnect
+        """
+        if self.__conn is not None:
+            if not self.__conn.closed:
+                self.__conn.close()
+
     def _connect(self, config_file=None, raise_error=True):
         """Setup a new connection to the database.
 
@@ -125,9 +132,7 @@ class Model:
 
         The reconnect method is an alias to the connect method.
         """
-        if self.__conn is not None:
-            if not self.__conn.closed:
-                self.__conn.close()
+        self.disconnect()
         if config_file:
             self.__config_file = config_file
 

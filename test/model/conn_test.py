@@ -3,7 +3,9 @@
 
 import os.path
 from unittest import TestCase
-from ..init import halftest
+from psycopg2 import InterfaceError
+
+from ..init import halftest, model
 from half_orm.model import Model
 
 class Test(TestCase):
@@ -22,3 +24,15 @@ class Test(TestCase):
         self.assertEqual(person._fqrn, '"halftest"."blog"."comment"')
         person = halftest.relation("blog.view.post_comment")
         self.assertEqual(person._fqrn, '"halftest"."blog.view"."post_comment"')
+
+    def test_disconnect(self):
+        "it should disconnect"
+        model.disconnect()
+        with self.assertRaises(InterfaceError):
+            model.execute_query("select 1")
+
+    def test_ping(self):
+        "it shoud reconnect"
+        model.disconnect()
+        model.ping()
+        self.assertEqual(1, model.execute_query("select 1").fetchone()['?column?'])
