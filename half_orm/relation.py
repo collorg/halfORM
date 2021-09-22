@@ -29,7 +29,6 @@ The following methods can be chained on the object before a select.
 - offset: sets the offset for the select method.
 """
 
-
 from collections import OrderedDict
 import datetime
 import sys
@@ -189,10 +188,7 @@ def __set_fkeys(self):
 
     fkeys_metadata = self._model._metadata['byname'][self.__sfqrn]['fkeys']
     for fkeyname, f_metadata in fkeys_metadata.items():
-        # ft_sfqrn, ft_fields_names, fields_names, confupdtype, confdeltype = f_metadata
-        self._fkeys[fkeyname] = FKey(
-            fkeyname, self, *f_metadata)
-
+        self._fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
     if not self.__fkeys_properties:
         self._set_fkeys_properties()
         self.__fkeys_properties = True
@@ -353,7 +349,7 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
         res.update(kwargs)
     return json.dumps(res, default=handler)
 
-def to_dict(self):
+def to_dict(self, str_conv=False):
     """Returns a dictionary containing only the values of the fields
     that are set."""
     return {key:field.value for key, field in self._fields.items() if field.is_set()}
@@ -740,6 +736,54 @@ def cast(self, qrn):
     new.__set_op = self.__set_op
     return new
 
+def join(self, *f_rel):
+    """Joins data to self.select() result. Returns a dict
+    f_rel is a list of [(Relation, name, fields), ...].
+
+    Each Relation in f_rel must have a direct or reverse fkey to self.
+    If res is the result, res[name] contains the data associated to the element
+    through the fkey or reversed fkey.
+    """
+    constraint = {self.__dict__[field].name: self.__dict__[field].value for field in self._fields}
+    res = list(
+        {key: str(value) for key, value in elt.items()}
+        for elt in self(**constraint).distinct().select()
+    )
+    res_remote_d = {}
+    for f_relation, name, fields in f_rel:
+        ref = self(**constraint)
+        res_remote = {}
+
+        remote1 = None
+        f_relation_fk_names = []
+        for fkey_12 in ref._fkeys:
+            remote1 = ref._fkeys[fkey_12]
+            if remote1().__class__ == f_relation.__class__:
+                remote1.set(f_relation)
+                f_relation_fk_names = remote1.fk_names
+                break
+
+        relation1_pk_names = []
+        for fkey_21 in f_relation._fkeys:
+            remote = f_relation._fkeys[fkey_21]
+            if remote().__class__ == ref.__class__:
+                relation1_pk_names = remote.fk_names
+                break
+
+        inter = [{key: str(val) for key, val in elt.items()} for elt in remote1().distinct().select(*(fields + f_relation_fk_names))]
+        for elt in inter:
+            key = tuple(elt[subelt] for subelt in f_relation_fk_names)
+            if not key in res_remote:
+                res_remote[key] = []
+            if len(fields) == 1:
+                res_remote[key].append(elt[fields[0]])
+            else:
+                res_remote[key].append({key: elt[key] for key in fields})
+        for delt in res:
+            keyr = tuple(delt[key] for key in relation1_pk_names)
+            delt[name] = res_remote.get(keyr, [])
+    return res
+
 def __set__op__(self, op_=None, right=None):
     """Si l'opérateur du self est déjà défini, il faut aller modifier
     l'opérateur du right ???
@@ -872,6 +916,7 @@ COMMON_INTERFACE = {
     '__len__': __len__,
     'count': count,
     'get': get,
+    'join': join,
     '__set__op__': __set__op__,
     '__and__': __and__,
     '__iand__': __iand__,

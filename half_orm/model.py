@@ -57,7 +57,6 @@ def camel_case(name):
     return ''.join(ccname)
 
 psycopg2.extras.register_uuid()
-#from pprint import PrettyPrinter
 
 class Model:
     """Model class

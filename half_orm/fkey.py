@@ -21,7 +21,7 @@ class FKey:
         self.__confupdtype = confupdtype
         self.__confdeltype = confdeltype
         self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
-        self.__fields = {f'"{name}"' for name in fields} or set()
+        self.__fields = [f'"{name}"' for name in fields]
 
     def __get_fk_qrn(self):
         """Returns QRN from FQRN."""

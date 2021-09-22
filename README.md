@@ -336,7 +336,7 @@ We finally remove every inserted tuples. Note that we use the ```delete_all``` a
 ```
 Well, there is not much left after this in the ```actor.person``` table.
 
-# Working with foreign keys (the FKey class)
+# Working with foreign keys (the FKey class) and the *`join`* method
 
 Working with foreign keys is as easy as working with Relational objects.
 A Relational object has an attribute ```_fkeys``` that contains the foreign
@@ -440,6 +440,26 @@ g_comments = gaston._fkeys['_reverse_fkey_halftest_blog_comment_author_id']()
 g_events = gaston._fkeys['_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date']()
 g_posts = gaston._fkeys['_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date']()
 ```
+
+## The *`join`* method
+
+The *`join`* method allows to integrate the data associated to a Relation object in the result obtained by the *`select`* method.
+
+Unlike the *`select`* method (which is a generator), it returns the data directly in a list.
+
+The following code
+```#python
+lagaffe = Person(last_name='Lagaffe')
+res = lagaffe.join(
+    (Comment(), 'comments', ['id', 'post_id']),
+    (Post(), 'posts', ['id'])
+)
+```
+would return the list of people named `Lagaffe` with two
+additional fields : `comments` and `posts`.
+
+The data associated with `comments` is a list of dictionaries whose keys are 'id' and 'post_id'.
+The data associated  with  `posts` is a simple list of values.
 
 ## Last: SQL queries
 

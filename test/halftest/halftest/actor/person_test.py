@@ -39,3 +39,31 @@ class Test(BaseTest):
         "hotAssertAliasReferences should pass"
         from halftest.blog.comment import Comment
         self.hotAssertAliasReferences(Person, '_comment', Comment)
+
+    def test_join(self):
+        "should join the objects"
+        from halftest.blog.comment import Comment
+        from halftest.blog.post import Post
+        Post().delete(delete_all=True)
+        Comment().delete(delete_all=True)
+        personne = Person(**next(Person(last_name='aa').select()))
+        post = Post(title='essai', content='essai')
+        post.author_last_name = personne.last_name
+        post.author_first_name = personne.first_name
+        post.author_birth_date = personne.birth_date
+        post = post.insert()[0]
+        comment0 = Comment(author_id=personne.id, post_id=post['id'], content='essai').insert()[0]
+        comment1 = Comment(author_id=personne.id, post_id=post['id'], content='essai 1').insert()[0]
+        personne = Person(last_name='aa')
+        res = personne.join(
+            (Comment(), 'comments', ['id']),
+            (Post(), 'posts', ['id'])
+        )
+        print(res)
+        self.assertTrue(isinstance(res[0]['comments'], list))
+        self.assertTrue(isinstance(res[0]['posts'], list))
+        self.assertEqual(res[0]['posts'][0], str(post['id']))
+        self.assertEqual(len(res[0]['comments']), 2)
+        self.assertEqual(set(res[0]['comments']), set((str(comment0['id']), str(comment1['id']))))
+        Post().delete(delete_all=True)
+        Comment().delete(delete_all=True)

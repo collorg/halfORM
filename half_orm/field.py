@@ -159,4 +159,8 @@ class Field():
         """Return the SQL representation of self.__value"""
         return adapt(self.__value)
 
+    @property
+    def name(self):
+        return self.__name
+
 register_adapter(Field, Field._psycopg_adapter)
