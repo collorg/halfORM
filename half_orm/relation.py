@@ -756,10 +756,12 @@ def join(self, *f_rel):
 
         remote1 = None
         f_relation_fk_names = []
+        fkey_found = False
         for fkey_12 in ref._fkeys:
             remote1 = ref._fkeys[fkey_12]
             if remote1().__class__ == f_relation.__class__:
                 remote1.set(f_relation)
+                fkey_found = True
                 f_relation_fk_names = remote1.fk_names
                 break
 
@@ -769,6 +771,9 @@ def join(self, *f_rel):
             if remote().__class__ == ref.__class__:
                 relation1_pk_names = remote.fk_names
                 break
+
+        if not fkey_found:
+            raise RuntimeError(f"No foreign key between {self._fqrn} and {f_relation._fqrn}!")
 
         inter = [{key: str(val) for key, val in elt.items()} for elt in remote1().distinct().select(*(fields + f_relation_fk_names))]
         for elt in inter:
