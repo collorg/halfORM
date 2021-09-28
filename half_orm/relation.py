@@ -743,13 +743,34 @@ def join(self, *f_rel):
     Each Relation in f_rel must have a direct or reverse fkey to self.
     If res is the result, res[name] contains the data associated to the element
     through the fkey or reversed fkey.
+
+    Raises:
+        RuntimeError: if self.__class__ and foreign.__class__ don't have fkeys to each other.
+
+    Returns:
+        dict: all values are converted to string.
     """
+    def to_str(value):
+        """Returns value in string format if the type of value is
+        in TO_PROCESS
+
+        Args:
+            value (any): the value to return in string format.
+        """
+        #pylint: disable=import-outside-toplevel
+        from uuid import UUID
+        from datetime import date, datetime, time, timedelta
+
+        TO_PROCESS = {UUID, date, datetime, time, timedelta}
+        if value.__class__ in TO_PROCESS:
+            return str(value)
+        return value
+
     constraint = {self.__dict__[field].name: self.__dict__[field].value for field in self._fields}
     res = list(
-        {key: str(value) for key, value in elt.items()}
+        {key: to_str(value) for key, value in elt.items()}
         for elt in self(**constraint).distinct().select()
     )
-    res_remote_d = {}
     for f_relation, name, fields in f_rel:
         ref = self(**constraint)
         res_remote = {}
@@ -775,15 +796,16 @@ def join(self, *f_rel):
         if not fkey_found:
             raise RuntimeError(f"No foreign key between {self._fqrn} and {f_relation._fqrn}!")
 
-        inter = [{key: str(val) for key, val in elt.items()} for elt in remote1().distinct().select(*(fields + f_relation_fk_names))]
+        inter = [{key: to_str(val) for key, val in elt.items()}
+            for elt in remote1().distinct().select(*(fields + f_relation_fk_names))]
         for elt in inter:
             key = tuple(elt[subelt] for subelt in f_relation_fk_names)
-            if not key in res_remote:
+            if key not in res_remote:
                 res_remote[key] = []
             if len(fields) == 1:
-                res_remote[key].append(elt[fields[0]])
+                res_remote[key].append(to_str(elt[fields[0]]))
             else:
-                res_remote[key].append({key: elt[key] for key in fields})
+                res_remote[key].append({key: to_str(elt[key]) for key in fields})
         for delt in res:
             keyr = tuple(delt[key] for key in relation1_pk_names)
             delt[name] = res_remote.get(keyr, [])
