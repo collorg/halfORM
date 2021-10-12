@@ -89,6 +89,7 @@ class Model:
         self._relations_['list'] = []
         self._relations_['classes'] = {}
         self.__raise_error = raise_error
+        self.__production = False
         self._connect(raise_error=self.__raise_error)
 
     @staticmethod
@@ -115,6 +116,16 @@ class Model:
                 sys.stderr.write('{}\n'.format(err))
                 sys.stderr.flush()
             return False
+
+    @property
+    def production(self):
+        """Returns the production status of the db. Production is set by adding
+        production = True to the connexion file.
+
+        Returns:
+            bool: True if the database is in production, False otherwise
+        """
+        return self.__production
 
     def disconnect(self):
         """Disconnect
@@ -153,6 +164,13 @@ class Model:
         self._dbinfo['password'] = params.get('password')
         self._dbinfo['host'] = params.get('host')
         self._dbinfo['port'] = params.get('port')
+        self.__production = params.get('production', False)
+        if self.__production == 'True':
+            self.__production = True
+        if self.__production == 'False':
+            self.__production = False
+        if not isinstance(self.__production, bool):
+            raise ValueError
         if 'name' not in self._dbinfo:
             raise model_errors.MalformedConfigFile(
                 self.__config_file, {'name'})
