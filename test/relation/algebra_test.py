@@ -11,7 +11,7 @@ from ..init import halftest
 from half_orm import relation_errors, model
 
 def name(letter, integer):
-    return '{}{}'.format(letter, chr(ord('a') + integer))
+    return f"{letter}{chr(ord('a') + integer)}"
 
 class Test(TestCase):
     def setUp(self):
@@ -25,13 +25,13 @@ class Test(TestCase):
         self.c1 = hexchars[randint(0, len(hexchars) - 1)]
         self.c2 = hexchars[randint(0, len(hexchars) - 1)]
         self.c3 = hexchars[randint(0, len(hexchars) - 1)]
-        self.set_1 = self.pers(last_name=('like', '{}%'.format(self.c1)))
+        self.set_1 = self.pers(last_name=('like', f'{self.c1}%'))
         self.comp_set_1 = self.pers(
-            last_name=('not like', '{}%'.format(self.c1)))
-        self.set_2 = self.pers(last_name=('like', '_{}%'.format(self.c2)))
+            last_name=('not like', f'{self.c1}%'))
+        self.set_2 = self.pers(last_name=('like', f'_{self.c2}%'))
         self.subset_1_2 = self.pers(
-            last_name=('like', '{}{}%'.format(self.c1, self.c2)))
-        self.set_3 = self.pers(last_name=('like', '__{}%'.format(self.c3)))
+            last_name=('like', f'{self.c1}{self.c2}%'))
+        self.set_3 = self.pers(last_name=('like', f'__{self.c3}%'))
 
     def test_and_1(self):
         a = self.set_1

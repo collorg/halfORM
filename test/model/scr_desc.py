@@ -15,4 +15,4 @@ if len(sys.argv) > 1:
     for elt in sys.argv[1:]:
         qrn.append(elt)
 for elt in qrn:
-    db = model.Model("{}/../halftest.ini".format(dirname)).desc(elt)
+    db = model.Model(f"{dirname}/../halftest.ini").desc(elt)

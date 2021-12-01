@@ -4,14 +4,12 @@ class ExpectedOneError(Exception):
     """This exception is raised when get count differs from 1."""
     def __init__(self, relation, count):
         plural = '' if count == 0 else 's'
-        Exception.__init__(self, 'Expected 1, got {} tuple{}:\n{}'.format(
-            count, plural, relation))
+        Exception.__init__(self, f'Expected 1, got {count} tuple{plural}:\n{relation}')
 
 class UnknownAttributeError(Exception):
     """Unknown attribute error"""
     def __init__(self, msg):
-        super().__init__(
-            "ERROR! Unknown attribute: {}.".format(msg))
+        super().__init__(f"ERROR! Unknown attribute: {msg}.")
 
 class IsFrozenError(Exception):
     """Class is frozen"""
@@ -22,5 +20,3 @@ class IsFrozenError(Exception):
 
 class DuplicateAttributeError(Exception):
     """Attempt to setattr to an already existing attribute."""
-    def __init__(self, msg):
-        super().__init__(msg)

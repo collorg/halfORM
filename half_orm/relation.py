@@ -78,9 +78,7 @@ class SetOp:
     right = property(__get_right, __set_right)
 
     def __repr__(self):
-        return "{} {}".format(
-            self.__op,
-            self.__right and self.__right._fqrn or None)
+        return f"{self.__op} {self.__right and self.__right._fqrn or None}"
 
 class Relation:
     """Base class of Table and View classes (see _factory)."""
@@ -337,8 +335,7 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
         if isinstance(obj, datetime.timedelta):
             return obj.total_seconds()
         raise TypeError(
-            'Object of type {} with value of '
-            '{} is not JSON serializable'.format(type(obj), repr(obj)))
+            f'Object of type {type(obj)} with value of {repr(obj)} is not JSON serializable')
 
     if yml_directive:
         res = self.group_by(yml_directive)
@@ -363,25 +360,22 @@ def _to_dict_val_comp(self):
 def __repr__(self):
     rel_kind = self.__kind
     ret = []
-    ret.append("__RCLS: {}".format(self.__class__))
+    ret.append(f"__RCLS: {self.__class__}")
     ret.append(
         "This class allows you to manipulate the data in the PG relation:")
-    ret.append("{}: {}".format(rel_kind.upper(), self._fqrn))
+    ret.append(f"{rel_kind.upper()}: {self._fqrn}")
     if self.__metadata['description']:
-        ret.append("DESCRIPTION:\n{}".format(self.__metadata['description']))
+        ret.append(f"DESCRIPTION:\n{self.__metadata['description']}")
     ret.append('FIELDS:')
     mx_fld_n_len = 0
     for field_name in self._fields.keys():
         if len(field_name) > mx_fld_n_len:
             mx_fld_n_len = len(field_name)
     for field_name, field in self._fields.items():
-        ret.append('- {}:{}{}'.format(
-            field_name,
-            ' ' * (mx_fld_n_len + 1 - len(field_name)),
-            repr(field)))
+        ret.append(f"- {field_name}:{' ' * (mx_fld_n_len + 1 - len(field_name))}{repr(field)}")
     if self._fkeys.keys():
         plur = 'S' if len(self._fkeys) > 1 else ''
-        ret.append('FOREIGN KEY{}:'.format(plur))
+        ret.append(f'FOREIGN KEY{plur}:')
         for fkey in self._fkeys.values():
             ret.append(repr(fkey))
     return '\n'.join(ret)
@@ -416,7 +410,7 @@ def __walk_op(self, rel_id_, out=None, _fields_=None):
         left.__query_type = self.__query_type
         left.__walk_op(rel_id_, out, _fields_)
         if self.__set_op.right is not None:
-            out.append(" {}\n    ".format(self.__set_op.op_))
+            out.append(f" {self.__set_op.op_}\n    ")
             right = self.__set_op.right
             right.__query_type = self.__query_type
             right.__walk_op(rel_id_, out, _fields_)
@@ -435,21 +429,21 @@ def __join(self, orig_rel, deja_vu):
         if fk_rel.id_ not in deja_vu:
             deja_vu[fk_rel.id_] = []
         elif (fk_rel, fkey) in deja_vu[fk_rel.id_] or fk_rel is orig_rel:
-            #sys.stderr.write("déjà vu in from! {}\n".format(fk_rel._fqrn))
+            #sys.stderr.write(f"déjà vu in from! {fk_rel._fqrn}\n")
             continue
         deja_vu[fk_rel.id_].append((fk_rel, fkey))
         if fk_rel.__set_op.op_:
             fk_rel.__get_from(self.id_)
         _, where, values = fk_rel.__where_args()
-        where = " and\n    {}".format(where)
-        orig_rel.__sql_query.insert(1, '\n  join {} on\n   '.format(__sql_id(fk_rel)))
+        where = f" and\n    {where}"
+        orig_rel.__sql_query.insert(1, f'\n  join {__sql_id(fk_rel)} on\n   ')
         orig_rel.__sql_query.insert(2, fkey._join_query(self))
         orig_rel.__sql_query.append(where)
         orig_rel.__sql_values += values
 
 def __sql_id(self):
     """Returns the FQRN as alias for the sql query."""
-    return "{} as r{}".format(self._fqrn, self.id_)
+    return f"{self._fqrn} as r{self.id_}"
 
 def __get_from(self, orig_rel=None, deja_vu=None):
     """Constructs the __sql_query and gets the __sql_values for self."""
@@ -463,18 +457,19 @@ def __where_repr(self, rel_id_):
     where_repr = []
     for field in self.__get_set_fields():
         where_repr.append(field.where_repr(self.__query_type, rel_id_))
-    ret = "({})".format(" and\n    ".join(where_repr) or "1 = 1")
+    where_repr = ' and\n    '.join(where_repr) or '1 = 1'
+    ret = f"({where_repr})"
     if self.__neg:
-        ret = "not ({})".format(ret)
+        ret = f"not ({ret})"
     return ret
 
 def __where_args(self, *args):
     """Returns the what, where and values needed to construct the queries.
     """
     rel_id_ = self.id_
-    what = 'r{}.*'.format(rel_id_)
+    what = f'r{rel_id_}.*'
     if args:
-        what = ', '.join(['r{}.{}'.format(rel_id_, arg) for arg in args])
+        what = ', '.join([f'r{rel_id_}.{arg}' for arg in args])
     s_where, set_fields = self.__walk_op(rel_id_)
     s_where = ''.join(s_where)
     if s_where == '()':
@@ -486,7 +481,7 @@ def __get_query(self, query_template, *args):
     self.__sql_values = []
     self.__query_type = 'select'
     what, where, values = self.__where_args(*args)
-    where = "\nwhere\n    {}".format(where)
+    where = f"\nwhere\n    {where}"
     self.__get_from()
     # remove duplicates
     for idx, elt in reversed(list(enumerate(self.__sql_query))):
@@ -501,17 +496,15 @@ def __get_query(self, query_template, *args):
 
 def _prep_select(self, *args):
     self.__sql_values = []
-    query_template = "select\n {} {{}}\nfrom\n  {{}} {{}}\n  {{}}".format(
-        self.__select_params.get('distinct', ''))
+    query_template = f"select\n {self.__select_params.get('distinct', '')} {{}}\nfrom\n  {{}} {{}}\n  {{}}"
     query, values = self.__get_query(query_template, *args)
     values = tuple(self.__sql_values + values)
     if 'order_by' in self.__select_params.keys():
-        query = "{} order by {}".format(
-            query, self.__select_params['order_by'])
+        query = f"{query} order by {self.__select_params['order_by']}"
     if 'limit' in self.__select_params.keys():
-        query = '{} limit {}'.format(query, self.__select_params['limit'])
+        query = f"{query} limit {self.__select_params['limit']}"
     if 'offset' in self.__select_params.keys():
-        query = "{} offset {}".format(query, self.__select_params['offset'])
+        query = f"{query} offset {self.__select_params['offset']}"
     return query, values
 
 def distinct(self):
@@ -555,8 +548,7 @@ def select(self, *args) -> Generator[any, None, None]:
     try:
         self.__execute(query, values)
     except Exception as err:
-        sys.stderr.write(
-            "QUERY: {}\nVALUES: {}\n".format(query, values))
+        sys.stderr.write(f"QUERY: {query}\nVALUES: {values}\n")
         raise err
     return self.__cursor
 
@@ -633,7 +625,7 @@ def __update_args(self, **kwargs):
     new_values = []
     self.__query_type = 'update'
     _, where, values = self.__where_args()
-    where = " where {}".format(where)
+    where = f" where {where}"
     for field_name, new_value in kwargs.items():
         what_fields.append(field_name)
         new_values.append(new_value)
@@ -662,8 +654,8 @@ def update(self, update_all=False, **kwargs):
     what, where, values = self.__update_args(**update_args)
     _, _, fk_fields, fk_query, fk_values = self.__what_to_insert()
     if fk_fields:
-        fk_where = " and ".join(["({}) in ({})".format(a, b) for a, b in zip(fk_fields, fk_query)])
-        where = "{} and {}".format(where, fk_where)
+        fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
+        where = f"{where} and {fk_where}"
         values += fk_values
     query = query_template.format(self._fqrn, what, where)
     self.__execute(query, tuple(values))
@@ -675,8 +667,8 @@ def __what_to_insert(self):
     fields_names = []
     set_fields = self.__get_set_fields()
     if set_fields:
-        fields_names = ['"{}"'.format(name)
-                        for name, field in self._fields.items() if field.is_set()]
+        fields_names = [
+            f'"{name}"' for name, field in self._fields.items() if field.is_set()]
     fk_fields = []
     fk_queries = []
     fk_values = []
@@ -696,7 +688,7 @@ def insert(self):
     what_to_insert = ["%s" for _ in range(len(values))]
     if fk_fields:
         fields_names += fk_fields
-        what_to_insert += ["({})".format(query) for query in fk_query]
+        what_to_insert += [f"({query})" for query in fk_query]
         values += fk_values
     query = query_template.format(self._fqrn, ", ".join(fields_names), ", ".join(what_to_insert))
     self.__execute(query, tuple(values))
@@ -714,12 +706,12 @@ def delete(self, delete_all=False):
     self.__query_type = 'delete'
     _, where, values = self.__where_args()
     _, values, fk_fields, fk_query, fk_values = self.__what_to_insert()
-    where = " where {}".format(where)
+    where = f" where {where}"
     if where == "(1 = 1)" and not delete_all:
         raise RuntimeError
     if fk_fields:
-        fk_where = " and ".join(["({}) in ({})".format(a, b) for a, b in zip(fk_fields, fk_query)])
-        where = "{} and {}".format(where, fk_where)
+        fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
+        where = f"{where} and {fk_where}"
         values += fk_values
     query = query_template.format(self._fqrn, where)
     self.__execute(query, tuple(values))
@@ -987,7 +979,7 @@ def _factory(class_name, bases, dct, reload=False):
         """Generates class name from relation kind and FQRN tuple"""
         class_name = "".join([elt.capitalize() for elt in
                               [elt.replace('.', '') for elt in sfqrn]])
-        return "{}_{}".format(rel_kind, class_name)
+        return f"{rel_kind}_{class_name}"
 
     bases = [Relation,]
     tbl_attr = {}
@@ -1014,7 +1006,7 @@ def _factory(class_name, bases, dct, reload=False):
         metadata['inherits'].sort()
         bases = []
     for parent_fqrn in metadata['inherits']:
-        parent_fqrn = ".".join(['"{}"'.format(elt) for elt in parent_fqrn])
+        parent_fqrn = ".".join([f'"{elt}"' for elt in parent_fqrn])
         bases.append(_factory(None, None, {'fqrn': parent_fqrn}))
     tbl_attr['__metadata'] = metadata
     if dct.get('model'):
@@ -1051,8 +1043,7 @@ def _normalize_fqrn(_fqrn):
     _fqrn = _fqrn.replace('"', '')
     dbname, schema_table = _fqrn.split('.', 1)
     schemaname, tablename = schema_table.rsplit('.', 1)
-    sfqrn = (dbname, schemaname, tablename)
-    return '"{}"."{}"."{}"'.format(*sfqrn), sfqrn
+    return f'"{dbname}"."{schemaname}"."{tablename}"', (dbname, schemaname, tablename)
 
 def _normalize_qrn(qrn):
     """
@@ -1061,4 +1052,4 @@ def _normalize_qrn(qrn):
     A table name can't have a dot in it.
     returns "<schema name>"."<relation name>"
     """
-    return '.'.join(['"{}"'.format(elt) for elt in qrn.rsplit('.', 1)])
+    return '.'.join([f'"{elt}"' for elt in qrn.rsplit('.', 1)])

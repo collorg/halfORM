@@ -115,7 +115,7 @@ import os.path
 from half_orm.model import Model
 
 dirname = os.path.dirname(__file__)
-halftest = Model('{}/halftest.ini'.format(dirname))
+halftest = Model(f'{dirname}/halftest.ini')
 
 person = halftest.relation("actor.person")
 print(person)
@@ -210,7 +210,7 @@ gaston_comment_on_corto_post = halftest.relation(
 
 print(gaston_comment_on_corto_post)
 print('AVANT')
-print("autocommit {}".format(gaston.model.connection.autocommit))
+print(f"autocommit {gaston.model.connection.autocommit}")
 corto_post.select()
 gaston_comment_on_corto_post.select()
 print('APRÈS')

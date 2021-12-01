@@ -23,7 +23,7 @@ To drop halftest database and user when you're done with the tests:
 model = Model('halftest', scope="halftest")
 
 def name(letter, integer):
-    return '{}{}'.format(letter, chr(ord('a') + integer))
+    return f"{letter}{chr(ord('a') + integer)}"
 
 class HalfTest:
     def __init__(self):
@@ -56,6 +56,6 @@ class HalfTest:
 if 1:#try:
     halftest = HalfTest()
 else:#except Exception as err:
-    sys.stderr.write('{}\n'.format(err))
+    sys.stderr.write('{err}\n')
     sys.stderr.write(README.format(path))
     sys.exit(1)

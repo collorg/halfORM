@@ -11,6 +11,7 @@ psycopg2-binary = ">=2, <3"
 pydash = "5"
 click = "*"
 pyyaml = "*"
+half-orm = {editable = true, path = "."}
 
 [dev-packages]
 half-orm = {path = ".", editable = "true"}

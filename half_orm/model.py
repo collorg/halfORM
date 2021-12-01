@@ -113,7 +113,7 @@ class Model:
             try:
                 self._connect(raise_error=self.__raise_error)
             except psycopg2.OperationalError as err:
-                sys.stderr.write('{}\n'.format(err))
+                sys.stderr.write(f'{err}\n')
                 sys.stderr.flush()
             return False
 
@@ -156,8 +156,7 @@ class Model:
         params = dict(config['database'].items())
         if config_file and params['name'] != self.__dbname:
             raise RuntimeError(
-                "Can't reconnect to another database {} != {}".format(
-                    params['name'], self.__dbname))
+                f"Can't reconnect to another database {params['name']} != {self.__dbname}")
         self.__dbname = params['name']
         self._dbinfo['name'] = params['name']
         self._dbinfo['user'] = params.get('user')
@@ -182,7 +181,7 @@ class Model:
         except psycopg2.OperationalError as err:
             if raise_error:
                 raise err.__class__(err)
-            sys.stderr.write("{}\n".format(err))
+            sys.stderr.write(f"{err}\n")
             sys.stderr.flush()
         self.__conn.autocommit = True
         self.__metadata[self.__dbname] = self.__get_metadata()
@@ -271,8 +270,7 @@ class Model:
                     confupdtype = dct['fkey_confupdtype']
                     confdeltype = dct['fkey_confdeltype']
                     ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
-                    rev_fkey_name = '_reverse_fkey_{}'.format(
-                        "_".join(list(table_key) + fields)).replace(".", "_")
+                    rev_fkey_name = f'_reverse_fkey_{"_".join(list(table_key) + fields).replace(".", "_")}'
                     byname[table_key]['fkeys'][fkeyname] = (
                         ftable_key, ffields, fields, confupdtype, confdeltype)
                     byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
@@ -293,7 +291,7 @@ class Model:
         @kwargs is a dictionary {field_name:value}
         """
         schema, table = qtn.rsplit('.', 1)
-        fqrn = '.'.join([self.__dbname, '"{}"'.format(schema), table])
+        fqrn = '.'.join([self.__dbname, f'"{schema}"', table])
         fqrn, _ = _normalize_fqrn(fqrn)
         return _factory('Table', (), {'fqrn': fqrn, 'model': self})
 
@@ -310,7 +308,8 @@ class Model:
     def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
         """
-        module_path = '{}.{}'.format(scope or self._scope, qtn.replace('"', ''))
+        stripped_qtn = qtn.replace('"', '')
+        module_path = f'{scope or self._scope}.{stripped_qtn}'
         class_name = camel_case(qtn.split('.')[-1])
         module = __import__(
             module_path, globals(), locals(), [class_name], 0)
@@ -321,7 +320,7 @@ class Model:
     def _relations(self):
         """List all_ the relations in the database"""
         for relation in self._relations_['list']:
-            yield "{} {}.{}.{}".format(relation[0], *relation[1])
+            yield f"{relation[0]} {'.'.join(relation[1])}"
 
     def desc(self, qrn=None, type_=None):
         """Returns the list of the relations of the model.
@@ -336,7 +335,7 @@ class Model:
         """
         def get_fqrn(key):
             "returns the quoted version of the FQRN"
-            return ".".join(['"{}"'.format(elt) for elt in key[1:]])
+            return ".".join([f'"{elt}"' for elt in key[1:]])
 
         if not qrn:
             ret_val = []
@@ -352,7 +351,7 @@ class Model:
                         continue
                 ret_val.append((tablekind, fqrn, inh))
             return ret_val
-        fqrn = '"{}".{}'.format(self.__dbname, _normalize_qrn(qrn=qrn))
+        fqrn = f'"{self.__dbname}".{_normalize_qrn(qrn=qrn)}'
         return str(_factory(
             'Table', (), {'fqrn': fqrn, 'model': self})())
 
@@ -360,6 +359,6 @@ class Model:
         out = []
         entry = self.__metadata[self.__dbname]['byname']
         for key in entry:
-            fqrn = ".".join(['"{}"'.format(elt) for elt in key[1:]])
-            out.append('{} {}'.format(entry[key]['tablekind'], fqrn))
+            fqrn = ".".join([f'"{elt}"' for elt in key[1:]])
+            out.append(f"{entry[key]['tablekind']} {fqrn}")
         return '\n'.join(out)

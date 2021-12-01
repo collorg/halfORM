@@ -41,8 +41,8 @@ class Test(HoTestCase):
         n = 'abcdef'[randint(0, 5)]
         p = chr(ord('a') + range(10)[randint(0, 9)])
         pers = self.pers(
-            last_name=('ilike', '{}%'.format(n)),
-            first_name=('ilike', '%{}'.format(p)),
+            last_name=('ilike', f'{n}%'),
+            first_name=('ilike', f'%{p}'),
             birth_date=self.today)
         for dct in pers.select():
             self.pers(**dct).get()

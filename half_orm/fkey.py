@@ -20,7 +20,7 @@ class FKey:
         self.__fk_to = None
         self.__confupdtype = confupdtype
         self.__confdeltype = confdeltype
-        self.__fk_fqrn = ".".join(['"{}"'.format(elt) for elt in fk_sfqrn])
+        self.__fk_fqrn = ".".join([f'"{elt}"' for elt in fk_sfqrn])
         self.__fields = [f'"{name}"' for name in fields]
 
     def __get_fk_qrn(self):
@@ -41,7 +41,7 @@ class FKey:
         else:
             f_cast = __cast__
         f_relation = get_rel(f_cast or f_qrn)(**kwargs)
-        rev_fkey_name = '_reverse_{}'.format(f_relation.id_)
+        rev_fkey_name = f'_reverse_{f_relation.id_}'
         f_relation._fkeys[rev_fkey_name] = FKey(
                 rev_fkey_name,
                 f_relation,
@@ -69,8 +69,7 @@ class FKey:
         if object in common_classes:
             common_classes.remove(object)
         if not common_classes:
-            raise Exception(
-                "Type mismatch:\n{} != {}".format(self.__fk_fqrn, to_._fqrn))
+            raise Exception(f"Type mismatch:\n{self.__fk_fqrn} != {to_._fqrn}")
         self.__fk_from = from_
         self.__fk_to = to_
         self.__is_set = to_.is_set()
@@ -109,19 +108,17 @@ class FKey:
         to_ = self.to_
         if id(from_) == id(to_):
             raise RuntimeError("You can't join a relation with itself!")
-        orig_rel_id = 'r{}'.format(orig_rel.id_)
-        to_id = 'r{}'.format(to_.id_)
-        from_id = 'r{}'.format(from_.id_)
+        orig_rel_id = f'r{orig_rel.id_}'
+        to_id = f'r{to_.id_}'
+        from_id = f'r{from_.id_}'
         if to_._qrn == orig_rel._qrn:
             to_id = orig_rel_id
         if from_._qrn == orig_rel._qrn:
             from_id = orig_rel_id
-        from_fields = ('{}.{}'.format(from_id, name)
-                       for name in self.__fields)
-        to_fields = ('{}.{}'.format(to_id, name) for name in self.fk_names)
-        bounds = " and ".join(['{} = {}'.format(a, b) for
-                               a, b in zip(to_fields, from_fields)])
-        return "({})".format(bounds)
+        from_fields = (f'{from_id}.{name}' for name in self.__fields)
+        to_fields = (f'{to_id}.{name}' for name in self.fk_names)
+        bounds = " and ".join([f'{a} = {b}' for a, b in zip(to_fields, from_fields)])
+        return f"({bounds})"
 
     def _prep_select(self):
         if self.__is_set:
@@ -141,14 +138,13 @@ class FKey:
         """
         fields = list(self.__fields)
         fields.sort()
-        fields = '({})'.format(', '.join(fields))
-        repr_ = u"- {}: {}\n ↳ {}({})".format(
-            self.__name,
-            fields, self.__fk_fqrn, ', '.join(self.fk_names))
+        fields = f"({', '.join(fields)})"
+        repr_ = f"- {self.__name}: {fields}\n ↳ {self.__fk_fqrn}({', '.join(self.fk_names)})"
         if self.__is_set:
             repr_value = str(self.to_)
             res = []
             for line in repr_value.split('\n'):
-                res.append('     {}'.format(line))
-            repr_ = '{}\n{}'.format(repr_, '\n'.join(res))
+                res.append(f'     {line}')
+            res = '\n'.join(res)
+            repr_ = f'{repr_}\n{res}'
         return repr_

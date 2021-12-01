@@ -63,8 +63,7 @@ class Transaction:
                 relation._model._connection.commit()
                 relation._model._connection.autocommit = True
         except Exception as err:
-            sys.stderr.write(
-                "Transaction error: {}\nRolling back!\n".format(err))
+            sys.stderr.write(f"Transaction error: {err}\nRolling back!\n")
             self.__level = 0
             relation._model._connection.rollback()
             relation._model._connection.autocommit = True

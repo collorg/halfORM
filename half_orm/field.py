@@ -42,13 +42,10 @@ class Field():
 
     def __repr__(self):
         md_ = self.__metadata
-        repr_ = "({}) {}".format(
-            md_['fieldtype'], md_['pkey'] and 'PK' or ('{}{}'.format(
-                md_['uniq'] and 'UNIQUE ' or '',
-                md_['notnull'] and 'NOT NULL' or '')))
+        field_constraint = md_['pkey'] and 'PK' or f"{md_['uniq'] and 'UNIQUE ' or ''}{md_['notnull'] and 'NOT NULL' or ''}"
+        repr_ = f"({md_['fieldtype']}) {field_constraint}"
         if self.__is_set:
-            repr_ = "{} ({} {} {})".format(
-                repr_, self.__name, self.__comp, self.__value)
+            repr_ = f"{repr_} ({self.__name} {self.__comp} {self.__value})"
         return repr_.strip()
 
     def __str__(self):
@@ -58,10 +55,10 @@ class Field():
         """Returns field_name prefixed with relation alias if the query is
         select. Otherwise, returns the field name quoted with ".
         """
-        id_ = 'r{}'.format(id_)
+        id_ = f'r{id_}'
         if query == 'select':
-            return '{}."{}"'.format(id_, self.__name)
-        return '"{}"'.format(self.__name)
+            return f'{id_}."{self.__name}"'
+        return f'"{self.__name}"'
 
     def where_repr(self, query, id_):
         """Returns the SQL representation of the field for the where clause
@@ -77,11 +74,9 @@ class Field():
                 if comp == '@@':
                     comp_str = 'any(websearch_to_tsquery(%s))'
         if not self.unaccent:
-            where_repr = "{} {} {}".format(
-                self._praf(query, id_), comp, comp_str)
+            where_repr = f"{self._praf(query, id_)} {comp} {comp_str}"
         else:
-            where_repr = "unaccent({}) {} unaccent({})".format(
-                self._praf(query, id_), comp, comp_str)
+            where_repr = f"unaccent({self._praf(query, id_)}) {comp} unaccent({comp_str})"
         return where_repr
 
     @property
