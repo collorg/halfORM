@@ -637,7 +637,7 @@ def __update_args(self, **kwargs):
     for field_name, new_value in kwargs.items():
         what_fields.append(field_name)
         new_values.append(new_value)
-    what = ", ".join(["{} = %s".format(elt) for elt in what_fields])
+    what = ", ".join([f'"{elt}" = %s' for elt in what_fields])
     return what, where, new_values + values
 
 def update(self, update_all=False, **kwargs):
