@@ -12,3 +12,4 @@ halftest.egg-info/
 .noseids
 .pdbrc
 pyproject.toml
+.tox

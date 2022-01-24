@@ -17,40 +17,40 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: actor; Type: SCHEMA; Schema: -; Owner: joel
+-- Name: actor; Type: SCHEMA; Schema: -; Owner: halftest
 --
 
 CREATE SCHEMA actor;
 
 
-ALTER SCHEMA actor OWNER TO joel;
+ALTER SCHEMA actor OWNER TO halftest;
 
 --
--- Name: blog; Type: SCHEMA; Schema: -; Owner: joel
+-- Name: blog; Type: SCHEMA; Schema: -; Owner: halftest
 --
 
 CREATE SCHEMA blog;
 
 
-ALTER SCHEMA blog OWNER TO joel;
+ALTER SCHEMA blog OWNER TO halftest;
 
 --
--- Name: blog.view; Type: SCHEMA; Schema: -; Owner: joel
+-- Name: blog.view; Type: SCHEMA; Schema: -; Owner: halftest
 --
 
 CREATE SCHEMA "blog.view";
 
 
-ALTER SCHEMA "blog.view" OWNER TO joel;
+ALTER SCHEMA "blog.view" OWNER TO halftest;
 
 --
--- Name: meta.view; Type: SCHEMA; Schema: -; Owner: joel
+-- Name: meta.view; Type: SCHEMA; Schema: -; Owner: halftest
 --
 
 CREATE SCHEMA "meta.view";
 
 
-ALTER SCHEMA "meta.view" OWNER TO joel;
+ALTER SCHEMA "meta.view" OWNER TO halftest;
 
 --
 -- Name: plpython3u; Type: EXTENSION; Schema: -; Owner: -
@@ -67,7 +67,7 @@ COMMENT ON EXTENSION plpython3u IS 'PL/Python3U untrusted procedural language';
 
 
 --
--- Name: id_person; Type: SEQUENCE; Schema: actor; Owner: joel
+-- Name: id_person; Type: SEQUENCE; Schema: actor; Owner: halftest
 --
 
 CREATE SEQUENCE actor.id_person
@@ -78,14 +78,14 @@ CREATE SEQUENCE actor.id_person
     CACHE 1;
 
 
-ALTER TABLE actor.id_person OWNER TO joel;
+ALTER TABLE actor.id_person OWNER TO halftest;
 
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: person; Type: TABLE; Schema: actor; Owner: joel
+-- Name: person; Type: TABLE; Schema: actor; Owner: halftest
 --
 
 CREATE TABLE actor.person (
@@ -96,10 +96,10 @@ CREATE TABLE actor.person (
 );
 
 
-ALTER TABLE actor.person OWNER TO joel;
+ALTER TABLE actor.person OWNER TO halftest;
 
 --
--- Name: TABLE person; Type: COMMENT; Schema: actor; Owner: joel
+-- Name: TABLE person; Type: COMMENT; Schema: actor; Owner: halftest
 --
 
 COMMENT ON TABLE actor.person IS 'The table actor.person contains the persons of the blogging system.
@@ -108,7 +108,7 @@ to insert a new person.';
 
 
 --
--- Name: id_comment; Type: SEQUENCE; Schema: blog; Owner: joel
+-- Name: id_comment; Type: SEQUENCE; Schema: blog; Owner: halftest
 --
 
 CREATE SEQUENCE blog.id_comment
@@ -119,10 +119,10 @@ CREATE SEQUENCE blog.id_comment
     CACHE 1;
 
 
-ALTER TABLE blog.id_comment OWNER TO joel;
+ALTER TABLE blog.id_comment OWNER TO halftest;
 
 --
--- Name: comment; Type: TABLE; Schema: blog; Owner: joel
+-- Name: comment; Type: TABLE; Schema: blog; Owner: halftest
 --
 
 CREATE TABLE blog.comment (
@@ -134,10 +134,10 @@ CREATE TABLE blog.comment (
 );
 
 
-ALTER TABLE blog.comment OWNER TO joel;
+ALTER TABLE blog.comment OWNER TO halftest;
 
 --
--- Name: TABLE comment; Type: COMMENT; Schema: blog; Owner: joel
+-- Name: TABLE comment; Type: COMMENT; Schema: blog; Owner: halftest
 --
 
 COMMENT ON TABLE blog.comment IS 'The table blog.comment contains all the comments
@@ -145,7 +145,7 @@ made by a person on a post.';
 
 
 --
--- Name: post_id; Type: SEQUENCE; Schema: blog; Owner: joel
+-- Name: post_id; Type: SEQUENCE; Schema: blog; Owner: halftest
 --
 
 CREATE SEQUENCE blog.post_id
@@ -156,10 +156,10 @@ CREATE SEQUENCE blog.post_id
     CACHE 1;
 
 
-ALTER TABLE blog.post_id OWNER TO joel;
+ALTER TABLE blog.post_id OWNER TO halftest;
 
 --
--- Name: post; Type: TABLE; Schema: blog; Owner: joel
+-- Name: post; Type: TABLE; Schema: blog; Owner: halftest
 --
 
 CREATE TABLE blog.post (
@@ -172,10 +172,10 @@ CREATE TABLE blog.post (
 );
 
 
-ALTER TABLE blog.post OWNER TO joel;
+ALTER TABLE blog.post OWNER TO halftest;
 
 --
--- Name: TABLE post; Type: COMMENT; Schema: blog; Owner: joel
+-- Name: TABLE post; Type: COMMENT; Schema: blog; Owner: halftest
 --
 
 COMMENT ON TABLE blog.post IS 'The table blog.post contains all the post
@@ -183,7 +183,7 @@ made by a person in the blogging system.';
 
 
 --
--- Name: event; Type: TABLE; Schema: blog; Owner: joel
+-- Name: event; Type: TABLE; Schema: blog; Owner: halftest
 --
 
 CREATE TABLE blog.event (
@@ -195,10 +195,10 @@ CREATE TABLE blog.event (
 INHERITS (blog.post);
 
 
-ALTER TABLE blog.event OWNER TO joel;
+ALTER TABLE blog.event OWNER TO halftest;
 
 --
--- Name: TABLE event; Type: COMMENT; Schema: blog; Owner: joel
+-- Name: TABLE event; Type: COMMENT; Schema: blog; Owner: halftest
 --
 
 COMMENT ON TABLE blog.event IS 'The table blog.event contains all the events
@@ -207,7 +207,7 @@ It''s just here to illustrate the inheriance in half_orm';
 
 
 --
--- Name: post_comment; Type: VIEW; Schema: blog.view; Owner: joel
+-- Name: post_comment; Type: VIEW; Schema: blog.view; Owner: halftest
 --
 
 CREATE VIEW "blog.view".post_comment AS
@@ -227,10 +227,10 @@ CREATE VIEW "blog.view".post_comment AS
      LEFT JOIN actor.person auth_c ON ((comment.author_id = auth_c.id)));
 
 
-ALTER TABLE "blog.view".post_comment OWNER TO joel;
+ALTER TABLE "blog.view".post_comment OWNER TO halftest;
 
 --
--- Name: VIEW post_comment; Type: COMMENT; Schema: blog.view; Owner: joel
+-- Name: VIEW post_comment; Type: COMMENT; Schema: blog.view; Owner: halftest
 --
 
 COMMENT ON VIEW "blog.view".post_comment IS 'This view joins:
@@ -241,7 +241,7 @@ COMMENT ON VIEW "blog.view".post_comment IS 'This view joins:
 
 
 --
--- Name: person person_id_key; Type: CONSTRAINT; Schema: actor; Owner: joel
+-- Name: person person_id_key; Type: CONSTRAINT; Schema: actor; Owner: halftest
 --
 
 ALTER TABLE ONLY actor.person
@@ -249,7 +249,7 @@ ALTER TABLE ONLY actor.person
 
 
 --
--- Name: person person_pkey; Type: CONSTRAINT; Schema: actor; Owner: joel
+-- Name: person person_pkey; Type: CONSTRAINT; Schema: actor; Owner: halftest
 --
 
 ALTER TABLE ONLY actor.person
@@ -257,7 +257,7 @@ ALTER TABLE ONLY actor.person
 
 
 --
--- Name: comment comment_pkey; Type: CONSTRAINT; Schema: blog; Owner: joel
+-- Name: comment comment_pkey; Type: CONSTRAINT; Schema: blog; Owner: halftest
 --
 
 ALTER TABLE ONLY blog.comment
@@ -265,7 +265,7 @@ ALTER TABLE ONLY blog.comment
 
 
 --
--- Name: event event_pkey; Type: CONSTRAINT; Schema: blog; Owner: joel
+-- Name: event event_pkey; Type: CONSTRAINT; Schema: blog; Owner: halftest
 --
 
 ALTER TABLE ONLY blog.event
@@ -273,7 +273,7 @@ ALTER TABLE ONLY blog.event
 
 
 --
--- Name: post post_pkey; Type: CONSTRAINT; Schema: blog; Owner: joel
+-- Name: post post_pkey; Type: CONSTRAINT; Schema: blog; Owner: halftest
 --
 
 ALTER TABLE ONLY blog.post
@@ -281,7 +281,7 @@ ALTER TABLE ONLY blog.post
 
 
 --
--- Name: post author; Type: FK CONSTRAINT; Schema: blog; Owner: joel
+-- Name: post author; Type: FK CONSTRAINT; Schema: blog; Owner: halftest
 --
 
 ALTER TABLE ONLY blog.post
@@ -289,7 +289,7 @@ ALTER TABLE ONLY blog.post
 
 
 --
--- Name: comment author; Type: FK CONSTRAINT; Schema: blog; Owner: joel
+-- Name: comment author; Type: FK CONSTRAINT; Schema: blog; Owner: halftest
 --
 
 ALTER TABLE ONLY blog.comment
@@ -297,7 +297,7 @@ ALTER TABLE ONLY blog.comment
 
 
 --
--- Name: event author; Type: FK CONSTRAINT; Schema: blog; Owner: joel
+-- Name: event author; Type: FK CONSTRAINT; Schema: blog; Owner: halftest
 --
 
 ALTER TABLE ONLY blog.event
@@ -305,7 +305,7 @@ ALTER TABLE ONLY blog.event
 
 
 --
--- Name: comment post; Type: FK CONSTRAINT; Schema: blog; Owner: joel
+-- Name: comment post; Type: FK CONSTRAINT; Schema: blog; Owner: halftest
 --
 
 ALTER TABLE ONLY blog.comment
@@ -313,77 +313,77 @@ ALTER TABLE ONLY blog.comment
 
 
 --
--- Name: SCHEMA actor; Type: ACL; Schema: -; Owner: joel
+-- Name: SCHEMA actor; Type: ACL; Schema: -; Owner: halftest
 --
 
 GRANT ALL ON SCHEMA actor TO halftest;
 
 
 --
--- Name: SCHEMA blog; Type: ACL; Schema: -; Owner: joel
+-- Name: SCHEMA blog; Type: ACL; Schema: -; Owner: halftest
 --
 
 GRANT ALL ON SCHEMA blog TO halftest;
 
 
 --
--- Name: SCHEMA "blog.view"; Type: ACL; Schema: -; Owner: joel
+-- Name: SCHEMA "blog.view"; Type: ACL; Schema: -; Owner: halftest
 --
 
 GRANT ALL ON SCHEMA "blog.view" TO halftest;
 
 
 --
--- Name: SEQUENCE id_person; Type: ACL; Schema: actor; Owner: joel
+-- Name: SEQUENCE id_person; Type: ACL; Schema: actor; Owner: halftest
 --
 
 GRANT ALL ON SEQUENCE actor.id_person TO halftest;
 
 
 --
--- Name: TABLE person; Type: ACL; Schema: actor; Owner: joel
+-- Name: TABLE person; Type: ACL; Schema: actor; Owner: halftest
 --
 
 GRANT ALL ON TABLE actor.person TO halftest;
 
 
 --
--- Name: SEQUENCE id_comment; Type: ACL; Schema: blog; Owner: joel
+-- Name: SEQUENCE id_comment; Type: ACL; Schema: blog; Owner: halftest
 --
 
 GRANT ALL ON SEQUENCE blog.id_comment TO halftest;
 
 
 --
--- Name: TABLE comment; Type: ACL; Schema: blog; Owner: joel
+-- Name: TABLE comment; Type: ACL; Schema: blog; Owner: halftest
 --
 
 GRANT ALL ON TABLE blog.comment TO halftest;
 
 
 --
--- Name: SEQUENCE post_id; Type: ACL; Schema: blog; Owner: joel
+-- Name: SEQUENCE post_id; Type: ACL; Schema: blog; Owner: halftest
 --
 
 GRANT ALL ON SEQUENCE blog.post_id TO halftest;
 
 
 --
--- Name: TABLE post; Type: ACL; Schema: blog; Owner: joel
+-- Name: TABLE post; Type: ACL; Schema: blog; Owner: halftest
 --
 
 GRANT ALL ON TABLE blog.post TO halftest;
 
 
 --
--- Name: TABLE event; Type: ACL; Schema: blog; Owner: joel
+-- Name: TABLE event; Type: ACL; Schema: blog; Owner: halftest
 --
 
 GRANT ALL ON TABLE blog.event TO halftest;
 
 
 --
--- Name: TABLE post_comment; Type: ACL; Schema: blog.view; Owner: joel
+-- Name: TABLE post_comment; Type: ACL; Schema: blog.view; Owner: halftest
 --
 
 GRANT ALL ON TABLE "blog.view".post_comment TO halftest;
@@ -392,4 +392,3 @@ GRANT ALL ON TABLE "blog.view".post_comment TO halftest;
 --
 -- PostgreSQL database dump complete
 --
-

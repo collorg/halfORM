@@ -1,0 +1,33 @@
+image: python:3.7-bullseye # python3.7 & 3.9
+
+stages:
+  - test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+  - apt-get update
+  - apt-get install -y postgresql postgresql-plpython3
+  - service postgresql start
+  - su - postgres -c "psql template1 -c \"create user halftest with password 'halftest';\" "
+  - su - postgres -c "createdb halftest -O halftest"
+  - su - postgres -c "psql halftest -f $CI_PROJECT_DIR/test/sql/halftest.sql"
+  - python --version  # For debugging
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+  - pip install .
+
+test-job:
+  stage:
+    test
+  script:
+    - pip install tox  # you can also use tox
+    - tox -e py37
+    - tox -e py39

@@ -21,3 +21,5 @@ pytest = "*"
 halftest = {path = "./test/halftest", editable = "true"}
 build = "*"
 twine = "*"
+tox = "*"
+flake8 = "*"
