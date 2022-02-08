@@ -16,6 +16,8 @@ You have a PostgreSQL database ready at hand (you can try half_orm with [pagila]
 
 run ```pip install half_orm``` in a virtual environment.
 
+### Set your HALFORM_CONF_DIR
+
 Create a directory to store your connection files and set the shell variable ```HALFORM_CONF_DIR```:
 
 ```sh
@@ -23,7 +25,12 @@ Create a directory to store your connection files and set the shell variable ```
 % export HALFORM_CONF_DIR=~/.half_orm
 ```
 
-Create a connection file in the ```HALFORM_CONF_DIR``` containing the following information (with your values):
+> Set your HALFORM_CONF_DIR for windows users:
+> - select settings in the menu
+> - search for "variable"
+> - select "Edit environment variables for your account"
+
+Create a connection file in the ```$HALFORM_CONF_DIR``` containing the following information (with your values):
 
 ```ini
 [database]
@@ -39,7 +46,7 @@ Your ready to go!
 
 ```py
 >>> from half_orm.model import Model
->>> my_db = Model('my_database') # OK wrong naming... this is a Pg database ;)
+>>> my_db = Model('my_database') # OK wrong name... this is a Pg database ;)
 ```
 
 The ```my_database``` is the name of the connexion file. It will be fetched in the directory referenced by
@@ -132,7 +139,7 @@ It provides you with information extracted from the database metadata:
 
 ## Constraining a relation
 
-when you instantiate an object with no arguments, its intention corresponds to all the data present in the corresponding relation.
+When you instantiate an object with no arguments, its intention corresponds to all the data present in the corresponding relation.
 ```Person()``` represents the set of people contained in the ```actor.person``` table (ie. there is no constraint on the set). You can get the number of elements in a relation whith the ```len``` function as in ```len(Person())```.
 
 To constrain a set, you must specify one or more values for the fields/columns in the set with a tuple of the form: ```(comp, value)```.
@@ -189,7 +196,7 @@ my_selection |= Person(first_name=('ilike', 'A%'))
 ```my_selection``` represents the set of persons whose second letter of the name is an `a` or whose first letter of the first name is an `a`.
 
 
-# DML. The ```insert```, ```select```, ```update```,```delete``` methods.
+# DML. The ```insert```, ```select```, ```update```, ```delete``` methods.
 
 These methods trigger their corresponding SQL querie on the database. 
 For debugging purposes, you can activate the print the SQL query built 
@@ -205,6 +212,14 @@ To insert a tuple in the relation, use the ```insert``` method as shown bellow:
 ```python
 Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
 ```
+
+`insert` returns the row as a dict in a list. So, to get the `id` of the newly inserted row, you can write:
+
+```python
+lagaffe = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
+lagaffe_id = lagaffe.insert()[0]['id']
+```
+
 You can put a transaction on any function using the ```Relation.Transaction``` decorator.
 
 ```python
@@ -271,7 +286,8 @@ You can also get a subset of the attributes:
 ```
 
 ### Select one: the `get` method
-the `get` method returns an object whose fields are constrained with the values of the corresponding row in the database.
+
+The `get` method returns an object whose fields are constrained with the values of the corresponding row in the database.
 It raises an [ExpectedOneError](https://github.com/collorg/halfORM/blob/master/half_orm/relation_errors.py)
 Exception if 0 or more than 1 rows match the intention.
 
@@ -290,7 +306,7 @@ gaston = Person(**next(people.select()))
 
 ## Update
 
-To update a subset, you first define the subset an then invoque the udpate
+To update a subset, you first define the subset an then invoque the `udpate`
 method with the new values passed as argument.
 
 In the following example, we capitalize the last name of all people whose second letter is an ```a```.
@@ -328,6 +344,7 @@ Again, we insure the atomicity of the transaction using the ```Relation.Transact
 If you want to update all the data in a relation, you must set the argument ```update_all``` to ```True```.
 
 ## Delete
+
 We finally remove every inserted tuples. Note that we use the ```delete_all``` argument with a ```True``` value. The ```delete``` would have been rejected otherwise:
 ```python
 >>> persons().delete(delete_all=True)
@@ -431,7 +448,7 @@ FOREIGN KEYS:
  ↳ "halftest"."blog"."post"(author_first_name, author_last_name, author_birth_date)
 ```
 
-If we wanted to recover the `posts`, `events` and `comments` made by Gaston, we would just have to write:
+If we wanted to get the `posts`, `events` and `comments` made by Gaston, we would just have to write:
 
 ```py
 gaston = Person(last_name='Lagaffe', first_name='Gaston')
@@ -445,7 +462,7 @@ g_posts = gaston._fkeys['_reverse_fkey_halftest_blog_post_author_first_name_auth
 
 The *`join`* method allows to integrate the data associated to a Relation object in the result obtained by the *`select`* method.
 
-Unlike the *`select`* method (which is a generator), it returns the data directly in a list.
+Unlike the *`select`* method (which is a generator), the *`join`* method returns a list.
 
 The following code
 ```#python
@@ -456,7 +473,7 @@ res = lagaffe.join(
 )
 ```
 would return the list of people named `Lagaffe` with two
-additional fields : `comments` and `posts`.
+additional attributes : `comments` and `posts`.
 
 The data associated with `comments` is a list of dictionaries whose keys are 'id' and 'post_id'.
 The data associated  with  `posts` is a simple list of values.
@@ -474,7 +491,7 @@ halftest.execute_query('select 1')
 
 By the way, this is the code used in the `Model.ping` method that makes sure the connection is established and attempts a reconnection if it is not.
 
-That's it! You've learn pretty much everything there is to know with `half_orm`.
+That's it! You've learn pretty much everything there is to know about `half_orm`.
 
 # Next: `hop`, the `half_orm` packager
 
@@ -483,4 +500,3 @@ The [`hop`](https://github.com/collorg/halfORM_packager) command, provided by th
 # Want to contribute?
 
 Fork me on Github: https://github.com/collorg/halfORM
-
