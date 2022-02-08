@@ -30,7 +30,13 @@ class HalfTest:
         assert model._scope == "halftest"
         self.dbname = model._dbname
         self.today = date.today()
-        self.pers = model._import_class("actor.person")()
+        self.Person = model._import_class("actor.person")
+        class PC(self.Person):
+            def last_name(self):
+                pass
+
+        self.pc = PC()
+        self.pers = self.Person()
         self.relation = model._import_class
         self.post = model._import_class("blog.post")()
         self.comment = model._import_class("blog.comment")()

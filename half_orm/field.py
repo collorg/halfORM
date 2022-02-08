@@ -3,6 +3,8 @@
 
 """This module provides the Field class."""
 
+import inspect
+import types
 from psycopg2.extensions import register_adapter, adapt
 
 from half_orm.null import NULL
@@ -157,5 +159,23 @@ class Field():
     @property
     def name(self):
         return self.__name
+
+    def __call__(self):
+        """In case someone inadvertently uses the name of a field for a method."""
+        rel_class = self.__relation.__class__
+        rcn = rel_class.__name__
+        method = None
+        try:
+            method = rel_class.__dict__[self.__name]
+            print(isinstance(method, types.FunctionType))
+        except KeyError as err:
+            # genuine attemp to call a Field.
+            raise err
+        err_msg = "'Field' object is not callable."
+        warn_msg = f"'{self.__name}' is an attribute of type Field of the '{rcn}' object."
+        err_msg = f"{err_msg}\nWARNING:        {warn_msg}"
+        if method:
+            err_msg = f"{err_msg}\n                Do not use '{self.__name}' as a method name."
+        raise TypeError(err_msg)
 
 register_adapter(Field, Field._psycopg_adapter)
