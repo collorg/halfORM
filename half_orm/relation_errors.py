@@ -3,8 +3,10 @@
 class ExpectedOneError(Exception):
     """This exception is raised when get count differs from 1."""
     def __init__(self, relation, count):
-        plural = '' if count == 0 else 's'
-        Exception.__init__(self, f'Expected 1, got {count} tuple{plural}:\n{relation}')
+        self.rel = relation
+        self.count = count
+        self.plural = '' if count == 0 else 's'
+        Exception.__init__(self, f'Expected 1, got {self.count} tuple{self.plural}')
 
 class UnknownAttributeError(Exception):
     """Unknown attribute error"""
@@ -20,3 +22,11 @@ class IsFrozenError(Exception):
 
 class DuplicateAttributeError(Exception):
     """Attempt to setattr to an already existing attribute."""
+
+class NotASingletonError(Exception):
+    """The constraint do not define a singleton.
+    
+    Raised from ExpectedOneError (err).
+    """
+    def __init__(self, err):
+        Exception.__init__(self, f'Not a singleton. Got {err.count} tuple{err.plural}')

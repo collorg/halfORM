@@ -29,6 +29,7 @@ The following methods can be chained on the object before a select.
 - offset: sets the offset for the select method.
 """
 
+from functools import wraps
 from collections import OrderedDict
 import datetime
 import sys
@@ -109,6 +110,7 @@ def __init__(self, **kwargs):
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     self.__mogrify = False
+    self._is_singleton = False
     kwk_ = set(kwargs.keys())
     if kwk_.intersection(self._fields.keys()) != kwk_:
         raise relation_errors.UnknownAttributeError(str(kwk_.difference(self._fields.keys())))
@@ -565,7 +567,10 @@ def get(self):
     _count = len(self)
     if _count != 1:
         raise relation_errors.ExpectedOneError(self, _count)
-    return self(**(next(self.select())))
+    self._is_singleton = True
+    ret = self(**(next(self.select())))
+    ret._is_singleton = True
+    return ret
 
 def __len__(self):
     """Returns the number of tuples matching the intention in the relation.
@@ -894,6 +899,23 @@ def __exit__(self, *exc):
     """
     return False
 
+def singleton(fn):
+    """Decorator. Enforces the relation to define a singleton.
+
+    _is_singleton is set by Relation.get.
+    _is_singleton is unset as soon as a Field is set.
+    """
+    @wraps(fn)
+    def wrapper(self):
+        if self._is_singleton:
+            return fn(self)
+        try:
+            self = self.get()
+            return fn(self)
+        except relation_errors.ExpectedOneError as err:
+            raise relation_errors.NotASingletonError(err)
+    return wrapper
+
 def _debug(obj):
     """For debug purpose"""
 
@@ -963,6 +985,7 @@ COMMON_INTERFACE = {
     '__exit__': __exit__,
     # test
     '_debug': _debug,
+    'singleton': singleton,
 }
 
 TABLE_INTERFACE = COMMON_INTERFACE

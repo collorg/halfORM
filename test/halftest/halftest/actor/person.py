@@ -35,6 +35,8 @@ FKEYS = [
 from halftest.db_connector import base_relation_class
 
 #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+from half_orm.relation import singleton
+
 FKEYS = [
     ('_comment', '_reverse_fkey_halftest_blog_comment_author_id'),
     ('_event', '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date'),
@@ -73,3 +75,8 @@ class Person(__RCLS):
         super().__init__(**kwargs)
 
         #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+
+    @singleton
+    def name(self):
+        """To test Relation.singleton decorator"""
+        return self.last_name

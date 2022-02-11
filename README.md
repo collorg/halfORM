@@ -98,8 +98,10 @@ True
 To work with a table of your database, you must instanciate the corresponding class:
 
 ```python
-Person = halftest.get_relation_class('actor.person')
-PostComment = halftest.get_relation_class('blog.view.post_comment')
+class Person(halftest.get_relation_class('actor.person')):
+    pass
+class PostComment(halftest.get_relation_class('blog.view.post_comment')):
+    pass
 ```
 
 The argument passed to `get_relation_class` is as string of the form:
@@ -289,7 +291,7 @@ You can also get a subset of the attributes:
 
 The `get` method returns an object whose fields are constrained with the values of the corresponding row in the database.
 It raises an [ExpectedOneError](https://github.com/collorg/halfORM/blob/master/half_orm/relation_errors.py)
-Exception if 0 or more than 1 rows match the intention.
+Exception if 0 or more than 1 rows match the intention. The returned object is a singleton (see below).
 
 ```py
 gaston = Person(last_name='Lagaffe').get()
@@ -302,7 +304,66 @@ people = Person(last_name='Lagaffe')
 if people.is_empty() or len(people) > 1:
     raise ExcpetedOneError
 gaston = Person(**next(people.select()))
+gaston.is_singleton = True
 ```
+
+### Is it a set? Is it an element of the set?
+
+Let's go back to our definition of the class `Person`. We would like to write a property that
+returns the name of **a** person. 
+
+```py
+class Person(halftest.get_relation_class('actor.person')):
+    @property
+    def name(self):
+        return f'{self.first_name} {self.last_name}'
+```
+
+Used in the following context, the `name` property wouldn't make much sens:
+
+```py
+pers = Person(last_name='Lagaffe')
+pers.name
+# 'None Lagaffe'
+```
+
+In this case, you can use the `@singleton` decorator to ensure that the constraint references one and only one element:
+
+```py
+class Person(halftest.get_relation_class('actor.person')):
+    @property
+    @singleton
+    def name(self):
+        return f'{self.first_name} {self.last_name}'
+
+pers = Person(last_name='Lagaffe')
+pers.name
+# 'Gaston Lagaffe'
+```
+
+If more than one person has *Lagaffe* as last name in the `actor.person` table, a `NotASingletonError` exception would be raised:
+
+```
+half_orm.relation_errors.NotASingletonError: Not a singleton. Got X tuples
+```
+
+You can also get or set the singleton value. Be careful when using this possiblity. Here is a common usage:
+
+```py
+class Person(halftest.get_relation_class('actor.person')):
+    # ...
+    def do_something(self):
+        for elt in self.select():
+            elt.is_singleton = True
+            elt.name
+```
+
+This example works for two reasons:
+
+1. `select` is called without argument ensuring that
+all columns are retreived from the database,
+2. The constraints of the `actor.person` table make it
+a set.
 
 ## Update
 
@@ -314,8 +375,8 @@ In the following example, we capitalize the last name of all people whose second
 ```python
 @persons.Transaction
 def upper_a(persons):
-    for d_pers in persons.select():
-        pers = Person(id=d_pers['id'])
+    for d_pers in persons.select('id'):
+        pers = Person(**d_pers)
         pers.update(last_name=d_pers['last_name'].upper())
 
 upper_a(_a_persons)
@@ -326,8 +387,8 @@ upper_a(_a_persons)
 ```python
 @persons.Transaction
 def upper_a(persons):
-    # Won't work!
     for pers in persons.select():
+        # Won't work (pers is a dict)!
         pers.update(last_name=pers['last_name'].upper())
 
 upper_a(_a_persons)
