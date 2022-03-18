@@ -30,7 +30,8 @@ from collections import OrderedDict
 from configparser import ConfigParser
 from os import environ
 
-CONF_DIR = environ.get('HALFORM_CONF_DIR', '/etc/half_orm')
+CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
+
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
