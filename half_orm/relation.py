@@ -899,7 +899,7 @@ def __exit__(self, *exc):
     """
     return False
 
-def singleton(fn):
+def singleton(fn, *args, **kwargs):
     """Decorator. Enforces the relation to define a singleton.
 
     _is_singleton is set by Relation.get.
@@ -908,10 +908,10 @@ def singleton(fn):
     @wraps(fn)
     def wrapper(self):
         if self._is_singleton:
-            return fn(self)
+            return fn(self, *args, **kwargs)
         try:
             self = self.get()
-            return fn(self)
+            return fn(self, *args, **kwargs)
         except relation_errors.ExpectedOneError as err:
             raise relation_errors.NotASingletonError(err)
     return wrapper
