@@ -899,14 +899,14 @@ def __exit__(self, *exc):
     """
     return False
 
-def singleton(fn, *args, **kwargs):
+def singleton(fn):
     """Decorator. Enforces the relation to define a singleton.
 
     _is_singleton is set by Relation.get.
     _is_singleton is unset as soon as a Field is set.
     """
     @wraps(fn)
-    def wrapper(self):
+    def wrapper(self, *args, **kwargs):
         if self._is_singleton:
             return fn(self, *args, **kwargs)
         try:
