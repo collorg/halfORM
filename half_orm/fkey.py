@@ -21,6 +21,7 @@ class FKey:
         self.__confupdtype = confupdtype
         self.__confdeltype = confdeltype
         self.__fk_fqrn = ".".join([f'"{elt}"' for elt in fk_sfqrn])
+        self.__fields_names = fields
         self.__fields = [f'"{name}"' for name in fields]
 
     def __get_fk_qrn(self):
@@ -125,13 +126,19 @@ class FKey:
             return self.__fields, self.to_._prep_select(*self.fk_names)
         return None
 
-    def __get_fk_names(self):
-        """Returns the names of the fields in the foreign table."""
+    @property
+    def fk_names(self):
+        """Returns the names of the fields composing the foreign key in the foreign table."""
         return self.__fk_names
-    def __set_fk_names(self, fk_names):
+    @fk_names.setter
+    def fk_names(self, fk_names):
         """Sets the names of the fields in the foreign table."""
         self.__fk_names = fk_names
-    fk_names = property(__get_fk_names, __set_fk_names)
+
+    @property
+    def names(self):
+        "Returns the names of the fields composing the foreign key in the table"
+        return self.__fields_names
 
     def __repr__(self):
         """Representation of a foreign key

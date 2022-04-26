@@ -778,7 +778,7 @@ def join(self, *f_rel):
         for fkey_12 in ref._fkeys:
             remote1 = ref._fkeys[fkey_12]
             if remote1().__class__ == f_relation.__class__:
-                remote1.set(f_relation)
+                remote1.set(f_relation())
                 fkey_found = True
                 f_relation_fk_names = remote1.fk_names
                 break
@@ -787,6 +787,7 @@ def join(self, *f_rel):
         for fkey_21 in f_relation._fkeys:
             remote = f_relation._fkeys[fkey_21]
             if remote().__class__ == ref.__class__:
+                fkey_found = True
                 relation1_pk_names = remote.fk_names
                 break
 
@@ -803,9 +804,19 @@ def join(self, *f_rel):
                 res_remote[key].append(to_str(elt[fields[0]]))
             else:
                 res_remote[key].append({key: to_str(elt[key]) for key in fields})
-        for delt in res:
-            keyr = tuple(delt[key] for key in relation1_pk_names)
-            delt[name] = res_remote.get(keyr, [])
+
+        if relation1_pk_names:
+            for delt in res:
+                keyr = tuple(delt[key] for key in relation1_pk_names)
+                delt[name] = res_remote.get(keyr, [])
+        if f_relation_fk_names:
+            d_res = {
+                tuple(elt[selt] for selt in remote1.names): elt
+                for elt in res
+                }
+            for elt in d_res:
+                d_res[elt][name] = res_remote[elt]
+
     return res
 
 def __set__op__(self, op_=None, right=None):
