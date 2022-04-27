@@ -519,25 +519,34 @@ g_events = gaston._fkeys['_reverse_fkey_halftest_blog_event_author_first_name_au
 g_posts = gaston._fkeys['_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date']()
 ```
 
-## The *`join`* method
+## The *`join`* method [WIP]
 
-The *`join`* method allows to integrate the data associated to a Relation object in the result obtained by the *`select`* method.
+The *`join`* method allows you to integrate the data associated to a Relation object in the result obtained by the *`select`* method by using foreign keys of the object or referencing the object.
 
 Unlike the *`select`* method (which is a generator), the *`join`* method returns a list.
+
+It takes a list of tuples each having two or three elements:
+
+- a remote Relation object which must be reachable using a direct or "reverse" foreign key,
+- the name of the key under which the associated data would be stored,
+- an optional list of columns (str[]) or the name of a column (str) to be extracted from the
+  remote object.
+
+  If the third argument is omitted, all columns are retreived.
 
 The following code
 ```#python
 lagaffe = Person(last_name='Lagaffe')
 res = lagaffe.join(
     (Comment(), 'comments', ['id', 'post_id']),
-    (Post(), 'posts', ['id'])
+    (Post(), 'posts', 'id')
 )
 ```
 would return the list of people named `Lagaffe` with two
 additional attributes : `comments` and `posts`.
 
 The data associated with `comments` is a list of dictionaries whose keys are 'id' and 'post_id'.
-The data associated  with  `posts` is a simple list of values.
+The data associated  with  `posts` is a simple list of values corresponding to the 'id' column.
 
 ## Last: SQL queries
 

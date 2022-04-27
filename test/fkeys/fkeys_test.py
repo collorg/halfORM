@@ -12,6 +12,11 @@ class Test(TestCase):
         self.pers = halftest.pers
         self.post = halftest.post
         self.comment = halftest.comment
+        aa = self.pers(last_name='aa')
+        assert(len(aa) == 1)
+
+    def tearDown(self):
+        pass
 
     def test_post_fkeys_names(self):
         self.assertEqual(
