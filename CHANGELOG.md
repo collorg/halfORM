@@ -1,3 +1,21 @@
+# 0.6.1 (2022-05-04)
+
+* [Transaction] Fix #6. Autocommit mode stays at False on rollback. (643f500)
+
+## Breaking change
+
+There is a bug in the previous versions of the Transaction class. 
+If you use the Transaction class, **please upgrade to this release**.
+
+# 0.5.14 (2022-05-04)
+
+* [Transaction] Fix #6. Autocommit mode stays at False on rollback. (643f500)
+
+## Breaking change
+
+There is a bug in the previous versions of the Transaction class. 
+If you use the Transaction class, **please upgrade to this release**.
+
 # 0.6.0 (2022-04-28)
 
 * [Breaking change] Relation.join. (fdb4be8)
@@ -8,7 +26,7 @@
 `Relation.join` now accepts either a string or a list of strings.
 
 ```
-lagaffe.join(Post(), 'posts', ['id'])
+lagaffe.join((Post(), 'posts', ['id']))
 ```
 
 now returns `[{'id': value1}, {'id': value2}, ...]` instead of `[value1, value2, ...]`. It must be replaced by:
