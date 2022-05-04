@@ -22,7 +22,7 @@ class Transaction:
     @gaston.Transaction
     def do_something(person):
         #... code to be done
-    do_somethin(person)
+    do_somethin(gaston)
     ```
     Every SQL commands executed in the do_something function will be put in a
     transaction and commited or rolled back at the end of the function.
@@ -37,7 +37,7 @@ class Transaction:
     def first(gaston):
         # ... do something
         second(gaston)
-    first()
+    first(gaston)
     ```
     Here second is called by first and both function are played in the same
     transaction.
@@ -64,7 +64,7 @@ class Transaction:
                 relation._model._connection.autocommit = True
         except Exception as err:
             sys.stderr.write(f"Transaction error: {err}\nRolling back!\n")
-            self.__level = 0
+            Transaction.__level = 0
             relation._model._connection.rollback()
             relation._model._connection.autocommit = True
             raise err
