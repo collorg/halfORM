@@ -90,7 +90,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE actor.person (
     id integer DEFAULT nextval('actor.id_person'::regclass) NOT NULL,
-    first_name text NOT NULL,
+    first_name text UNIQUE NOT NULL,
     last_name text NOT NULL,
     birth_date date NOT NULL
 );
