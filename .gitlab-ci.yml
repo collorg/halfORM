@@ -5,6 +5,7 @@ stages:
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  HALFORM_CONF_DIR: "$CI_PROJECT_DIR/.config"
 
 cache:
   paths:
@@ -23,11 +24,13 @@ before_script:
   - virtualenv venv
   - source venv/bin/activate
   - pip install .
+  - pip install pytest
 
-test-job:
-  stage:
-    test
+test:
+  stage: test
+  image: python:${PYVERSION}-bullseye
   script:
-    - pip install tox  # you can also use tox
-    - tox -e py37
-    - tox -e py39
+    - pytest
+  parallel:
+    matrix:
+      - PYVERSION: ["3.6", "3.7", "3.8", "3.9", "3.10"]
