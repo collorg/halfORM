@@ -1,36 +1,54 @@
-image: python:3.7-bullseye # python3.7 & 3.9
+image: python:${PYVERSION}-bullseye
 
 stages:
   - test
+  - build
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   HALFORM_CONF_DIR: "$CI_PROJECT_DIR/.config"
+  GIT_STRATEGY: clone
 
-cache:
-  paths:
-    - .cache/pip
-    - venv/
+.before_script_template: &test
+  before_script:
+    - apt-get update
+    - apt-get install -y postgresql postgresql-plpython3
+    - service postgresql start
+    - su - postgres -c "psql template1 -c \"create user halftest with password 'halftest';\" "
+    - su - postgres -c "createdb halftest -O halftest"
+    - su - postgres -c "psql halftest -f $CI_PROJECT_DIR/test/sql/halftest.sql"
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install .
+    - pip install pytest
 
-before_script:
-  - apt-get update
-  - apt-get install -y postgresql postgresql-plpython3
-  - service postgresql start
-  - su - postgres -c "psql template1 -c \"create user halftest with password 'halftest';\" "
-  - su - postgres -c "createdb halftest -O halftest"
-  - su - postgres -c "psql halftest -f $CI_PROJECT_DIR/test/sql/halftest.sql"
-  - python --version  # For debugging
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
-  - pip install .
-  - pip install pytest
+.before_script_template: &build
+  before_script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install .
+    - pip install build
 
 test:
   stage: test
-  image: python:${PYVERSION}-bullseye
-  script:
-    - pytest
+  <<: *test
   parallel:
     matrix:
       - PYVERSION: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+  script:
+    - pytest
+
+build:
+  stage: build
+  <<: *build
+  parallel:
+    matrix:
+      - PYVERSION: ["3.10"]
+  script:
+    python -m build
+  artifacts:
+    paths:
+      - "$CI_PROJECT_DIR/dist"
+    expire_in: 1 week
