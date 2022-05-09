@@ -133,14 +133,14 @@ class Field():
         "Returns the SQL type of the field"
         return self.__metadata['fieldtype']
 
-    def __get_unaccent(self):
+    @property
+    def unaccent(self):
         return self.__unaccent
-    def __set_unaccent(self, value):
+    @unaccent.setter
+    def unaccent(self, value):
         if not isinstance(value, bool):
             raise RuntimeError('unaccent argument must be of boolean type!')
         self.__unaccent = value
-
-    unaccent = property(__get_unaccent, __set_unaccent)
 
     def comp(self):
         "Returns the comparator associated to the value."

@@ -80,13 +80,14 @@ class FKey:
         """Return if the foreign key is set (boolean)."""
         return self.__is_set
 
-    def __get_to(self):
+    @property
+    def to(self):
         """Returns the destination relation of the fkey."""
         return self.__fk_to
-    def __set_to(self, to_):
+    @to.setter
+    def to(self, to_):
         """Sets the destination relation of the fkey."""
         self.__fk_to = to_
-    to_ = property(__get_to, __set_to)
 
     @property
     def fk_fqrn(self):
@@ -106,7 +107,7 @@ class FKey:
         fkey interface: frel, from_, to_, fields, fk_names
         """
         from_ = self.__fk_from
-        to_ = self.to_
+        to_ = self.to
         if id(from_) == id(to_):
             raise RuntimeError("You can't join a relation with itself!")
         orig_rel_id = f'r{orig_rel.id_}'

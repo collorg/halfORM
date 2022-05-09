@@ -43,43 +43,46 @@ from half_orm import relation_errors
 from half_orm.transaction import Transaction
 from half_orm.field import Field
 
-class SetOp:
-    """SetOp class stores the set operations made on the Relation class objects
+class SetOperators:
+    """SetOperators class stores the set operations made on the Relation class objects
 
-    - __op is one of {'or', 'and', 'sub', 'neg'}
+    - __operator is one of {'or', 'and', 'sub', 'neg'}
     - __right is a Relation object. It can be None if the operator is 'neg'.
     """
-    def __init__(self, left, op=None, right=None):
+    def __init__(self, left, operator=None, right=None):
         self.__left = left
-        self.__op = op
+        self.__operator = operator
         self.__right = right
 
-    def __get_op(self):
-        """Property returning the __op value."""
-        return self.__op
-    def __set_op(self, op_):
+    @property
+    def operator(self):
+        """Property returning the __operator value."""
+        return self.__operator
+    @operator.setter
+    def operator(self, operator):
         """Set operator setter."""
-        self.__op = op_
-    op_ = property(__get_op, __set_op)
+        self.__operator = operator
 
-    def __get_left(self):
+    @property
+    def left(self):
         """Returns the left object of the set operation."""
         return self.__left
-    def __set_left(self, left):
+    @left.setter
+    def left(self, left):
         """left operand (relation) setter."""
         self.__left = left
-    left = property(__get_left, __set_left)
 
-    def __get_right(self):
+    @property
+    def right(self):
         """Property returning the right operand (relation)."""
         return self.__right
-    def __set_right(self, right):
+    @right.setter
+    def right(self, right):
         """right operand (relation) setter."""
         self.__right = right
-    right = property(__get_right, __set_right)
 
     def __repr__(self):
-        return f"{self.__op} {self.__right and self.__right._fqrn or None}"
+        return f"{self.__operator} {self.__right and self.__right._fqrn or None}"
 
 class Relation:
     """Base class of Table and View classes (see _factory)."""
@@ -104,7 +107,7 @@ def __init__(self, **kwargs):
     self.__query_type = None
     self.__sql_query = []
     self.__sql_values = []
-    self.__set_op = SetOp(self)
+    self.__set_operators = SetOperators(self)
     self.__select_params = {}
     self.__id_cast = None
     self.__cursor = self._model._connection.cursor()
@@ -158,18 +161,18 @@ def id_(self):
     """
     return self.__id_cast or id(self)
 
-def __get_only(self):
+@property
+def only(self):
     "Returns the value of self.__only"
     return self.__only
-def __set_only(self, value):
+@only.setter
+def only(self, value):
     """Set the value of self.__only. Restrict the values of a query to
     the elements of the relation (no inherited values).
     """
     if not value in {True, False}:
         raise ValueError(f'{value} is not a bool!')
     self.__only = value
-
-only = property(__get_only, __set_only)
 
 def __set_fields(self):
     """Initialise the fields of the relation."""
@@ -390,7 +393,7 @@ def is_set(self):
     joined_to = False
     for _, jt_ in self._joined_to.items():
         joined_to |= jt_.is_set()
-    return (joined_to or bool(self.__set_op.op_) or bool(self.__neg) or
+    return (joined_to or bool(self.__set_operators.operator) or bool(self.__neg) or
             bool({field for field in self._fields.values() if field.is_set()}))
 
 def __get_set_fields(self):
@@ -404,16 +407,16 @@ def __walk_op(self, rel_id_, out=None, _fields_=None):
     if out is None:
         out = []
         _fields_ = []
-    if self.__set_op.op_:
+    if self.__set_operators.operator:
         if self.__neg:
             out.append("not (")
         out.append("(")
-        left = self.__set_op.left
+        left = self.__set_operators.left
         left.__query_type = self.__query_type
         left.__walk_op(rel_id_, out, _fields_)
-        if self.__set_op.right is not None:
-            out.append(f" {self.__set_op.op_}\n    ")
-            right = self.__set_op.right
+        if self.__set_operators.right is not None:
+            out.append(f" {self.__set_operators.operator}\n    ")
+            right = self.__set_operators.right
             right.__query_type = self.__query_type
             right.__walk_op(rel_id_, out, _fields_)
         out.append(")")
@@ -434,7 +437,7 @@ def __join(self, orig_rel, deja_vu):
             #sys.stderr.write(f"déjà vu in from! {fk_rel._fqrn}\n")
             continue
         deja_vu[fk_rel.id_].append((fk_rel, fkey))
-        if fk_rel.__set_op.op_:
+        if fk_rel.__set_operators.operator:
             fk_rel.__get_from(self.id_)
         _, where, values = fk_rel.__where_args()
         where = f" and\n    {where}"
@@ -730,7 +733,7 @@ def cast(self, qrn):
     new = self._model._import_class(qrn)(**self._to_dict_val_comp())
     new.__id_cast = id(self)
     new._joined_to = self._joined_to
-    new.__set_op = self.__set_op
+    new.__set_operators = self.__set_operators
     return new
 
 def join(self, *f_rels):
@@ -835,7 +838,7 @@ def join(self, *f_rels):
 
     return res
 
-def __set__op__(self, op_=None, right=None):
+def __set__op__(self, operator=None, right=None):
     """Si l'opérateur du self est déjà défini, il faut aller modifier
     l'opérateur du right ???
     On crée un nouvel objet sans contrainte et on a left et right et opérateur
@@ -849,12 +852,12 @@ def __set__op__(self, op_=None, right=None):
             new._joined_to[fkey] = rel
     new = self(**self._to_dict_val_comp())
     new.__id_cast = self.__id_cast
-    if op_:
-        new.__set_op.left = self
-        new.__set_op.op_ = op_
+    if operator:
+        new.__set_operators.left = self
+        new.__set_operators.operator = operator
     dct_join = self._joined_to
     if right is not None:
-        new.__set_op.right = right
+        new.__set_operators.right = right
         dct_join.update(right._joined_to)
     check_fk(new, dct_join)
     return new
@@ -878,7 +881,7 @@ def __isub__(self, right):
     return self
 
 def __neg__(self):
-    new = self.__set__op__(self.__set_op.op_, self.__set_op.right)
+    new = self.__set__op__(self.__set_operators.operator, self.__set_operators.right)
     new.__neg = not self.__neg
     return new
 
@@ -966,7 +969,6 @@ COMMON_INTERFACE = {
     'cast': cast,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
-    '__set_only': __set_only,
     'only': only,
     'is_empty': is_empty,
     'group_by':group_by,
