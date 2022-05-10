@@ -17,13 +17,13 @@ class Test(TestCase):
 
     def test_relation_instanciation(self):
         person = halftest.relation("actor.person")
-        self.assertEqual(person._fqrn, '"halftest"."actor"."person"')
+        self.assertEqual(person._fqrn, '"halftest":"actor"."person"')
         post = halftest.relation("blog.post")
-        self.assertEqual(post._fqrn, '"halftest"."blog"."post"')
+        self.assertEqual(post._fqrn, '"halftest":"blog"."post"')
         person = halftest.relation("blog.comment")
-        self.assertEqual(person._fqrn, '"halftest"."blog"."comment"')
+        self.assertEqual(person._fqrn, '"halftest":"blog"."comment"')
         person = halftest.relation("blog.view.post_comment")
-        self.assertEqual(person._fqrn, '"halftest"."blog.view"."post_comment"')
+        self.assertEqual(person._fqrn, '"halftest":"blog.view"."post_comment"')
 
     def test_disconnect(self):
         "it should disconnect"

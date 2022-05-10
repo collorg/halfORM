@@ -2,6 +2,8 @@
 PostgreSQL database.
 """
 
+from collections import OrderedDict
+
 REQUEST = """
 SELECT
     a.attrelid AS tableid,
@@ -18,11 +20,12 @@ SELECT
     a.attnum AS fieldnum,
     NOT( a.attislocal ) AS inherited,
     cn_uniq.contype AS uniq,
+    cn_uniq.conkey as pkeynum,
     a.attnotnull OR NULL AS notnull,
     cn_pk.contype AS pkey,
     cn_fk.contype AS fkey,
     cn_fk.conname AS fkeyname,
-    cn_fk.conkey AS keynum,
+    cn_fk.conkey AS lfkeynum,
     cn_fk.confrelid AS fkeytableid,
     cn_fk.confkey AS fkeynum,
     cn_fk.confupdtype as fkey_confupdtype,
@@ -79,6 +82,7 @@ GROUP BY
     a.attislocal,
     pt.typname,
     cn_uniq.contype,
+    cn_uniq.conkey,
     a.attnotnull,
     cn_pk.contype,
     cn_fk.contype,
@@ -91,3 +95,116 @@ GROUP BY
 ORDER BY
     n.nspname, c.relname, a.attnum
 """
+
+class Meta(dict):
+    __d_meta = {}
+
+    @classmethod
+    def deja_vu(cls, dbname):
+        return dbname in cls.__d_meta
+
+    @classmethod
+    def load(cls, dbname, meta):
+        cls.__d_meta[dbname] = meta
+
+    def __getitem__(self, key):
+        return Meta.__d_meta.__getitem__(key)
+
+    def __setitem__(self, key, val):
+        Meta.__d_meta.__setitem__(key, val)
+
+    def __repr__(self):
+        dictrepr = dict.__repr__(self.__d_meta)
+        return f'{type(self).__name__}({dictrepr})'
+  
+    def update(self, *args, **kwargs):
+        for key, value in dict(*args, **kwargs).items():
+            self.__d_meta[key] = value
+
+class PgMeta:
+    meta = Meta()
+    def __init__(self, connection, dbname, relations):
+        self.__dbname = dbname
+        self.__relations = relations
+        if not PgMeta.meta.deja_vu(dbname):
+            self.__load_metadata(connection)
+
+    def metadata(self, dbname):
+        return self.meta[dbname].__metadata
+
+    @property
+    def relations(self):
+        return self.__relations
+
+    def __load_metadata(self, connection):
+        """Loads the metadata by querying the request in the pg_metaview
+        module.
+        """
+        metadata = {}
+        byname = metadata['byname'] = OrderedDict()
+        byid = metadata['byid'] = {}
+        with connection.cursor() as cur:
+            cur.execute(REQUEST)
+            all_ = [elt for elt in cur.fetchall()]
+            for dct in all_:
+                table_key = f'''"{self.__dbname}":"{dct['schemaname']}"."{dct['relationname']}"'''
+                tableid = dct['tableid']
+                description = dct['tabledescription']
+                if table_key not in byname:
+                    byid[tableid] = {}
+                    byid[tableid]['sfqrn'] = table_key
+                    byid[tableid]['fields'] = OrderedDict()
+                    byid[tableid]['fkeys'] = OrderedDict()
+                    byname[table_key] = OrderedDict()
+                    byname[table_key]['description'] = description
+                    byname[table_key]['fields'] = OrderedDict()
+                    byname[table_key]['fkeys'] = OrderedDict()
+                    byname[table_key]['fields_by_num'] = OrderedDict()
+            for dct in all_:
+                tableid = dct['tableid']
+                table_key = byid[tableid]['sfqrn']
+                fieldname = dct.pop('fieldname')
+                fieldnum = dct['fieldnum']
+                tablekind = dct.pop('tablekind')
+                inherits = [byid[int(elt.split(':')[1])]['sfqrn']
+                            for elt in dct.pop('inherits') if elt is not None]
+                byname[table_key]['tablekind'] = tablekind
+                byname[table_key]['inherits'] = inherits
+                byname[table_key]['fields'][fieldname] = dct
+                byname[table_key]['fields_by_num'][fieldnum] = dct
+                byid[tableid]['fields'][fieldnum] = fieldname
+                if (tablekind, table_key) not in self.__relations['list']:
+                    self.__relations['list'].append((tablekind, table_key))
+            for dct in all_:
+                tableid = dct['tableid']
+                table_key = byid[tableid]['sfqrn']
+                fkeyname = dct['fkeyname']
+                if fkeyname and not fkeyname in byname[table_key]['fkeys']:
+                    fkeytableid = dct['fkeytableid']
+                    ftable_key = byid[fkeytableid]['sfqrn']
+                    fields = [byid[tableid]['fields'][num] for num in dct['lfkeynum']]
+                    confupdtype = dct['fkey_confupdtype']
+                    confdeltype = dct['fkey_confdeltype']
+                    ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
+                    rev_fkey_name = f'_reverse_fkey_{table_key}.{".".join(fields)}'
+                    rev_fkey_name = rev_fkey_name.replace(".", "_").replace(":", "_").replace('"', '')
+                    byname[table_key]['fkeys'][fkeyname] = (
+                        ftable_key, ffields, fields, confupdtype, confdeltype)
+                    byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
+
+        self.__relations['list'].sort()
+        self.__metadata = metadata
+        PgMeta.meta.load(self.__dbname, self)
+
+    def has_relation(self, dbname, qtn):
+        """Checks if the qtn is a relation in the database
+
+        @qtn is in the form <schema>.<table>
+        Returns True if the relation exists, False otherwise.
+        Also works for views and materialized views.
+        """
+        schema, table = qtn.rsplit('.', 1)
+        key = f'"{dbname}":"{schema}"."{table}"'
+        print('XXX key', key)
+        print('XXX keys', list(self.meta[dbname].__metadata['byname'].keys()))
+        return key in self.meta[dbname].__metadata['byname']

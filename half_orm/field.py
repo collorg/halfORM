@@ -3,7 +3,6 @@
 
 """This module provides the Field class."""
 
-import inspect
 import types
 from psycopg2.extensions import register_adapter, adapt
 

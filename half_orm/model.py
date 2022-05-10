@@ -26,18 +26,16 @@ About QRN and FQRN:
 
 import os
 import sys
-from collections import OrderedDict
 from configparser import ConfigParser
 from os import environ
-
-CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
-
-
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from half_orm import model_errors
 from half_orm.relation import _normalize_fqrn, _normalize_qrn, _factory
+from half_orm.pg_metaview import PgMeta
+
+CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 
 __all__ = ["Model", "camel_case"]
 
@@ -79,7 +77,6 @@ class Model:
         if bool(config_file) == bool(dbname):
             raise RuntimeError("You can't specify config_file with bdname!")
         self.__config_file = config_file
-        self.__config = {}
         self._dbinfo = {}
         self.__dbname = dbname
         if Model._deja_vu(dbname):
@@ -149,7 +146,6 @@ class Model:
 
         config = ConfigParser()
 
-        self.__config = dict(config.items('halfORM')) if config.has_section('halfORM') else {}
         if not config.read(
                 [os.path.join(CONF_DIR, self.__config_file)]):
             raise model_errors.MissingConfigFile(os.path.join(CONF_DIR, self.__config_file))
@@ -185,7 +181,8 @@ class Model:
             sys.stderr.write(f"{err}\n")
             sys.stderr.flush()
         self.__conn.autocommit = True
-        self.__metadata[self.__dbname] = self.__get_metadata()
+        self.___metadata = PgMeta(self.__conn, self.__dbname, self._relations_)
+        self.__metadata = self.___metadata.metadata(self.__dbname)
         self.__deja_vu[self.__dbname] = self
         self.__backend_pid = self.execute_query(
             "select pg_backend_pid()").fetchone()['pg_backend_pid']
@@ -216,68 +213,7 @@ class Model:
         """Returns the metadata of the database.
         Uses the Model.__metadata class dictionary.
         """
-        return self.__metadata[self.__dbname]
-
-    def __get_metadata(self):
-        """Loads the metadata by querying the request in the pg_metaview
-        module.
-        """
-        from .pg_metaview import REQUEST
-        metadata = {}
-        byname = metadata['byname'] = OrderedDict()
-        byid = metadata['byid'] = {}
-        with self._connection.cursor() as cur:
-            cur.execute(REQUEST)
-            all_ = [elt for elt in cur.fetchall()]
-            for dct in all_:
-                table_key = (
-                    self.__dbname,
-                    dct['schemaname'], dct['relationname'])
-                tableid = dct['tableid']
-                description = dct['tabledescription']
-                if table_key not in byname:
-                    byid[tableid] = {}
-                    byid[tableid]['sfqrn'] = table_key
-                    byid[tableid]['fields'] = OrderedDict()
-                    byid[tableid]['fkeys'] = OrderedDict()
-                    byname[table_key] = OrderedDict()
-                    byname[table_key]['description'] = description
-                    byname[table_key]['fields'] = OrderedDict()
-                    byname[table_key]['fkeys'] = OrderedDict()
-                    byname[table_key]['fields_by_num'] = OrderedDict()
-            for dct in all_:
-                tableid = dct['tableid']
-                table_key = byid[tableid]['sfqrn']
-                fieldname = dct.pop('fieldname')
-                fieldnum = dct['fieldnum']
-                tablekind = dct.pop('tablekind')
-                inherits = [byid[int(elt.split(':')[1])]['sfqrn']
-                            for elt in dct.pop('inherits') if elt is not None]
-                byname[table_key]['tablekind'] = tablekind
-                byname[table_key]['inherits'] = inherits
-                byname[table_key]['fields'][fieldname] = dct
-                byname[table_key]['fields_by_num'][fieldnum] = dct
-                byid[tableid]['fields'][fieldnum] = fieldname
-                if (tablekind, table_key) not in self._relations_['list']:
-                    self._relations_['list'].append((tablekind, table_key))
-            for dct in all_:
-                tableid = dct['tableid']
-                table_key = byid[tableid]['sfqrn']
-                fkeyname = dct['fkeyname']
-                if fkeyname and not fkeyname in byname[table_key]['fkeys']:
-                    fkeytableid = dct['fkeytableid']
-                    ftable_key = byid[fkeytableid]['sfqrn']
-                    fields = [byid[tableid]['fields'][num] for num in dct['keynum']]
-                    confupdtype = dct['fkey_confupdtype']
-                    confdeltype = dct['fkey_confdeltype']
-                    ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
-                    rev_fkey_name = f'_reverse_fkey_{"_".join(list(table_key) + fields).replace(".", "_")}'
-                    byname[table_key]['fkeys'][fkeyname] = (
-                        ftable_key, ffields, fields, confupdtype, confdeltype)
-                    byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
-
-        self._relations_['list'].sort()
-        return metadata
+        return self.__metadata
 
     def execute_query(self, query, values=()):
         """Execute a raw SQL query"""
@@ -292,8 +228,9 @@ class Model:
         @kwargs is a dictionary {field_name:value}
         """
         schema, table = qtn.rsplit('.', 1)
-        fqrn = '.'.join([self.__dbname, f'"{schema}"', table])
+        fqrn = f'{self.__dbname}:"{schema}".{table}'
         fqrn, _ = _normalize_fqrn(fqrn)
+        # print('XXX fqrn (get_relation_class)', fqrn)
         return _factory('Table', (), {'fqrn': fqrn, 'model': self})
 
     def has_relation(self, qtn):
@@ -303,14 +240,14 @@ class Model:
         Returns True if the relation exists, False otherwise.
         Also works for views and materialized views.
         """
-        schema, table = qtn.rsplit('.', 1)
-        return (self.__dbname, schema, table) in self.__metadata[self._dbname]['byname']
+        return self.___metadata.has_relation(self.__dbname, qtn)
 
     def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
         """
         stripped_qtn = qtn.replace('"', '')
         module_path = f'{scope or self._scope}.{stripped_qtn}'
+        # print('XXX qtn', qtn)
         class_name = camel_case(qtn.split('.')[-1])
         module = __import__(
             module_path, globals(), locals(), [class_name], 0)
@@ -328,37 +265,35 @@ class Model:
 
         Each line contains:
         - the relation type: 'r' relation, 'v' view, 'm' materialized view,
-        - the quoted FQRN (Fully qualified relation name) "<schema name>"."<relation name>"
+        - the quoted FQRN (Fully qualified relation name) <"db name">:"<schema name>"."<relation name>"
         - the list of the FQRN of the inherited relations.
 
         If a qualified relation name (<schema name>.<table name>) is
         passed, prints only the description of the corresponding relation.
         """
-        def get_fqrn(key):
-            "returns the quoted version of the FQRN"
-            return ".".join([f'"{elt}"' for elt in key[1:]])
 
         if not qrn:
             ret_val = []
-            entry = self.__metadata[self.__dbname]['byname']
+            entry = self.__metadata['byname']
             for key in entry:
                 inh = []
                 tablekind = entry[key]['tablekind']
-                fqrn = get_fqrn(key)
                 if entry[key]['inherits']:
-                    inh = [get_fqrn(elt) for elt in entry[key]['inherits']]
+                    inh = [elt for elt in entry[key]['inherits']]
                 if type_:
                     if tablekind != type_:
                         continue
-                ret_val.append((tablekind, fqrn, inh))
+                ret_val.append((tablekind, key, inh))
             return ret_val
-        fqrn = f'"{self.__dbname}".{_normalize_qrn(qrn=qrn)}'
+        fqrn = f'"{self.__dbname}":{_normalize_qrn(qrn=qrn)}'
+        print('XXX fqrn (desc)', fqrn)
         return str(_factory(
             'Table', (), {'fqrn': fqrn, 'model': self})())
 
     def __str__(self):
         out = []
-        entry = self.__metadata[self.__dbname]['byname']
+        print(self.__metadata)
+        entry = self.__metadata['byname']
         for key in entry:
             fqrn = ".".join([f'"{elt}"' for elt in key[1:]])
             out.append(f"{entry[key]['tablekind']} {fqrn}")

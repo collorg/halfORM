@@ -20,13 +20,14 @@ class FKey:
         self.__fk_to = None
         self.__confupdtype = confupdtype
         self.__confdeltype = confdeltype
-        self.__fk_fqrn = ".".join([f'"{elt}"' for elt in fk_sfqrn])
+        # print('XXX fk_sfqrn', fk_sfqrn)
+        self.__fk_fqrn = fk_sfqrn
         self.__fields_names = fields
         self.__fields = [f'"{name}"' for name in fields]
 
     def __get_fk_qrn(self):
         """Returns QRN from FQRN."""
-        return '.'.join(self.__fk_fqrn.split('.', 1)[1:])
+        return self.__fk_fqrn.split(':')[1]
 
     def __call__(self, __cast__=None, **kwargs):
         """Returns the relation on which the fkey is defined.
@@ -43,6 +44,7 @@ class FKey:
             f_cast = __cast__
         f_relation = get_rel(f_cast or f_qrn)(**kwargs)
         rev_fkey_name = f'_reverse_{f_relation.id_}'
+        # print('XXX rev_fkey_name', rev_fkey_name)
         f_relation._fkeys[rev_fkey_name] = FKey(
                 rev_fkey_name,
                 f_relation,

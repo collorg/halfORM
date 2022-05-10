@@ -176,6 +176,7 @@ def only(self, value):
 
 def __set_fields(self):
     """Initialise the fields of the relation."""
+    # print('XXX __set_fields (self.__fqrn)', self.__sfqrn)
     fields_metadata = self._model._metadata['byname'][self.__sfqrn]['fields']
 
     for field_name, f_metadata in fields_metadata.items():
@@ -448,7 +449,7 @@ def __join(self, orig_rel, deja_vu):
 
 def __sql_id(self):
     """Returns the FQRN as alias for the sql query."""
-    return f"{self._fqrn} as r{self.id_}"
+    return f"{self._qrn} as r{self.id_}"
 
 def __get_from(self, orig_rel=None, deja_vu=None):
     """Constructs the __sql_query and gets the __sql_values for self."""
@@ -665,7 +666,7 @@ def update(self, update_all=False, **kwargs):
         fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
         where = f"{where} and {fk_where}"
         values += fk_values
-    query = query_template.format(self._fqrn, what, where)
+    query = query_template.format(self._qrn, what, where)
     self.__execute(query, tuple(values))
     for field_name, value in update_args.items():
         self._fields[field_name].set(value)
@@ -698,7 +699,7 @@ def insert(self):
         fields_names += fk_fields
         what_to_insert += [f"({query})" for query in fk_query]
         values += fk_values
-    query = query_template.format(self._fqrn, ", ".join(fields_names), ", ".join(what_to_insert))
+    query = query_template.format(self._qrn, ", ".join(fields_names), ", ".join(what_to_insert))
     self.__execute(query, tuple(values))
     return self.__cursor.fetchall()
 
@@ -721,7 +722,7 @@ def delete(self, delete_all=False):
         fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
         where = f"{where} and {fk_where}"
         values += fk_values
-    query = query_template.format(self._fqrn, where)
+    query = query_template.format(self._qrn, where)
     self.__execute(query, tuple(values))
 
 def __call__(self, **kwargs):
@@ -795,8 +796,10 @@ def join(self, *f_rels):
         f_relation_fk_names = []
         fkey_found = False
         for fkey_12 in ref._fkeys:
+            print('XXX fkey_12', fkey_12)
             remote1 = ref._fkeys[fkey_12]
-            if remote1().__class__ == f_relation.__class__:
+            print('XXX remote1', remote1().__class__, f_relation.__class__, id(remote1().__class__), id(f_relation.__class__))
+            if remote1().__class__ is f_relation.__class__:
                 remote1.set(f_relation())
                 fkey_found = True
                 f_relation_fk_names = remote1.fk_names
@@ -804,7 +807,9 @@ def join(self, *f_rels):
 
         relation1_pk_names = []
         for fkey_21 in f_relation._fkeys:
+            print('XXX fkey_21', fkey_21)
             remote = f_relation._fkeys[fkey_21]
+            print('XXX remote', remote().__class__, ref.__class__, remote().__class__ == ref.__class__)
             if remote().__class__ == ref.__class__:
                 fkey_found = True
                 relation1_pk_names = remote.fk_names
@@ -1022,7 +1027,7 @@ VIEW_INTERFACE = COMMON_INTERFACE
 MVIEW_INTERFACE = COMMON_INTERFACE
 FDATA_INTERFACE = COMMON_INTERFACE
 
-def _factory(class_name, bases, dct, reload=False):
+def _factory(class_name, bases, dct):
     """Function to build a Relation class corresponding to a PostgreSQL
     relation.
     """
@@ -1038,32 +1043,34 @@ def _factory(class_name, bases, dct, reload=False):
     tbl_attr['__cls_fkeys_dict'] = {}
     tbl_attr['__base_classes'] = set()
     tbl_attr['__fkeys_properties'] = False
+    print('XXX dct[fqrn]', dct['fqrn'])
     tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
-    tbl_attr['_qrn'] = tbl_attr['_fqrn'].split('.', 1)[1].replace('"', '')
+    # print('XXX tbl_attr[_fqrn]', tbl_attr['_fqrn'])
+    tbl_attr['_qrn'] = tbl_attr['_fqrn'].split(':')[1].replace('"', '')
+    # print('XXX tbl_attr[_qrn]', tbl_attr['_qrn'])
+
     attr_names = ['_dbname', '_schemaname', '_relationname']
     for i, name in enumerate(attr_names):
         tbl_attr[name] = sfqrn[i]
     dbname = tbl_attr['_dbname']
     tbl_attr['_model'] = model.Model._deja_vu(dbname)
-    rel_class = model.Model._relations_['classes'].get(tuple(sfqrn))
+    rel_class = model.Model._relations_['classes'].get(tbl_attr['_fqrn'])
     if rel_class:
         return rel_class
-    if not tbl_attr['_model']:
-        tbl_attr['_model'] = model.Model(dbname=dbname)
     try:
-        metadata = tbl_attr['_model']._metadata['byname'][tuple(sfqrn)]
-    except KeyError:
-        raise model_errors.UnknownRelation(sfqrn)
+        metadata = tbl_attr['_model']._metadata['byname'][tbl_attr['_fqrn']]
+    except KeyError as exc:
+        raise model_errors.UnknownRelation(sfqrn) from exc
     if metadata['inherits']:
         metadata['inherits'].sort()
         bases = []
     for parent_fqrn in metadata['inherits']:
-        parent_fqrn = ".".join([f'"{elt}"' for elt in parent_fqrn])
+        # print('XXX parent_fqrn', parent_fqrn)
         bases.append(_factory(None, None, {'fqrn': parent_fqrn}))
     tbl_attr['__metadata'] = metadata
     if dct.get('model'):
         tbl_attr['_model'] = dct['model']
-    tbl_attr['__sfqrn'] = tuple(sfqrn)
+    tbl_attr['__sfqrn'] = tbl_attr['_fqrn']
     rel_class_names = {
         'r': 'Table',
         'p': 'Partioned table',
@@ -1083,7 +1090,8 @@ def _factory(class_name, bases, dct, reload=False):
         tbl_attr[fct_name] = fct
     class_name = _gen_class_name(rel_class_names[kind], sfqrn)
     rel_class = type(class_name, tuple(bases), tbl_attr)
-    tbl_attr['_model']._relations_['classes'][tuple(sfqrn)] = rel_class
+    print('XXX sfqrn', tbl_attr['_fqrn'])
+    tbl_attr['_model']._relations_['classes'][tbl_attr['_fqrn']] = rel_class
     return rel_class
 
 def _normalize_fqrn(_fqrn):
@@ -1093,9 +1101,10 @@ def _normalize_fqrn(_fqrn):
     Dots are allowed only in the schema name.
     """
     _fqrn = _fqrn.replace('"', '')
-    dbname, schema_table = _fqrn.split('.', 1)
+    # print('XXX normalize fqtn', _fqrn)
+    dbname, schema_table = _fqrn.split(':')
     schemaname, tablename = schema_table.rsplit('.', 1)
-    return f'"{dbname}"."{schemaname}"."{tablename}"', (dbname, schemaname, tablename)
+    return f'"{dbname}":"{schemaname}"."{tablename}"', (dbname, schemaname, tablename)
 
 def _normalize_qrn(qrn):
     """
