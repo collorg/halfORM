@@ -1,4 +1,8 @@
-# 0.6.2 (2022-05-17)
+# 0.6.3 (2022-05-17)
+
+* [Fix] Regression in 0.6.2: dotted schema names were not handled properly. (0830a0c)
+
+# 0.6.2 (2022-05-17) DO-NOT-USE
 
 * [Fkeys] Fix insert, update and delete with constraints defined through foreign keys. (7bf9c77)
 * [META] Change keys and fqrn to "<db>":"<schema>"."<relation>" (eada1b3)
