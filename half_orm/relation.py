@@ -31,11 +31,13 @@ The following methods can be chained on the object before a select.
 
 from functools import wraps
 from collections import OrderedDict
-import datetime
-import sys
-import uuid
-import psycopg2
+from uuid import UUID
 from typing import Generator
+from datetime import date, datetime, time, timedelta
+import json
+import sys
+import psycopg2
+
 
 import yaml
 
@@ -176,7 +178,6 @@ def only(self, value):
 
 def __set_fields(self):
     """Initialise the fields of the relation."""
-    # print('XXX __set_fields (self.__fqrn)', self.__sfqrn)
     fields_metadata = self._model._metadata['byname'][self.__sfqrn]['fields']
 
     for field_name, f_metadata in fields_metadata.items():
@@ -188,6 +189,7 @@ def __set_fields(self):
 
 def __set_fkeys(self):
     """Initialisation of the foreign keys of the relation"""
+    #pylint: disable=import-outside-toplevel
     from half_orm.fkey import FKey
 
     fkeys_metadata = self._model._metadata['byname'][self.__sfqrn]['fkeys']
@@ -273,8 +275,8 @@ def group_by(self, yml_directive):
                 deja_vu_key.add(directive[key])
                 try:
                     res_elt.update({directive[key]:elt[key]})
-                except:
-                    raise relation_errors.UnknownAttributeError(key)
+                except KeyError as exc:
+                    raise relation_errors.UnknownAttributeError(key) from exc
             if isinstance(gdata, list):
                 different = None
                 for selt in gdata:
@@ -330,15 +332,14 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
     """Returns a JSON representation of the set returned by the select query.
     if kwargs, returns {res_field_name: [list of elements]}.update(kwargs)
     """
-    import json
 
     def handler(obj):
         """Replacement of default handler for json.dumps."""
         if hasattr(obj, 'isoformat'):
             return str(obj.isoformat())
-        if isinstance(obj, uuid.UUID):
+        if isinstance(obj, UUID):
             return str(obj)
-        if isinstance(obj, datetime.timedelta):
+        if isinstance(obj, timedelta):
             return obj.total_seconds()
         raise TypeError(
             f'Object of type {type(obj)} with value of {repr(obj)} is not JSON serializable')
@@ -352,7 +353,7 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
         res.update(kwargs)
     return json.dumps(res, default=handler)
 
-def to_dict(self, str_conv=False):
+def to_dict(self):
     """Returns a dictionary containing only the values of the fields
     that are set."""
     return {key:field.value for key, field in self._fields.items() if field.is_set()}
@@ -590,6 +591,7 @@ def __len__(self):
     except Exception as err:
         self._mogrify()
         self.__execute(query, vars_)
+        raise Exception from err
     return self.__cursor.fetchone()['count']
 
 def is_empty(self):
@@ -626,6 +628,7 @@ def count(self, *args, _distinct=False):
     except Exception as err:
         self._mogrify()
         self.__execute(query, vars_)
+        raise Exception from err
     return self.__cursor.fetchone()['count']
 
 def __update_args(self, **kwargs):
@@ -679,14 +682,15 @@ def __what_to_insert(self):
         fields_names = [
             f'"{name}"' for name, field in self._fields.items() if field.is_set()]
     fk_fields = []
-    fk_queries = []
+    fk_queries = ''
     fk_values = []
     for fkey in self._fkeys.values():
         fk_prep_select = fkey._prep_select()
         if fk_prep_select is not None:
+            fk_values += list(fkey.values()[0])
             fk_fields += fk_prep_select[0]
-            fk_queries.append(fk_prep_select[1][0])
-            fk_values += fk_prep_select[1][1]
+            fk_queries = ["%s" for _ in range(len(fk_values))]
+
     return fields_names, set_fields, fk_fields, fk_queries, fk_values
 
 def insert(self):
@@ -697,7 +701,7 @@ def insert(self):
     what_to_insert = ["%s" for _ in range(len(values))]
     if fk_fields:
         fields_names += fk_fields
-        what_to_insert += [f"({query})" for query in fk_query]
+        what_to_insert += fk_query
         values += fk_values
     query = query_template.format(self._qrn, ", ".join(fields_names), ", ".join(what_to_insert))
     self.__execute(query, tuple(values))
@@ -712,9 +716,10 @@ def delete(self, delete_all=False):
             f'Attempt to delete all rows from {self.__class__.__name__}'
             ' without delete_all being set to True!')
     query_template = "delete from {} {}"
+    _, values = self.__get_query(query_template)
     self.__query_type = 'delete'
-    _, where, values = self.__where_args()
-    _, values, fk_fields, fk_query, fk_values = self.__what_to_insert()
+    _, where, _ = self.__where_args()
+    _, _, fk_fields, fk_query, fk_values = self.__what_to_insert()
     where = f" where {where}"
     if where == "(1 = 1)" and not delete_all:
         raise RuntimeError
@@ -761,9 +766,6 @@ def join(self, *f_rels):
         Args:
             value (any): the value to return in string format.
         """
-        #pylint: disable=import-outside-toplevel
-        from uuid import UUID
-        from datetime import date, datetime, time, timedelta
 
         TO_PROCESS = {UUID, date, datetime, time, timedelta}
         if value.__class__ in TO_PROCESS:
@@ -796,9 +798,7 @@ def join(self, *f_rels):
         f_relation_fk_names = []
         fkey_found = False
         for fkey_12 in ref._fkeys:
-            print('XXX fkey_12', fkey_12)
             remote1 = ref._fkeys[fkey_12]
-            print('XXX remote1', remote1().__class__, f_relation.__class__, id(remote1().__class__), id(f_relation.__class__))
             if remote1().__class__ is f_relation.__class__:
                 remote1.set(f_relation())
                 fkey_found = True
@@ -807,9 +807,7 @@ def join(self, *f_rels):
 
         relation1_pk_names = []
         for fkey_21 in f_relation._fkeys:
-            print('XXX fkey_21', fkey_21)
             remote = f_relation._fkeys[fkey_21]
-            print('XXX remote', remote().__class__, ref.__class__, remote().__class__ == ref.__class__)
             if remote().__class__ == ref.__class__:
                 fkey_found = True
                 relation1_pk_names = remote.fk_names
@@ -819,7 +817,8 @@ def join(self, *f_rels):
             raise RuntimeError(f"No foreign key between {self._fqrn} and {f_relation._fqrn}!")
 
         inter = [{key: to_str(val) for key, val in elt.items()}
-            for elt in remote1().distinct().select(*([f'"{field}"' for field in fields] + f_relation_fk_names))]
+            for elt in remote1().distinct().select(
+                *([f'"{field}"' for field in fields] + f_relation_fk_names))]
         for elt in inter:
             key = tuple(elt[subelt] for subelt in f_relation_fk_names)
             if key not in res_remote:
@@ -927,31 +926,31 @@ def __enter__(self):
         return self
     return context(self)
 
-def __exit__(self, *exc):
+def __exit__(_, *__):
     """Context management exit
 
     Not much to do here.
     """
     return False
 
-def singleton(fn):
+def singleton(fct):
     """Decorator. Enforces the relation to define a singleton.
 
     _is_singleton is set by Relation.get.
     _is_singleton is unset as soon as a Field is set.
     """
-    @wraps(fn)
+    @wraps(fct)
     def wrapper(self, *args, **kwargs):
         if self._is_singleton:
-            return fn(self, *args, **kwargs)
+            return fct(self, *args, **kwargs)
         try:
             self = self.get()
-            return fn(self, *args, **kwargs)
+            return fct(self, *args, **kwargs)
         except relation_errors.ExpectedOneError as err:
             raise relation_errors.NotASingletonError(err)
     return wrapper
 
-def _debug(obj):
+def _debug(_):
     """For debug purpose"""
 
 #### END of Relation methods definition
@@ -1022,15 +1021,31 @@ COMMON_INTERFACE = {
     'singleton': singleton,
 }
 
+
 TABLE_INTERFACE = COMMON_INTERFACE
 VIEW_INTERFACE = COMMON_INTERFACE
 MVIEW_INTERFACE = COMMON_INTERFACE
 FDATA_INTERFACE = COMMON_INTERFACE
 
+REL_INTERFACES = {
+    'r': TABLE_INTERFACE,
+    'p': TABLE_INTERFACE,
+    'v': VIEW_INTERFACE,
+    'm': MVIEW_INTERFACE,
+    'f': FDATA_INTERFACE}
+
+REL_CLASS_NAMES = {
+    'r': 'Table',
+    'p': 'Partioned table',
+    'v': 'View',
+    'm': 'Materialized view',
+    'f': 'Foreign data'}
+
 def _factory(class_name, bases, dct):
     """Function to build a Relation class corresponding to a PostgreSQL
     relation.
     """
+    #pylint: disable=import-outside-toplevel
     from half_orm import model, model_errors
     def _gen_class_name(rel_kind, sfqrn):
         """Generates class name from relation kind and FQRN tuple"""
@@ -1043,17 +1058,11 @@ def _factory(class_name, bases, dct):
     tbl_attr['__cls_fkeys_dict'] = {}
     tbl_attr['__base_classes'] = set()
     tbl_attr['__fkeys_properties'] = False
-    print('XXX dct[fqrn]', dct['fqrn'])
     tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
-    # print('XXX tbl_attr[_fqrn]', tbl_attr['_fqrn'])
     tbl_attr['_qrn'] = tbl_attr['_fqrn'].split(':')[1].replace('"', '')
-    # print('XXX tbl_attr[_qrn]', tbl_attr['_qrn'])
 
-    attr_names = ['_dbname', '_schemaname', '_relationname']
-    for i, name in enumerate(attr_names):
-        tbl_attr[name] = sfqrn[i]
-    dbname = tbl_attr['_dbname']
-    tbl_attr['_model'] = model.Model._deja_vu(dbname)
+    tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], sfqrn)))
+    tbl_attr['_model'] = model.Model._deja_vu(tbl_attr['_dbname'])
     rel_class = model.Model._relations_['classes'].get(tbl_attr['_fqrn'])
     if rel_class:
         return rel_class
@@ -1065,32 +1074,17 @@ def _factory(class_name, bases, dct):
         metadata['inherits'].sort()
         bases = []
     for parent_fqrn in metadata['inherits']:
-        # print('XXX parent_fqrn', parent_fqrn)
         bases.append(_factory(None, None, {'fqrn': parent_fqrn}))
     tbl_attr['__metadata'] = metadata
     if dct.get('model'):
         tbl_attr['_model'] = dct['model']
     tbl_attr['__sfqrn'] = tbl_attr['_fqrn']
-    rel_class_names = {
-        'r': 'Table',
-        'p': 'Partioned table',
-        'v': 'View',
-        'm': 'Materialized view',
-        'f': 'Foreign data'}
-    kind = metadata['tablekind']
-    tbl_attr['__kind'] = rel_class_names[kind]
+    tbl_attr['__kind'] = REL_CLASS_NAMES[metadata['tablekind']]
     tbl_attr['_fkeys'] = []
-    rel_interfaces = {
-        'r': TABLE_INTERFACE,
-        'p': TABLE_INTERFACE,
-        'v': VIEW_INTERFACE,
-        'm': MVIEW_INTERFACE,
-        'f': FDATA_INTERFACE}
-    for fct_name, fct in rel_interfaces[kind].items():
+    for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
         tbl_attr[fct_name] = fct
-    class_name = _gen_class_name(rel_class_names[kind], sfqrn)
+    class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], sfqrn)
     rel_class = type(class_name, tuple(bases), tbl_attr)
-    print('XXX sfqrn', tbl_attr['_fqrn'])
     tbl_attr['_model']._relations_['classes'][tbl_attr['_fqrn']] = rel_class
     return rel_class
 
@@ -1101,7 +1095,6 @@ def _normalize_fqrn(_fqrn):
     Dots are allowed only in the schema name.
     """
     _fqrn = _fqrn.replace('"', '')
-    # print('XXX normalize fqtn', _fqrn)
     dbname, schema_table = _fqrn.split(':')
     schemaname, tablename = schema_table.rsplit('.', 1)
     return f'"{dbname}":"{schemaname}"."{tablename}"', (dbname, schemaname, tablename)

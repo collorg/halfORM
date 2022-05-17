@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
-import os.path
 from unittest import TestCase
 from psycopg2 import InterfaceError
 
 from ..init import halftest, model
-from half_orm.model import Model
 
 class Test(TestCase):
     def reset(self):

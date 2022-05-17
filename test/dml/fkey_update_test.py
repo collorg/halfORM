@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+#-*- coding:  utf-8 -*-
+
+import psycopg2
+from unittest import TestCase
+
+from ..init import halftest
+from half_orm import relation_errors, model
+
+class Test(TestCase):
+    def setUp(self):
+        self.pers = halftest.pers
+        self.post = halftest.post
+        self.comment = halftest.comment
+        self.aa = self.pers(last_name='aa')
+        assert(len(self.aa) == 1)
+
+    def tearDown(self):
+        pass
+
+    def test_fkey_update(self):
+        "should insert blog.post with fkey reference on author"
+        self.post._fkeys['author'].set(self.aa)
+        self.post.title = 'title test_direct_fkey_insert'
+        self.post.content = 'content test_direct_fkey_insert'
+        self.post.insert()
+        post = halftest.post(title='title test_direct_fkey_insert')
+        self.assertEqual(len(post), 1)
+        self.post.update(title='title test_direct_fkey_insert updated')
+        upost = halftest.post(title='title test_direct_fkey_insert updated')
+        self.assertEqual(len(post), 0)
+        self.assertEqual(len(upost), 1)
+        upost.delete()
+        self.assertEqual(len(post), 0)
+

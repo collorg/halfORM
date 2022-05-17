@@ -1,7 +1,8 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # pylint: disable=protected-access
 
 """This module provides the FKey class."""
+
 
 class FKey:
     """Foreign key class
@@ -11,8 +12,12 @@ class FKey:
     It is then used to construct the join query for Relation.select
     method.
     """
-    def __init__(self, fk_name, relation, fk_sfqrn, fk_names=None, fields=None, confupdtype=None, confdeltype=None):
+
+    def __init__(self,
+                 fk_name, relation, fk_sfqrn,
+                 fk_names=None, fields=None, confupdtype=None, confdeltype=None):
         self.__relation = relation
+        self.__to_relation = None
         self.__name = fk_name
         self.__is_set = False
         self.__fk_names = fk_names or []
@@ -20,7 +25,6 @@ class FKey:
         self.__fk_to = None
         self.__confupdtype = confupdtype
         self.__confdeltype = confdeltype
-        # print('XXX fk_sfqrn', fk_sfqrn)
         self.__fk_fqrn = fk_sfqrn
         self.__fields_names = fields
         self.__fields = [f'"{name}"' for name in fields]
@@ -37,23 +41,29 @@ class FKey:
         model = self.__relation._model
         f_qrn = self.__get_fk_qrn()
         f_cast = None
-        get_rel = model._import_class  if model._scope else model.get_relation_class
+        get_rel = model._import_class if model._scope else model.get_relation_class
         if self.__name.find('_reverse_fkey_') == 0 and __cast__:
             self.__relation = get_rel(__cast__)(**self.__relation.to_dict())
         else:
             f_cast = __cast__
         f_relation = get_rel(f_cast or f_qrn)(**kwargs)
         rev_fkey_name = f'_reverse_{f_relation.id_}'
-        # print('XXX rev_fkey_name', rev_fkey_name)
         f_relation._fkeys[rev_fkey_name] = FKey(
-                rev_fkey_name,
-                f_relation,
-                f_relation._fqrn.split('.'), self.__fields, self.__fk_names)
+            rev_fkey_name,
+            f_relation,
+            f_relation._fqrn.split('.'), self.__fields, self.__fk_names)
         f_relation._fkeys[rev_fkey_name].set(self.__relation)
         return f_relation
 
+    def values(self):
+        return [list(elt.values()) for elt in self.__to_relation.select(*self.__fk_names)]
+
+    def insert(self):
+        return self.__to_relation.insert()
+
     def set(self, to_):
         """Sets the relation associated to the foreign key."""
+        self.__to_relation = to_
         self.__set__(self.__relation, to_)
 
     def __set__(self, from_, to_):
@@ -62,6 +72,7 @@ class FKey:
         The value must be an object of type Relation having the
         same FQRN that (or inheriting) the one referenced by self.__fk_fqrn.
         """
+        # pylint: disable=import-outside-toplevel
         from half_orm.relation import Relation
 
         if not issubclass(to_.__class__, Relation):
@@ -83,11 +94,12 @@ class FKey:
         return self.__is_set
 
     @property
-    def to(self):
+    def to_(self):
         """Returns the destination relation of the fkey."""
         return self.__fk_to
-    @to.setter
-    def to(self, to_):
+
+    @to_.setter
+    def to_(self, to_):
         """Sets the destination relation of the fkey."""
         self.__fk_to = to_
 
@@ -98,10 +110,12 @@ class FKey:
 
     @property
     def confupdtype(self):
+        "on update configuration"
         return self.__confupdtype
 
     @property
     def confdeltype(self):
+        "on delete configuration"
         return self.__confdeltype
 
     def _join_query(self, orig_rel):
@@ -109,7 +123,7 @@ class FKey:
         fkey interface: frel, from_, to_, fields, fk_names
         """
         from_ = self.__fk_from
-        to_ = self.to
+        to_ = self.to_
         if id(from_) == id(to_):
             raise RuntimeError("You can't join a relation with itself!")
         orig_rel_id = f'r{orig_rel.id_}'
@@ -121,7 +135,8 @@ class FKey:
             from_id = orig_rel_id
         from_fields = (f'{from_id}.{name}' for name in self.__fields)
         to_fields = (f'{to_id}.{name}' for name in self.fk_names)
-        bounds = " and ".join([f'{a} = {b}' for a, b in zip(to_fields, from_fields)])
+        bounds = " and ".join(
+            [f'{a} = {b}' for a, b in zip(to_fields, from_fields)])
         return f"({bounds})"
 
     def _prep_select(self):
@@ -133,6 +148,7 @@ class FKey:
     def fk_names(self):
         """Returns the names of the fields composing the foreign key in the foreign table."""
         return self.__fk_names
+
     @fk_names.setter
     def fk_names(self, fk_names):
         """Sets the names of the fields in the foreign table."""

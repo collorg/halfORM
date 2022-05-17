@@ -196,6 +196,10 @@ class PgMeta:
         self.__metadata = metadata
         PgMeta.meta.load(self.__dbname, self)
 
+    def getFqrn(self, dbname, qtn):
+        schema, table = qtn.rsplit('.', 1)
+        return f'"{dbname}":"{schema}"."{table}"'
+
     def has_relation(self, dbname, qtn):
         """Checks if the qtn is a relation in the database
 
@@ -203,8 +207,5 @@ class PgMeta:
         Returns True if the relation exists, False otherwise.
         Also works for views and materialized views.
         """
-        schema, table = qtn.rsplit('.', 1)
-        key = f'"{dbname}":"{schema}"."{table}"'
-        print('XXX key', key)
-        print('XXX keys', list(self.meta[dbname].__metadata['byname'].keys()))
+        key = self.getFqrn(dbname, qtn)
         return key in self.meta[dbname].__metadata['byname']

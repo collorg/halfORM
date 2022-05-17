@@ -84,8 +84,8 @@ class Model:
             return
         self.__conn = None
         self._scope = scope and scope.split('.')[0]
-        self._relations_['list'] = []
-        self._relations_['classes'] = {}
+        Model._relations_['list'] = []
+        Model._relations_['classes'] = {}
         self.__raise_error = raise_error
         self.__production = False
         self._connect(raise_error=self.__raise_error)
@@ -181,8 +181,8 @@ class Model:
             sys.stderr.write(f"{err}\n")
             sys.stderr.flush()
         self.__conn.autocommit = True
-        self.___metadata = PgMeta(self.__conn, self.__dbname, self._relations_)
-        self.__metadata = self.___metadata.metadata(self.__dbname)
+        self.__pg_meta = PgMeta(self.__conn, self.__dbname, self._relations_)
+        self.__metadata = self.__pg_meta.metadata(self.__dbname)
         self.__deja_vu[self.__dbname] = self
         self.__backend_pid = self.execute_query(
             "select pg_backend_pid()").fetchone()['pg_backend_pid']
@@ -230,7 +230,6 @@ class Model:
         schema, table = qtn.rsplit('.', 1)
         fqrn = f'{self.__dbname}:"{schema}".{table}'
         fqrn, _ = _normalize_fqrn(fqrn)
-        # print('XXX fqrn (get_relation_class)', fqrn)
         return _factory('Table', (), {'fqrn': fqrn, 'model': self})
 
     def has_relation(self, qtn):
@@ -240,14 +239,13 @@ class Model:
         Returns True if the relation exists, False otherwise.
         Also works for views and materialized views.
         """
-        return self.___metadata.has_relation(self.__dbname, qtn)
+        return self.__pg_meta.has_relation(self.__dbname, qtn)
 
     def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
         """
         stripped_qtn = qtn.replace('"', '')
         module_path = f'{scope or self._scope}.{stripped_qtn}'
-        # print('XXX qtn', qtn)
         class_name = camel_case(qtn.split('.')[-1])
         module = __import__(
             module_path, globals(), locals(), [class_name], 0)
@@ -265,7 +263,8 @@ class Model:
 
         Each line contains:
         - the relation type: 'r' relation, 'v' view, 'm' materialized view,
-        - the quoted FQRN (Fully qualified relation name) <"db name">:"<schema name>"."<relation name>"
+        - the quoted FQRN (Fully qualified relation name)
+          <"db name">:"<schema name>"."<relation name>"
         - the list of the FQRN of the inherited relations.
 
         If a qualified relation name (<schema name>.<table name>) is
@@ -286,7 +285,6 @@ class Model:
                 ret_val.append((tablekind, key, inh))
             return ret_val
         fqrn = f'"{self.__dbname}":{_normalize_qrn(qrn=qrn)}'
-        print('XXX fqrn (desc)', fqrn)
         return str(_factory(
             'Table', (), {'fqrn': fqrn, 'model': self})())
 
