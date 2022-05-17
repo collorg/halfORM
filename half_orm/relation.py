@@ -1059,7 +1059,7 @@ def _factory(class_name, bases, dct):
     tbl_attr['__base_classes'] = set()
     tbl_attr['__fkeys_properties'] = False
     tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
-    tbl_attr['_qrn'] = tbl_attr['_fqrn'].split(':')[1].replace('"', '')
+    tbl_attr['_qrn'] = _normalize_qrn(tbl_attr['_fqrn'].split(':')[1].replace('"', ''))
 
     tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], sfqrn)))
     tbl_attr['_model'] = model.Model._deja_vu(tbl_attr['_dbname'])
@@ -1091,7 +1091,7 @@ def _factory(class_name, bases, dct):
 def _normalize_fqrn(_fqrn):
     """
     Transform <db name>.<schema name>.<table name> in
-    "<db name>"."<schema name>"."<table name>".
+    "<db name>":"<schema name>"."<table name>".
     Dots are allowed only in the schema name.
     """
     _fqrn = _fqrn.replace('"', '')

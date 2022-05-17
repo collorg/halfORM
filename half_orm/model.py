@@ -235,7 +235,7 @@ class Model:
     def has_relation(self, qtn):
         """Checks if the qtn is a relation in the database
 
-        @qtn is in the form <schema>.<table>
+        @qtn is in the form "<schema>".<table>
         Returns True if the relation exists, False otherwise.
         Also works for views and materialized views.
         """

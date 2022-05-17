@@ -16,6 +16,7 @@ class Test(HoTestCase):
         self.pers = halftest.pers
         self.post = halftest.post
         self.today = halftest.today
+        self.blog_view = halftest.blog_view
 
     def test_count(self):
         self.pers._mogrify()
@@ -46,6 +47,10 @@ class Test(HoTestCase):
             birth_date=self.today)
         for dct in pers.select():
             self.pers(**dct).get()
+
+    def test_select_from_dotted_schema(self):
+        "should quote dotted schema in sql request"
+        self.blog_view.select()
 
     def test_update(self):
         pers = self.pers(last_name=('like', 'a%'))

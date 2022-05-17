@@ -41,6 +41,7 @@ class HalfTest:
         self.post = model._import_class("blog.post")()
         self.comment = model._import_class("blog.comment")()
         self.event = model._import_class("blog.event")()
+        self.blog_view = model._import_class("blog.view.post_comment")()
 
         @self.pers.Transaction
         def insert_pers(pers):
