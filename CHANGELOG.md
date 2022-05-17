@@ -1,3 +1,10 @@
+# 0.6.2 (2022-05-17)
+
+* [Fkeys] Fix insert, update and delete with constraints defined through foreign keys. (7bf9c77)
+* [META] Change keys and fqrn to "<db>":"<schema>"."<relation>" (eada1b3)
+* [CI] Build stage (origin/master, origin/ci, origin/HEAD, ci) (4d836f2)
+* [CI] Test from python 3.6 to 3.10 (github/master) (ff3db37)
+
 # 0.6.1 (2022-05-04)
 
 * [Transaction] Fix #6. Autocommit mode stays at False on rollback. (643f500)
