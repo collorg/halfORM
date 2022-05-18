@@ -178,7 +178,7 @@ def only(self, value):
 
 def __set_fields(self):
     """Initialise the fields of the relation."""
-    fields_metadata = self._model._metadata['byname'][self.__sfqrn]['fields']
+    fields_metadata = self._model.fields_metadata(self.__sfqrn)
 
     for field_name, f_metadata in fields_metadata.items():
         field = Field(field_name, self, f_metadata)
@@ -192,7 +192,7 @@ def __set_fkeys(self):
     #pylint: disable=import-outside-toplevel
     from half_orm.fkey import FKey
 
-    fkeys_metadata = self._model._metadata['byname'][self.__sfqrn]['fkeys']
+    fkeys_metadata = self._model.fkeys_metadata(self.__sfqrn)
     for fkeyname, f_metadata in fkeys_metadata.items():
         self._fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
     if not self.__fkeys_properties:
@@ -1067,7 +1067,7 @@ def _factory(class_name, bases, dct):
     if rel_class:
         return rel_class
     try:
-        metadata = tbl_attr['_model']._metadata['byname'][tbl_attr['_fqrn']]
+        metadata = tbl_attr['_model'].relation_metadata(tbl_attr['_fqrn'])
     except KeyError as exc:
         raise model_errors.UnknownRelation(sfqrn) from exc
     if metadata['inherits']:

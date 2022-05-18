@@ -123,10 +123,11 @@ class Meta(dict):
 
 class PgMeta:
     meta = Meta()
-    def __init__(self, connection, dbname, relations):
-        self.__dbname = dbname
-        self.__relations = relations
-        if not PgMeta.meta.deja_vu(dbname):
+    def __init__(self, connection):
+        self.__dbname = connection.get_dsn_parameters()['dbname']
+        self.__relations_classes = {}
+        self.__relations_list = []
+        if not PgMeta.meta.deja_vu(self.__dbname):
             self.__load_metadata(connection)
 
     def metadata(self, dbname):
@@ -134,7 +135,11 @@ class PgMeta:
 
     @property
     def relations(self):
-        return self.__relations
+        return self.__relations_list
+
+    @property
+    def classes(self):
+        return self.__relations_classes
 
     def __load_metadata(self, connection):
         """Loads the metadata by querying the request in the pg_metaview
@@ -173,8 +178,8 @@ class PgMeta:
                 byname[table_key]['fields'][fieldname] = dct
                 byname[table_key]['fields_by_num'][fieldnum] = dct
                 byid[tableid]['fields'][fieldnum] = fieldname
-                if (tablekind, table_key) not in self.__relations['list']:
-                    self.__relations['list'].append((tablekind, table_key))
+                if (tablekind, table_key) not in self.__relations_list:
+                    self.__relations_list.append((tablekind, table_key))
             for dct in all_:
                 tableid = dct['tableid']
                 table_key = byid[tableid]['sfqrn']
@@ -192,7 +197,7 @@ class PgMeta:
                         ftable_key, ffields, fields, confupdtype, confdeltype)
                     byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
 
-        self.__relations['list'].sort()
+        self.__relations_list.sort()
         self.__metadata = metadata
         PgMeta.meta.load(self.__dbname, self)
 
@@ -209,3 +214,58 @@ class PgMeta:
         """
         key = self.getFqrn(dbname, qtn)
         return key in self.meta[dbname].__metadata['byname']
+
+    @property
+    def relations_list(self):
+        return self.__relations_list
+
+
+    def desc(self, dbname, qrn=None, type_=None):
+        """Returns the list of the relations of the model.
+
+        Each line contains:
+        - the relation type: 'r' relation, 'v' view, 'm' materialized view,
+        - the quoted FQRN (Fully qualified relation name)
+          <"db name">:"<schema name>"."<relation name>"
+        - the list of the FQRN of the inherited relations.
+
+        If a qualified relation name (<schema name>.<table name>) is
+        passed, prints only the description of the corresponding relation.
+        """
+
+        if not qrn:
+            ret_val = []
+            entry = self.metadata(dbname)['byname']
+            for key in entry:
+                inh = []
+                tablekind = entry[key]['tablekind']
+                if entry[key]['inherits']:
+                    inh = [elt for elt in entry[key]['inherits']]
+                if type_:
+                    if tablekind != type_:
+                        continue
+                ret_val.append((tablekind, key, inh))
+            return ret_val
+        fqrn = f'"{self.__dbname}":{_normalize_qrn(qrn=qrn)}'
+        return str(_factory(
+            'Table', (), {'fqrn': fqrn, 'model': self})())
+
+    def fields(self, dbname, sfqrn):
+        "Retruns the fields metadata for a given sfqrn"
+        return self.metadata(dbname)['byname'][sfqrn]['fields']
+
+    def fkeys(self, dbname, sfqrn):
+        "Returns the foreign keys metadata for a given sfqrn"
+        return self.metadata(dbname)['byname'][sfqrn]['fkeys']
+
+    def relation(self, dbname, fqrn):
+        "Returns the relation metadata for a given fqrn"
+        return self.metadata(dbname)['byname'][fqrn]
+
+    def str(self, dbname):
+        out = []
+        entry = self.metadata(dbname)['byname']
+        for key in entry:
+            fqrn = ".".join([f'"{elt}"' for elt in key[1:]])
+            out.append(f"{entry[key]['tablekind']} {fqrn}")
+        return '\n'.join(out)

@@ -65,7 +65,7 @@ class Model:
     """
     __deja_vu = {}
     __metadata = {}
-    _relations_ = {}
+    _relations_ = {'classes': {}}
     def __init__(self,
                  config_file, dbname=None, scope=None, raise_error=True):
         """Model constructor
@@ -77,15 +77,13 @@ class Model:
         if bool(config_file) == bool(dbname):
             raise RuntimeError("You can't specify config_file with bdname!")
         self.__config_file = config_file
-        self._dbinfo = {}
+        self.__dbinfo = {}
         self.__dbname = dbname
         if Model._deja_vu(dbname):
             self.__dict__.update(Model._deja_vu(dbname))
             return
         self.__conn = None
         self._scope = scope and scope.split('.')[0]
-        Model._relations_['list'] = []
-        Model._relations_['classes'] = {}
         self.__raise_error = raise_error
         self.__production = False
         self._connect(raise_error=self.__raise_error)
@@ -155,11 +153,11 @@ class Model:
             raise RuntimeError(
                 f"Can't reconnect to another database {params['name']} != {self.__dbname}")
         self.__dbname = params['name']
-        self._dbinfo['name'] = params['name']
-        self._dbinfo['user'] = params.get('user')
-        self._dbinfo['password'] = params.get('password')
-        self._dbinfo['host'] = params.get('host')
-        self._dbinfo['port'] = params.get('port')
+        self.__dbinfo['name'] = params['name']
+        self.__dbinfo['user'] = params.get('user')
+        self.__dbinfo['password'] = params.get('password')
+        self.__dbinfo['host'] = params.get('host')
+        self.__dbinfo['port'] = params.get('port')
         self.__production = params.get('production', False)
         if self.__production == 'True':
             self.__production = True
@@ -167,11 +165,11 @@ class Model:
             self.__production = False
         if not isinstance(self.__production, bool):
             raise ValueError
-        if 'name' not in self._dbinfo:
+        if 'name' not in self.__dbinfo:
             raise model_errors.MalformedConfigFile(
                 self.__config_file, {'name'})
         try:
-            params = dict(self._dbinfo)
+            params = dict(self.__dbinfo)
             params['dbname'] = params.pop('name')
             self.__conn = psycopg2.connect(
                 **params, cursor_factory=RealDictCursor)
@@ -181,7 +179,7 @@ class Model:
             sys.stderr.write(f"{err}\n")
             sys.stderr.flush()
         self.__conn.autocommit = True
-        self.__pg_meta = PgMeta(self.__conn, self.__dbname, self._relations_)
+        self.__pg_meta = PgMeta(self.__conn)
         self.__metadata = self.__pg_meta.metadata(self.__dbname)
         self.__deja_vu[self.__dbname] = self
         self.__backend_pid = self.execute_query(
@@ -208,12 +206,14 @@ class Model:
         """
         return self.__conn
 
-    @property
-    def _metadata(self):
-        """Returns the metadata of the database.
-        Uses the Model.__metadata class dictionary.
-        """
-        return self.__metadata
+    def fields_metadata(self, sfqrn):
+        return self.__pg_meta.fields(self.__dbname, sfqrn)
+
+    def fkeys_metadata(self, sfqrn):
+        return self.__pg_meta.fkeys(self.__dbname, sfqrn)
+
+    def relation_metadata(self, fqrn):
+        return self.__pg_meta.relation(self.__dbname, fqrn)
 
     def execute_query(self, query, values=()):
         """Execute a raw SQL query"""
@@ -255,7 +255,7 @@ class Model:
 
     def _relations(self):
         """List all_ the relations in the database"""
-        for relation in self._relations_['list']:
+        for relation in self.__pg_meta.relations_list:
             yield f"{relation[0]} {'.'.join(relation[1])}"
 
     def desc(self, qrn=None, type_=None):
@@ -270,29 +270,7 @@ class Model:
         If a qualified relation name (<schema name>.<table name>) is
         passed, prints only the description of the corresponding relation.
         """
-
-        if not qrn:
-            ret_val = []
-            entry = self.__metadata['byname']
-            for key in entry:
-                inh = []
-                tablekind = entry[key]['tablekind']
-                if entry[key]['inherits']:
-                    inh = [elt for elt in entry[key]['inherits']]
-                if type_:
-                    if tablekind != type_:
-                        continue
-                ret_val.append((tablekind, key, inh))
-            return ret_val
-        fqrn = f'"{self.__dbname}":{_normalize_qrn(qrn=qrn)}'
-        return str(_factory(
-            'Table', (), {'fqrn': fqrn, 'model': self})())
+        return self.__pg_meta.desc(self.__dbname, qrn, type_)
 
     def __str__(self):
-        out = []
-        print(self.__metadata)
-        entry = self.__metadata['byname']
-        for key in entry:
-            fqrn = ".".join([f'"{elt}"' for elt in key[1:]])
-            out.append(f"{entry[key]['tablekind']} {fqrn}")
-        return '\n'.join(out)
+        return self.__pg_meta.str(self.__dbname)
