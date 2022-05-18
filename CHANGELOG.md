@@ -1,3 +1,15 @@
+# 0.6.4 (2022-05-18)
+
+* Use pg_meta qrn manipluation fonctions in relation and fkey modules. (45c9836)
+* [test] Test Model.reload. (99f7c64)
+* [model][meta] Move qrn manipulation fonctions to pg_meta. (29def79)
+* [meta] Rename pg_metaview to pg_meta. (558d328)
+* [meta] Remove Model._metadata attribute. (f2a68b3)
+
+## Note
+
+This release fixes some problems with half_orm_packager (pre-alpha).
+
 # 0.6.3 (2022-05-17)
 
 * [Fix] Regression in 0.6.2: dotted schema names were not handled properly. (0830a0c)
@@ -6,8 +18,8 @@
 
 * [Fkeys] Fix insert, update and delete with constraints defined through foreign keys. (7bf9c77)
 * [META] Change keys and fqrn to "<db>":"<schema>"."<relation>" (eada1b3)
-* [CI] Build stage (origin/master, origin/ci, origin/HEAD, ci) (4d836f2)
-* [CI] Test from python 3.6 to 3.10 (github/master) (ff3db37)
+* [CI] Build stage (4d836f2)
+* [CI] Test from python 3.6 to 3.10 (ff3db37)
 
 # 0.6.1 (2022-05-04)
 
