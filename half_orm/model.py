@@ -33,7 +33,7 @@ from psycopg2.extras import RealDictCursor
 
 from half_orm import model_errors
 from half_orm.relation import _normalize_fqrn, _normalize_qrn, _factory
-from half_orm.pg_metaview import PgMeta
+from half_orm.pg_meta import PgMeta
 
 CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 

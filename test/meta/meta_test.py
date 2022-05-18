@@ -5,7 +5,7 @@ from unittest import TestCase
 import psycopg2
 
 from ..init import halftest, model
-from half_orm.pg_metaview import PgMeta
+from half_orm.pg_meta import PgMeta
 
 class Test(TestCase):
     def setUp(self):

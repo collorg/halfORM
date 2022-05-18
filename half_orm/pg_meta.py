@@ -266,6 +266,5 @@ class PgMeta:
         out = []
         entry = self.metadata(dbname)['byname']
         for key in entry:
-            fqrn = ".".join([f'"{elt}"' for elt in key[1:]])
-            out.append(f"{entry[key]['tablekind']} {fqrn}")
+            out.append(f"{entry[key]['tablekind']} {key}")
         return '\n'.join(out)
