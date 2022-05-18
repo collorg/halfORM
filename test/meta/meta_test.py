@@ -1,19 +1,33 @@
 #!/usr/bin/env python3
-#-*- coding:  utf-8 -*-
+# -*- coding:  utf-8 -*-
 
-from unittest import TestCase
+import os
 import psycopg2
+from unittest import TestCase
+from psycopg2.extras import RealDictCursor
+from configparser import ConfigParser
 
 from ..init import halftest, model
 from half_orm.pg_meta import PgMeta
 
+
+HALFTEST_DESC = [
+    ('r', '"halftest":"actor"."person"', []),
+    ('r', '"halftest":"blog"."comment"', []),
+    ('r', '"halftest":"blog"."event"', ['"halftest":"blog"."post"']),
+    ('r', '"halftest":"blog"."post"', []),
+    ('v', '"halftest":"blog.view"."post_comment"', [])
+]
+
+CONF_DIR = os.path.abspath(os.environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
+
 class Test(TestCase):
     def setUp(self):
-        self.conn = psycopg2.connect(**{'dbname': 'halftest', 'password': 'halftest'})
-        self.pg_meta = PgMeta(self.conn)
+        self.pg_meta = model._Model__pg_meta
 
     def tearDown(self):
-        self.conn.close()
+        model.disconnect()
 
-    def test_is_connected(self):
-        self.assertEqual(self.conn.get_dsn_parameters()['dbname'], 'halftest')
+    def test_desc(self):
+        "it should return the list of relations as [(<type>, <fqrn>, [<inherits>, ...]), ...]"
+        self.assertEqual(self.pg_meta.desc('halftest'), HALFTEST_DESC)

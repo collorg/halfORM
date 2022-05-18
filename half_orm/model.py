@@ -24,6 +24,7 @@ About QRN and FQRN:
 
 """
 
+
 import os
 import sys
 from configparser import ConfigParser
@@ -32,28 +33,12 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from half_orm import model_errors
-from half_orm.relation import _normalize_fqrn, _normalize_qrn, _factory
-from half_orm.pg_meta import PgMeta
+from half_orm.relation import _factory
+from half_orm import pg_meta
+
 
 CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 
-__all__ = ["Model", "camel_case"]
-
-def camel_case(name):
-    """Transform a string in camel case."""
-    ccname = []
-    name = name.lower()
-    capitalize = True
-    for char in name:
-        if not char.isalnum():
-            capitalize = True
-            continue
-        if capitalize:
-            ccname.append(char.upper())
-            capitalize = False
-            continue
-        ccname.append(char)
-    return ''.join(ccname)
 
 psycopg2.extras.register_uuid()
 
@@ -86,7 +71,7 @@ class Model:
         self._scope = scope and scope.split('.')[0]
         self.__raise_error = raise_error
         self.__production = False
-        self._connect(raise_error=self.__raise_error)
+        self.__connect(raise_error=self.__raise_error)
 
     @staticmethod
     def _deja_vu(dbname):
@@ -107,7 +92,7 @@ class Model:
             return True
         except (psycopg2.OperationalError, psycopg2.InterfaceError):
             try:
-                self._connect(raise_error=self.__raise_error)
+                self.__connect(raise_error=self.__raise_error)
             except psycopg2.OperationalError as err:
                 sys.stderr.write(f'{err}\n')
                 sys.stderr.flush()
@@ -130,7 +115,7 @@ class Model:
             if not self.__conn.closed:
                 self.__conn.close()
 
-    def _connect(self, config_file=None, raise_error=True):
+    def __connect(self, config_file=None, raise_error=True, reload=False):
         """Setup a new connection to the database.
 
         If a config_file is provided, the connection is made with the new
@@ -179,13 +164,17 @@ class Model:
             sys.stderr.write(f"{err}\n")
             sys.stderr.flush()
         self.__conn.autocommit = True
-        self.__pg_meta = PgMeta(self.__conn)
+        self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
         self.__metadata = self.__pg_meta.metadata(self.__dbname)
         self.__deja_vu[self.__dbname] = self
         self.__backend_pid = self.execute_query(
             "select pg_backend_pid()").fetchone()['pg_backend_pid']
 
-    reconnect = _connect
+    reconnect = __connect
+
+    def reload(self, config_file=None, raise_error=True):
+        "Reload metadata"
+        self.__connect(config_file, raise_error, True)
 
     @property
     def _pg_backend_pid(self):
@@ -229,7 +218,7 @@ class Model:
         """
         schema, table = qtn.rsplit('.', 1)
         fqrn = f'{self.__dbname}:"{schema}".{table}'
-        fqrn, _ = _normalize_fqrn(fqrn)
+        fqrn, _ = pg_meta.normalize_fqrn(fqrn)
         return _factory('Table', (), {'fqrn': fqrn, 'model': self})
 
     def has_relation(self, qtn):
@@ -244,19 +233,17 @@ class Model:
     def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
         """
-        stripped_qtn = qtn.replace('"', '')
-        module_path = f'{scope or self._scope}.{stripped_qtn}'
-        class_name = camel_case(qtn.split('.')[-1])
+        module_path = f'{scope or self._scope}.{pg_meta.strip_qrn(qtn)}'
+        _class_name = pg_meta.class_name(qtn)
         module = __import__(
-            module_path, globals(), locals(), [class_name], 0)
+            module_path, globals(), locals(), [_class_name], 0)
         if scope:
             self._scope = scope
-        return module.__dict__[class_name]
+        return module.__dict__[_class_name]
 
     def _relations(self):
         """List all_ the relations in the database"""
-        for relation in self.__pg_meta.relations_list:
-            yield f"{relation[0]} {'.'.join(relation[1])}"
+        return self.__pg_meta.relations_list(self.__dbname)
 
     def desc(self, qrn=None, type_=None):
         """Returns the list of the relations of the model.

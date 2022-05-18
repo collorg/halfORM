@@ -4,7 +4,55 @@ PostgreSQL database.
 
 from collections import OrderedDict
 
-REQUEST = """
+def strip_qrn(qrn):
+    "Removes all double quotes from the qrn/fqrn"
+    return qrn.replace('"', '')
+
+def get_qrn(fqrn):
+    "Returns the qualified relation name <schema>.<relation> from the fully qualified relation name"
+    return strip_qrn(fqrn).split(':')[1]
+
+def normalize_fqrn(_fqrn):
+    """
+    Transform <db name>.<schema name>.<table name> in
+    "<db name>":"<schema name>"."<table name>".
+    Dots are allowed only in the schema name.
+    """
+    _fqrn = strip_qrn(_fqrn)
+    dbname, schema_table = _fqrn.split(':')
+    schemaname, tablename = schema_table.rsplit('.', 1)
+    return f'"{dbname}":"{schemaname}"."{tablename}"', (dbname, schemaname, tablename)
+
+def normalize_qrn(qrn):
+    """
+    qrn is the qualified relation name (<schema name>.<talbe name>)
+    A schema name can have any number of dots in it.
+    A table name can't have a dot in it.
+    returns "<schema name>"."<relation name>"
+    """
+    return '.'.join([f'"{elt}"' for elt in qrn.rsplit('.', 1)])
+
+def camel_case(string):
+    "Retruns the string transformed to camel case"
+    ccname = []
+    name = string.lower()
+    capitalize = True
+    for char in name:
+        if not char.isalnum():
+            capitalize = True
+            continue
+        if capitalize:
+            ccname.append(char.upper())
+            capitalize = False
+            continue
+        ccname.append(char)
+    return ''.join(ccname)
+
+def class_name(qrn):
+    "Returns the class name from qrn"
+    return camel_case(qrn.split('.')[-1])
+
+_REQUEST = """
 SELECT
     a.attrelid AS tableid,
     array_agg( distinct i.inhseqno::TEXT || ':' || i.inhparent::TEXT ) AS inherits,
@@ -96,7 +144,7 @@ ORDER BY
     n.nspname, c.relname, a.attnum
 """
 
-class Meta(dict):
+class _Meta(dict):
     __d_meta = {}
 
     @classmethod
@@ -108,10 +156,10 @@ class Meta(dict):
         cls.__d_meta[dbname] = meta
 
     def __getitem__(self, key):
-        return Meta.__d_meta.__getitem__(key)
+        return _Meta.__d_meta.__getitem__(key)
 
     def __setitem__(self, key, val):
-        Meta.__d_meta.__setitem__(key, val)
+        _Meta.__d_meta.__setitem__(key, val)
 
     def __repr__(self):
         dictrepr = dict.__repr__(self.__d_meta)
@@ -122,34 +170,31 @@ class Meta(dict):
             self.__d_meta[key] = value
 
 class PgMeta:
-    meta = Meta()
-    def __init__(self, connection):
+    meta = _Meta()
+    def __init__(self, connection, reload=False):
         self.__dbname = connection.get_dsn_parameters()['dbname']
-        self.__relations_classes = {}
-        self.__relations_list = []
-        if not PgMeta.meta.deja_vu(self.__dbname):
+        if not PgMeta.meta.deja_vu(self.__dbname) or reload:
             self.__load_metadata(connection)
 
     def metadata(self, dbname):
         return self.meta[dbname].__metadata
 
+    def relations_list(self, dbname):
+        return self.metadata(dbname)['relations_list']
+
     @property
     def relations(self):
         return self.__relations_list
-
-    @property
-    def classes(self):
-        return self.__relations_classes
 
     def __load_metadata(self, connection):
         """Loads the metadata by querying the request in the pg_metaview
         module.
         """
-        metadata = {}
+        metadata = {'relations_list': []}
         byname = metadata['byname'] = OrderedDict()
         byid = metadata['byid'] = {}
         with connection.cursor() as cur:
-            cur.execute(REQUEST)
+            cur.execute(_REQUEST)
             all_ = [elt for elt in cur.fetchall()]
             for dct in all_:
                 table_key = f'''"{self.__dbname}":"{dct['schemaname']}"."{dct['relationname']}"'''
@@ -178,8 +223,8 @@ class PgMeta:
                 byname[table_key]['fields'][fieldname] = dct
                 byname[table_key]['fields_by_num'][fieldnum] = dct
                 byid[tableid]['fields'][fieldnum] = fieldname
-                if (tablekind, table_key) not in self.__relations_list:
-                    self.__relations_list.append((tablekind, table_key))
+                if (tablekind, table_key) not in metadata['relations_list']:
+                    metadata['relations_list'].append((tablekind, table_key))
             for dct in all_:
                 tableid = dct['tableid']
                 table_key = byid[tableid]['sfqrn']
@@ -192,32 +237,29 @@ class PgMeta:
                     confdeltype = dct['fkey_confdeltype']
                     ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
                     rev_fkey_name = f'_reverse_fkey_{table_key}.{".".join(fields)}'
-                    rev_fkey_name = rev_fkey_name.replace(".", "_").replace(":", "_").replace('"', '')
+                    rev_fkey_name = strip_qrn(rev_fkey_name.replace(".", "_").replace(":", "_"))
                     byname[table_key]['fkeys'][fkeyname] = (
                         ftable_key, ffields, fields, confupdtype, confdeltype)
                     byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
 
-        self.__relations_list.sort()
+        metadata['relations_list'].sort()
         self.__metadata = metadata
         PgMeta.meta.load(self.__dbname, self)
 
-    def getFqrn(self, dbname, qtn):
-        schema, table = qtn.rsplit('.', 1)
+    def getFqrn(self, dbname, qrn):
+        "Returns the Fully qualified relation name (quoted) from the unquoted (qrn)"
+        schema, table = qrn.rsplit('.', 1)
         return f'"{dbname}":"{schema}"."{table}"'
 
-    def has_relation(self, dbname, qtn):
-        """Checks if the qtn is a relation in the database
+    def has_relation(self, dbname, qrn):
+        """Checks if the qrn is a relation in the database
 
-        @qtn is in the form <schema>.<table>
+        @qrn is in the form <schema>.<table>
         Returns True if the relation exists, False otherwise.
         Also works for views and materialized views.
         """
-        key = self.getFqrn(dbname, qtn)
+        key = self.getFqrn(dbname, qrn)
         return key in self.meta[dbname].__metadata['byname']
-
-    @property
-    def relations_list(self):
-        return self.__relations_list
 
 
     def desc(self, dbname, qrn=None, type_=None):
@@ -246,7 +288,7 @@ class PgMeta:
                         continue
                 ret_val.append((tablekind, key, inh))
             return ret_val
-        fqrn = f'"{self.__dbname}":{_normalize_qrn(qrn=qrn)}'
+        fqrn = f'"{self.__dbname}":{normalize_qrn(qrn=qrn)}'
         return str(_factory(
             'Table', (), {'fqrn': fqrn, 'model': self})())
 
