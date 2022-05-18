@@ -3,10 +3,19 @@
 
 from unittest import TestCase
 from psycopg2 import InterfaceError
+from psycopg2.errors import UndefinedTable
 
 from ..init import halftest, model
 
 class Test(TestCase):
+    def tearDown(self):
+        try:
+            model.ping()
+            model.execute_query('drop table test')
+            model.disconnect()
+        except UndefinedTable as exc:
+            pass
+
     def reset(self):
         pass
 
@@ -34,3 +43,11 @@ class Test(TestCase):
         model.disconnect()
         model.ping()
         self.assertEqual(1, model.execute_query("select 1").fetchone()['?column?'])
+
+    def test_reload(self):
+        "it should reload the model"
+        self.assertFalse(model.has_relation('public.test'))
+        model.execute_query('create table test (a text)')
+        model.execute_query('select * from test')
+        model.reload()
+        self.assertTrue(model.has_relation('public.test'))
