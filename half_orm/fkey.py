@@ -3,6 +3,7 @@
 
 """This module provides the FKey class."""
 
+from half_orm.pg_meta import get_qrn
 
 class FKey:
     """Foreign key class
@@ -29,24 +30,19 @@ class FKey:
         self.__fields_names = fields
         self.__fields = [f'"{name}"' for name in fields]
 
-    def __get_fk_qrn(self):
-        """Returns QRN from FQRN."""
-        return self.__fk_fqrn.split(':')[1]
-
     def __call__(self, __cast__=None, **kwargs):
         """Returns the relation on which the fkey is defined.
         If model._scope is set, instanciate the class from the scoped module.
         Uses the __cast if it is set.
         """
         model = self.__relation._model
-        f_qrn = self.__get_fk_qrn()
         f_cast = None
         get_rel = model._import_class if model._scope else model.get_relation_class
         if self.__name.find('_reverse_fkey_') == 0 and __cast__:
             self.__relation = get_rel(__cast__)(**self.__relation.to_dict())
         else:
             f_cast = __cast__
-        f_relation = get_rel(f_cast or f_qrn)(**kwargs)
+        f_relation = get_rel(f_cast or get_qrn(self.__fk_fqrn))(**kwargs)
         rev_fkey_name = f'_reverse_{f_relation.id_}'
         f_relation._fkeys[rev_fkey_name] = FKey(
             rev_fkey_name,

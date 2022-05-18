@@ -44,6 +44,7 @@ import yaml
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
 from half_orm.field import Field
+from half_orm.pg_meta import get_qrn, normalize_fqrn, normalize_qrn
 
 class SetOperators:
     """SetOperators class stores the set operations made on the Relation class objects
@@ -1058,8 +1059,8 @@ def _factory(class_name, bases, dct):
     tbl_attr['__cls_fkeys_dict'] = {}
     tbl_attr['__base_classes'] = set()
     tbl_attr['__fkeys_properties'] = False
-    tbl_attr['_fqrn'], sfqrn = _normalize_fqrn(dct['fqrn'])
-    tbl_attr['_qrn'] = _normalize_qrn(tbl_attr['_fqrn'].split(':')[1].replace('"', ''))
+    tbl_attr['_fqrn'], sfqrn = normalize_fqrn(dct['fqrn'])
+    tbl_attr['_qrn'] = normalize_qrn(get_qrn(tbl_attr['_fqrn']))
 
     tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], sfqrn)))
     tbl_attr['_model'] = model.Model._deja_vu(tbl_attr['_dbname'])
@@ -1087,23 +1088,3 @@ def _factory(class_name, bases, dct):
     rel_class = type(class_name, tuple(bases), tbl_attr)
     tbl_attr['_model']._relations_['classes'][tbl_attr['_fqrn']] = rel_class
     return rel_class
-
-def _normalize_fqrn(_fqrn):
-    """
-    Transform <db name>.<schema name>.<table name> in
-    "<db name>":"<schema name>"."<table name>".
-    Dots are allowed only in the schema name.
-    """
-    _fqrn = _fqrn.replace('"', '')
-    dbname, schema_table = _fqrn.split(':')
-    schemaname, tablename = schema_table.rsplit('.', 1)
-    return f'"{dbname}":"{schemaname}"."{tablename}"', (dbname, schemaname, tablename)
-
-def _normalize_qrn(qrn):
-    """
-    qrn is the qualified relation name (<schema name>.<talbe name>)
-    A schema name can have any number of dots in it.
-    A table name can't have a dot in it.
-    returns "<schema name>"."<relation name>"
-    """
-    return '.'.join([f'"{elt}"' for elt in qrn.rsplit('.', 1)])
