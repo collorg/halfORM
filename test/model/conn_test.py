@@ -44,7 +44,7 @@ class Test(TestCase):
         model.ping()
         self.assertEqual(1, model.execute_query("select 1").fetchone()['?column?'])
 
-    def test_reload(self):
+    def test_reload_and_has_relation(self):
         "it should reload the model"
         self.assertFalse(model.has_relation('public.test'))
         model.execute_query('create table test (a text)')

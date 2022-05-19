@@ -3,7 +3,7 @@
 
 """This module provides the FKey class."""
 
-from half_orm.pg_meta import get_qrn
+from half_orm.pg_meta import get_qrn, normalize_fqrn
 
 class FKey:
     """Foreign key class
@@ -42,12 +42,12 @@ class FKey:
             self.__relation = get_rel(__cast__)(**self.__relation.to_dict())
         else:
             f_cast = __cast__
-        f_relation = get_rel(f_cast or get_qrn(self.__fk_fqrn))(**kwargs)
+        f_relation = get_rel(f_cast or '.'.join(get_qrn(self.__fk_fqrn)))(**kwargs)
         rev_fkey_name = f'_reverse_{f_relation.id_}'
         f_relation._fkeys[rev_fkey_name] = FKey(
             rev_fkey_name,
             f_relation,
-            f_relation._fqrn.split('.'), self.__fields, self.__fk_names)
+            f_relation._fqrn, self.__fields, self.__fk_names)
         f_relation._fkeys[rev_fkey_name].set(self.__relation)
         return f_relation
 
@@ -161,7 +161,7 @@ class FKey:
         fields = list(self.__fields)
         fields.sort()
         fields = f"({', '.join(fields)})"
-        repr_ = f"- {self.__name}: {fields}\n ↳ {self.__fk_fqrn}({', '.join(self.fk_names)})"
+        repr_ = f"- {self.__name}: {fields}\n ↳ {normalize_fqrn(self.__fk_fqrn)}({', '.join(self.fk_names)})"
         if self.__is_set:
             repr_value = str(self.to_)
             res = []

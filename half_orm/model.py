@@ -49,8 +49,7 @@ class Model:
     generate a Relation object using model.relation(QRN) method.
     """
     __deja_vu = {}
-    __metadata = {}
-    _relations_ = {'classes': {}}
+    _classes_ = {}
     def __init__(self,
                  config_file, dbname=None, scope=None, raise_error=True):
         """Model constructor
@@ -64,9 +63,6 @@ class Model:
         self.__config_file = config_file
         self.__dbinfo = {}
         self.__dbname = dbname
-        if Model._deja_vu(dbname):
-            self.__dict__.update(Model._deja_vu(dbname))
-            return
         self.__conn = None
         self._scope = scope and scope.split('.')[0]
         self.__raise_error = raise_error
@@ -165,7 +161,6 @@ class Model:
             sys.stderr.flush()
         self.__conn.autocommit = True
         self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
-        self.__metadata = self.__pg_meta.metadata(self.__dbname)
         self.__deja_vu[self.__dbname] = self
         self.__backend_pid = self.execute_query(
             "select pg_backend_pid()").fetchone()['pg_backend_pid']
@@ -196,13 +191,13 @@ class Model:
         return self.__conn
 
     def fields_metadata(self, sfqrn):
-        return self.__pg_meta.fields(self.__dbname, sfqrn)
+        return self.__pg_meta.fields_meta(self.__dbname, sfqrn)
 
     def fkeys_metadata(self, sfqrn):
-        return self.__pg_meta.fkeys(self.__dbname, sfqrn)
+        return self.__pg_meta.fkeys_meta(self.__dbname, sfqrn)
 
     def relation_metadata(self, fqrn):
-        return self.__pg_meta.relation(self.__dbname, fqrn)
+        return self.__pg_meta.relation_meta(self.__dbname, fqrn)
 
     def execute_query(self, query, values=()):
         """Execute a raw SQL query"""
@@ -217,9 +212,7 @@ class Model:
         @kwargs is a dictionary {field_name:value}
         """
         schema, table = qtn.rsplit('.', 1)
-        fqrn = f'{self.__dbname}:"{schema}".{table}'
-        fqrn, _ = pg_meta.normalize_fqrn(fqrn)
-        return _factory('Table', (), {'fqrn': fqrn, 'model': self})
+        return _factory({'fqrn': (self.__dbname, schema, table), 'model': self})
 
     def has_relation(self, qtn):
         """Checks if the qtn is a relation in the database
@@ -228,13 +221,14 @@ class Model:
         Returns True if the relation exists, False otherwise.
         Also works for views and materialized views.
         """
-        return self.__pg_meta.has_relation(self.__dbname, qtn)
+        return self.__pg_meta.has_relation(self.__dbname, *qtn.split('.'))
 
     def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
         """
-        module_path = f'{scope or self._scope}.{pg_meta.strip_qrn(qtn)}'
-        _class_name = pg_meta.class_name(qtn)
+        t_qtn = qtn.split('.')
+        module_path = f'{scope or self._scope}.{".".join(t_qtn)}'
+        _class_name = pg_meta.class_name(qtn) # XXX
         module = __import__(
             module_path, globals(), locals(), [_class_name], 0)
         if scope:
@@ -243,9 +237,10 @@ class Model:
 
     def _relations(self):
         """List all_ the relations in the database"""
-        return self.__pg_meta.relations_list(self.__dbname)
+        rels = self.__pg_meta.relations_list(self.__dbname)
+        return rels
 
-    def desc(self, qrn=None, type_=None):
+    def desc(self):
         """Returns the list of the relations of the model.
 
         Each line contains:
@@ -253,11 +248,8 @@ class Model:
         - the quoted FQRN (Fully qualified relation name)
           <"db name">:"<schema name>"."<relation name>"
         - the list of the FQRN of the inherited relations.
-
-        If a qualified relation name (<schema name>.<table name>) is
-        passed, prints only the description of the corresponding relation.
         """
-        return self.__pg_meta.desc(self.__dbname, qrn, type_)
+        return self.__pg_meta.desc(self.__dbname)
 
     def __str__(self):
         return self.__pg_meta.str(self.__dbname)

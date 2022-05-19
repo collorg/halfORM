@@ -1042,7 +1042,7 @@ REL_CLASS_NAMES = {
     'm': 'Materialized view',
     'f': 'Foreign data'}
 
-def _factory(class_name, bases, dct):
+def _factory(dct):
     """Function to build a Relation class corresponding to a PostgreSQL
     relation.
     """
@@ -1059,32 +1059,33 @@ def _factory(class_name, bases, dct):
     tbl_attr['__cls_fkeys_dict'] = {}
     tbl_attr['__base_classes'] = set()
     tbl_attr['__fkeys_properties'] = False
-    tbl_attr['_fqrn'], sfqrn = normalize_fqrn(dct['fqrn'])
-    tbl_attr['_qrn'] = normalize_qrn(get_qrn(tbl_attr['_fqrn']))
+    tbl_attr['_qrn'] = normalize_qrn(get_qrn(dct['fqrn']))
 
-    tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], sfqrn)))
-    tbl_attr['_model'] = model.Model._deja_vu(tbl_attr['_dbname'])
-    rel_class = model.Model._relations_['classes'].get(tbl_attr['_fqrn'])
+    tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], dct['fqrn'])))
+    if dct.get('model'):
+        tbl_attr['_model'] = dct['model']
+    else:
+        tbl_attr['_model'] = model.Model._deja_vu(tbl_attr['_dbname'])
+    rel_class = model.Model._classes_.get(dct['fqrn'])
     if rel_class:
         return rel_class
     try:
-        metadata = tbl_attr['_model'].relation_metadata(tbl_attr['_fqrn'])
+        metadata = tbl_attr['_model'].relation_metadata(dct['fqrn'])
     except KeyError as exc:
-        raise model_errors.UnknownRelation(sfqrn) from exc
+        raise model_errors.UnknownRelation(dct['fqrn']) from exc
     if metadata['inherits']:
         metadata['inherits'].sort()
         bases = []
     for parent_fqrn in metadata['inherits']:
-        bases.append(_factory(None, None, {'fqrn': parent_fqrn}))
+        bases.append(_factory({'fqrn': parent_fqrn}))
     tbl_attr['__metadata'] = metadata
-    if dct.get('model'):
-        tbl_attr['_model'] = dct['model']
-    tbl_attr['__sfqrn'] = tbl_attr['_fqrn']
+    tbl_attr['__sfqrn'] = dct['fqrn']
+    tbl_attr['_fqrn'] = normalize_fqrn(dct['fqrn'])
     tbl_attr['__kind'] = REL_CLASS_NAMES[metadata['tablekind']]
     tbl_attr['_fkeys'] = []
     for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
         tbl_attr[fct_name] = fct
-    class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], sfqrn)
+    class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
     rel_class = type(class_name, tuple(bases), tbl_attr)
-    tbl_attr['_model']._relations_['classes'][tbl_attr['_fqrn']] = rel_class
+    tbl_attr['_model']._classes_[tbl_attr['_fqrn']] = rel_class
     return rel_class

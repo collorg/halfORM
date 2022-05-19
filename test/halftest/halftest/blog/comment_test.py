@@ -11,7 +11,3 @@ class Test(BaseTest):
 
     def test_fk_author_deltype(self):
         self.hotAssertOnDeleteCascade(Comment, 'author')
-
-    def test_has_relation(self):
-        self.assertTrue(Comment._model.has_relation('blog.comment'))
-        self.assertFalse(Comment._model.has_relation('blog.commentaire'))
