@@ -44,7 +44,7 @@ import yaml
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
 from half_orm.field import Field
-from half_orm.pg_meta import get_qrn, normalize_fqrn, normalize_qrn
+from half_orm.pg_meta import normalize_fqrn, normalize_qrn
 
 class SetOperators:
     """SetOperators class stores the set operations made on the Relation class objects
@@ -179,7 +179,7 @@ def only(self, value):
 
 def __set_fields(self):
     """Initialise the fields of the relation."""
-    fields_metadata = self._model.fields_metadata(self.__sfqrn)
+    fields_metadata = self._model.fields_metadata(self._t_fqrn)
 
     for field_name, f_metadata in fields_metadata.items():
         field = Field(field_name, self, f_metadata)
@@ -193,36 +193,23 @@ def __set_fkeys(self):
     #pylint: disable=import-outside-toplevel
     from half_orm.fkey import FKey
 
-    fkeys_metadata = self._model.fkeys_metadata(self.__sfqrn)
+    fkeys_metadata = self._model.fkeys_metadata(self._t_fqrn)
     for fkeyname, f_metadata in fkeys_metadata.items():
         self._fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
     if not self.__fkeys_properties:
         self._set_fkeys_properties()
         self.__fkeys_properties = True
-    if not self.__cls_fkeys_dict:
-        self.__class__.__cls_fkeys_dict = {'_fkeys_names': []}
-        for cls in self.__class__.mro():
-            if not id(cls) in self.__base_classes:
-                self.__class__.__base_classes.add(id(cls))
-                if issubclass(cls, Relation):
-                    if cls == self.__class__:
-                        continue
-                    obj = cls()
-                    if not hasattr(obj, '_fkeys'):
-                        continue
-                    for fkey_name in obj._fkeys.keys():
-                        if not fkey_name in self._fkeys:
-                            self._fkeys[fkey_name] = obj._fkeys[fkey_name]
-                        self.__class__.__cls_fkeys_dict['_fkeys_names'].append(fkey_name)
-                        self.__class__.__cls_fkeys_dict[fkey_name] = obj._fkeys[fkey_name]
-    else:
-        for fkey_name in self.__class__.__cls_fkeys_dict['_fkeys_names']:
-            if not fkey_name in self._fkeys:
-                self._fkeys[fkey_name] = self.__class__.__cls_fkeys_dict[fkey_name]
+    if hasattr(self, 'Fkeys'):
+        for key, value in self.Fkeys.items():
+            try:
+                if key != '': # we skip empty keys
+                    setattr(self, key, self._fkeys[value])
+            except KeyError as exp:
+                raise relation_errors.WrongFkeyError(self, value) from exp
 
 def _set_fkeys_properties(self):
     """Property generator for fkeys.
-    @args is a list of tuples (proerty_name, fkey_name)
+    @args is a list of tuples (property_name, fkey_name)
     """
     fkp = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES', 'FKEYS'], 0)
     if hasattr(fkp, 'FKEYS_PROPERTIES'):
@@ -324,7 +311,7 @@ def group_by(self, yml_directive):
                     [elt], directive[group_name], suite, None)
 
     grouped_data = {}
-    data = [elt for elt in self.select()]
+    data = list(self.select())
     directive = yaml.safe_load(yml_directive)
     inner_group_by(data, directive, grouped_data)
     return grouped_data
@@ -1056,19 +1043,21 @@ def _factory(dct):
 
     bases = [Relation,]
     tbl_attr = {}
-    tbl_attr['__cls_fkeys_dict'] = {}
     tbl_attr['__base_classes'] = set()
     tbl_attr['__fkeys_properties'] = False
-    tbl_attr['_qrn'] = normalize_qrn(get_qrn(dct['fqrn']))
+    tbl_attr['_qrn'] = normalize_qrn(dct['fqrn'])
 
     tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], dct['fqrn'])))
+    if not tbl_attr['_dbname'] in model.Model._classes_:
+        model.Model._classes_[tbl_attr['_dbname']] = {}
     if dct.get('model'):
         tbl_attr['_model'] = dct['model']
     else:
         tbl_attr['_model'] = model.Model._deja_vu(tbl_attr['_dbname'])
-    rel_class = model.Model._classes_.get(dct['fqrn'])
+    rel_class = model.Model.check_deja_vu_class(*dct['fqrn'])
     if rel_class:
         return rel_class
+
     try:
         metadata = tbl_attr['_model'].relation_metadata(dct['fqrn'])
     except KeyError as exc:
@@ -1079,7 +1068,7 @@ def _factory(dct):
     for parent_fqrn in metadata['inherits']:
         bases.append(_factory({'fqrn': parent_fqrn}))
     tbl_attr['__metadata'] = metadata
-    tbl_attr['__sfqrn'] = dct['fqrn']
+    tbl_attr['_t_fqrn'] = dct['fqrn']
     tbl_attr['_fqrn'] = normalize_fqrn(dct['fqrn'])
     tbl_attr['__kind'] = REL_CLASS_NAMES[metadata['tablekind']]
     tbl_attr['_fkeys'] = []
@@ -1087,5 +1076,5 @@ def _factory(dct):
         tbl_attr[fct_name] = fct
     class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
     rel_class = type(class_name, tuple(bases), tbl_attr)
-    tbl_attr['_model']._classes_[tbl_attr['_fqrn']] = rel_class
+    model.Model._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
     return rel_class

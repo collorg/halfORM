@@ -3,7 +3,7 @@
 
 """This module provides the FKey class."""
 
-from half_orm.pg_meta import get_qrn, normalize_fqrn
+from half_orm.pg_meta import normalize_fqrn, normalize_qrn
 
 class FKey:
     """Foreign key class
@@ -42,12 +42,12 @@ class FKey:
             self.__relation = get_rel(__cast__)(**self.__relation.to_dict())
         else:
             f_cast = __cast__
-        f_relation = get_rel(f_cast or '.'.join(get_qrn(self.__fk_fqrn)))(**kwargs)
+        f_relation = get_rel(f_cast or normalize_qrn(self.__fk_fqrn))(**kwargs)
         rev_fkey_name = f'_reverse_{f_relation.id_}'
         f_relation._fkeys[rev_fkey_name] = FKey(
             rev_fkey_name,
             f_relation,
-            f_relation._fqrn, self.__fields, self.__fk_names)
+            f_relation._t_fqrn, self.__fields, self.__fk_names)
         f_relation._fkeys[rev_fkey_name].set(self.__relation)
         return f_relation
 

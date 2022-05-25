@@ -14,6 +14,13 @@ HALFTEST_DESC = [
     ('v', ('halftest', 'blog.view', 'post_comment'), [])
 ]
 
+HALFTEST_STR = """r "actor"."person"
+r "blog"."comment"
+r "blog"."event"
+r "blog"."post"
+v "blog.view"."post_comment"
+"""
+
 class Test(TestCase):
     def setUp(self):
         self.pg_meta = model._Model__pg_meta
@@ -24,3 +31,7 @@ class Test(TestCase):
     def test_desc(self):
         "it should return the list of relations as [(<type>, <fqrn>, [<inherits>, ...]), ...]"
         self.assertEqual(self.pg_meta.desc('halftest'), HALFTEST_DESC)
+
+    def test_str(self):
+        "it should return a well formatted string"
+        self.assertEqual(self.pg_meta.str('halftest'), HALFTEST_STR.strip())

@@ -63,6 +63,8 @@ class Model:
         self.__config_file = config_file
         self.__dbinfo = {}
         self.__dbname = dbname
+        if (dbname):
+            Model._classes_[dbname] = {}
         self.__conn = None
         self._scope = scope and scope.split('.')[0]
         self.__raise_error = raise_error
@@ -211,7 +213,7 @@ class Model:
         @qtn is the <schema>.<table> name of the relation
         @kwargs is a dictionary {field_name:value}
         """
-        schema, table = qtn.rsplit('.', 1)
+        schema, table = qtn.replace('"', '').rsplit('.', 1)
         return _factory({'fqrn': (self.__dbname, schema, table), 'model': self})
 
     def has_relation(self, qtn):
@@ -223,10 +225,20 @@ class Model:
         """
         return self.__pg_meta.has_relation(self.__dbname, *qtn.split('.'))
 
+    @classmethod
+    def check_deja_vu_class(cls, dbname, schema, relation):
+        """Not to use with _import_class.
+        """
+        if cls._classes_.get(dbname):
+            return cls._classes_[dbname].get((dbname, schema, relation))
+
     def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
+
+        This method is used to import a class from a module. The module
+        must reside in an accessible python package named `scope`.
         """
-        t_qtn = qtn.split('.')
+        t_qtn = qtn.replace('"', '').rsplit('.', 1)
         module_path = f'{scope or self._scope}.{".".join(t_qtn)}'
         _class_name = pg_meta.class_name(qtn) # XXX
         module = __import__(

@@ -15,8 +15,3 @@ class Test(TestCase):
     def test_missing_config_file(self):
         self.assertRaises(
             model_errors.MissingConfigFile, model.Model, "missing")
-
-    def __test_unknown_relation(self):
-        self.assertRaises(
-            model_errors.UnknownRelation,
-            halftest.relation, "blog.unknown")

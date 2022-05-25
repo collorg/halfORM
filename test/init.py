@@ -4,6 +4,7 @@ import os
 import sys
 from datetime import date
 from half_orm.model import Model
+from half_orm.relation import singleton
 
 path = os.path.dirname(__file__)
 sys.path.insert(0, f'{path}/halftest')
@@ -27,6 +28,7 @@ def name(letter, integer):
 
 class HalfTest:
     def __init__(self):
+        self.model = model
         assert model._scope == "halftest"
         self.dbname = model._dbname
         self.today = date.today()
@@ -60,9 +62,4 @@ class HalfTest:
             self.post.delete(delete_all=True)
             insert_pers(self.pers)
 
-if 1:#try:
-    halftest = HalfTest()
-else:#except Exception as err:
-    sys.stderr.write('{err}\n')
-    sys.stderr.write(README.format(path))
-    sys.exit(1)
+halftest = HalfTest()

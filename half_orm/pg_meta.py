@@ -4,11 +4,11 @@ PostgreSQL database.
 
 from collections import OrderedDict
 
-def strip_qrn(qrn):
+def strip_quotes(qrn):
     "Removes all double quotes from the qrn/fqrn"
     return qrn.replace('"', '')
 
-def get_qrn(fqrn: tuple) -> tuple:
+def __get_qrn(fqrn: tuple) -> tuple:
     "Returns the qualified relation name <schema>.<relation> from the fully qualified relation name"
     return fqrn[1:]
 
@@ -28,7 +28,7 @@ def normalize_qrn(t_qrn):
     A table name can't have a dot in it.
     returns "<schema name>"."<relation name>"
     """
-    return '.'.join([f'"{elt}"' for elt in t_qrn])
+    return '.'.join([f'"{elt}"' for elt in __get_qrn(t_qrn)])
 
 def camel_case(string):
     "Retruns the string transformed to camel case"
@@ -48,7 +48,7 @@ def camel_case(string):
 
 def class_name(qrn):
     "Returns the class name from qrn"
-    return camel_case(qrn.split('.')[-1])
+    return camel_case(qrn.replace('"', '').split('.')[-1])
 
 _REQUEST = """
 SELECT
@@ -230,7 +230,7 @@ class PgMeta:
                     confdeltype = dct['fkey_confdeltype']
                     ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
                     rev_fkey_name = f'_reverse_fkey_{"_".join(table_key)}.{".".join(fields)}'
-                    rev_fkey_name = strip_qrn(rev_fkey_name.replace(".", "_").replace(":", "_"))
+                    rev_fkey_name = strip_quotes(rev_fkey_name.replace(".", "_").replace(":", "_"))
                     byname[table_key]['fkeys'][fkeyname] = (
                         ftable_key, ffields, fields, confupdtype, confdeltype)
                     byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
@@ -292,5 +292,5 @@ class PgMeta:
         out = []
         entry = self.metadata(dbname)['byname']
         for key in entry:
-            out.append(f"{entry[key]['tablekind']} {normalize_fqrn(key)}")
+            out.append(f"{entry[key]['tablekind']} {normalize_qrn(key)}")
         return '\n'.join(out)

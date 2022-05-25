@@ -30,3 +30,12 @@ class NotASingletonError(Exception):
     """
     def __init__(self, err):
         Exception.__init__(self, f'Not a singleton. Got {err.count} tuple{err.plural}')
+
+class WrongFkeyError(Exception):
+    "Raised when Fkeys contains a wrong name"
+    def __init__(self, cls, value):
+        fkeys_list = "\n".join([f" - {fkey}" for fkey in cls._fkeys.keys()])
+        err = f"Can't find '{value}'!\n" \
+            f"List of keys for {cls.__class__.__name__}:\n" \
+            f"{fkeys_list}"
+        super().__init__(err)

@@ -1,16 +1,57 @@
 # A simple PostgreSQL-Python relation-object mapper.
 
-`half_orm` maps an existing PostgreSQL database to Python objects with [inheritance as defined in PostgreSQL](https://www.postgresql.org/docs/current/static/tutorial-inheritance.html).
-## Why half?
-The SQL language is divided in two different parts:
-- the data definition language part ([DDL](https://www.postgresql.org/docs/13/ddl.html)) to manipulate the structure of a database,
-- the data manipulation language part ([DML](https://www.postgresql.org/docs/13/dml.html)) used for selecting, inserting, deleting and updating data in a database.
+`half_orm` maps an existing PostgreSQL database into Python objects with [inheritance as defined in PostgreSQL](https://www.postgresql.org/docs/current/static/tutorial-inheritance.html). You have a PostgreSQL database ready at hand, here is what coding with halfORM looks like :
 
-`half_orm` only deals with the DML part. Basically the `INSERT`, `SELECT`, `UPDATE` and `DELETE` commands. This makes `half_orm` easy to learn and use. In a way, `half_orm` is more a `ROM`  (relation-object mapper) than an `ORM`.
+```python
+from half_orm.model import Model
+from half_orm.relation import singleton
+
+halftest = Model('halftest') # We connect to the PostgreSQL database
+# print(halftest) to get the list of relations in the database
+
+class Post(halftest.get_relation_class('blog.post')):
+    """blog.post is a table of the halftest database (<schema>.<relation>)
+    To get a full description of the relation, use print(Post())
+    """
+    Fkeys = { # we set some aliases for the foreign keys (direct AND reverse) (half_orm >= 0.6.5)
+        'comments': '_reverse_fkey_halftest_blog_comment_post_id', # a post is referenced by comments
+        'author': 'author' # the post references a person
+    }
+
+class Person(halftest.get_relation_class('actor.person')):
+    Fkeys = {
+        'posts': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
+        'comments': '_reverse_fkey_halftest_blog_comment_author_id'
+    }
+    @singleton # we ensure that self is a singleton of the actor.person table
+    def add_post(self, title: str=None, content: str=None) -> dict:
+        return self.posts(title=title, content=content).insert()[0] # we use the insert method
+    @singleton
+    def add_comment(self, post: Post=None, content: str=None) -> dict:
+        return self.comments(content=content, post_id=post.id.value, author_id=self.id.value).insert()[0]
+
+def main():
+    # let's define a Person set (a singleton here) by instanciating a set with some constraints
+    gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
+    gaston.delete() # the delete method
+    if gaston.is_empty(): # always true since we've just deleted gaston
+        gaston.insert()
+    post_dct = gaston.add_post(title='Easy', content='halfORM is fun!')
+    post = Post(**post_dct)
+    gaston.add_comment(content='This is a comment on the newly created post.', post=post)
+    print(list(post.comments().select()))
+    post.update(title='Super easy')
+    gaston.delete()
+```
+
+
+## halfORM is not an ORM
+
+`half_orm` only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL, basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands. 
 
 # Learn `half_orm` in half an hour
 
-You have a PostgreSQL database ready at hand (you can try half_orm with [pagila](https://github.com/devrimgunduz/pagila))
+
 
 ## Install `half_orm`
 
@@ -304,7 +345,7 @@ people = Person(last_name='Lagaffe')
 if people.is_empty() or len(people) > 1:
     raise ExcpetedOneError
 gaston = Person(**next(people.select()))
-gaston.is_singleton = True
+gaston._is_singleton = True
 ```
 
 ### Is it a set? Is it an element of the set?
@@ -330,6 +371,8 @@ pers.name
 In this case, you can use the `@singleton` decorator to ensure that the constraint references one and only one element:
 
 ```py
+from half_orm.relation import singleton
+
 class Person(halftest.get_relation_class('actor.person')):
     @property
     @singleton
