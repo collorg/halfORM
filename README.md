@@ -91,7 +91,7 @@ Your ready to go!
 ```
 
 The `my_database` is the name of the connexion file. It will be fetched in the directory referenced by
-the shell variable `HALFORM_CONF_DIR` if defined, in `/etc/half_orm` otherwise.
+the environment variable `HALFORM_CONF_DIR` if defined, in `/etc/half_orm` otherwise.
 
 
 ## Get a rapid description of the database structure
@@ -242,7 +242,7 @@ my_selection |= Person(first_name=('ilike', 'A%'))
 # DML. The `insert`, `select`, `update`, `delete` methods.
 
 These methods trigger their corresponding SQL querie on the database. 
-For debugging purposes, you can activate the print the SQL query built 
+For debugging purposes, you can print the SQL query built 
 by half_orm when the DML method is invoked using the _mogrify() method.
 
 ```py
@@ -251,7 +251,7 @@ persons.select()
 ```
 
 ## Insert
-To insert a tuple in the relation, use the `insert` method as shown bellow:
+To insert a tuple in the relation, use the `insert` method as shown below:
 ```python
 Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
 ```
