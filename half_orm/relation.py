@@ -760,7 +760,6 @@ def join(self, *f_rels):
             return str(value)
         return value
 
-    # constraint = {self.__dict__[field].name: self.__dict__[field].value for field in self._fields}
     res = list(
         {key: to_str(value) for key, value in elt.items()}
         for elt in self.distinct().select()
@@ -782,30 +781,23 @@ def join(self, *f_rels):
             result_as_list = True
         res_remote = {}
 
-        remote1 = None
         f_relation_fk_names = []
         fkey_found = False
         for fkey_12 in ref._fkeys:
-            remote1 = ref._fkeys[fkey_12]
-            if remote1().__class__ is f_relation.__class__:
-                remote1.set(f_relation())
+            remote_fk = ref._fkeys[fkey_12]
+            remote = remote_fk()
+            if remote.__class__ == f_relation.__class__:
+                for field in f_relation._fields.keys():
+                    if f_relation.__dict__[field].is_set():
+                        remote.__dict__[field].set(f_relation.__dict__[field])
                 fkey_found = True
-                f_relation_fk_names = remote1.fk_names
-                break
-
-        relation1_pk_names = []
-        for fkey_21 in f_relation._fkeys:
-            remote = f_relation._fkeys[fkey_21]
-            if remote().__class__ == ref.__class__:
-                fkey_found = True
-                relation1_pk_names = remote.fk_names
+                f_relation_fk_names = remote_fk.fk_names
                 break
 
         if not fkey_found:
             raise RuntimeError(f"No foreign key between {self._fqrn} and {f_relation._fqrn}!")
-
         inter = [{key: to_str(val) for key, val in elt.items()}
-            for elt in remote1().distinct().select(
+            for elt in remote.distinct().select(
                 *([f'"{field}"' for field in fields] + f_relation_fk_names))]
         for elt in inter:
             key = tuple(elt[subelt] for subelt in f_relation_fk_names)
@@ -816,18 +808,20 @@ def join(self, *f_rels):
             else:
                 res_remote[key].append({key: to_str(elt[key]) for key in fields})
 
-        if relation1_pk_names:
-            for delt in res:
-                keyr = tuple(delt[key] for key in relation1_pk_names)
-                delt[name] = res_remote.get(keyr, [])
         if f_relation_fk_names:
             d_res = {
-                tuple(elt[selt] for selt in remote1.names): elt
+                tuple(elt[selt] for selt in remote_fk.names): elt
                 for elt in res
                 }
+            to_remove = set()
             for elt in d_res:
-                d_res[elt][name] = res_remote[elt]
-
+                remote = res_remote.get(elt)
+                if remote:
+                    d_res[elt][name] = remote
+                else:
+                    to_remove.add(elt)
+            res = [elt for elt in res if tuple(elt[selt]
+                    for selt in remote_fk.names) not in to_remove]
     return res
 
 def __set__op__(self, operator=None, right=None):

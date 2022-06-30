@@ -46,20 +46,21 @@ class HalfTest:
         self.blog_view = model._import_class("blog.view.post_comment")()
 
         @self.pers.Transaction
-        def insert_pers(pers):
-            for n in 'abcdef':
+        def init_pers(pers):
+            sys.stderr.write('Initializing actor.person\n')
+            self.pers.delete(delete_all=True)
+            self.post.delete(delete_all=True)
+            for letter in 'abcdef':
                 for i in range(10):
-                    last_name = name(n, i)
-                    first_name = name(n, i)
+                    last_name = name(letter, i)
+                    first_name = name(letter, i)
                     birth_date = self.today
-                    self.pers(
+                    pers(
                         last_name=last_name,
                         first_name=first_name,
                         birth_date=birth_date).insert()
 
         if len(self.pers) != 60:
-            self.pers.delete(delete_all=True)
-            self.post.delete(delete_all=True)
-            insert_pers(self.pers)
+            init_pers(self.pers)
 
 halftest = HalfTest()
