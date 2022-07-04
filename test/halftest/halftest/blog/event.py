@@ -71,7 +71,6 @@ class Event(BlogPost, __RCLS):
     Fkeys = {
         '': 'author',
     }
-
     """
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
     Fkeys = {

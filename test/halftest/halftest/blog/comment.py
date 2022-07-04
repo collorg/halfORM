@@ -73,7 +73,6 @@ class Comment(__RCLS):
         '': 'post',
         '': 'author',
     }
-
     """
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
 

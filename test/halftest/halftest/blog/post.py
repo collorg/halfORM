@@ -74,7 +74,6 @@ class Post(__RCLS):
         '': '_reverse_fkey_halftest_blog_comment_post_id',
         '': 'author',
     }
-
     """
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
 

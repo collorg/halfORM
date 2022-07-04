@@ -353,6 +353,14 @@ def _to_dict_val_comp(self):
             self._fields.items() if field.is_set()}
 
 def __repr__(self):
+
+    fkeys_usage = """To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
+your code as a class attribute and replace the empty string(s) key(s) with the alias you
+want to use. The aliases must be unique and different from any of the column names. Empty
+string keys are ignored.
+
+Fkeys = {"""
+
     rel_kind = self.__kind
     ret = []
     ret.append(f"__RCLS: {self.__class__}")
@@ -373,6 +381,11 @@ def __repr__(self):
         ret.append(f'FOREIGN KEY{plur}:')
         for fkey in self._fkeys.values():
             ret.append(repr(fkey))
+        ret.append('')
+        ret.append(fkeys_usage)
+        for fkey in self._fkeys:
+            ret.append(f"    '': '{fkey}',")
+        ret.append('}')
     return '\n'.join(ret)
 
 def is_set(self):

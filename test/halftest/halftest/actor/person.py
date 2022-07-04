@@ -76,7 +76,6 @@ class Person(__RCLS):
         '': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
         '': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
     }
-
     """
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
     Fkeys = {
