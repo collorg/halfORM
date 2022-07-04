@@ -269,6 +269,7 @@ class PgMeta:
         ret_val = []
         entry = self.metadata(dbname)['byname']
         for key in entry:
+            if key[1].find('half_orm_meta') == 0: continue
             inh = []
             tablekind = entry[key]['tablekind']
             if entry[key]['inherits']:
@@ -292,5 +293,6 @@ class PgMeta:
         out = []
         entry = self.metadata(dbname)['byname']
         for key in entry:
+            if key[1].find('half_orm_meta') == 0: continue
             out.append(f"{entry[key]['tablekind']} {normalize_qrn(key)}")
         return '\n'.join(out)

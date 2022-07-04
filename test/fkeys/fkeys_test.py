@@ -65,8 +65,8 @@ class Test(TestCase):
 
     def test_check_FKEYS_class(self):
         pers = self.pers()
-        self.assertEqual(pers._post.__class__.__name__, self.post.__class__.__name__)
-        self.assertEqual(pers._comment.__class__.__name__, self.comment.__class__.__name__)
+        self.assertEqual(pers._post().__class__.__name__, self.post.__class__.__name__)
+        self.assertEqual(pers._comment().__class__.__name__, self.comment.__class__.__name__)
         post = self.post()
-        self.assertEqual(post.author_.__class__.__name__, self.pers.__class__.__name__)
-        self.assertEqual(post.comment_fk.__class__.__name__, self.comment.__class__.__name__)
+        self.assertEqual(post.author_().__class__.__name__, self.pers.__class__.__name__)
+        self.assertEqual(post.comment_fk().__class__.__name__, self.comment.__class__.__name__)

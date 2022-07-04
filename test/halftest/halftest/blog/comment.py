@@ -1,4 +1,4 @@
-# hop release: 0.0.2
+# hop release: 0.0.21
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.blog.comment povides the Comment class.
@@ -19,15 +19,17 @@ MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 
 To use the foreign keys as direct attributes of the relation class,
-copy/paste the FKEYS/FKEYS_PROPERTIES bellow in your code and replace the
+copy/paste the FKEYS bellow in your code and replace the
 empty string(s) with the alias you want to use.
 The aliases must be unique and different from any of the column names. Empty
-strings are ignored. FKEYS_PROPERTIES is deprecated.
+strings are ignored.
 
 FKEYS = [
     ('', 'post'),
     ('', 'author'),
 ]
+
+DEPRECATED! See Fkeys class attribute. Will be removed in half_orm_packager 0.1.0 release.
 
 """
 
@@ -46,7 +48,7 @@ class Comment(__RCLS):
     """
     __RCLS: <class 'half_orm.relation.Table_HalftestBlogComment'>
     This class allows you to manipulate the data in the PG relation:
-    TABLE: "halftest"."blog"."comment"
+    TABLE: "halftest":"blog"."comment"
     DESCRIPTION:
     The table blog.comment contains all the comments
     made by a person on a post.
@@ -58,9 +60,20 @@ class Comment(__RCLS):
     - a = 1:     (text)
     FOREIGN KEYS:
     - post: ("post_id")
-     ↳ "halftest"."blog"."post"(id)
+     ↳ "halftest":"blog"."post"(id)
     - author: ("author_id")
-     ↳ "halftest"."actor"."person"(id)
+     ↳ "halftest":"actor"."person"(id)
+
+    To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
+    your code as a class attribute and replace the empty string(s) key(s) with the alias you
+    want to use. The aliases must be unique and different from any of the column names. Empty
+    string keys are ignored.
+
+    Fkeys = {
+        '': 'post',
+        '': 'author',
+    }
+
     """
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
 

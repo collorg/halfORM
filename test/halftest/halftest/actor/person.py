@@ -1,4 +1,4 @@
-# hop release: 0.0.2
+# hop release: 0.0.21
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.actor.person povides the Person class.
@@ -19,16 +19,18 @@ MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 
 To use the foreign keys as direct attributes of the relation class,
-copy/paste the FKEYS/FKEYS_PROPERTIES bellow in your code and replace the
+copy/paste the FKEYS bellow in your code and replace the
 empty string(s) with the alias you want to use.
 The aliases must be unique and different from any of the column names. Empty
-strings are ignored. FKEYS_PROPERTIES is deprecated.
+strings are ignored.
 
 FKEYS = [
     ('', '_reverse_fkey_halftest_blog_comment_author_id'),
     ('', '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date'),
     ('', '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date'),
 ]
+
+DEPRECATED! See Fkeys class attribute. Will be removed in half_orm_packager 0.1.0 release.
 
 """
 
@@ -37,11 +39,7 @@ from halftest.db_connector import base_relation_class
 #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
 from half_orm.relation import singleton
 
-FKEYS = [
-    ('_comment', '_reverse_fkey_halftest_blog_comment_author_id'),
-    ('_event', '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date'),
-    ('_post', '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date')
-]
+
 #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
 
 __RCLS = base_relation_class('actor.person')
@@ -50,7 +48,7 @@ class Person(__RCLS):
     """
     __RCLS: <class 'half_orm.relation.Table_HalftestActorPerson'>
     This class allows you to manipulate the data in the PG relation:
-    TABLE: "halftest"."actor"."person"
+    TABLE: "halftest":"actor"."person"
     DESCRIPTION:
     The table actor.person contains the persons of the blogging system.
     The id attribute is a serial. Just pass first_name, last_name and birth_date
@@ -62,14 +60,30 @@ class Person(__RCLS):
     - birth_date: (date) PK
     FOREIGN KEYS:
     - _reverse_fkey_halftest_blog_comment_author_id: ("id")
-     ↳ "halftest"."blog"."comment"(author_id)
+     ↳ "halftest":"blog"."comment"(author_id)
     - _reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
-     ↳ "halftest"."blog"."event"(author_first_name, author_last_name, author_birth_date)
+     ↳ "halftest":"blog"."event"(author_first_name, author_last_name, author_birth_date)
     - _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
-     ↳ "halftest"."blog"."post"(author_first_name, author_last_name, author_birth_date)
+     ↳ "halftest":"blog"."post"(author_first_name, author_last_name, author_birth_date)
+
+    To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
+    your code as a class attribute and replace the empty string(s) key(s) with the alias you
+    want to use. The aliases must be unique and different from any of the column names. Empty
+    string keys are ignored.
+
+    Fkeys = {
+        '': '_reverse_fkey_halftest_blog_comment_author_id',
+        '': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
+        '': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
+    }
+
     """
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
-
+    Fkeys = {
+        '_comment': '_reverse_fkey_halftest_blog_comment_author_id',
+        '_event': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
+        '_post': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date'
+    }
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -1,4 +1,4 @@
-# hop release: 0.0.2
+# hop release: 0.0.21
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.blog.post povides the Post class.
@@ -19,15 +19,17 @@ MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 
 To use the foreign keys as direct attributes of the relation class,
-copy/paste the FKEYS/FKEYS_PROPERTIES bellow in your code and replace the
+copy/paste the FKEYS bellow in your code and replace the
 empty string(s) with the alias you want to use.
 The aliases must be unique and different from any of the column names. Empty
-strings are ignored. FKEYS_PROPERTIES is deprecated.
+strings are ignored.
 
 FKEYS = [
     ('', '_reverse_fkey_halftest_blog_comment_post_id'),
     ('', 'author'),
 ]
+
+DEPRECATED! See Fkeys class attribute. Will be removed in half_orm_packager 0.1.0 release.
 
 """
 
@@ -46,7 +48,7 @@ class Post(__RCLS):
     """
     __RCLS: <class 'half_orm.relation.Table_HalftestBlogPost'>
     This class allows you to manipulate the data in the PG relation:
-    TABLE: "halftest"."blog"."post"
+    TABLE: "halftest":"blog"."post"
     DESCRIPTION:
     The table blog.post contains all the post
     made by a person in the blogging system.
@@ -59,9 +61,20 @@ class Post(__RCLS):
     - author_birth_date: (date)
     FOREIGN KEYS:
     - _reverse_fkey_halftest_blog_comment_post_id: ("id")
-     ↳ "halftest"."blog"."comment"(post_id)
+     ↳ "halftest":"blog"."comment"(post_id)
     - author: ("author_birth_date", "author_first_name", "author_last_name")
-     ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+     ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)
+
+    To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
+    your code as a class attribute and replace the empty string(s) key(s) with the alias you
+    want to use. The aliases must be unique and different from any of the column names. Empty
+    string keys are ignored.
+
+    Fkeys = {
+        '': '_reverse_fkey_halftest_blog_comment_post_id',
+        '': 'author',
+    }
+
     """
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
 

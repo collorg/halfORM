@@ -223,7 +223,7 @@ class Model:
         Returns True if the relation exists, False otherwise.
         Also works for views and materialized views.
         """
-        return self.__pg_meta.has_relation(self.__dbname, *qtn.split('.'))
+        return self.__pg_meta.has_relation(self.__dbname, *qtn.rsplit('.', 1))
 
     @classmethod
     def check_deja_vu_class(cls, dbname, schema, relation):

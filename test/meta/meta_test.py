@@ -14,12 +14,11 @@ HALFTEST_DESC = [
     ('v', ('halftest', 'blog.view', 'post_comment'), [])
 ]
 
-HALFTEST_STR = """r "actor"."person"
+HALFTEST_STR = '''r "actor"."person"
 r "blog"."comment"
 r "blog"."event"
 r "blog"."post"
-v "blog.view"."post_comment"
-"""
+v "blog.view"."post_comment"'''
 
 class Test(TestCase):
     def setUp(self):
@@ -34,4 +33,4 @@ class Test(TestCase):
 
     def test_str(self):
         "it should return a well formatted string"
-        self.assertEqual(self.pg_meta.str('halftest'), HALFTEST_STR.strip())
+        self.assertEqual(self.pg_meta.str('halftest'), HALFTEST_STR)

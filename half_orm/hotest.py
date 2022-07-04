@@ -25,7 +25,7 @@ class HoTestCase(unittest.TestCase):
     def hotAssertAliasReferences(self, relation: Relation, alias: str, f_relation: Relation):
         referenced = eval(f"relation().{alias}")
         print(dir(referenced))
-        if not referenced._qrn == f_relation._qrn:
+        if not referenced()._qrn == f_relation._qrn:
             raise self.fail(f"{relation}.{alias}() does not reference {f_relation}")
 
     def __check_update_action(self, relation: Relation, fk_name: str, update_type: str):

@@ -1,4 +1,4 @@
-# hop release: 0.0.2
+# hop release: 0.0.21
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.blog.view.post_comment povides the PostComment class.
@@ -33,7 +33,7 @@ class PostComment(__RCLS):
     """
     __RCLS: <class 'half_orm.relation.View_HalftestBlogviewPost_comment'>
     This class allows you to manipulate the data in the PG relation:
-    VIEW: "halftest"."blog.view"."post_comment"
+    VIEW: "halftest":"blog.view"."post_comment"
     DESCRIPTION:
     This view joins:
     - comment,

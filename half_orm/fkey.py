@@ -31,7 +31,7 @@ class FKey:
         self.__fields = [f'"{name}"' for name in fields]
 
     def __call__(self, __cast__=None, **kwargs):
-        """Returns the relation on which the fkey is defined.
+        """Returns the relation referenced by the fkey.
         If model._scope is set, instanciate the class from the scoped module.
         Uses the __cast if it is set.
         """
@@ -53,9 +53,6 @@ class FKey:
 
     def values(self):
         return [list(elt.values()) for elt in self.__to_relation.select(*self.__fk_names)]
-
-    def insert(self):
-        return self.__to_relation.insert()
 
     def set(self, to_):
         """Sets the relation associated to the foreign key."""
