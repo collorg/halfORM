@@ -27,11 +27,11 @@ class Test(TestCase):
         self.assertEqual(list(self.comment._fkeys.keys()), ['post', 'author'])
 
     def test_post_author_fkey_type(self):
-        author = self.post.author_
+        author = self.post.author_()
         self.assertTrue(isinstance(author, halftest.pers.__class__))
 
     def test_comment_author_fkey_type(self):
-        author = self.comment.author_
+        author = self.comment.author_()
         self.assertTrue(isinstance(author, halftest.pers.__class__))
 
     def test_comment_post_fkey_type(self):
@@ -42,7 +42,7 @@ class Test(TestCase):
         post = self.post()
         self.assertFalse(post.is_set())
         pers = self.pers(last_name=('a%', 'like'))
-        post.author_ = pers
+        post.author_.set(pers)
         self.assertTrue(post.is_set())
 
     def test_is_not_set(self):
@@ -50,12 +50,12 @@ class Test(TestCase):
         self.assertFalse(post.is_set())
         pers = self.pers()
         self.assertFalse(pers.is_set())
-        post.author_ = pers
+        post.author_.set(pers)
         self.assertFalse(post.is_set())
 
     def test_is_set_reverse(self):
         post = self.post(title="toto")
-        author = post.author_
+        author = post.author_()
         self.assertTrue(author.is_set())
 
     def test_is_not_set_reverse(self):
@@ -70,3 +70,10 @@ class Test(TestCase):
         post = self.post()
         self.assertEqual(post.author_().__class__.__name__, self.pers.__class__.__name__)
         self.assertEqual(post.comment_fk().__class__.__name__, self.comment.__class__.__name__)
+
+    def test_runtime_error(self):
+        "should raise a RuntimeError exception"
+        pers = self.pers()
+
+        with self.assertRaises(RuntimeError) as err:
+            pers._comment = self.comment()

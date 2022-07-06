@@ -56,18 +56,10 @@ class FKey:
 
     def set(self, to_):
         """Sets the relation associated to the foreign key."""
-        self.__to_relation = to_
-        self.__set__(self.__relation, to_)
-
-    def __set__(self, from_, to_):
-        """Sets the value associated with the foreign key.
-
-        The value must be an object of type Relation having the
-        same FQRN that (or inheriting) the one referenced by self.__fk_fqrn.
-        """
-        # pylint: disable=import-outside-toplevel
         from half_orm.relation import Relation
 
+        self.__to_relation = to_
+        from_ = self.__relation
         if not issubclass(to_.__class__, Relation):
             raise Exception("Expecting a Relation")
         to_classes = set(type.mro(to_.__class__))
@@ -81,6 +73,10 @@ class FKey:
         self.__fk_to = to_
         self.__is_set = to_.is_set()
         from_._joined_to[self] = to_
+
+    @classmethod
+    def __set__(cls, *args):
+        raise RuntimeError
 
     def is_set(self):
         """Return if the foreign key is set (boolean)."""

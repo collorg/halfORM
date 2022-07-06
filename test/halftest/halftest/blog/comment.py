@@ -36,10 +36,7 @@ DEPRECATED! See Fkeys class attribute. Will be removed in half_orm_packager 0.1.
 from halftest.db_connector import base_relation_class
 
 #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
-FKEYS = [
-    ('post_', 'post'),
-    ('author_', 'author')
-]
+
 #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
 
 __RCLS = base_relation_class('blog.comment')
@@ -75,6 +72,10 @@ class Comment(__RCLS):
     }
     """
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+    Fkeys = {
+        'post_fk': 'post',
+        'author_': 'author',
+    }
 
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
     def __init__(self, **kwargs):

@@ -101,7 +101,7 @@ class Test(HoTestCase):
 
     def test_join_should_work_with_FKEYS(self):
         "join should work with the use of FKEYS"
-        author_ab = self.comment(content=self.comment_ab_post_1).author_
+        author_ab = self.comment(content=self.comment_ab_post_1).author_()
         res3 = author_ab.join(
             (self.comment(), 'comments', 'content')
         )[0]
@@ -123,11 +123,13 @@ class Test(HoTestCase):
     def test_join_with_joined_object_with_FKEYS(self):
         "join should work with constraints on the joined objects"
         self.skipTest("Not implemented")
+        post = self.post()
+        # post.title = self.post0.title
         print(halftest.post()._fkeys.keys())
-        print(halftest.event._fkeys.keys())
-        self.post().join((self.comment(), 'comments'))
-        res = self.comment(content=self.comment_ab_post_1).join(
-            (self.comment(content=self.comment_ab_post).post_, 'posts')
+        print(halftest.comment()._fkeys.keys())
+        print(len(self.post().join((self.comment(), 'comments'))))
+        res = self.comment().join(
+            (self.comment(content=self.comment_ab_post).post_fk(), '')
         )
         print(res)
         self.assertEqual('a', 'b')

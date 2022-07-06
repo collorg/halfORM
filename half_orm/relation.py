@@ -101,6 +101,7 @@ def __init__(self, **kwargs):
     self._pkey = {}
     self._fkeys = OrderedDict()
     self._fkeys_prop = []
+    self._fkeys_attr = set()
     self.__only = False
     self.__neg = False
     self.__set_fields()
@@ -203,7 +204,8 @@ def __set_fkeys(self):
         for key, value in self.Fkeys.items():
             try:
                 if key != '': # we skip empty keys
-                    setattr(self, key, self._fkeys[value])
+                    setattr(self.__class__.__base__, key, self._fkeys[value])
+                    self._fkeys_attr.add(key)
             except KeyError as exp:
                 raise relation_errors.WrongFkeyError(self, value) from exp
 
@@ -486,6 +488,8 @@ def __where_args(self, *args):
 
 def __get_query(self, query_template, *args):
     """Prepare the SQL query to be executed."""
+    from half_orm.fkey import FKey
+
     self.__sql_values = []
     self.__query_type = 'select'
     what, where, values = self.__where_args(*args)
@@ -495,6 +499,15 @@ def __get_query(self, query_template, *args):
     for idx, elt in reversed(list(enumerate(self.__sql_query))):
         if elt.find('\n  join ') == 0 and self.__sql_query.count(elt) > 1:
             self.__sql_query[idx] = '  and\n'
+    # check that fkeys are fkeys
+    for fkey_name in self._fkeys_attr:
+        fkey_cls = self.__class__.__base__.__dict__[fkey_name].__class__
+        if fkey_cls != FKey:
+            raise RuntimeError(
+                f'self.{fkey_name} is not a FKey (got a {fkey_cls.__name__} object instead).\n'
+                f'- use: self.{fkey_name}.set({fkey_cls.__name__}(...))\n'
+                f'- not: self.{fkey_name} = {fkey_cls.__name__}(...)'
+                )
     return (
         query_template.format(
             what,
@@ -760,6 +773,8 @@ def join(self, *f_rels):
     Returns:
         dict: all values are converted to string.
     """
+    from half_orm.fkey import FKey
+
     def to_str(value):
         """Returns value in string format if the type of value is
         in TO_PROCESS
@@ -797,6 +812,8 @@ def join(self, *f_rels):
         f_relation_fk_names = []
         fkey_found = False
         for fkey_12 in ref._fkeys:
+            if type(ref._fkeys[fkey_12]) != FKey:
+                raise RuntimeError("This is not an Fkey")
             remote_fk = ref._fkeys[fkey_12]
             remote = remote_fk()
             if remote.__class__ == f_relation.__class__:
