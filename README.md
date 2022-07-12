@@ -1,6 +1,9 @@
 # A simple PostgreSQL-Python relation-object mapper.
 
-`half_orm` maps an existing PostgreSQL database into Python objects with [inheritance as defined in PostgreSQL](https://www.postgresql.org/docs/current/static/tutorial-inheritance.html). You have a PostgreSQL database ready at hand, here is what coding with halfORM looks like :
+`half_orm` maps an existing PostgreSQL database into Python objects with [inheritance as defined in PostgreSQL](https://www.postgresql.org/docs/current/static/tutorial-inheritance.html).
+`half_orm` only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL, basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands.
+
+You have a PostgreSQL database ready at hand, here is what coding with halfORM looks like :
 
 ```python
 from half_orm.model import Model
@@ -28,7 +31,7 @@ class Person(halftest.get_relation_class('actor.person')):
         return self.posts(title=title, content=content).insert()[0] # we use the insert method
     @singleton
     def add_comment(self, post: Post=None, content: str=None) -> dict:
-        return self.comments(content=content, post_id=post.id.value, author_id=self.id.value).insert()[0]
+        return self.comments(content=content, post_id=post.id.value).insert()[0]
 
 def main():
     # let's define a Person set (a singleton here) by instanciating a set with some constraints
@@ -44,10 +47,6 @@ def main():
     gaston.delete()
 ```
 
-
-## halfORM is not an ORM
-
-`half_orm` only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL, basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands. 
 
 # Learn `half_orm` in half an hour
 
@@ -87,7 +86,7 @@ Your ready to go!
 
 ```py
 >>> from half_orm.model import Model
->>> my_db = Model('my_database') # OK wrong name... this is a Pg database ;)
+>>> my_db = Model('my_database')
 ```
 
 The `my_database` is the name of the connexion file. It will be fetched in the directory referenced by
@@ -146,17 +145,21 @@ class PostComment(halftest.get_relation_class('blog.view.post_comment')):
 ```
 
 The argument passed to `get_relation_class` is as string of the form:
-`<schema_name>.<relation_name>`. Note that while dots are allowed in the schemas, this is not the case for relations.
+`<schema_name>.<relation_name>`.
+
+**Note**: Dots are only allowed in schema names.
 
 To get a full description of the corresponding relation, print an instance of the class:
 
 ```python
 >>> print(Person())
+```
+```
 __RCLS: <class 'half_orm.relation.Table_HalftestActorPerson'>
 This class allows you to manipulate the data in the PG relation:
-TABLE: "halftest"."actor"."person"
+TABLE: "halftest":"actor"."person"
 DESCRIPTION:
-The table actor.person contains the persons of the blogging system.
+The table actor.person contains the people of the blogging system.
 The id attribute is a serial. Just pass first_name, last_name and birth_date
 to insert a new person.
 FIELDS:
@@ -166,11 +169,22 @@ FIELDS:
 - birth_date: (date) PK
 FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_comment_author_id: ("id")
- ↳ "halftest"."blog"."comment"(author_id)
+ ↳ "halftest":"blog"."comment"(author_id)
 - _reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
- ↳ "halftest"."blog"."event"(author_first_name, author_last_name, author_birth_date)
+ ↳ "halftest":"blog"."event"(author_first_name, author_last_name, author_birth_date)
 - _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
- ↳ "halftest"."blog"."post"(author_first_name, author_last_name, author_birth_date)
+ ↳ "halftest":"blog"."post"(author_first_name, author_last_name, author_birth_date)
+
+To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
+your code as a class attribute and replace the empty string(s) key(s) with the alias you
+want to use. The aliases must be unique and different from any of the column names. Empty
+string keys are ignored.
+
+Fkeys = {
+    '': '_reverse_fkey_halftest_blog_comment_author_id',
+    '': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
+    '': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
+}
 ```
 
 It provides you with information extracted from the database metadata:
@@ -187,7 +201,7 @@ When you instantiate an object with no arguments, its intention corresponds to a
 
 To constrain a set, you must specify one or more values for the fields/columns in the set with a tuple of the form: `(comp, value)`.
 `comp` (`=` if ommited) is either a 
-[comparison operator](https://www.postgresql.org/docs/13.0/static/functions-comparison.html) or a [pattern matching operator (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html).
+[comparison operator](https://www.postgresql.org/docs/current/static/functions-comparison.html) or a [pattern matching operator (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html).
 
 You can constrain a relation object at instanciation:
 
@@ -232,11 +246,10 @@ Take a look at [the algebra test file](https://github.com/collorg/halfORM/blob/m
 - you can also use the `==`, `!=` and `in` operators to compare two sets.
 
 ```python
-my_selection = Person(last_name=('ilike', '_a%'))
-my_selection |= Person(first_name=('ilike', 'A%'))
+my_selection = Person(last_name=('ilike', '_a%')) | Person(first_name=('ilike', 'A%'))
 ```
 
-`my_selection` represents the set of persons whose second letter of the name is an `a` or whose first letter of the first name is an `a`.
+`my_selection` represents the set of people whose second letter of the name is an `a` or whose first letter of the first name is an `a`.
 
 
 # DML. The `insert`, `select`, `update`, `delete` methods.
@@ -246,8 +259,8 @@ For debugging purposes, you can print the SQL query built
 by half_orm when the DML method is invoked using the _mogrify() method.
 
 ```py
-persons._mogrify()
-persons.select()
+people._mogrify()
+people.select()
 ```
 
 ## Insert
@@ -263,17 +276,25 @@ lagaffe = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-2
 lagaffe_id = lagaffe.insert()[0]['id']
 ```
 
-You can put a transaction on any function using the `Relation.Transaction` decorator.
+You can trigger a transaction for any combination of insert, modify or delete operations using the `Relation.Transaction` decorator.
+
+```py
+class Person(halftest.get_relation_class('actor.person')):
+    # [...]
+
+    def insert_many(self, *data):
+        """Insert multiple people in a single transaction."""
+        @self.Transaction
+        def insert(self, *data):
+            for d_pers in data:
+                self(**d_pers).insert()
+        insert(self, *data)
+
+```
 
 ```python
-persons = Person()
-
-@persons.Transaction
-def insert_many(persons, data):
-    for person in data:
-        persons(**person).insert()
-
-insert_many(persons, data=[
+people = Person()
+people.insert_many(*[
     {'last_name':'Lagaffe', 'first_name':'Gaston', 'birth_date':'1957-02-28'},
     {'last_name':'Fricotin', 'first_name':'Bibi', 'birth_date':'1924-10-05'},
     {'last_name':'Maltese', 'first_name':'Corto', 'birth_date':'1975-01-07'},
@@ -282,51 +303,35 @@ insert_many(persons, data=[
 ])
 ```
 
-Notice:
-- half_orm works in autocommit mode by default.
-- if "Lagaffe" was already inserted, none of the data would be
-inserted by insert_many.
+**Note**: half_orm works in autocommit mode by default. Without transaction, all the missing data
+would be inserted.
 
 ## Select
 The `select` method is a generator. It returns all the data of the relation that match the constraint defined on the Relation object.
-The data is returned in a list of dictionaries.
+The data is returned in a list of `RealDictRow`s. A `RealDictRow` is a subclass of `dict` provided by [psycopg2](https://www.psycopg.org/docs/).
 
 ```python
->>> persons = Person()
->>> for pers in persons.select():
-...     print(pers)
-...
-{'first_name': 'Gaston', 'birth_date': datetime.date(1957, 2, 28), 'id': 159361, 'last_name': 'Lagaffe'}
-{'first_name': 'Bibi', 'birth_date': datetime.date(1924, 10, 5), 'id': 159362, 'last_name': 'Fricotin'}
-{'first_name': 'Corto', 'birth_date': datetime.date(1975, 1, 7), 'id': 159363, 'last_name': 'Maltese'}
-{'first_name': 'Achile', 'birth_date': datetime.date(1963, 11, 7), 'id': 159364, 'last_name': 'Talon'}
-{'first_name': 'Gil', 'birth_date': datetime.date(1956, 9, 20), 'id': 159365, 'last_name': 'Jourdan'}
+>>> people = Person()
+>>> print(list(people.select()))
+[RealDictRow([('id', 159), ('first_name', 'Gil'), ('last_name', 'Jourdan'), ('birth_date', datetime.date(1956, 9, 20))]), RealDictRow([('id', 160), ('first_name', 'Gaston'), ('last_name', 'Lagaffe'), ('birth_date', datetime.date(1957, 2, 28))]), RealDictRow([('id', 161), ('first_name', 'Bibi'), ('last_name', 'Fricotin'), ('birth_date', datetime.date(1924, 10, 5))]), RealDictRow([('id', 162), ('first_name', 'Corto'), ('last_name', 'Maltese'), ('birth_date', datetime.date(1975, 1, 7))]), RealDictRow([('id', 163), ('first_name', 'Achile'), ('last_name', 'Talon'), ('birth_date', datetime.date(1963, 11, 7))])]
 >>>
 ```
 
 You can set a limit or an offset:
 ```python
->>> persons.offset(2).limit(3)
+>>> people.offset(1).limit(2)
+>>> print([dict(elt) for elt in list(people.select())])
+[{'id': 232, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1957, 2, 28)}, {'id': 233, 'first_name': 'Bibi', 'last_name': 'Fricotin', 'birth_date': datetime.date(1924, 10, 5)}]
 ```
+
+You can also get a subset of the attributes by passing a list of columns names to `select`:
 
 ```python
->>> _a_persons = Person(last_name=('like',  '_a%'))
+>>> print(list(people.select('last_name')))
+[{'last_name': 'Lagaffe'}, {'last_name': 'Fricotin'}]
 ```
 
-```python
->>> [elt['last_name'] for elt in _a_persons.select()]
-['Lagaffe', 'Maltese', 'Talon']
-```
-
-You can also get a subset of the attributes:
-
-```python
->>> for dct in _a_persons.select('last_name'):
-...     print(dct)
-{'last_name': 'Lagaffe'}
-{'last_name': 'Maltese'}
-{'last_name': 'Talon'}
-```
+**Note**: The set offset and limit still apply.
 
 ### Select one: the `get` method
 
@@ -341,34 +346,34 @@ gaston = Person(last_name='Lagaffe').get()
 is equivalent to
 
 ```py
-people = Person(last_name='Lagaffe')
-if people.is_empty() or len(people) > 1:
+lagaffe = Person(last_name='Lagaffe')
+if lagaffe.is_empty() or len(lagaffe) > 1:
     raise ExcpetedOneError
-gaston = Person(**next(people.select()))
+gaston = Person(**next(lagaffe.select()))
 gaston._is_singleton = True
 ```
 
 ### Is it a set? Is it an element of the set?
 
 Let's go back to our definition of the class `Person`. We would like to write a property that
-returns the name of **a** person. 
+returns the full name of **a** person. 
 
 ```py
 class Person(halftest.get_relation_class('actor.person')):
+    # [...]
     @property
-    def name(self):
+    def full_name(self):
         return f'{self.first_name} {self.last_name}'
 ```
 
-Used in the following context, the `name` property wouldn't make much sens:
+Used in the following context, the `full_name` property wouldn't make much sens:
 
 ```py
-pers = Person(last_name='Lagaffe')
-pers.name
-# 'None Lagaffe'
+lagaffe = Person(last_name='Lagaffe')
+lagaffe.full_name # returns 'None Lagaffe'
 ```
 
-In this case, you can use the `@singleton` decorator to ensure that the constraint references one and only one element:
+In this case, you can use the `@singleton` decorator to ensure that the self object references one and only one element:
 
 ```py
 from half_orm.relation import singleton
@@ -376,29 +381,28 @@ from half_orm.relation import singleton
 class Person(halftest.get_relation_class('actor.person')):
     @property
     @singleton
-    def name(self):
+    def full_name(self):
         return f'{self.first_name} {self.last_name}'
 
-pers = Person(last_name='Lagaffe')
-pers.name
-# 'Gaston Lagaffe'
+gaston = Person(first_name='Gaston')
+gaston.full_name # now returns 'Gaston Lagaffe'
 ```
 
-If more than one person has *Lagaffe* as last name in the `actor.person` table, a `NotASingletonError` exception would be raised:
+If more than one person has *Gaston* as first name in the `actor.person` table, a `NotASingletonError` exception would be raised:
 
 ```
 half_orm.relation_errors.NotASingletonError: Not a singleton. Got X tuples
 ```
 
-You can also get or set the singleton value. Be careful when using this possiblity. Here is a common usage:
+You can also get or set the singleton value. Be careful when using this possiblity. Under the hood a `get` is made for every element returned by `select`. Here is a common usage:
 
 ```py
 class Person(halftest.get_relation_class('actor.person')):
-    # ...
+    # [...]
     def do_something(self):
         for elt in self.select():
-            elt.is_singleton = True
-            elt.name
+            elt._is_singleton = True
+            ...
 ```
 
 This example works for two reasons:
@@ -406,112 +410,113 @@ This example works for two reasons:
 1. `select` is called without argument ensuring that
 all columns are retreived from the database,
 2. The constraints of the `actor.person` table make it
-a set.
+a set (ie. each element returned by select is indeed a singleton).
 
 ## Update
 
 To update a subset, you first define the subset an then invoque the `udpate`
 method with the new values passed as argument.
 
-In the following example, we capitalize the last name of all people whose second letter is an `a`.
-
-```python
-@persons.Transaction
-def upper_a(persons):
-    for d_pers in persons.select('id'):
-        pers = Person(**d_pers)
-        pers.update(last_name=d_pers['last_name'].upper())
-
-upper_a(_a_persons)
+```py
+gaston = Person(first_name='Gaston')
+gaston.update(birth_date='1970-01-01')
 ```
 
-**WARNING!** The following code won't work. `_a_persons.select()` returns a list of dictionaries and the dict.update method would only update the corresponding dictonary. It's a common pitfall.
+Let's look at how we could turn the last name into capital letters for a subset of people:
 
 ```python
-@persons.Transaction
-def upper_a(persons):
-    for pers in persons.select():
-        # Won't work (pers is a dict)!
-        pers.update(last_name=pers['last_name'].upper())
+class Person(halftest.get_relation_class('actor.person')):
+    # [...]
 
-upper_a(_a_persons)
+    def upper_last_name(self):
+        "tranform last name to upper case."
+        @self.Transaction
+        def update(self):
+            for d_pers in self.select('id', 'last_name'):
+                pers = Person(**d_pers) # IMPORTANT! See the warning below.
+                pers.update(last_name=d_pers['last_name'].upper())
+                #    ^^^^^^ here is the actual update
+        update(self)
 ```
-
 
 Again, we insure the atomicity of the transaction using the `Relation.Transaction` decorator.
 
-```python
->>> [elt['last_name'] for elt in Person(last_name=('like', '_A%')).select()]
+```
+>>> a_pers = Person(last_name=('ilike', '_a%'))
+>>> print([elt.last_name for elt in list(a_pers.select())])
+>>> a_pers = Person(last_name = ('ilike', '_a%'))
+>>> print([elt['last_name'] for elt in a_pers.select('last_name')])
+['Lagaffe', 'Maltese', 'Talon']
+>>> a_pers.upper_last_name()
+>>> print([elt['last_name'] for elt in a_pers.select('last_name')])
 ['LAGAFFE', 'MALTESE', 'TALON']
 ```
 
-If you want to update all the data in a relation, you must set the argument `update_all` to `True`.
+
+**WARNING!** The following code won't update the database. `people.select()` returns a list of dictionaries and the `update` method invoked here would only update the corresponding dictonary. It's a common pitfall.
+
+```python
+for pers in people.select():
+    pers.update(...) # Won't work (pers is a dict)!
+```
+
+### Update all data in a table
+
+If you want to update all the data in a relation, you must set the argument `update_all` to `True`. A `RuntimeError` is raised otherwise.
+
+```py
+Person().update(birth_date='1970-01-01', update_all=True)
+```
 
 ## Delete
 
-We finally remove every inserted tuples. Note that we use the `delete_all` argument with a `True` value. The `delete` would have been rejected otherwise:
+The delete method allows you to remove a set of elements from a table:
+
+```py
+gaston = Person(first_name='Gaston')
+gaston.delete()
+```
+
+To remove every tuples from a table, you must use the `delete_all` argument with a `True` value. A `RuntimeError` is raised otherwise.
+
 ```python
->>> persons().delete(delete_all=True)
->>> list(persons().select())
-[]
+Person().delete(delete_all=True)
+if not Person().is_empty():
+    print('Weird! You should check your "on delete cascade".')
 ```
 Well, there is not much left after this in the `actor.person` table.
 
-# Working with foreign keys (the FKey class) and the *`join`* method
+# Working with foreign keys [WIP]
 
-Working with foreign keys is as easy as working with Relational objects.
-A Relational object has an attribute `_fkeys` that contains the foreign
-keys in a dictionary. Foreign keys are `Fkey` objects. The Fkey class
-has one method:
-- the `set` method allows you to constrain a foreign key with a Relation object,
-- a foreign key is a transitional object, so when you "call" an FKey object,
-you get the relation it points to. The original constraint is propagated through the foreign key.
+> This is a work in progress
 
-Let's see an example with the `blog.comment` relation:
+A relational object integrates all the material necessary to process its foreign keys and the
+foreign keys that point to this object. When you print the object, its representation ends
+with the information about the foreign keys:
+
+```
+To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
+your code as a class attribute and replace the empty string(s) key(s) with the alias you
+want to use. The aliases must be unique and different from any of the column names. Empty
+string keys are ignored.
+
+Fkeys = {
+    [...]
+}
+```
+
+Let's see an example with the `blog.post` relation:
 
 ```python
->>> Comment = halftest.get_relation_class('blog.comment')
->>> Comment()
-__RCLS: <class 'half_orm.relation.Table_HalftestBlogComment'>
+>>> class Post(halftest.get_relation_class('blog.post')):
+...     pass
+...
+>>> Post()
+```
+```
+__RCLS: <class '__main__.Post'>
 This class allows you to manipulate the data in the PG relation:
-TABLE: "halftest"."blog"."comment"
-DESCRIPTION:
-The table blog.comment contains all the comments
-made by a person on a post.
-FIELDS:
-- id:        (int4) PK
-- content:   (text)
-- post_id:   (int4)
-- author_id: (int4)
-- a = 1:     (text)
-FOREIGN KEYS:
-- post: ("post_id")
- ↳ "halftest"."blog"."post"(id)
-- author: ("author_id")
- ↳ "halftest"."actor"."person"(id)
- ```
-
-It has two foreign keys named `post` and `author`.
-
-We want the comments made by Gaston:
-
-```python
-gaston = Person(last_name="Lagaffe")
-gaston_comments = Comment()
-gaston_comments._fkeys['author'].set(gaston)
-```
-
-To know on which posts gaston made at least one comment, we just "call"
-the foreign key `post` on `gaston_comments`:
-
-```python
->>> the_posts_commented_by_gaston = gaston_comments._fkeys['post']()
->>> isinstance(the_posts_commented_by_gaston, halftest.get_relation_class('blog.post'))
-True
-```
-Knowing that a Post object has the following structure:
-```
-TABLE: "halftest"."blog"."post"
+TABLE: "halftest":"blog"."post"
 DESCRIPTION:
 The table blog.post contains all the post
 made by a person in the blogging system.
@@ -523,46 +528,69 @@ FIELDS:
 - author_last_name:  (text)
 - author_birth_date: (date)
 FOREIGN KEYS:
-- author: (author_first_name, author_last_name, author_birth_date)
- ↳ "halftest"."actor"."person"(first_name, last_name, birth_date)
+- _reverse_fkey_halftest_blog_comment_post_id: ("id")
+ ↳ "halftest":"blog"."comment"(post_id)
+- author: ("author_birth_date", "author_first_name", "author_last_name")
+ ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)
+
+To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
+your code as a class attribute and replace the empty string(s) key(s) with the alias you
+want to use. The aliases must be unique and different from any of the column names. Empty
+string keys are ignored.
+
+Fkeys = {
+    '': '_reverse_fkey_halftest_blog_comment_post_id',
+    '': 'author',
+}
 ```
-We can now retreive the authors of `the_posts_commented_by_gaston`:
+
+It has two foreign keys named `_reverse_fkey_halftest_blog_comment_post_id` and `author`:
+* `author` is the foreign key that refrences an `actor.person` from the table `blog.post`.
+* `_reverse_fkey_halftest_blog_comment_post_id` is the foreign key that references a `blog.post` from the table `blog.comment`. The foreign key is traversed in opposite direction (from `blog.post` to `blog.comment`).
+
+We redefine our class to add the aliases for our foreign keys:
+
+```
+class Post(halftest.get_relation_class('blog.post')):
+    Fkeys = {
+        'comments_rfk': '_reverse_fkey_halftest_blog_comment_post_id',
+        'author_fk': 'author'
+    }
+```
+
+**Note**: By convention, we suffix by `_fk` the foreign keys and by `_rfk` the foreign keys traversed in reverse.
+The plural in `comments_rfk` indicates that a post can be referenced by many comments.
+
+A foreign key is a transitional object, so when you instanciate a FKey object,
+you get the relation it points to. The original constraint is propagated through the foreign key.
+
+Given a post defined by a `constraint`:
+
+```py
+a_post = Post(**constraint)
+comments_on_a_post = a_post.comments_rfk()
+author_of_a_post = a_post.author_fk()
+```
+
+You can also add a filter on a foreign key.
+
+```py
+comments_on_a_post_containing_simple = a_post.comment_rfk(content=('ilike', '%simple%'))
+```
+
+The Fkey class has the `set` method which allows you to constrain a foreign key with a Relation object.
+To get the comments made by Gaston, we simply constraint the `author_fk` Fkey to reference the entry corresponding to Gaston in the actor.person table. To do so, we use the `Fkey.set()` method:
+
 ```python
->>> the_authors_of_posts_commented_by_gaston = the_posts_commented_by_gaston._fkeys['author']()
->>> list(the_authors_of_posts_commented_by_gaston.select())
-[...]
-```
-Again, `the_authors_of_posts_commented_by_gaston` is an object of the class 
-`halftest.get_relation_class('actor.person')`. It's that easy!
-
-## the reverse Fkeys
-
-With `half_orm` you can also go upstream.
-If we look at the foreign keys of the `Person` class, they are
-all prefixed by `_reverse_`. This means that the `actor.person`
-table is referenced by other tables:
-
-```py
-FOREIGN KEYS:
-- _reverse_fkey_halftest_blog_comment_author_id: ("id")
- ↳ "halftest"."blog"."comment"(author_id)
-- _reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
- ↳ "halftest"."blog"."event"(author_first_name, author_last_name, author_birth_date)
-- _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
- ↳ "halftest"."blog"."post"(author_first_name, author_last_name, author_birth_date)
+gaston = Person(first_name='Gaston')
+gaston_comments = Comment()
+gaston_comments.author_fk.set(gaston)
+print(list(gaston_comments.select())
 ```
 
-If we wanted to get the `posts`, `events` and `comments` made by Gaston, we would just have to write:
+> TODO. Some documentation about the chaining of FKeys
 
-```py
-gaston = Person(last_name='Lagaffe', first_name='Gaston')
-# assuming there is only one Gaston Lagaffe
-g_comments = gaston._fkeys['_reverse_fkey_halftest_blog_comment_author_id']()
-g_events = gaston._fkeys['_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date']()
-g_posts = gaston._fkeys['_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date']()
-```
-
-## The *`join`* method [WIP]
+## The *`join`* method
 
 The *`join`* method allows you to integrate the data associated to a Relation object in the result obtained by the *`select`* method by using foreign keys of the object or referencing the object.
 
@@ -570,9 +598,9 @@ Unlike the *`select`* method (which is a generator), the *`join`* method returns
 
 It takes a list of tuples each having two or three elements:
 
-- a remote Relation object which must be reachable using a direct or "reverse" foreign key,
-- the name of the key under which the associated data would be stored,
-- an optional list of columns (str[]) or the name of a column (str) to be extracted from the
+* a remote Relation object which must be reachable using a direct or "reverse" foreign key,
+* the name of the key under which the associated data would be stored,
+* an optional list of columns (str[]) or the name of a column (str) to be extracted from the
   remote object.
 
   If the third argument is omitted, all columns are retreived.
@@ -591,7 +619,7 @@ additional attributes : `comments` and `posts`.
 The data associated with `comments` is a list of dictionaries whose keys are 'id' and 'post_id'.
 The data associated  with  `posts` is a simple list of values corresponding to the 'id' column.
 
-## Last: SQL queries
+# Last: SQL queries
 
 If you realy need to invoke a SQL query not managed by half_orm, use
 the `Model.execute_query` method:

@@ -664,6 +664,11 @@ def update(self, update_all=False, **kwargs):
     The object self must be set unless update_all is True.
     The constraints of the relations are updated with kwargs.
     """
+    if not (self.is_set() or update_all):
+        raise RuntimeError(
+            f'Attempt to update all rows of {self.__class__.__name__}'
+            ' without update_all being set to True!')
+
     update_args = dict(kwargs)
     for key, value in kwargs.items():
         # None values are first removed
@@ -671,10 +676,6 @@ def update(self, update_all=False, **kwargs):
             update_args.pop(key)
     if not update_args:
         return # no new value update. Should we raise an error here?
-    if not (self.is_set() or update_all):
-        raise RuntimeError(
-            f'Attempt to update all rows of {self.__class__.__name__}'
-            ' without update_all being set to True!')
 
     query_template = "update {} set {} {}"
     what, where, values = self.__update_args(**update_args)
@@ -726,7 +727,7 @@ def delete(self, delete_all=False):
     To empty the relation, delete_all must be set to True.
     """
     if not (self.is_set() or delete_all):
-        raise ValueError(
+        raise RuntimeError(
             f'Attempt to delete all rows from {self.__class__.__name__}'
             ' without delete_all being set to True!')
     query_template = "delete from {} {}"
