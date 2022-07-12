@@ -1,3 +1,14 @@
+# 0.7.0-rc0 (2022-07-12)
+
+* [doc] Improve README. (3363818)
+* [WIP][fkeys] Make fkeys chaining possible. (62bf465)
+* [fkeys][documentation] Add info about Fkeys class attribute in the relation class documentation. (0bc5af7)
+* [WIP] Switch FKEYS module variable to Fkeys class attribute in halftest package (hop next release).fb15769 ()
+* [WIP] Allow constraint in joined objects. (61cd3f6)
+* [test] Add tests for Relation._schemaname and Relation._relationname. (6845941)
+* [relation][WIP] take into account the Fkeys attribute for a class inheriting from get_relation_class (00ecffe)
+* [meta] Use tuple instead of normalized fqrn for key in metadata. (347fd98)
+
 # 0.6.4 (2022-05-18)
 
 * Use pg_meta qrn manipluation fonctions in relation and fkey modules. (45c9836)
