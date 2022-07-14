@@ -186,7 +186,7 @@ def __set_fields(self):
         field = Field(field_name, self, f_metadata)
         self._fields[field_name] = field
         self.__setattr__(field_name, field)
-        if field.is_pk():
+        if field.is_part_of_pk():
             self._pkey[field_name] = field
 
 def __set_fkeys(self):

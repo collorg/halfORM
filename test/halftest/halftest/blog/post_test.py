@@ -12,3 +12,12 @@ class Test(BaseTest):
     def test_is_not_null_wrong(self):
         with self.assertRaises(AssertionError):
             self.hotAssertIsNotNull(Post, 'title')
+
+    def test_is_not_unique(self):
+        with self.assertRaises(AssertionError):
+            self.hotAssertIsUnique(Post, ['title'])
+        with self.assertRaises(AssertionError):
+            self.hotAssertIsUnique(Post, ['content'])
+
+    def test_title_content_is_unique(self):
+        self.hotAssertIsUnique(Post, ['title', 'content'])

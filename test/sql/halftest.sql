@@ -166,6 +166,7 @@ CREATE TABLE blog.post (
     id integer DEFAULT nextval('blog.post_id'::regclass) NOT NULL,
     title text,
     content text,
+    unique (title, content),
     author_first_name text,
     author_last_name text,
     author_birth_date date

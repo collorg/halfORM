@@ -29,13 +29,9 @@ class Field():
         "Returns if the field is set or not."
         return self.__is_set
 
-    def is_pk(self):
+    def is_part_of_pk(self):
         "Returns True if the field is part of the PK"
         return bool(self.__metadata['pkey'])
-
-    def is_unique(self):
-        "Returns True if the field is defined as unique"
-        return bool(self.__metadata['uniq'])
 
     def is_not_null(self):
         "Returns True if the field is defined as not null."

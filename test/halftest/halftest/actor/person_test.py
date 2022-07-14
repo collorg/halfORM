@@ -19,15 +19,16 @@ class Test(BaseTest):
             self.hotAssertIsPkey(Person, ('first_name', 'last_name'))
 
     def test_is_unique_ok(self):
-        "hotAssertIsUnique should pass"
-        self.hotAssertIsUnique(Person, 'id')
+        "hotAssertUnique should pass on 'id'"
+        self.hotAssertIsUnique(Person, ['id'])
 
     def test_is_unique_wrong(self):
+        "hotAsserUnique should fail on 'last_name'"
         with self.assertRaises(AssertionError):
-            self.hotAssertIsUnique(Person, 'last_name')
+            self.hotAssertIsUnique(Person, ['last_name'])
 
     def test_is_not_null_ok(self):
-        "hotAssertIsUnique should pass"
+        "hotAssertIsNotNull should pass on 'id'"
         self.hotAssertIsNotNull(Person, 'id')
 
     def test_references_ok(self):

@@ -1,9 +1,10 @@
 # A simple PostgreSQL-Python relation-object mapper.
 
-`half_orm` maps an existing PostgreSQL database into Python objects with [inheritance as defined in PostgreSQL](https://www.postgresql.org/docs/current/static/tutorial-inheritance.html).
-`half_orm` only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL, basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands.
+You have a PostgreSQL database ready at hand, `half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data.
 
-You have a PostgreSQL database ready at hand, here is what coding with halfORM looks like :
+The 'half' part of `half_orm` name indicates that it only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL. Basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands. This is what makes `half_orm` so easy to learn an use.
+
+Here is what coding with halfORM looks like :
 
 ```python
 from half_orm.model import Model
@@ -16,33 +17,33 @@ class Post(halftest.get_relation_class('blog.post')):
     """blog.post is a table of the halftest database (<schema>.<relation>)
     To get a full description of the relation, use print(Post())
     """
-    Fkeys = { # we set some aliases for the foreign keys (direct AND reverse) (half_orm >= 0.6.5)
-        'comments': '_reverse_fkey_halftest_blog_comment_post_id', # a post is referenced by comments
-        'author': 'author' # the post references a person
+    #  The Fkeys template is provided by print(Post()). Just fill in the keys names.
+    Fkeys = {
+        'comments_rfk': '_reverse_fkey_halftest_blog_comment_post_id', # a post is referenced by comments
+        'author_fk': 'author' # the post references a person
     }
 
 class Person(halftest.get_relation_class('actor.person')):
     Fkeys = {
-        'posts': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
-        'comments': '_reverse_fkey_halftest_blog_comment_author_id'
+        'posts_rfk': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
+        'comments_rfk': '_reverse_fkey_halftest_blog_comment_author_id'
     }
-    @singleton # we ensure that self is a singleton of the actor.person table
+    @singleton # This ensures that the author of the post is well defined.
     def add_post(self, title: str=None, content: str=None) -> dict:
-        return self.posts(title=title, content=content).insert()[0] # we use the insert method
+        return self.posts_rfk(title=title, content=content).insert()[0]
     @singleton
     def add_comment(self, post: Post=None, content: str=None) -> dict:
-        return self.comments(content=content, post_id=post.id.value).insert()[0]
+        return self.comments_rfk(content=content, post_id=post.id.value).insert()[0]
 
 def main():
-    # let's define a Person set (a singleton here) by instanciating a set with some constraints
     gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
-    gaston.delete() # the delete method
-    if gaston.is_empty(): # always true since we've just deleted gaston
+    gaston.delete()
+    if gaston.is_empty(): # gaston defines a subset of the actor.person table.
         gaston.insert()
     post_dct = gaston.add_post(title='Easy', content='halfORM is fun!')
     post = Post(**post_dct)
     gaston.add_comment(content='This is a comment on the newly created post.', post=post)
-    print(list(post.comments().select()))
+    print(list(post.comments_rfk().select()))
     post.update(title='Super easy')
     gaston.delete()
 ```
@@ -126,6 +127,8 @@ r "blog"."post"
 v "blog.view"."post_comment"
 ```
 
+**Note**: Dots are only allowed in schema names.
+
 ## Check if a relation exists in the database
 
 ```py
@@ -147,7 +150,7 @@ class PostComment(halftest.get_relation_class('blog.view.post_comment')):
 The argument passed to `get_relation_class` is as string of the form:
 `<schema_name>.<relation_name>`.
 
-**Note**: Dots are only allowed in schema names.
+**Note**: Again, dots are only allowed in schema names.
 
 To get a full description of the corresponding relation, print an instance of the class:
 
@@ -200,7 +203,7 @@ When you instantiate an object with no arguments, its intention corresponds to a
 `Person()` represents the set of people contained in the `actor.person` table (ie. there is no constraint on the set). You can get the number of elements in a relation whith the `len` function as in `len(Person())`.
 
 To constrain a set, you must specify one or more values for the fields/columns in the set with a tuple of the form: `(comp, value)`.
-`comp` (`=` if ommited) is either a 
+The `comp` value ('`=`' if ommited) is either a SQL 
 [comparison operator](https://www.postgresql.org/docs/current/static/functions-comparison.html) or a [pattern matching operator (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html).
 
 You can constrain a relation object at instanciation:
@@ -394,17 +397,26 @@ If more than one person has *Gaston* as first name in the `actor.person` table, 
 half_orm.relation_errors.NotASingletonError: Not a singleton. Got X tuples
 ```
 
-You can also get or set the singleton value. Be careful when using this possiblity. Under the hood a `get` is made for every element returned by `select`. Here is a common usage:
+### Forcing  `_is_singleton` attribute.
+
+By forcing the attribute `_is_singleton` of a Relation object to True, you can avoid some unnecessary `get()` that a `@singleton` decorator would have triggered. Here is an example:
 
 ```py
 class Person(halftest.get_relation_class('actor.person')):
     # [...]
+    @singleton
+    def do_something_else(self):
+        "Needs self to be a singleton"
+        ...
+
     def do_something(self):
         for elt in self.select():
-            elt._is_singleton = True
-            ...
+            pers = Person(**elt)
+            pers._is_singleton = True # You must be pretty sure of what you're doing here. See the warning and the explanation.
+            pers.do_something_else() # Warning! do_something_else won't check that pers is indeed a singleton
 ```
 
+**Warning!** By setting `_is_singleton` value to `True`, you disable the check that `@singleton` would have made before executing `do_something_else`. 
 This example works for two reasons:
 
 1. `select` is called without argument ensuring that

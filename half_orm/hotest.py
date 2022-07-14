@@ -9,10 +9,21 @@ class HoTestCase(unittest.TestCase):
         if set(field_names) != pkey:
             raise self.fail(f'PKey failure: {set(field_names)} != {pkey}')
 
-    def hotAssertIsUnique(self, relation: Relation, field_name: str):
-        if not relation()._fields[field_name].is_unique():
-            raise self.fail(f"'{field_name}' is not unique.")
-    
+    def hotAssertIsUnique(self, relation: Relation, fields_names: List[str]):
+        "Checks if a list of fields is unique for the relation."
+        fields_nums = set()
+        pkeynum = []
+        for field_name in fields_names:
+            field = relation()._fields[field_name]
+            metadata = field._Field__metadata
+            fields_nums.add(metadata['fieldnum'])
+            if not pkeynum and metadata['pkeynum']:
+                pkeynum = metadata['pkeynum']
+            if not metadata['uniq'] and pkeynum != metadata['pkeynum']:
+                raise self.fail(f"'{fields_names}' is not unique.")
+        if fields_nums != set(pkeynum):
+            raise self.fail(f"'{fields_names}' is not unique.")
+
     def hotAssertIsNotNull(self, relation: Relation, field_name: str):
         if not relation()._fields[field_name].is_not_null():
             raise self.fail(f"'{field_name}' is not 'not null'.")
