@@ -286,7 +286,7 @@ class Person(halftest.get_relation_class('actor.person')):
     # [...]
 
     def insert_many(self, *data):
-        """Insert multiple people in a single transaction."""
+        """Insert serveral people in a single transaction."""
         @self.Transaction
         def insert(self, *data):
             for d_pers in data:

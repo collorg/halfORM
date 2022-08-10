@@ -197,6 +197,7 @@ def __set_fkeys(self):
     fkeys_metadata = self._model.fkeys_metadata(self._t_fqrn)
     for fkeyname, f_metadata in fkeys_metadata.items():
         self._fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
+    #TODO: Remove in 0.8 release
     if not self.__fkeys_properties:
         self._set_fkeys_properties()
         self.__fkeys_properties = True
@@ -212,15 +213,20 @@ def __set_fkeys(self):
 def _set_fkeys_properties(self):
     """Property generator for fkeys.
     @args is a list of tuples (property_name, fkey_name)
+
+    Will be removed in 0.8 release.
     """
     fkp = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES', 'FKEYS'], 0)
     if hasattr(fkp, 'FKEYS_PROPERTIES'):
         sys.stderr.write(
-            'WARNING! Depreciation:'
-            f'Please replace FKEYS_PROPERTIES with FKEYS in {self.__class__}\n')
+            'WARNING! Deprecation (FKEYS_PROPERTIES will be removed in half_orm 0.8 release):\n'
+            f'Please replace {self.__module__}.FKEYS_PROPERTIES variable with the {self.__class__.__name__}.Fkeys class attribute.\n')
         for prop in fkp.FKEYS_PROPERTIES:
             self._set_fkey_property(*prop)
     if hasattr(fkp, 'FKEYS'):
+        sys.stderr.write(
+            'WARNING! Deprecation (FKEYS will be removed in half_orm 0.8 release):\n'
+            f'Please replace {self.__module__}.FKEYS variable with the {self.__class__.__name__}.Fkeys class attribute.\n')
         for prop in fkp.FKEYS:
             self._set_fkey_property(*prop)
 
