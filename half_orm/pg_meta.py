@@ -63,7 +63,6 @@ SELECT
     adesc.description AS fielddescription,
     a.attndims AS fielddim,
     pt.typname AS fieldtype,
-    a.attnum AS fieldnum,
     NOT( a.attislocal ) AS inherited,
     cn_uniq.contype AS uniq,
     cn_uniq.conkey as pkeynum,
@@ -211,6 +210,7 @@ class PgMeta:
                 tablekind = dct.pop('tablekind')
                 inherits = [byid[int(elt.split(':')[1])]['sfqrn']
                             for elt in dct.pop('inherits') if elt is not None]
+                byname[table_key]['tableid'] = tableid
                 byname[table_key]['tablekind'] = tablekind
                 byname[table_key]['inherits'] = inherits
                 byname[table_key]['fields'][fieldname] = dct
@@ -296,3 +296,33 @@ class PgMeta:
             if key[1].find('half_orm_meta') == 0: continue
             out.append(f"{entry[key]['tablekind']} {normalize_qrn(key)}")
         return '\n'.join(out)
+
+    def unique_constraints_list(self, dbname, sfqrn):
+        "Returns the unique constraints of the given sfqrn"
+        rel_meta_by_name = self.metadata(dbname)['byname'][sfqrn]
+        tableid = rel_meta_by_name['tableid']
+        rel_meta_by_id = self.metadata(dbname)['byid']
+        unique_by_num = []
+        for key, value in rel_meta_by_name['fields'].items():
+            value['uniq'] and unique_by_num.append(tuple(value['pkeynum']))
+        unique = []
+        for elt in unique_by_num:
+            fields_names = []
+            for num in elt:
+                fields_names.append(rel_meta_by_id[tableid]['fields'][num])
+            unique.append(tuple(fields_names))
+        return unique
+
+    def pkey_constraint(self, dbname, sfqrn):
+        "Returns the pkey constraint"
+        rel_meta_by_name = self.metadata(dbname)['byname'][sfqrn]
+        tableid = rel_meta_by_name['tableid']
+        rel_meta_by_id = self.metadata(dbname)['byid']
+        pkey_by_num = []
+        for key, value in rel_meta_by_name['fields'].items():
+            if value['pkey']:
+                pkey_by_num.append(value['fieldnum'])
+        pkey = []
+        for num in pkey_by_num:
+            pkey.append(rel_meta_by_id[tableid]['fields'][num])
+        return pkey

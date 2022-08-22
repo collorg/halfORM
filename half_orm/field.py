@@ -39,7 +39,7 @@ class Field():
 
     def __repr__(self):
         md_ = self.__metadata
-        field_constraint = md_['pkey'] and 'PK' or f"{md_['uniq'] and 'UNIQUE ' or ''}{md_['notnull'] and 'NOT NULL' or ''}"
+        field_constraint = f"{md_['notnull'] and 'NOT NULL' or ''}"
         repr_ = f"({md_['fieldtype']}) {field_constraint}"
         if self.__is_set:
             repr_ = f"{repr_} ({self.__name} {self.__comp} {self.__value})"

@@ -201,6 +201,12 @@ class Model:
     def relation_metadata(self, fqrn):
         return self.__pg_meta.relation_meta(self.__dbname, fqrn)
 
+    def unique_constraints_list(self, fqrn):
+        return self.__pg_meta.unique_constraints_list(self.__dbname, fqrn)
+
+    def pkey_constraint(self, fqrn):
+        return self.__pg_meta.pkey_constraint(self.__dbname, fqrn)
+
     def execute_query(self, query, values=()):
         """Execute a raw SQL query"""
         cursor = self.__conn.cursor()

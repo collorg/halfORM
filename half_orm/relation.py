@@ -44,7 +44,7 @@ import yaml
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
 from half_orm.field import Field
-from half_orm.pg_meta import normalize_fqrn, normalize_qrn
+from half_orm.pg_meta import normalize_fqrn, normalize_qrn, PgMeta
 
 class SetOperators:
     """SetOperators class stores the set operations made on the Relation class objects
@@ -384,6 +384,12 @@ Fkeys = {"""
             mx_fld_n_len = len(field_name)
     for field_name, field in self._fields.items():
         ret.append(f"- {field_name}:{' ' * (mx_fld_n_len + 1 - len(field_name))}{repr(field)}")
+    ret.append('')
+    pkey = self._model.pkey_constraint(self._t_fqrn)
+    if pkey:
+        ret.append(f"PRIMARY KEY ({', '.join(pkey)})")
+    for uniq in self._model.unique_constraints_list(self._t_fqrn):
+        ret.append(f"UNIQUE CONSTRAINT ({', '.join(uniq)})")
     if self._fkeys.keys():
         plur = 'S' if len(self._fkeys) > 1 else ''
         ret.append(f'FOREIGN KEY{plur}:')
