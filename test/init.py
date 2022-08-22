@@ -33,6 +33,7 @@ class HalfTest:
         self.dbname = model._dbname
         self.today = date.today()
         self.Person = model._import_class("actor.person")
+        self.Post = model._import_class("blog.post")
         class PC(self.Person):
             def last_name(self):
                 pass
@@ -40,7 +41,7 @@ class HalfTest:
         self.pc = PC()
         self.pers = self.Person()
         self.relation = model._import_class
-        self.post = model._import_class("blog.post")()
+        self.post = self.Post()
         self.comment = model._import_class("blog.comment")()
         self.event = model._import_class("blog.event")()
         self.blog_view = model._import_class("blog.view.post_comment")()

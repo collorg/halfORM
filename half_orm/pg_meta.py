@@ -304,7 +304,10 @@ class PgMeta:
         rel_meta_by_id = self.metadata(dbname)['byid']
         unique_by_num = []
         for key, value in rel_meta_by_name['fields'].items():
-            value['uniq'] and unique_by_num.append(tuple(value['pkeynum']))
+            if value['uniq']:
+                t_uniq = tuple(value['pkeynum'])
+                if unique_by_num.count(t_uniq) == 0:
+                    unique_by_num.append(t_uniq)
         unique = []
         for elt in unique_by_num:
             fields_names = []

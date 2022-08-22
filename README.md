@@ -162,14 +162,18 @@ __RCLS: <class 'half_orm.relation.Table_HalftestActorPerson'>
 This class allows you to manipulate the data in the PG relation:
 TABLE: "halftest":"actor"."person"
 DESCRIPTION:
-The table actor.person contains the people of the blogging system.
+The table actor.person contains the persons of the blogging system.
 The id attribute is a serial. Just pass first_name, last_name and birth_date
 to insert a new person.
 FIELDS:
-- id:         (int4) UNIQUE NOT NULL
-- first_name: (text) PK
-- last_name:  (text) PK
-- birth_date: (date) PK
+- id:         (int4) NOT NULL
+- first_name: (text) NOT NULL
+- last_name:  (text) NOT NULL
+- birth_date: (date) NOT NULL
+
+PRIMARY KEY (first_name, last_name, birth_date)
+UNIQUE CONSTRAINT (id)
+UNIQUE CONSTRAINT (first_name)
 FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_comment_author_id: ("id")
  ↳ "halftest":"blog"."comment"(author_id)
@@ -533,12 +537,15 @@ DESCRIPTION:
 The table blog.post contains all the post
 made by a person in the blogging system.
 FIELDS:
-- id:                (int4) PK
+- id:                (int4) NOT NULL
 - title:             (text)
 - content:           (text)
 - author_first_name: (text)
 - author_last_name:  (text)
 - author_birth_date: (date)
+
+PRIMARY KEY (id)
+UNIQUE CONSTRAINT (title, content)
 FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_comment_post_id: ("id")
  ↳ "halftest":"blog"."comment"(post_id)
