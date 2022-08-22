@@ -34,23 +34,22 @@ class HalfTest:
         self.today = date.today()
         self.Person = model._import_class("actor.person")
         self.Post = model._import_class("blog.post")
+        self.Comment = model._import_class("blog.comment")
+        self.Event = model._import_class("blog.event")
+        self.Blog_view = model._import_class("blog.view.post_comment")
         class PC(self.Person):
             def last_name(self):
                 pass
 
+        self._person = self.Person()
         self.pc = PC()
-        self.pers = self.Person()
         self.relation = model._import_class
-        self.post = self.Post()
-        self.comment = model._import_class("blog.comment")()
-        self.event = model._import_class("blog.event")()
-        self.blog_view = model._import_class("blog.view.post_comment")()
 
-        @self.pers.Transaction
+        @self._person.Transaction
         def init_pers(pers):
             sys.stderr.write('Initializing actor.person\n')
-            self.pers.delete(delete_all=True)
-            self.post.delete(delete_all=True)
+            self.Person().delete(delete_all=True)
+            self.Post().delete(delete_all=True)
             for letter in 'abcdef':
                 for i in range(10):
                     last_name = name(letter, i)
@@ -61,7 +60,7 @@ class HalfTest:
                         first_name=first_name,
                         birth_date=birth_date).insert()
 
-        if len(self.pers) != 60:
-            init_pers(self.pers)
+        if len(self.Person()) != 60:
+            init_pers(self.Person())
 
 halftest = HalfTest()

@@ -12,8 +12,8 @@ from half_orm.field import Field
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.pers
-        self.post = halftest.post
+        self.pers = halftest.Person()
+        self.post = halftest.Post()
         self.today = halftest.today
 
     def test_not_set_field(self):

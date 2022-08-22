@@ -13,9 +13,9 @@ from half_orm import relation_errors, model
 
 class Test(HoTestCase):
     def setUp(self):
-        self.pers = halftest.pers
-        self.post = halftest.post
-        self.comment = halftest.comment
+        self.pers = halftest.Person()
+        self.post = halftest.Post()
+        self.comment = halftest.Comment()
         self.today = halftest.today
         self.post().delete(delete_all=True)
         self.comment().delete(delete_all=True)
@@ -125,8 +125,8 @@ class Test(HoTestCase):
         self.skipTest("Not implemented")
         post = self.post()
         # post.title = self.post0.title
-        print(halftest.post()._fkeys.keys())
-        print(halftest.comment()._fkeys.keys())
+        print(halftest.Post()()._fkeys.keys())
+        print(halftest.Comment()()._fkeys.keys())
         print(len(self.post().join((self.comment(), 'comments'))))
         res = self.comment().join(
             (self.comment(content=self.comment_ab_post).post_fk(), '')

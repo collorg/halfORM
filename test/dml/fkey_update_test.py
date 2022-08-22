@@ -9,9 +9,9 @@ from half_orm import relation_errors, model
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.pers
-        self.post = halftest.post
-        self.comment = halftest.comment
+        self.pers = halftest.Person()
+        self.post = halftest.Post()
+        self.comment = halftest.Comment()
         self.aa = self.pers(last_name='aa')
         assert(len(self.aa) == 1)
 
@@ -24,10 +24,10 @@ class Test(TestCase):
         self.post.title = 'title test_direct_fkey_insert'
         self.post.content = 'content test_direct_fkey_insert'
         self.post.insert()
-        post = halftest.post(title='title test_direct_fkey_insert')
+        post = halftest.Post(title='title test_direct_fkey_insert')
         self.assertEqual(len(post), 1)
         self.post.update(title='title test_direct_fkey_insert updated')
-        upost = halftest.post(title='title test_direct_fkey_insert updated')
+        upost = halftest.Post(title='title test_direct_fkey_insert updated')
         self.assertEqual(len(post), 0)
         self.assertEqual(len(upost), 1)
         upost.delete()

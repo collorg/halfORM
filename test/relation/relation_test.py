@@ -8,8 +8,8 @@ from ..init import halftest
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.pers()
-        self.post = halftest.post()
+        self.pers = halftest.Person()()
+        self.post = halftest.Post()()
         self.relation = halftest.relation
 
     def test_isinstance(self):
@@ -17,9 +17,9 @@ class Test(TestCase):
         self.assertTrue(isinstance(pers, self.pers.__class__))
 
     def test_schemaname(self):
-        "_schemaname should be 'actor' for the halftest.pers class"
-        self.assertEqual(halftest.pers._schemaname, "actor")
+        "_schemaname should be 'actor' for the halftest.Person() class"
+        self.assertEqual(halftest.Person()._schemaname, "actor")
 
     def test_tablename(self):
-        "_relationname should be 'person' for the halftest.pers class"
-        self.assertEqual(halftest.pers._relationname, "person")
+        "_relationname should be 'person' for the halftest.Person() class"
+        self.assertEqual(halftest.Person()._relationname, "person")

@@ -13,10 +13,10 @@ from half_orm import relation_errors, model
 
 class Test(HoTestCase):
     def setUp(self):
-        self.pers = halftest.pers
-        self.post = halftest.post
+        self.pers = halftest.Person()
+        self.post = halftest.Post()
         self.today = halftest.today
-        self.blog_view = halftest.blog_view
+        self.blog_view = halftest.Blog_view()
 
     def test_count(self):
         self.pers._mogrify()
