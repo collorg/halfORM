@@ -11,7 +11,7 @@ def read(name):
 setup(
     name='half_orm',
     version=read('half_orm/version.txt').strip(),
-    description="A simple PostgreSQL-Python relation-object mapper.",
+    description="A simple PostgreSQL to Python mapper.",
     long_description=read('README.md'),
     keywords='',
     author='Joël Maïzi',
@@ -28,7 +28,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',

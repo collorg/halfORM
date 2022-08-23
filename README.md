@@ -1,10 +1,10 @@
-# A simple PostgreSQL-Python relation-object mapper.
+# A simple PostgreSQL to Python mapper.
 
-You have a PostgreSQL database ready at hand, `half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data.
+You have a PostgreSQL database at hand and you want to interact with it in Python; `half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data.
 
 The 'half' part of `half_orm` name indicates that it only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL. Basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands. This is what makes `half_orm` so easy to learn an use.
 
-Here is what coding with halfORM looks like :
+Here is what coding with `half_orm` looks like :
 
 ```python
 from half_orm.model import Model
@@ -493,7 +493,7 @@ gaston = Person(first_name='Gaston')
 gaston.delete()
 ```
 
-To remove every tuples from a table, you must use the `delete_all` argument with a `True` value. A `RuntimeError` is raised otherwise.
+To remove every tuples from a table, you must set the argument `delete_all` to `True`. A `RuntimeError` is raised otherwise.
 
 ```python
 Person().delete(delete_all=True)
