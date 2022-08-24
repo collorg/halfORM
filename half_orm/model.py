@@ -193,18 +193,23 @@ class Model:
         return self.__conn
 
     def fields_metadata(self, sfqrn):
+        "Proxy to PgMeta.fields_meta"
         return self.__pg_meta.fields_meta(self.__dbname, sfqrn)
 
     def fkeys_metadata(self, sfqrn):
+        "Proxy to PgMeta.fkeys_meta"
         return self.__pg_meta.fkeys_meta(self.__dbname, sfqrn)
 
     def relation_metadata(self, fqrn):
+        "Proxy to PgMeta.relation_meta"
         return self.__pg_meta.relation_meta(self.__dbname, fqrn)
 
     def unique_constraints_list(self, fqrn):
+        "Proxy to PgMeta.unique_constraints_list"
         return self.__pg_meta.unique_constraints_list(self.__dbname, fqrn)
 
     def pkey_constraint(self, fqrn):
+        "Proxy to PgMeta.pkey_constraint"
         return self.__pg_meta.pkey_constraint(self.__dbname, fqrn)
 
     def execute_query(self, query, values=()):
@@ -212,6 +217,39 @@ class Model:
         cursor = self.__conn.cursor()
         cursor.execute(query, values)
         return cursor
+
+    def execute_function(self, fct_name, *args, **kwargs):
+        """Execute a PostgreSQL function with named parameters.
+
+        returns a list of tuples
+        """
+        if bool(args) and bool(kwargs):
+            raise RuntimeError("You can't mix args and kwargs with the execute_function method!")
+        cursor = self.__conn.cursor()
+        if kwargs:
+            values = kwargs
+        else:
+            values = args
+        cursor.callproc(fct_name, values)
+        return cursor.fetchall()
+
+    def call_procedure(self, proc_name, *args, **kwargs):
+        "Execute a PostgreSQL procedure"
+        if bool(args) and bool(kwargs):
+            raise RuntimeError("You can't mix args and kwargs with the call_procedure method!")
+        if kwargs:
+            params = ', '.join([f'{key} => %s' for key in kwargs])
+            values = tuple(kwargs.values())
+        else:
+            params = ', '.join(['%s' for elt in range(len(args))])
+            values = args
+        query = f'call {proc_name}({params})'
+        cursor = self.__conn.cursor()
+        cursor.execute(query, values)
+        try:
+            return cursor.fetchall()
+        except psycopg2.ProgrammingError:
+            return None
 
     def get_relation_class(self, qtn):
         """Returns the class corresponding to the fqrn relation in the database.

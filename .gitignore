@@ -13,3 +13,4 @@ halftest.egg-info/
 .pdbrc
 pyproject.toml
 .tox
+Pipfile.dev
