@@ -347,7 +347,7 @@ It raises an [ExpectedOneError](https://github.com/collorg/halfORM/blob/master/h
 Exception if 0 or more than 1 rows match the intention. The returned object is a singleton (see below).
 
 ```py
-gaston = Person(last_name='Lagaffe').get()
+gaston = Person(last_name='Lagaffe').get(*args)
 ```
 
 is equivalent to
@@ -356,7 +356,7 @@ is equivalent to
 lagaffe = Person(last_name='Lagaffe')
 if lagaffe.is_empty() or len(lagaffe) > 1:
     raise ExcpetedOneError
-gaston = Person(**next(lagaffe.select()))
+gaston = Person(**next(lagaffe.select(*args)))
 gaston._is_singleton = True
 ```
 
@@ -637,6 +637,24 @@ additional attributes : `comments` and `posts`.
 
 The data associated with `comments` is a list of dictionaries whose keys are 'id' and 'post_id'.
 The data associated  with  `posts` is a simple list of values corresponding to the 'id' column.
+
+# PostgreSQL functions and stored procedures
+
+`half_orm.model.Model` class provides two methods to deal with functions and stored procedures:
+`execute_function` and `call_procedure`. You can
+pass parameters as a list or a dictionary (for named parameters). The returned value of
+`execute_function` is a list of `dict` like objects.
+
+```py
+from half_orm.model import Model
+halftest = Model('halftest')
+
+res = halftest.execute_function('schema.my_function', *args)
+res = halftest.execute_function('schema.my_function', **kwargs) # for named parameters
+
+half_test.call_procedure('schema.my_procedure', *args)
+half_test.call_procedure('schema.my_procedure', **kwargs) # for named parameters
+```
 
 # Last: SQL queries
 

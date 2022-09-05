@@ -28,11 +28,10 @@ The following methods can be chained on the object before a select.
 - limit: limits the number of elements returned by the select method.
 - offset: sets the offset for the select method.
 """
-
 from functools import wraps
 from collections import OrderedDict
 from uuid import UUID
-from typing import Generator
+from typing import Generator, List
 from datetime import date, datetime, time, timedelta
 import json
 import sys
@@ -590,16 +589,30 @@ def _mogrify(self):
     self.__mogrify = True
     return self
 
-def get(self):
+def get(self, *args: List[str]) -> Relation:
     """Returns the Relation object extracted.
 
-    Raises an exception if no or more than one element is found.
+
+    Args:
+        args (List[str]): list of fields names.\
+        If ommitted, all the values of the row retreived from the database\
+        are set for the self object.\
+        Otherwise, only the values listed in the `args` parameter are set.
+
+    Returns:
+        Relation: the object retreived from the database.
+
+    Raises:
+        ExpectedOneError: an exception is raised if no or more than one element is found.
+
+    Example:
+        >>> person(last_name='Lagaffe', first_name='Gaston').get()
     """
     _count = len(self)
     if _count != 1:
         raise relation_errors.ExpectedOneError(self, _count)
     self._is_singleton = True
-    ret = self(**(next(self.select())))
+    ret = self(**(next(self.select(*args))))
     ret._is_singleton = True
     return ret
 
