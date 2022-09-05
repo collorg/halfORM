@@ -1,9 +1,37 @@
+# 0.7.1 (2022-09-05)
+
+* [relation] Allow fields names to be passed to Relation.get method. (93caa77)
+* Add Model.execute_function and Model.call_procedure methods. (35215b3)
+* Switch development status to beta. (74d3c67)
+* [test] Don't reuse instances of Relation objects in tests. (0e137ce)
+* [repr] Fix duplicates in unique constraints. Update README. (a91678e)
+
+## New features
+
+* You can now trigger the execution of PostgreSQL stored procedures and
+functions by using `Model.execute_fonction` and `Model.call_procedure` methods.
+* You can now pass fields names to The `Relation.get` method.\
+```py
+Person(last_name='Lagaffe', first_name='Gaston').get('id')
+```
+
+# 0.7.0 (2022-08-22)
+
+* Fix Relation constraints representation. (c7beac7)
+* Add deprecation warning for FKEYS module variable. (286a84c)
+* [test] half_orm.hotest.hotAssertIsUnique takes a list of fields names. (283aefd)
+
+## Breaking change
+
+The `FKEYS` module variable (undocumented, mainly used with half_orm_packager) is
+deprecated. It is replaced by the `Fkeys` Relation class attribute.
+
 # 0.7.0-rc0 (2022-07-12)
 
 * [doc] Improve README. (3363818)
 * [WIP][fkeys] Make fkeys chaining possible. (62bf465)
 * [fkeys][documentation] Add info about Fkeys class attribute in the relation class documentation. (0bc5af7)
-* [WIP] Switch FKEYS module variable to Fkeys class attribute in halftest package (hop next release).fb15769 ()
+* [WIP] Switch FKEYS module variable to Fkeys class attribute in halftest package (hop next release). (fb15769)
 * [WIP] Allow constraint in joined objects. (61cd3f6)
 * [test] Add tests for Relation._schemaname and Relation._relationname. (6845941)
 * [relation][WIP] take into account the Fkeys attribute for a class inheriting from get_relation_class (00ecffe)
