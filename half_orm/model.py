@@ -50,26 +50,20 @@ class Model:
     """
     __deja_vu = {}
     _classes_ = {}
-    def __init__(self,
-                 config_file, dbname=None, scope=None, raise_error=True):
+    def __init__(self, config_file, scope=None):
         """Model constructor
 
         Use @config_file in your scripts. The @dbname parameter is
         reserved to the _factory metaclass.
         """
         self.__backend_pid = None
-        if bool(config_file) == bool(dbname):
-            raise RuntimeError("You can't specify config_file with bdname!")
         self.__config_file = config_file
         self.__dbinfo = {}
-        self.__dbname = dbname
-        if (dbname):
-            Model._classes_[dbname] = {}
+        self.__dbname = None
         self.__conn = None
         self._scope = scope and scope.split('.')[0]
-        self.__raise_error = raise_error
         self.__production = False
-        self.__connect(raise_error=self.__raise_error)
+        self.__connect()
 
     @staticmethod
     def _deja_vu(dbname):
@@ -90,7 +84,7 @@ class Model:
             return True
         except (psycopg2.OperationalError, psycopg2.InterfaceError):
             try:
-                self.__connect(raise_error=self.__raise_error)
+                self.__connect()
             except psycopg2.OperationalError as err:
                 sys.stderr.write(f'{err}\n')
                 sys.stderr.flush()
@@ -113,7 +107,7 @@ class Model:
             if not self.__conn.closed:
                 self.__conn.close()
 
-    def __connect(self, config_file=None, raise_error=True, reload=False):
+    def __connect(self, config_file=None, reload=False):
         """Setup a new connection to the database.
 
         If a config_file is provided, the connection is made with the new
@@ -157,10 +151,7 @@ class Model:
             self.__conn = psycopg2.connect(
                 **params, cursor_factory=RealDictCursor)
         except psycopg2.OperationalError as err:
-            if raise_error:
-                raise err.__class__(err)
-            sys.stderr.write(f"{err}\n")
-            sys.stderr.flush()
+            raise err.__class__(err)
         self.__conn.autocommit = True
         self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
         self.__deja_vu[self.__dbname] = self
@@ -169,9 +160,9 @@ class Model:
 
     reconnect = __connect
 
-    def _reload(self, config_file=None, raise_error=True):
+    def _reload(self, config_file=None):
         "Reload metadata"
-        self.__connect(config_file, raise_error, True)
+        self.__connect(config_file, True)
 
     @property
     def _pg_backend_pid(self):
