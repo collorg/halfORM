@@ -10,10 +10,10 @@
 
 * You can now trigger the execution of PostgreSQL stored procedures and
 functions by using `Model.execute_fonction` and `Model.call_procedure` methods.
-* You can now pass fields names to The `Relation.get` method.\
-```py
-Person(last_name='Lagaffe', first_name='Gaston').get('id')
-```
+* You can now pass fields names to The `Relation.get` method:
+  ```py
+  gaston = Person(last_name='Lagaffe', first_name='Gaston').get('id')
+  ```
 
 # 0.7.0 (2022-08-22)
 
@@ -40,7 +40,7 @@ deprecated. It is replaced by the `Fkeys` Relation class attribute.
 # 0.6.4 (2022-05-18)
 
 * Use pg_meta qrn manipluation fonctions in relation and fkey modules. (45c9836)
-* [test] Test Model.reload. (99f7c64)
+* [test] Test Model._reload. (99f7c64)
 * [model][meta] Move qrn manipulation fonctions to pg_meta. (29def79)
 * [meta] Rename pg_metaview to pg_meta. (558d328)
 * [meta] Remove Model._metadata attribute. (f2a68b3)

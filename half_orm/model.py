@@ -169,7 +169,7 @@ class Model:
 
     reconnect = __connect
 
-    def reload(self, config_file=None, raise_error=True):
+    def _reload(self, config_file=None, raise_error=True):
         "Reload metadata"
         self.__connect(config_file, raise_error, True)
 
@@ -192,25 +192,25 @@ class Model:
         """
         return self.__conn
 
-    def fields_metadata(self, sfqrn):
+    def _fields_metadata(self, sfqrn):
         "Proxy to PgMeta.fields_meta"
         return self.__pg_meta.fields_meta(self.__dbname, sfqrn)
 
-    def fkeys_metadata(self, sfqrn):
+    def _fkeys_metadata(self, sfqrn):
         "Proxy to PgMeta.fkeys_meta"
         return self.__pg_meta.fkeys_meta(self.__dbname, sfqrn)
 
-    def relation_metadata(self, fqrn):
+    def _relation_metadata(self, fqrn):
         "Proxy to PgMeta.relation_meta"
         return self.__pg_meta.relation_meta(self.__dbname, fqrn)
 
-    def unique_constraints_list(self, fqrn):
-        "Proxy to PgMeta.unique_constraints_list"
-        return self.__pg_meta.unique_constraints_list(self.__dbname, fqrn)
+    def _unique_constraints_list(self, fqrn):
+        "Proxy to PgMeta._unique_constraints_list"
+        return self.__pg_meta._unique_constraints_list(self.__dbname, fqrn)
 
-    def pkey_constraint(self, fqrn):
-        "Proxy to PgMeta.pkey_constraint"
-        return self.__pg_meta.pkey_constraint(self.__dbname, fqrn)
+    def _pkey_constraint(self, fqrn):
+        "Proxy to PgMeta._pkey_constraint"
+        return self.__pg_meta._pkey_constraint(self.__dbname, fqrn)
 
     def execute_query(self, query, values=()):
         """Execute a raw SQL query"""
@@ -270,7 +270,7 @@ class Model:
         return self.__pg_meta.has_relation(self.__dbname, *qtn.rsplit('.', 1))
 
     @classmethod
-    def check_deja_vu_class(cls, dbname, schema, relation):
+    def _check_deja_vu_class(cls, dbname, schema, relation):
         """Not to use with _import_class.
         """
         if cls._classes_.get(dbname):

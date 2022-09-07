@@ -29,7 +29,7 @@ class Field():
         "Returns if the field is set or not."
         return self.__is_set
 
-    def is_part_of_pk(self):
+    def _is_part_of_pk(self):
         "Returns True if the field is part of the PK"
         return bool(self.__metadata['pkey'])
 
@@ -57,12 +57,12 @@ class Field():
             return f'{id_}."{self.__name}"'
         return f'"{self.__name}"'
 
-    def where_repr(self, query, id_):
+    def _where_repr(self, query, id_):
         """Returns the SQL representation of the field for the where clause
         """
         where_repr = ''
         comp_str = '%s'
-        comp = self.comp()
+        comp = self._comp()
         if comp == '@@':
             comp_str = 'websearch_to_tsquery(%s)'
         if isinstance(self.__value, (list, tuple)):
@@ -81,7 +81,7 @@ class Field():
         "Returns the value of the field object"
         return self.__value
 
-    def set(self, *args):
+    def _set(self, *args):
         "Sets the value of the field object"
         self.__set__(self.__relation, *args)
 
@@ -117,7 +117,7 @@ class Field():
         self.__value = value
         self.__comp = comp
 
-    def unset(self):
+    def _unset(self):
         "Unset a field"
         self.__is_set = False
         self.__value = None
@@ -137,15 +137,19 @@ class Field():
             raise RuntimeError('unaccent argument must be of boolean type!')
         self.__unaccent = value
 
-    def comp(self):
+    def _comp(self):
         "Returns the comparator associated to the value."
         if self.__comp == '%':
             return '%%'
         return self.__comp
 
     @property
-    def relation(self):
-        """Returns the relation for which self is an attribute."""
+    def _relation(self):
+        """Internal usage.
+
+        Returns:
+            Relation: The Relation class for which self is an attribute.
+        """
         return self.__relation
 
     def _psycopg_adapter(self):
@@ -153,7 +157,7 @@ class Field():
         return adapt(self.__value)
 
     @property
-    def name(self):
+    def _name(self):
         return self.__name
 
     def __call__(self):
@@ -163,7 +167,7 @@ class Field():
         method = None
         try:
             method = rel_class.__dict__[self.__name]
-            print(isinstance(method, types.FunctionType))
+            # print('XXX', isinstance(method, types.FunctionType))
         except KeyError as err:
             # genuine attemp to call a Field.
             raise err

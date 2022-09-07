@@ -45,9 +45,9 @@ class Test(TestCase):
         self.assertEqual(1, model.execute_query("select 1").fetchone()['?column?'])
 
     def test_reload_and_has_relation(self):
-        "it should reload the model"
+        "it should _reload the model"
         self.assertFalse(model.has_relation('public.test'))
         model.execute_query('create table test (a text)')
         model.execute_query('select * from test')
-        model.reload()
+        model._reload()
         self.assertTrue(model.has_relation('public.test'))

@@ -297,7 +297,7 @@ class PgMeta:
             out.append(f"{entry[key]['tablekind']} {normalize_qrn(key)}")
         return '\n'.join(out)
 
-    def unique_constraints_list(self, dbname, sfqrn):
+    def _unique_constraints_list(self, dbname, sfqrn):
         "Returns the unique constraints of the given sfqrn"
         rel_meta_by_name = self.metadata(dbname)['byname'][sfqrn]
         tableid = rel_meta_by_name['tableid']
@@ -316,7 +316,7 @@ class PgMeta:
             unique.append(tuple(fields_names))
         return unique
 
-    def pkey_constraint(self, dbname, sfqrn):
+    def _pkey_constraint(self, dbname, sfqrn):
         "Returns the pkey constraint"
         rel_meta_by_name = self.metadata(dbname)['byname'][sfqrn]
         tableid = rel_meta_by_name['tableid']

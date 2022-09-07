@@ -76,6 +76,7 @@ class FKey:
 
     @classmethod
     def __set__(cls, *args):
+        print('XXX', cls, '\n', args)
         raise RuntimeError
 
     def is_set(self):

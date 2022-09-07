@@ -43,10 +43,10 @@ import yaml
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
 from half_orm.field import Field
-from half_orm.pg_meta import normalize_fqrn, normalize_qrn, PgMeta
+from half_orm.pg_meta import normalize_fqrn, normalize_qrn
 
-class SetOperators:
-    """SetOperators class stores the set operations made on the Relation class objects
+class _SetOperators:
+    """_SetOperators class stores the set operations made on the Relation class objects
 
     - __operator is one of {'or', 'and', 'sub', 'neg'}
     - __right is a Relation object. It can be None if the operator is 'neg'.
@@ -110,7 +110,7 @@ def __init__(self, **kwargs):
     self.__query_type = None
     self.__sql_query = []
     self.__sql_values = []
-    self.__set_operators = SetOperators(self)
+    self.__set_operators = _SetOperators(self)
     self.__select_params = {}
     self.__id_cast = None
     self.__cursor = self._model._connection.cursor()
@@ -120,7 +120,7 @@ def __init__(self, **kwargs):
     kwk_ = set(kwargs.keys())
     if kwk_.intersection(self._fields.keys()) != kwk_:
         raise relation_errors.UnknownAttributeError(str(kwk_.difference(self._fields.keys())))
-    _ = {self.__dict__[field_name].set(value)
+    _ = {self.__dict__[field_name]._set(value)
          for field_name, value in kwargs.items() if value is not None}
     self.__isfrozen = True
 
@@ -144,7 +144,7 @@ def __setattr__(self, key, value):
     if self.__isfrozen and not hasattr(self, key):
         raise relation_errors.IsFrozenError(self.__class__, key)
     if self.__dict__.get(key) and isinstance(self.__dict__[key], Field):
-        self.__dict__[key].set(value)
+        self.__dict__[key]._set(value)
         return
     object.__setattr__(self, key, value)
 
@@ -179,13 +179,13 @@ def only(self, value):
 
 def __set_fields(self):
     """Initialise the fields of the relation."""
-    fields_metadata = self._model.fields_metadata(self._t_fqrn)
+    _fields_metadata = self._model._fields_metadata(self._t_fqrn)
 
-    for field_name, f_metadata in fields_metadata.items():
+    for field_name, f_metadata in _fields_metadata.items():
         field = Field(field_name, self, f_metadata)
         self._fields[field_name] = field
         self.__setattr__(field_name, field)
-        if field.is_part_of_pk():
+        if field._is_part_of_pk():
             self._pkey[field_name] = field
 
 def __set_fkeys(self):
@@ -193,8 +193,8 @@ def __set_fkeys(self):
     #pylint: disable=import-outside-toplevel
     from half_orm.fkey import FKey
 
-    fkeys_metadata = self._model.fkeys_metadata(self._t_fqrn)
-    for fkeyname, f_metadata in fkeys_metadata.items():
+    _fkeys_metadata = self._model._fkeys_metadata(self._t_fqrn)
+    for fkeyname, f_metadata in _fkeys_metadata.items():
         self._fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
     #TODO: Remove in 0.8 release
     if not self.__fkeys_properties:
@@ -356,7 +356,7 @@ def to_dict(self):
 def _to_dict_val_comp(self):
     """Returns a dictionary containing the values and comparators of the fields
     that are set."""
-    return {key:(field.comp(), field.value) for key, field in
+    return {key:(field._comp(), field.value) for key, field in
             self._fields.items() if field.is_set()}
 
 def __repr__(self):
@@ -384,10 +384,10 @@ Fkeys = {"""
     for field_name, field in self._fields.items():
         ret.append(f"- {field_name}:{' ' * (mx_fld_n_len + 1 - len(field_name))}{repr(field)}")
     ret.append('')
-    pkey = self._model.pkey_constraint(self._t_fqrn)
+    pkey = self._model._pkey_constraint(self._t_fqrn)
     if pkey:
         ret.append(f"PRIMARY KEY ({', '.join(pkey)})")
-    for uniq in self._model.unique_constraints_list(self._t_fqrn):
+    for uniq in self._model._unique_constraints_list(self._t_fqrn):
         ret.append(f"UNIQUE CONSTRAINT ({', '.join(uniq)})")
     if self._fkeys.keys():
         plur = 'S' if len(self._fkeys) > 1 else ''
@@ -477,7 +477,7 @@ def __get_from(self, orig_rel=None, deja_vu=None):
 def __where_repr(self, rel_id_):
     where_repr = []
     for field in self.__get_set_fields():
-        where_repr.append(field.where_repr(self.__query_type, rel_id_))
+        where_repr.append(field._where_repr(self.__query_type, rel_id_))
     where_repr = ' and\n    '.join(where_repr) or '1 = 1'
     ret = f"({where_repr})"
     if self.__neg:
@@ -712,7 +712,7 @@ def update(self, update_all=False, **kwargs):
     query = query_template.format(self._qrn, what, where)
     self.__execute(query, tuple(values))
     for field_name, value in update_args.items():
-        self._fields[field_name].set(value)
+        self._fields[field_name]._set(value)
 
 def __what_to_insert(self):
     """Returns the field names and values to be inserted."""
@@ -845,7 +845,7 @@ def join(self, *f_rels):
             if remote.__class__ == f_relation.__class__:
                 for field in f_relation._fields.keys():
                     if f_relation.__dict__[field].is_set():
-                        remote.__dict__[field].set(f_relation.__dict__[field])
+                        remote.__dict__[field]._set(f_relation.__dict__[field])
                 fkey_found = True
                 f_relation_fk_names = remote_fk.fk_names
                 break
@@ -1104,12 +1104,12 @@ def _factory(dct):
         tbl_attr['_model'] = dct['model']
     else:
         tbl_attr['_model'] = model.Model._deja_vu(tbl_attr['_dbname'])
-    rel_class = model.Model.check_deja_vu_class(*dct['fqrn'])
+    rel_class = model.Model._check_deja_vu_class(*dct['fqrn'])
     if rel_class:
         return rel_class
 
     try:
-        metadata = tbl_attr['_model'].relation_metadata(dct['fqrn'])
+        metadata = tbl_attr['_model']._relation_metadata(dct['fqrn'])
     except KeyError as exc:
         raise model_errors.UnknownRelation(dct['fqrn']) from exc
     if metadata['inherits']:
