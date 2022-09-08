@@ -1,28 +1,7 @@
 #!/usr/bin/env python3
 #-*- coding: utf-8 -*-
 
-"""This module provides the Model class.
-
-The Model class allows to load the model of a database:
-- model = Model(config_file='<config file name>')
- - model.desc() displays information on the structure of
-   the database.
- - model.get_relation_class(<QRN>)
-   see relation module for available methods on Relation class.
-
-About QRN and FQRN:
-- FQRN stands for: Fully Qualified Relation Name. It is composed of:
-  <database name>.<schema name>.<table name>.
-  Only the schema name can have dots in it. In this case, you must double
-  quote the schema name :
-  <database connection filename>."<schema name>".<table name>
-  ex:
-  - one.public.my_table
-  - two."access.role".acces
-- QRN is the Qualified Relation Name. Same as the FQRN without the database
-  name. Double quotes can be ommited even if there are dots in the schema name.
-
-"""
+"""This module provides the class Model."""
 
 
 import os
@@ -32,10 +11,9 @@ from os import environ
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from half_orm import model_errors
+from half_orm.model_errors import MalformedConfigFile, MissingConfigFile, MissingSchemaInName
 from half_orm.relation import _factory
 from half_orm import pg_meta
-
 
 CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 
@@ -43,10 +21,19 @@ CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 psycopg2.extras.register_uuid()
 
 class Model:
-    """Model class
+    """The class Model is responsible for the connection to the PostgreSQL database.
+    
+    Once connected, you can use the
+    `get_relation_class <#half_orm.model.Model.get_relation_class>`_
+    method to generate a class to access any relation (table/view) in your database.
 
-    The model establishes a connection to the database and allows to
-    generate a Relation object using model.relation(QRN) method.
+    Example:
+        >>> from half_orm.model import Model
+        >>> model = Model('my_config_file')
+        >>> class MyTable(model.get_relation_class('my_schema.my_table')):
+        ...     # Your business code goes here
+
+
     """
     __deja_vu = {}
     _classes_ = {}
@@ -64,6 +51,44 @@ class Model:
         self._scope = scope and scope.split('.')[0]
         self.__production = False
         self.__connect()
+
+    def get_relation_class(self, relation_name: str) -> 'class(Relation)':
+        """This method is a factory that generates a class that inherits the `Relation <#half_orm.relation.Relation>`_ class.
+
+        Args:
+            relation_name (string): the full name (`<schema>.<relation>`) of the targeted relation in the database.
+
+        Raises:
+            ValueError: if the schema is missing in relation_name
+            UnknownRelationError: if the relation is not found in the database
+
+        Returns:
+            a class that inherits the `Relation <#half_orm.relation.Relation>`_ class:
+                the class corresponding to the relation in the database.
+
+        Examples:
+            A class inheriting the `Relation <#half_orm.relation.Relation>`_ class is returned:
+                >>> Person = model.get_relation_class('actor.person')
+                >>> Person
+                <class 'half_orm.relation.Table_HalftestActorPerson'>
+                >>> Person.__bases__
+                (<class 'half_orm.relation.Relation'>,)
+
+            A `MissingSchemaInName <#half_orm.model_errors.MissingSchemaInName>`_ is raised when the schema name is missing:
+                >>> model.get_relation_class('person')
+                [...]MissingSchemaInName: do you mean 'public.person'?
+
+            An `UnknownRelation <#half_orm.model_errors.UnknownRelation>`_ is raised if the relation is not found in the model:
+                >>> model.get_relation_class('public.person')
+                [...]UnknownRelation: 'public.person' does not exist in the database halftest.
+        """
+
+        try:
+            schema, table = relation_name.replace('"', '').rsplit('.', 1)
+        except ValueError as err:
+            raise MissingSchemaInName(relation_name) from err
+        return _factory({'fqrn': (self.__dbname, schema, table), 'model': self})
+
 
     @staticmethod
     def _deja_vu(dbname):
@@ -123,7 +148,7 @@ class Model:
 
         if not config.read(
                 [os.path.join(CONF_DIR, self.__config_file)]):
-            raise model_errors.MissingConfigFile(os.path.join(CONF_DIR, self.__config_file))
+            raise MissingConfigFile(os.path.join(CONF_DIR, self.__config_file))
 
         params = dict(config['database'].items())
         if config_file and params['name'] != self.__dbname:
@@ -143,7 +168,7 @@ class Model:
         if not isinstance(self.__production, bool):
             raise ValueError
         if 'name' not in self.__dbinfo:
-            raise model_errors.MalformedConfigFile(
+            raise MalformedConfigFile(
                 self.__config_file, {'name'})
         try:
             params = dict(self.__dbinfo)
@@ -241,15 +266,6 @@ class Model:
             return cursor.fetchall()
         except psycopg2.ProgrammingError:
             return None
-
-    def get_relation_class(self, qtn):
-        """Returns the class corresponding to the fqrn relation in the database.
-
-        @qtn is the <schema>.<table> name of the relation
-        @kwargs is a dictionary {field_name:value}
-        """
-        schema, table = qtn.replace('"', '').rsplit('.', 1)
-        return _factory({'fqrn': (self.__dbname, schema, table), 'model': self})
 
     def has_relation(self, qtn):
         """Checks if the qtn is a relation in the database
