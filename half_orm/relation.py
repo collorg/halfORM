@@ -650,7 +650,7 @@ def is_empty(self):
         raise err
     return self.__cursor.fetchone()['count'] != 1
 
-def count(self, *args, _distinct=False):
+def __count(self, *args, _distinct=False):
     """Returns the number of tuples matching the intention in the relation.
 
     See select for arguments.
@@ -1026,7 +1026,7 @@ COMMON_INTERFACE = {
     'select': select,
     '_mogrify': _mogrify,
     '__len__': __len__,
-    'count': count,
+    # 'count': count,
     'get': get,
     'join': join,
     '__set__op__': __set__op__,
