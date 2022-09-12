@@ -11,9 +11,10 @@ from os import environ
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from half_orm.model_errors import MalformedConfigFile, MissingConfigFile, MissingSchemaInName
-from half_orm.relation import _factory
+from half_orm.model_errors import MalformedConfigFile, MissingConfigFile, MissingSchemaInName, UnknownRelation
+from half_orm.relation import Relation, REL_INTERFACES, REL_CLASS_NAMES
 from half_orm import pg_meta
+from half_orm.pg_meta import normalize_fqrn, normalize_qrn
 
 CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 
@@ -41,7 +42,7 @@ class Model:
         """Model constructor
 
         Use @config_file in your scripts. The @dbname parameter is
-        reserved to the _factory metaclass.
+        reserved to the __factory metaclass.
         """
         self.__backend_pid = None
         self.__config_file = config_file
@@ -83,11 +84,59 @@ class Model:
                 [...]UnknownRelation: 'public.person' does not exist in the database halftest.
         """
 
+        def factory(dct):
+            """Function to build a Relation class corresponding to a PostgreSQL
+            relation.
+            """
+            def _gen_class_name(rel_kind, sfqrn):
+                """Generates class name from relation kind and FQRN tuple"""
+                class_name = "".join([elt.capitalize() for elt in
+                                    [elt.replace('.', '') for elt in sfqrn]])
+                return f"{rel_kind}_{class_name}"
+
+            bases = [Relation,]
+            tbl_attr = {}
+            tbl_attr['__base_classes'] = set()
+            tbl_attr['__fkeys_properties'] = False
+            tbl_attr['_qrn'] = normalize_qrn(dct['fqrn'])
+
+            tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], dct['fqrn'])))
+            if not tbl_attr['_dbname'] in Model._classes_:
+                Model._classes_[tbl_attr['_dbname']] = {}
+            if dct.get('model'):
+                tbl_attr['_model'] = dct['model']
+            else:
+                tbl_attr['_model'] = Model._deja_vu(tbl_attr['_dbname'])
+            rel_class = Model._check_deja_vu_class(*dct['fqrn'])
+            if rel_class:
+                return rel_class
+
+            try:
+                metadata = tbl_attr['_model']._relation_metadata(dct['fqrn'])
+            except KeyError as exc:
+                raise UnknownRelation(dct['fqrn']) from exc
+            if metadata['inherits']:
+                metadata['inherits'].sort()
+                bases = []
+            for parent_fqrn in metadata['inherits']:
+                bases.append(factory({'fqrn': parent_fqrn}))
+            tbl_attr['__metadata'] = metadata
+            tbl_attr['_t_fqrn'] = dct['fqrn']
+            tbl_attr['_fqrn'] = normalize_fqrn(dct['fqrn'])
+            tbl_attr['__kind'] = REL_CLASS_NAMES[metadata['tablekind']]
+            tbl_attr['_fkeys'] = []
+            for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
+                tbl_attr[fct_name] = fct
+            class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
+            rel_class = type(class_name, tuple(bases), tbl_attr)
+            Model._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
+            return rel_class
+
         try:
             schema, table = relation_name.replace('"', '').rsplit('.', 1)
         except ValueError as err:
             raise MissingSchemaInName(relation_name) from err
-        return _factory({'fqrn': (self.__dbname, schema, table), 'model': self})
+        return factory({'fqrn': (self.__dbname, schema, table), 'model': self})
 
 
     @staticmethod
