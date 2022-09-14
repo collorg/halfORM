@@ -1,7 +1,24 @@
 #!/usr/bin/env python3
 #-*- coding: utf-8 -*-
 
-"""This module provides the class Model."""
+"""This module provides the class Model.
+
+The class Model is responsible for the connection to the PostgreSQL database.
+    
+Once connected, you can use the
+`get_relation_class <#half_orm.model.Model.get_relation_class>`_
+method to generate a class to access any relation (table/view) in your database.
+
+Example:
+    >>> from half_orm.model import Model
+    >>> model = Model('my_config_file')
+    >>> class MyTable(model.get_relation_class('my_schema.my_table')):
+    ...     # Your business code goes here
+
+Note:
+    The default schema is ``public`` in PostgreSQL, so to reference a table
+    ``my_table`` in this schema you'll have to use ``pubic.my_table``.
+"""
 
 
 import os
@@ -10,6 +27,7 @@ from configparser import ConfigParser
 from os import environ
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from typing import Generator, List
 
 from half_orm.model_errors import MalformedConfigFile, MissingConfigFile, MissingSchemaInName, UnknownRelation
 from half_orm.relation import Relation, REL_INTERFACES, REL_CLASS_NAMES
@@ -22,23 +40,30 @@ CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 psycopg2.extras.register_uuid()
 
 class Model:
-    """The class Model is responsible for the connection to the PostgreSQL database.
+    """
+    Parameters:
+        config_file (str): the configuration file that contains the informations to connect
+            to the database.
+        scope (Optional[str]): used to agregate several modules in a package.
+            See `half_orm_packager <https://github.com/collorg/halfORM_packager>`_.
+
+    Note:
+        The **config_file** is searched in the `HALFORM_CONF_DIR` variable if specified,
+        then in `/etc/half_orm`. The file format is as follows:
+
+            | [database]
+            | name = <postgres db name>
+            | user = <postgres user>
+            | password = <postgres password>
+            | host = <host name | localhost>
+            | port = <port | 5432>
     
-    Once connected, you can use the
-    `get_relation_class <#half_orm.model.Model.get_relation_class>`_
-    method to generate a class to access any relation (table/view) in your database.
-
-    Example:
-        >>> from half_orm.model import Model
-        >>> model = Model('my_config_file')
-        >>> class MyTable(model.get_relation_class('my_schema.my_table')):
-        ...     # Your business code goes here
-
-
+        The information contained can be limited to *name* if you are using an
+        `ident login with a local account <https://www.postgresql.org/docs/current/auth-ident.html>`_.
     """
     __deja_vu = {}
     _classes_ = {}
-    def __init__(self, config_file, scope=None):
+    def __init__(self, config_file: str, scope: str=None):
         """Model constructor
 
         Use @config_file in your scripts. The @dbname parameter is
@@ -74,6 +99,10 @@ class Model:
                 <class 'half_orm.relation.Table_HalftestActorPerson'>
                 >>> Person.__bases__
                 (<class 'half_orm.relation.Relation'>,)
+
+            A prefered way to create a class:
+                >>> class Person(model.get_relation_class('actor.person)):
+                >>>     # Your code goes here
 
             A `MissingSchemaInName <#half_orm.model_errors.MissingSchemaInName>`_ is raised when the schema name is missing:
                 >>> model.get_relation_class('person')
@@ -148,46 +177,21 @@ class Model:
         """
         return Model.__deja_vu.get(dbname)
 
-    def ping(self):
-        """Returns True if the connection is OK.
-
-        Otherwise attempts a new connection and return False.
-        """
-        try:
-            self.execute_query("select 1")
-            return True
-        except (psycopg2.OperationalError, psycopg2.InterfaceError):
-            try:
-                self.__connect()
-            except psycopg2.OperationalError as err:
-                sys.stderr.write(f'{err}\n')
-                sys.stderr.flush()
-            return False
-
-    @property
-    def production(self):
-        """Returns the production status of the db. Production is set by adding
-        production = True to the connexion file.
-
-        Returns:
-            bool: True if the database is in production, False otherwise
-        """
-        return self.__production
-
-    def disconnect(self):
-        """Disconnect
-        """
-        if self.__conn is not None:
-            if not self.__conn.closed:
-                self.__conn.close()
-
-    def __connect(self, config_file=None, reload=False):
+    def __connect(self, config_file: str=None, reload: bool=False):
         """Setup a new connection to the database.
 
-        If a config_file is provided, the connection is made with the new
-        parameters, allowing to change role. The database name must be the same.
+        The reconnect method is an alias to the ``__connect`` method.
 
-        The reconnect method is an alias to the connect method.
+        Parameters:
+            config_file (str): If a config_file is provided, the connection is made with the new
+                parameters, allowing to change role. The database name must be the same.
+            reload (bool): If set to True, reloads the metadata from the database. Usefull if
+                the model has changed.
+
+        Raises:
+            MissingConfigFile: If the **config_file** is not found in *HALFORM_CONF_DIR*.
+            MalformedConfigFile: if the *name* is missing in the **config_file**. 
+            RuntimeError: If the reconnection is attempted on another database.
         """
         self.disconnect()
         if config_file:
@@ -234,6 +238,31 @@ class Model:
 
     reconnect = __connect
 
+    def ping(self):
+        """Checks if the connection is still established.
+        Attempts a new connection otherwise.
+
+        Returns:
+            bool: True if the connection is established, False otherwise.
+        """
+        try:
+            self.execute_query("select 1")
+            return True
+        except (psycopg2.OperationalError, psycopg2.InterfaceError):
+            try:
+                self.__connect()
+            except psycopg2.OperationalError as err:
+                sys.stderr.write(f'{err}\n')
+                sys.stderr.flush()
+            return False
+
+    def disconnect(self):
+        """Closes the connection to the database.
+        """
+        if self.__conn is not None:
+            if not self.__conn.closed:
+                self.__conn.close()
+
     def _reload(self, config_file=None):
         "Reload metadata"
         self.__connect(config_file, True)
@@ -278,15 +307,34 @@ class Model:
         return self.__pg_meta._pkey_constraint(self.__dbname, fqrn)
 
     def execute_query(self, query, values=()):
-        """Execute a raw SQL query"""
+        """Execute a raw SQL query.
+        
+        Warning:
+            This method calls the psycopg2
+            `cursor.execute <https://www.psycopg.org/docs/cursor.html?highlight=execute#cursor.execute>`_
+            function.
+            Please read the psycopg2 documentation on
+            `passing parameters to SQL queries <https://www.psycopg.org/docs/usage.html#query-parameters>`_.
+        """
         cursor = self.__conn.cursor()
         cursor.execute(query, values)
         return cursor
 
-    def execute_function(self, fct_name, *args, **kwargs):
-        """Execute a PostgreSQL function with named parameters.
+    def execute_function(self, fct_name, *args, **kwargs) -> List[tuple]:
+        """`Executes a PostgreSQL function <https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html>`_.
 
-        returns a list of tuples
+        Arguments:
+            *args: The list of parameters to be passed to the postgresql function.
+            **kwargs: The list of named parameters to be passed to the postgresql function.
+
+        Returns:
+            List[tuple]: a list of tuples.
+        
+        Raises:
+            RuntimeError: If you mix ***args** and ****kwargs**.
+
+        Note:
+            You can't mix args and kwargs with the execute_function method!
         """
         if bool(args) and bool(kwargs):
             raise RuntimeError("You can't mix args and kwargs with the execute_function method!")
@@ -299,7 +347,21 @@ class Model:
         return cursor.fetchall()
 
     def call_procedure(self, proc_name, *args, **kwargs):
-        "Execute a PostgreSQL procedure"
+        """`Execute a PostgreSQL procedure <https://www.postgresql.org/docs/current/sql-call.html>`_.
+
+        Arguments:
+            *args: The list of parameters to be passed to the postgresql function.
+            **kwargs: The list of named parameters to be passed to the postgresql function.
+
+        Returns:
+            None | List[tuple]: None or a list of tuples.
+        
+        Raises:
+            RuntimeError: If you mix ***args** and ****kwargs**.
+
+        Note:
+            You can't mix args and kwargs with the call_procedure method!
+        """
         if bool(args) and bool(kwargs):
             raise RuntimeError("You can't mix args and kwargs with the call_procedure method!")
         if kwargs:
@@ -316,12 +378,17 @@ class Model:
         except psycopg2.ProgrammingError:
             return None
 
-    def has_relation(self, qtn):
+    def has_relation(self, qtn: str) -> bool:
         """Checks if the qtn is a relation in the database
 
-        @qtn is in the form "<schema>".<table>
-        Returns True if the relation exists, False otherwise.
-        Also works for views and materialized views.
+        Returns:
+            bool: True if the relation exists in the database, False otherwise.
+
+        Example:
+            >>> model.has_relation('public.person')
+            False
+            >>> model.has_relation('actor.person')
+            True
         """
         return self.__pg_meta.has_relation(self.__dbname, *qtn.rsplit('.', 1))
 
@@ -355,13 +422,30 @@ class Model:
     def desc(self):
         """Returns the list of the relations of the model.
 
-        Each line contains:
-        - the relation type: 'r' relation, 'v' view, 'm' materialized view,
-        - the quoted FQRN (Fully qualified relation name)
-          <"db name">:"<schema name>"."<relation name>"
-        - the list of the FQRN of the inherited relations.
+        Each element in the list contains:
+
+        * the relation type: 'r' relation, 'v' view, 'm' materialized view, 'p' partition;
+        * a tuple identifying the relation: (db name>, <schema name>, <relation name>);
+        * a list of tuples indentifying the inherited relations.
+
+        Example:
+            >>> from half_orm.model import Model
+            >>> halftest = Model('halftest')
+            >>> halftest.desc()
+            [('r', ('halftest', 'actor', 'person'), []), ('r', ('halftest', 'blog', 'comment'), []), ('r', ('halftest', 'blog', 'event'), [('halftest', 'blog', 'post')]), ('r', ('halftest', 'blog', 'post'), []), ('v', ('halftest', 'blog.view', 'post_comment'), [])]
         """
         return self.__pg_meta.desc(self.__dbname)
 
     def __str__(self):
         return self.__pg_meta.str(self.__dbname)
+
+    @property
+    def production(self):
+        """Returns the production status of the db. Production is set by adding
+        ``production = True`` to the **config file**.
+
+        Returns:
+            bool: True if the database is in production, False otherwise
+        """
+        return self.__production
+
