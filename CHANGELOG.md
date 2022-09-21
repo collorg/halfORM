@@ -1,3 +1,13 @@
+# 0.7.2 (2022-09-21)
+
+* Do not include partitioned tables in pg_meta. (04f6637)
+* [doc][WIP] Add documentation in model and relation modules. (2040c95)
+* [model] move relation class factory from relation to model. (eee6d05)
+* [relation] Remove count method. (f3577c1)
+* [model] get_relation_class raises MissingSchemaInName. (b3c9702)
+* [model] Remove unused parameters dbname and raise_error from Model constructor. (95a3153)
+* [docs][pg_meta][field][model][BREAKING CHANGE] Privatize some public methods. (a756443)
+
 # 0.7.1 (2022-09-05)
 
 * [relation] Allow fields names to be passed to Relation.get method. (93caa77)
