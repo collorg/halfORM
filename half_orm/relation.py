@@ -1,9 +1,10 @@
 #-*- coding: utf-8 -*-
 # pylint: disable=protected-access, too-few-public-methods, no-member
 
-"""This module is used by the
-`Model.get_relation_class <#half_orm.model.Model.get_relation_class>`_
-to generate the classes that manipulate the data in your database.
+"""This module is used by the `model <#module-half_orm.model>`_ module
+to generate the classes that manipulate the data in your database
+with the `Model.get_relation_class <#half_orm.model.Model.get_relation_class>`_
+method.
 
 
 Example:

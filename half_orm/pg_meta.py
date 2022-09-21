@@ -113,6 +113,8 @@ WHERE
       OR c.relkind = 'p' -- patitioned table
     ) AND
     a.attnum > 0 -- AND
+    AND (i.inhparent is null or i.inhparent not in (select oid from pg_class where relkind = 'p'))
+    AND (cn_fk is null or cn_fk.confrelid not in (select inhrelid from pg_inherits where inhparent in (select oid from pg_class where relkind = 'p')))
 GROUP BY
     a.attrelid,
     n.nspname,

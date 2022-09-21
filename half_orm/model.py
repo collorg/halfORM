@@ -32,7 +32,6 @@ from typing import Generator, List
 from half_orm.model_errors import MalformedConfigFile, MissingConfigFile, MissingSchemaInName, UnknownRelation
 from half_orm.relation import Relation, REL_INTERFACES, REL_CLASS_NAMES
 from half_orm import pg_meta
-from half_orm.pg_meta import normalize_fqrn, normalize_qrn
 
 CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 
@@ -57,8 +56,8 @@ class Model:
             | password = <postgres password>
             | host = <host name | localhost>
             | port = <port | 5432>
-    
-        The information contained can be limited to *name* if you are using an
+
+        *name* is the only mandatory entry if you are using an
         `ident login with a local account <https://www.postgresql.org/docs/current/auth-ident.html>`_.
     """
     __deja_vu = {}
@@ -127,7 +126,7 @@ class Model:
             tbl_attr = {}
             tbl_attr['__base_classes'] = set()
             tbl_attr['__fkeys_properties'] = False
-            tbl_attr['_qrn'] = normalize_qrn(dct['fqrn'])
+            tbl_attr['_qrn'] = pg_meta.normalize_qrn(dct['fqrn'])
 
             tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], dct['fqrn'])))
             if not tbl_attr['_dbname'] in Model._classes_:
@@ -151,7 +150,7 @@ class Model:
                 bases.append(factory({'fqrn': parent_fqrn}))
             tbl_attr['__metadata'] = metadata
             tbl_attr['_t_fqrn'] = dct['fqrn']
-            tbl_attr['_fqrn'] = normalize_fqrn(dct['fqrn'])
+            tbl_attr['_fqrn'] = pg_meta.normalize_fqrn(dct['fqrn'])
             tbl_attr['__kind'] = REL_CLASS_NAMES[metadata['tablekind']]
             tbl_attr['_fkeys'] = []
             for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
@@ -307,7 +306,7 @@ class Model:
         return self.__pg_meta._pkey_constraint(self.__dbname, fqrn)
 
     def execute_query(self, query, values=()):
-        """Execute a raw SQL query.
+        """Executes a raw SQL query.
         
         Warning:
             This method calls the psycopg2
@@ -347,7 +346,7 @@ class Model:
         return cursor.fetchall()
 
     def call_procedure(self, proc_name, *args, **kwargs):
-        """`Execute a PostgreSQL procedure <https://www.postgresql.org/docs/current/sql-call.html>`_.
+        """`Executes a PostgreSQL procedure <https://www.postgresql.org/docs/current/sql-call.html>`_.
 
         Arguments:
             *args: The list of parameters to be passed to the postgresql function.

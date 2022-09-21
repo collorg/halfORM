@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 # pylint: disable=protected-access
 
-"""This module provides the Field class."""
+"""This module provides the Field class. It is used by the `relation <#module-half_orm.relation>`_ module."""
 
 import types
 from psycopg2.extensions import register_adapter, adapt
