@@ -91,7 +91,7 @@ class Field():
         if len(args) == 1:
             value = args[0]
             if value is None:
-                self.unset()
+                self._unset()
                 return
             comp = None
             self.__relation = obj
