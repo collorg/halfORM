@@ -1,3 +1,7 @@
+# 0.7.3 (2022-09-21)
+
+* [field][fix] Unsetting a Field by assigning None to it did not work anymore. (ef0735c)
+
 # 0.7.2 (2022-09-21)
 
 * Do not include partitioned tables in pg_meta. (04f6637)
