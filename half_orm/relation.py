@@ -164,16 +164,19 @@ def __init__(self, **kwargs):
          for field_name, value in kwargs.items() if value is not None}
     self.__isfrozen = True
 
-def insert(self) -> '[RealDictRow]':
+def insert(self, *args) -> '[dict]':
     """Insert a new tuple into the Relation.
 
     Returns:
-        [RealDictRow]: A list of one `RealDictRow <https://www.psycopg.org/docs/extras.html?highlight=realdictrow#psycopg2.extras.RealDictRow>`_ containing the data inserted.
+        [dict]: A singleton containing the data inserted.
 
     Example:
         >>> gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1970-01-01').insert()
         >>> print(gaston)
-        [RealDictRow([('id', 1536), ('first_name', 'Gaston'), ('last_name', 'Lagaffe'), ('birth_date', datetime.date(1970, 1, 1))])]
+        [{'id': 1772, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1970, 1, 1)}]
+
+    Note:
+        It is not possible to insert more than one row with the insert method
     """
     query_template = "insert into {} ({}) values ({}) returning *"
     self.__query_type = 'insert'
@@ -185,7 +188,7 @@ def insert(self) -> '[RealDictRow]':
         values += fk_values
     query = query_template.format(self._qrn, ", ".join(fields_names), ", ".join(what_to_insert))
     self.__execute(query, tuple(values))
-    return self.__cursor.fetchall()
+    return [dict(elt) for elt in self.__cursor.fetchall()]
 
 def select(self, *args):
     """Gets the set of values correponding to the constraint attached to the object.
@@ -194,13 +197,14 @@ def select(self, *args):
     Arguments:
         *args: the fields names of the returned attributes. If omitted,
             all the fields are returned.
-    
+
     Yields:
         the result of the query as a dictionary.
 
     Example:
-        >>> for person in Person(last_name=('like', 'La%')):
+        >>> for person in Person(last_name=('like', 'La%')).select('id'):
         >>>     print(person)
+        {'id': 1772}
     """
     query, values = self._prep_select(*args)
     try:
@@ -208,7 +212,8 @@ def select(self, *args):
     except Exception as err:
         sys.stderr.write(f"QUERY: {query}\nVALUES: {values}\n")
         raise err
-    return self.__cursor
+    for elt in self.__cursor:
+        yield dict(elt)
 
 def get(self, *args: List[str]) -> Relation:
     """The get method allows you to fetch a singleton from the database.
@@ -231,7 +236,7 @@ def get(self, *args: List[str]) -> Relation:
         >>> type(gaston) is Person
         True
         >>> gaston.id
-        (int4) NOT NULL (id = 1536)
+        (int4) NOT NULL (id = 1772)
     """
     _count = len(self)
     if _count != 1:
