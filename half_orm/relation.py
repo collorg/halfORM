@@ -178,7 +178,7 @@ def insert(self, *args) -> '[dict]':
     Note:
         It is not possible to insert more than one row with the insert method
     """
-    query_template = "insert into {} ({}) values ({}) returning *"
+    query_template = "insert into {} ({}) values ({})"
     self.__query_type = 'insert'
     fields_names, values, fk_fields, fk_query, fk_values = self.__what_to_insert()
     what_to_insert = ["%s" for _ in range(len(values))]
@@ -186,7 +186,8 @@ def insert(self, *args) -> '[dict]':
         fields_names += fk_fields
         what_to_insert += fk_query
         values += fk_values
-    query = query_template.format(self._qrn, ", ".join(fields_names), ", ".join(what_to_insert))
+    query = self.__add_returning(
+        query_template.format(self._qrn, ", ".join(fields_names), ", ".join(what_to_insert)), *args)
     self.__execute(query, tuple(values))
     return [dict(elt) for elt in self.__cursor.fetchall()]
 
@@ -246,7 +247,7 @@ def get(self, *args: List[str]) -> Relation:
     ret._is_singleton = True
     return ret
 
-def update(self, update_all=False, **kwargs):
+def update(self, *args, update_all=False, **kwargs):
     """
     kwargs represents the values to be updated {[field name:value]}
     The object self must be set unless update_all is True.
@@ -263,7 +264,7 @@ def update(self, update_all=False, **kwargs):
         if value is None:
             update_args.pop(key)
     if not update_args:
-        return # no new value update. Should we raise an error here?
+        return []# no new value update. Should we raise an error here?
 
     query_template = "update {} set {} {}"
     what, where, values = self.__update_args(**update_args)
@@ -272,12 +273,13 @@ def update(self, update_all=False, **kwargs):
         fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
         where = f"{where} and {fk_where}"
         values += fk_values
-    query = query_template.format(self._qrn, what, where)
+    query = self.__add_returning(query_template.format(self._qrn, what, where), *args)
     self.__execute(query, tuple(values))
     for field_name, value in update_args.items():
         self._fields[field_name]._set(value)
+    return [dict(elt) for elt in self.__cursor.fetchall()]
 
-def delete(self, delete_all=False):
+def delete(self, *args, delete_all=False):
     """Removes a set of tuples from the relation.
     To empty the relation, delete_all must be set to True.
     """
@@ -298,7 +300,16 @@ def delete(self, delete_all=False):
         where = f"{where} and {fk_where}"
         values += fk_values
     query = query_template.format(self._qrn, where)
+    query = self.__add_returning(query, *args)
     self.__execute(query, tuple(values))
+    return [dict(elt) for elt in self.__cursor.fetchall()]
+
+def __add_returning(self, query, *args) -> str:
+    "Adds the SQL returning clause to the query"
+    returning = '*'
+    if args:
+        returning = ','.join(args)
+    return f'{query} returning {returning}'
 
 def _unfreeze(self):
     "Allow to add attributs to a relation"
@@ -1126,6 +1137,7 @@ COMMON_INTERFACE = {
     'update': update,
     '__update_args': __update_args,
     'delete': delete,
+    '__add_returning': __add_returning,
     'Transaction': Transaction,
     '_set_fkeys_properties': _set_fkeys_properties,
     '_set_fkey_property': _set_fkey_property,

@@ -47,6 +47,6 @@ if len(comment) == 0:
     print(comment.insert())
 
 gaston_comments = gaston.comments_rfk(content=('ilike', '%simple%'))
-print(list(gaston_comments.select()))
+print(list(gaston_comments))
 
 # print(Post())

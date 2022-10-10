@@ -43,7 +43,7 @@ def main():
     post_dct = gaston.add_post(title='Easy', content='halfORM is fun!')
     post = Post(**post_dct)
     gaston.add_comment(content='This is a comment on the newly created post.', post=post)
-    print(list(post.comments_rfk().select()))
+    print(list(post.comments_rfk())) # The relational objects are iterators
     post.update(title='Super easy')
     gaston.delete()
 ```
