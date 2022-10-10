@@ -1037,6 +1037,12 @@ def __exit__(_, *__):
     """
     return False
 
+def __iter__(self):
+    return self.select()
+
+def __next__(self):
+    return next(self.select())
+
 def singleton(fct):
     """Decorator. Enforces the relation to define a singleton.
 
@@ -1120,6 +1126,8 @@ COMMON_INTERFACE = {
     '_set_fkey_property': _set_fkey_property,
     '__enter__': __enter__,
     '__exit__': __exit__,
+    '__iter__': __iter__,
+    '__next__': __next__,
     # test
     '_debug': _debug,
     'singleton': singleton,
