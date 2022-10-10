@@ -1,3 +1,10 @@
+# 0.7.4 (2022-10-10)
+
+* [relation] Add returning values to insert, update and delete. (816ae18)
+* [relation] Return dict instead of RealDictRow. (fcbcbe0) 
+* [relation] Relation objects are now iterators. (143f0b0) 
+* Add half_orm.__version__. (60521cf) 
+
 # 0.7.3 (2022-09-21)
 
 * [field][fix] Unsetting a Field by assigning None to it did not work anymore. (ef0735c)
