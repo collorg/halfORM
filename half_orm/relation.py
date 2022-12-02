@@ -241,6 +241,10 @@ def get(self, *args: List[str]) -> Relation:
         True
         >>> gaston.id
         (int4) NOT NULL (id = 1772)
+        >>> str(gaston.id)
+        '1772'
+        >>> gaston.id.value
+        1772
     """
     _count = len(self)
     if _count != 1:
@@ -505,7 +509,7 @@ def group_by(self, yml_directive):
                     [elt], directive[group_name], suite, None)
 
     grouped_data = {}
-    data = list(self.select())
+    data = list(self)
     directive = yaml.safe_load(yml_directive)
     inner_group_by(data, directive, grouped_data)
     return grouped_data
@@ -529,7 +533,7 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
     if yml_directive:
         res = self.group_by(yml_directive)
     else:
-        res = [elt for elt in self.select()]
+        res = list(self)
     if kwargs:
         res = {res_field_name: res}
         res.update(kwargs)
@@ -898,7 +902,7 @@ def join(self, *f_rels):
 
     res = list(
         {key: to_str(value) for key, value in elt.items()}
-        for elt in self.distinct().select()
+        for elt in self.distinct()
     )
     result_as_list = False
     ref = self()

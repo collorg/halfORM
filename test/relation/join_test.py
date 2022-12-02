@@ -21,8 +21,8 @@ class Test(HoTestCase):
         self.today = halftest.today
         self.post().delete(delete_all=True)
         self.comment().delete(delete_all=True)
-        self.personne = self.pers(**next(self.pers(last_name='aa').select()))
-        self.personne_ab = self.pers(**next(self.pers(last_name='ab').select()))
+        self.personne = self.pers(**next(self.pers(last_name='aa')))
+        self.personne_ab = self.pers(**next(self.pers(last_name='ab')))
         post0 = self.post(title='post', content='essai')
         post0.author_last_name = self.personne.last_name
         post0.author_first_name = self.personne.first_name

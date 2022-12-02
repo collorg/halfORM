@@ -45,19 +45,19 @@ class Test(HoTestCase):
             last_name=('ilike', f'{n}%'),
             first_name=('ilike', f'%{p}'),
             birth_date=self.today)
-        for dct in pers.select():
+        for dct in pers:
             self.pers(**dct).get()
 
     def test_select_from_dotted_schema(self):
         "should quote dotted schema in sql request"
-        self.blog_view.select()
+        list(self.blog_view)
 
     def test_update(self):
         pers = self.pers(last_name=('like', 'a%'))
         self.assertEqual(len(pers), 10)
         @pers.Transaction
         def update(pers, fct):
-            for elt in pers.select():
+            for elt in pers:
                 pers = self.pers.__class__(**elt)
                 pers.update(last_name=fct(pers.last_name.value))
             

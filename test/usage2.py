@@ -15,7 +15,7 @@ oidt.update(cog_fqtn='perdu')
 dpt_info.connection.commit()
 print(len(oidt))
 oidt2 = oidt(cog_fqtn='perdu')
-for elt in oidt2.select():
+for elt in oidt2:
     print(elt)
 input('Allez faire un tour sur psql...')
 oidt2.update(cog_fqtn='seminaire.session')

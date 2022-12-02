@@ -126,7 +126,7 @@ r "blog"."post"
 v "blog.view"."post_comment"
 ```
 
-**Note**: Dots are only allowed in schema names.
+**Note**: We only allow dots in schema names.
 
 ## Check if a relation exists in the database
 
