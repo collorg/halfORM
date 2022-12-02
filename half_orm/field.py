@@ -154,6 +154,9 @@ class Field():
 
     def _psycopg_adapter(self):
         """Return the SQL representation of self.__value"""
+        import json
+        if self.type_ in {'json', 'jsonb'}:
+            self.__value = json.dumps(self.__value)
         return adapt(self.__value)
 
     @property
