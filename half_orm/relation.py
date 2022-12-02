@@ -189,7 +189,10 @@ def insert(self, *args) -> '[dict]':
     query = self.__add_returning(
         query_template.format(self._qrn, ", ".join(fields_names), ", ".join(what_to_insert)), *args)
     self.__execute(query, tuple(values))
-    return [dict(elt) for elt in self.__cursor.fetchall()]
+    res = [dict(elt) for elt in self.__cursor.fetchall()]
+    if len(res):
+        return res[0]
+    return {}
 
 def select(self, *args):
     """Gets the set of values correponding to the constraint attached to the object.

@@ -25,17 +25,17 @@ class Test(HoTestCase):
         post0.author_last_name = self.personne.last_name
         post0.author_first_name = self.personne.first_name
         post0.author_birth_date = self.personne.birth_date
-        self.post0 = post0.insert()[0]
+        self.post0 = post0.insert()
         post1 = self.post(title="post 1", content="essai ab")
         post1.author_last_name = self.personne_ab.last_name
         post1.author_first_name = self.personne_ab.first_name
         post1.author_birth_date = self.personne_ab.birth_date
-        self.post1 = post1.insert()[0]
+        self.post1 = post1.insert()
         post2 = self.post(title="post 2", content="essai 2 ab")
         post2.author_last_name = self.personne_ab.last_name
         post2.author_first_name = self.personne_ab.first_name
         post2.author_birth_date = self.personne_ab.birth_date
-        self.post2 = post2.insert()[0]
+        self.post2 = post2.insert()
         self.comment_post = "comment post"
         self.comment_post_1 = "comment post 1"
         self.comment_ab_post = "comment ab post"
@@ -44,23 +44,23 @@ class Test(HoTestCase):
         self.comment0 = self.comment(
             author_id=self.personne.id,
             post_id=self.post0['id'],
-            content=self.comment_post).insert()[0]
+            content=self.comment_post).insert()
         self.comment1 = self.comment(
             author_id=self.personne.id,
             post_id=self.post1['id'],
-            content=self.comment_post_1).insert()[0]
+            content=self.comment_post_1).insert()
         self.comment0_ab = self.comment(
             author_id=self.personne_ab.id,
             post_id=self.post0['id'],
-            content=self.comment_ab_post).insert()[0]
+            content=self.comment_ab_post).insert()
         self.comment1_ab = self.comment(
             author_id=self.personne_ab.id,
             post_id=self.post1['id'],
-            content=self.comment_ab_post_1).insert()[0]
+            content=self.comment_ab_post_1).insert()
         self.comment_2_1_ab = self.comment(
             author_id=self.personne_ab.id,
             post_id=self.post1['id'],
-            content=self.comment_2_ab_post_1).insert()[0]
+            content=self.comment_2_ab_post_1).insert()
         self.res = self.personne.join(
             (self.comment(), 'comments'),
             (self.post(), 'posts')

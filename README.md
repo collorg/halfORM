@@ -30,10 +30,10 @@ class Person(halftest.get_relation_class('actor.person')):
     }
     @singleton # This ensures that the author of the post is well defined.
     def add_post(self, title: str=None, content: str=None) -> dict:
-        return self.posts_rfk(title=title, content=content).insert()[0]
+        return self.posts_rfk(title=title, content=content).insert()
     @singleton
     def add_comment(self, post: Post=None, content: str=None) -> dict:
-        return self.comments_rfk(content=content, post_id=post.id.value).insert()[0]
+        return self.comments_rfk(content=content, post_id=post.id.value).insert()
 
 def main():
     gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
@@ -280,7 +280,7 @@ Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert
 
 ```python
 lagaffe = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
-lagaffe_id = lagaffe.insert()[0]['id']
+lagaffe_id = lagaffe.insert()['id']
 ```
 
 You can trigger a transaction for any combination of insert, modify or delete operations using the `Relation.Transaction` decorator.
