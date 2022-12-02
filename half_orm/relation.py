@@ -386,11 +386,7 @@ def __set_fkeys(self):
     _fkeys_metadata = self._model._fkeys_metadata(self._t_fqrn)
     for fkeyname, f_metadata in _fkeys_metadata.items():
         self._fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
-    #TODO: Remove in 0.8 release
-    if not self.__fkeys_properties:
-        self._set_fkeys_properties()
-        self.__fkeys_properties = True
-    if hasattr(self, 'Fkeys'):
+    if hasattr(self, 'Fkeys') and not self.__fkeys_properties:
         for key, value in self.Fkeys.items():
             try:
                 if key != '': # we skip empty keys
@@ -398,6 +394,7 @@ def __set_fkeys(self):
                     self._fkeys_attr.add(key)
             except KeyError as exp:
                 raise relation_errors.WrongFkeyError(self, value) from exp
+    self.__fkeys_properties = True
 
 def _set_fkeys_properties(self):
     """Property generator for fkeys.
