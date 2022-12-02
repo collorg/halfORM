@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
+import sys
+from pprint import PrettyPrinter
 from time import sleep
 from random import randint
-import psycopg2
-import sys
 from unittest import TestCase
 from half_orm.hotest import HoTestCase
+
+import psycopg2
 
 from ..init import halftest
 from half_orm import relation_errors, model
@@ -120,16 +122,53 @@ class Test(HoTestCase):
         self.assertEqual(len(comments), 1)
         self.assertEqual(comments[0]['content'], self.comment_ab_post_1)
 
+        comments_by_posts = self.post().join((self.comment(), 'comments'))
+        # print('comments_by_posts')
+        # PrettyPrinter().pprint(comments_by_posts)
+        count = {'essai': 2, 'essai ab': 3}
+        if comments_by_posts[0]['content'] == 'essai':
+            self.assertEqual(len(comments_by_posts[0]['comments']), count['essai'])
+            self.assertEqual(len(comments_by_posts[1]['comments']), count['essai ab'])
+        else:
+            self.assertEqual(len(comments_by_posts[0]['comments']), count['essai ab'])
+            self.assertEqual(len(comments_by_posts[1]['comments']), count['essai'])
+
+        comments_by_post = self.post().join((self.comment(content=self.comment_post), 'comments'))
+        # print('comments_by_post')
+        # PrettyPrinter().pprint(comments_by_post)
+        self.assertEqual(len(comments_by_post), 1)
+        self.assertEqual(comments_by_post[0]['title'], 'post')
+        self.assertEqual(len(comments_by_post[0]['comments']), 1)
+        self.assertEqual(comments_by_post[0]['comments'][0]['content'], self.comment_post)
+
+        comments_by_post_1 = self.post().join((self.comment(content=self.comment_ab_post_1), 'comments'))
+        # print('comments_by_post_1')
+        # PrettyPrinter().pprint(comments_by_post_1)
+        self.assertEqual(len(comments_by_post_1), 1)
+        self.assertEqual(comments_by_post_1[0]['title'], 'post 1')
+        self.assertEqual(len(comments_by_post_1[0]['comments']), 1)
+        self.assertEqual(comments_by_post_1[0]['comments'][0]['content'], self.comment_ab_post_1)
+
+
     def test_join_with_joined_object_with_FKEYS(self):
         "join should work with constraints on the joined objects"
-        self.skipTest("Not implemented")
-        post = self.post()
-        # post.title = self.post0.title
-        print(halftest.Post()()._fkeys.keys())
-        print(halftest.Comment()()._fkeys.keys())
-        print(len(self.post().join((self.comment(), 'comments'))))
-        res = self.comment().join(
-            (self.comment(content=self.comment_ab_post).post_fk(), '')
+
+        post_by_comment = self.comment(content=self.comment_post).join(
+            (self.comment(content=self.comment_post).post_fk(), 'post')
         )
-        print(res)
-        self.assertEqual('a', 'b')
+        # print('post_by_comment')
+        # PrettyPrinter().pprint(post_by_comment)
+        self.assertEqual(len(post_by_comment), 1)
+        self.assertEqual(post_by_comment[0]['content'], self.comment_post)
+        self.assertEqual(len(post_by_comment[0]['post']), 1)
+        self.assertEqual(post_by_comment[0]['post'][0]['title'], 'post')
+
+        post_by_comment_ab_post_1 = self.comment(content=self.comment_ab_post_1).join(
+            (self.comment(content=self.comment_ab_post_1).post_fk(), 'post')
+        )
+        # print('post_by_comment_ab_post_1')
+        # PrettyPrinter().pprint(post_by_comment_ab_post_1)
+        self.assertEqual(len(post_by_comment_ab_post_1), 1)
+        self.assertEqual(post_by_comment_ab_post_1[0]['content'], self.comment_ab_post_1)
+        self.assertEqual(len(post_by_comment_ab_post_1[0]['post']), 1)
+        self.assertEqual(post_by_comment_ab_post_1[0]['post'][0]['title'], 'post 1')

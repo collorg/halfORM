@@ -76,6 +76,7 @@ class FKey:
 
     @classmethod
     def __set__(cls, *args):
+        "Setting an Fkey is prohibited"
         print('XXX', cls, '\n', args)
         raise RuntimeError
 
