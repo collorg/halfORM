@@ -1,4 +1,4 @@
-# 0.8.0-rc1 (2022-12-07)
+# 0.8.0-rc0 (2022-12-07)
 
 * Remove dependencies to pydash, click and gitpython (moved to half_orm_packager). (501549f)
 * [field] Allow json and jsonb columns to receive python jsonifiable objects. (8da564f)
