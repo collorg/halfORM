@@ -4,17 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"
 
 [packages]
 psycopg2-binary = ">=2, <3"
-pydash = "5"
-click = "*"
 pyyaml = "*"
 
 [dev-packages]
 half-orm = {editable = true, path = "."}
-gitpython = "3"
 coverage = "*"
 pytest = "*"
 halftest = {path = "./test/halftest", editable = "true"}
