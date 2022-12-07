@@ -1,3 +1,20 @@
+# 0.8.0-rc1 (2022-12-07)
+
+* Remove dependencies to pydash, click and gitpython (moved to half_orm_packager). (501549f)
+* [field] Allow json and jsonb columns to receive python jsonifiable objects. (8da564f)
+* Remove unnecessary select(). [Joël Maïzi] (d7b7722)
+* (test) join. Add test_join_with_joined_object_with_FKEYS. (17948a8)
+* (BREAKING CHANGE)(relation) Relation FKEYS module variable support is now removed (use Fkeys class attribute instead). (6ea7bd2)
+* (BREAKING CHANGE)(relation) Relation.insert now returns a dict. (dffd6e3)
+* [ci] Add Python 3.11. (origin/master, origin/HEAD, master) (72efc57)
+
+## Breaking changes
+
+* The `FKEYS` module variable is no longer supported. It is now replaced by the `Fkeys` class attribute.
+* Relation.insert method only insert one row and was returning a dict in a list. It now returns directly the dict:
+  * Before: `row_dict = MyTable(a='Something').insert()[0]`
+  * Now: `row_dict = MyTable(a='Something').insert()`
+
 # 0.7.4 (2022-10-10)
 
 * [relation] Add returning values to insert, update and delete. (816ae18)
