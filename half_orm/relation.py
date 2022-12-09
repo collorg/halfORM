@@ -173,7 +173,7 @@ def insert(self, *args) -> '[dict]':
     Example:
         >>> gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1970-01-01').insert()
         >>> print(gaston)
-        [{'id': 1772, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1970, 1, 1)}]
+        {'id': 1772, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1970, 1, 1)}
 
     Note:
         It is not possible to insert more than one row with the insert method
@@ -399,49 +399,6 @@ def __set_fkeys(self):
             except KeyError as exp:
                 raise relation_errors.WrongFkeyError(self, value) from exp
     self.__fkeys_properties = True
-
-def _set_fkeys_properties(self):
-    """Property generator for fkeys.
-    @args is a list of tuples (property_name, fkey_name)
-
-    Will be removed in 0.8 release.
-    """
-    fkp = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES', 'FKEYS'], 0)
-    if hasattr(fkp, 'FKEYS_PROPERTIES'):
-        sys.stderr.write(
-            'WARNING! Deprecation (FKEYS_PROPERTIES will be removed in half_orm 0.8 release):\n'
-            f'Please replace {self.__module__}.FKEYS_PROPERTIES variable with the {self.__class__.__name__}.Fkeys class attribute.\n')
-        for prop in fkp.FKEYS_PROPERTIES:
-            self._set_fkey_property(*prop)
-    if hasattr(fkp, 'FKEYS'):
-        sys.stderr.write(
-            'WARNING! Deprecation (FKEYS will be removed in half_orm 0.8 release):\n'
-            f'Please replace {self.__module__}.FKEYS variable with the {self.__class__.__name__}.Fkeys class attribute.\n')
-        for prop in fkp.FKEYS:
-            self._set_fkey_property(*prop)
-
-def _set_fkey_property(self, property_name, fkey_name, _cast=None):
-    """Sets the property with property_name on the foreign key."""
-    if property_name == '':
-        # Do nothing
-        return
-    def fget(self):
-        "getter"
-        return self._fkeys[fkey_name](__cast__=_cast)
-    def fset(self, value):
-        "setter"
-        try:
-            if value.is_set():
-                self._fkeys[fkey_name].set(value)
-        except KeyError as err:
-            sys.stderr.write(
-                f'ERR {err}\nFKeys for {self.__class__.__name__} are: {self._fkeys.keys()}\n')
-            raise err
-    if self.__dict__.get(property_name):
-        raise relation_errors.DuplicateAttributeError(
-            f"ERROR: Can't set '{property_name}' as a FKEY property in {self.__class__}!")
-    self._fkeys_prop.append(property_name)
-    setattr(self.__class__, property_name, property(fget=fget, fset=fset))
 
 def group_by(self, yml_directive):
     """Returns an aggregation of the data according to the yml directive
@@ -1143,8 +1100,6 @@ COMMON_INTERFACE = {
     'delete': delete,
     '__add_returning': __add_returning,
     'Transaction': Transaction,
-    '_set_fkeys_properties': _set_fkeys_properties,
-    '_set_fkey_property': _set_fkey_property,
     '__enter__': __enter__,
     '__exit__': __exit__,
     '__iter__': __iter__,
