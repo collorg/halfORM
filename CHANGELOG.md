@@ -1,3 +1,7 @@
+# 0.7.5 (2022-12-21)
+
+* [Fix] Foreign keys aliases were wrongly set as class attributes. (a100680)
+
 # 0.7.4 (2022-10-10)
 
 * [relation] Add returning values to insert, update and delete. (816ae18)
