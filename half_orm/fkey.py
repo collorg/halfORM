@@ -37,7 +37,7 @@ class FKey:
         """
         model = self.__relation._model
         f_cast = None
-        get_rel = model._import_class if model._scope else model.get_relation_class
+        get_rel = model._import_class if model._scope is not None else model.get_relation_class
         if self.__name.find('_reverse_fkey_') == 0 and __cast__:
             self.__relation = get_rel(__cast__)(**self.__relation.to_dict())
         else:
@@ -76,6 +76,7 @@ class FKey:
 
     @classmethod
     def __set__(cls, *args):
+        "Setting an Fkey is prohibited"
         print('XXX', cls, '\n', args)
         raise RuntimeError
 

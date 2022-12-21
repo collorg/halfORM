@@ -387,11 +387,13 @@ def __set_fkeys(self):
     if not self.__fkeys_properties:
         self._set_fkeys_properties()
         self.__fkeys_properties = True
-    if hasattr(self, 'Fkeys'):
+    if hasattr(self.__class__, 'Fkeys'):
+        # if not hasattr(self.__class__.__base__, 'Fkeys'):
+        #     setattr(self.__class__.__base__, 'Fkeys', self.__class__.Fkeys)
         for key, value in self.Fkeys.items():
             try:
                 if key != '': # we skip empty keys
-                    setattr(self.__class__.__base__, key, self._fkeys[value])
+                    setattr(self, key, self._fkeys[value])
                     self._fkeys_attr.add(key)
             except KeyError as exp:
                 raise relation_errors.WrongFkeyError(self, value) from exp
@@ -699,7 +701,7 @@ def __get_query(self, query_template, *args):
             self.__sql_query[idx] = '  and\n'
     # check that fkeys are fkeys
     for fkey_name in self._fkeys_attr:
-        fkey_cls = self.__class__.__base__.__dict__[fkey_name].__class__
+        fkey_cls = self.__dict__[fkey_name].__class__
         if fkey_cls != FKey:
             raise RuntimeError(
                 f'self.{fkey_name} is not a FKey (got a {fkey_cls.__name__} object instead).\n'

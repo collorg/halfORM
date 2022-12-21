@@ -405,12 +405,13 @@ class Model:
         must reside in an accessible python package named `scope`.
         """
         t_qtn = qtn.replace('"', '').rsplit('.', 1)
-        module_path = f'{scope or self._scope}.{".".join(t_qtn)}'
+        self._scope = scope or self._scope
+        module_path = ".".join(t_qtn)
+        if self._scope:
+            module_path = f'{self._scope}.{module_path}'
         _class_name = pg_meta.class_name(qtn) # XXX
         module = __import__(
             module_path, globals(), locals(), [_class_name], 0)
-        if scope:
-            self._scope = scope
         return module.__dict__[_class_name]
 
     def _relations(self):
