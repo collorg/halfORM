@@ -1,8 +1,14 @@
+# 0.8.0rc1 (2023-01-04)
+
+* 1de3c07 2022-12-19 | [Fix] Foreign keys aliases were wrongly set as class attributes.
+* 393fccc 2022-12-09 | (relation) Remove code used to manage obsolete FKEYS variable.
+* ba1a202 2022-12-09 | Upgrade dependencies.
+
 # 0.8.0rc0 (2022-12-07)
 
 * Remove dependencies to pydash, click and gitpython (moved to half_orm_packager). (501549f)
 * [field] Allow json and jsonb columns to receive python jsonifiable objects. (8da564f)
-* Remove unnecessary select(). [Joël Maïzi] (d7b7722)
+* Remove unnecessary select(). (d7b7722)
 * (test) join. Add test_join_with_joined_object_with_FKEYS. (17948a8)
 * (BREAKING CHANGE)(relation) Relation FKEYS module variable support is now removed (use Fkeys class attribute instead). (6ea7bd2)
 * (BREAKING CHANGE)(relation) Relation.insert now returns a dict. (dffd6e3)
