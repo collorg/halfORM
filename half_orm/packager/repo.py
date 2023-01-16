@@ -18,8 +18,9 @@ class Repo:
     __self_hop_version: str = None
     __base_dir: str = None
     __name: str = None
-    __database: Database = Database()
-    __hgit: HGit = None
+    database: Database = Database()
+    hgit: HGit = None
+    changelog: Changelog = None
     __conf_file: str = None
     def __init__(self):
         self.__check()
@@ -47,9 +48,9 @@ class Repo:
         base_dir = os.path.abspath(os.path.curdir)
         while base_dir:
             if self.__set_base_dir(base_dir):
-                self.database = Database(self.__name)
-                self.hgit = HGit(self)
-                self.changelog = Changelog(self)
+                Repo.database = Database(self.__name)
+                Repo.hgit = HGit(self)
+                Repo.changelog = Changelog(self)
                 self.__checked = True
             par_dir = os.path.split(base_dir)[0]
             if par_dir == base_dir:
@@ -106,12 +107,12 @@ class Repo:
     @property
     def state(self):
         "Returns the state (str) of the repository."
-        res = [f'Half-ORM packager: {utils.hop_version()}\n']
+        res = [utils.Color.bold(f'Half-ORM Packager: {utils.hop_version()}\n')]
         hop_version = utils.Color.red(self.__self_hop_version) if \
             self.__hop_version_mismatch() else \
             utils.Color.green(self.__self_hop_version)
         res += [
-            '[Hop repository]',
+            utils.Color.bold('[Hop repository]'),
             f'- base directory: {self.__base_dir}',
             f'- package name: {self.__name}',
             f'- hop version: {hop_version}'
@@ -152,14 +153,14 @@ class Repo:
         os.mkdir(os.path.join(self.__base_dir, '.hop'))
         self.__write_config()
         self.__load_config()
-        self.database = Database().init(self.__name)
+        Repo.database = Database().init(self.__name)
         modules.generate(self)
 
         readme = readme.format(
             hop_version=self.__self_hop_version, dbname=self.__name, package_name=self.__name)
         utils.write(os.path.join(self.__base_dir, 'README.md'), readme)
         utils.write(os.path.join(self.__base_dir, '.gitignore'), git_ignore)
-        self.hgit = HGit().init(self.__base_dir)
+        Repo.hgit = HGit().init(self.__base_dir)
 
         print(f"\nThe hop project '{self.__name}' has been created.")
         print(self.state)

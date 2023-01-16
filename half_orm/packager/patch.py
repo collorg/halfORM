@@ -224,19 +224,19 @@ class Patch:
 
     @property
     def state(self):
-        "The state of a patch"
+        "The state of the package regarding releases in devel or to apply in prod."
         if not self.__repo.production:
-            resp = ['[Releases in development]']
+            resp = [utils.Color.bold('[Releases in development]')]
             if len(self.__changelog.releases_in_dev) == 0:
                 resp.append("No release in development.\nUse `hop prepare-release`.")
             for release in self.__changelog.releases_in_dev:
                 resp.append(f'- {release} (branch hop_{release})')
         else:
-            resp = ['[Releases to apply]']
+            resp = [utils.Color.bold('[Releases to apply]')]
             if len(self.__changelog.releases_to_apply_in_prod) == 0:
                 resp.append("No new release to apply.")
             for release in self.__changelog.releases_to_apply_in_prod:
-                resp.append(f'- {release}')
+                resp.append(f'- {utils.Color.bold(release)}')
         return '\n'.join(resp)
 
 

@@ -23,7 +23,7 @@ class HGit:
         self.__current_branch = self.branch
 
     def __str__(self):
-        res = ['[Git]']
+        res = [utils.Color.bold('[Git]')]
         res.append(f'- current branch: {self.__current_branch}')
         clean = self.repos_is_clean()
         clean = utils.Color.green(clean) \

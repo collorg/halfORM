@@ -54,14 +54,14 @@ class Database:
     @property
     def state(self):
         "The state (str) of the database"
-        res = ['[Database]']
+        res = [utils.Color.bold('[Database]')]
         res.append(f'- name: {self.__name}')
         res.append(f'- user: {self.__connection_params.user}')
         res.append(f'- host: {self.__connection_params.host}')
         res.append(f'- port: {self.__connection_params.port}')
         prod = utils.Color.blue(True) if self.__connection_params.production else False
         res.append(f'- production: {prod}')
-        res.append(f'- last release: {self.last_release_s}')
+        res.append(f'- last release: {utils.Color.bold(self.last_release_s)}')
         return '\n'.join(res)
 
     @property
