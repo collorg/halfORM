@@ -1,4 +1,4 @@
-# hop release: 0.0.21
+# hop release: 0.1.0a0
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.blog.event povides the Event class.
@@ -17,19 +17,6 @@ DO NOT REMOVE OR MODIFY THE LINES BEGINING WITH:
 
 MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
-
-To use the foreign keys as direct attributes of the relation class,
-copy/paste the FKEYS bellow in your code and replace the
-empty string(s) with the alias you want to use.
-The aliases must be unique and different from any of the column names. Empty
-strings are ignored.
-
-FKEYS = [
-    ('', 'author'),
-]
-
-DEPRECATED! See Fkeys class attribute. Will be removed in half_orm_packager 0.1.0 release.
-
 """
 
 from halftest.db_connector import base_relation_class
@@ -42,7 +29,7 @@ __RCLS = base_relation_class('blog.event')
 
 class Event(BlogPost, __RCLS):
     """
-    __RCLS: <class 'half_orm.relation.Table_HalftestBlogEvent'>
+    __RCLS: <class 'half_orm.model.Table_HalftestBlogEvent'>
     This class allows you to manipulate the data in the PG relation:
     TABLE: "halftest":"blog"."event"
     DESCRIPTION:
@@ -50,7 +37,7 @@ class Event(BlogPost, __RCLS):
     of the blogging system. It inherits blog.post.
     It's just here to illustrate the inheriance in half_orm
     FIELDS:
-    - id:                (int4) PK
+    - id:                (int4) NOT NULL
     - title:             (text)
     - content:           (text)
     - author_first_name: (text)
@@ -59,6 +46,8 @@ class Event(BlogPost, __RCLS):
     - begin:             (timestamp)
     - end:               (timestamp)
     - location:          (text)
+
+    PRIMARY KEY (id)
     FOREIGN KEY:
     - author: ("author_birth_date", "author_first_name", "author_last_name")
      ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)

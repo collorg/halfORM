@@ -8,6 +8,17 @@ def read(name):
     file_name = os.path.join(os.path.abspath(os.path.dirname(__file__)), name)
     return codecs.open(file_name, "r", "utf-8").read()
 
+def package_files(*directories):
+    paths = set()
+    for directory in directories:
+        for (path, dirs, filenames) in os.walk(directory):
+            dirs[:] = [dir for dir in dirs if not dir in {'hop_test', '.git', '__pycache__'}]
+            for filename in filenames:
+                paths.add(os.path.join('..', path, filename))
+    return list(paths)
+
+extra_files = package_files('half_orm/packager/templates', 'half_orm/packager/patches')
+
 setup(
     name='half_orm',
     version=read('half_orm/version.txt').strip(),
@@ -17,22 +28,27 @@ setup(
     author='Joël Maïzi',
     author_email='joel.maizi@collorg.org',
     url='https://github.com/collorg/halfORM',
-    license='GNU General Public License v3 (GPLv3)',
-    packages=['half_orm'],
+    license='GPLv3',
+    packages=['half_orm', 'half_orm/packager'],
     install_requires=[
         'psycopg2-binary',
-        'PyYAML'],
-    package_data={'half_orm': ['version.txt']},
+        'PyYAML',
+        'pydash',
+        'click',
+        'GitPython'],
+    package_data={'half_orm': ['version.txt', 'packager/version.txt'], '': extra_files},
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
         'Development Status :: 4 - Beta',
+        'Operating System :: OS Independent',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
+        'Topic :: Database :: Front-Ends',
+        'Topic :: Software Development :: Libraries :: Application Frameworks',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
@@ -44,7 +60,13 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11'
     ],
+    entry_points={
+        'console_scripts': [
+            'hop=half_orm.packager.hop:main',
+        ],
+    },
     long_description_content_type = "text/markdown"
 
 )

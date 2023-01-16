@@ -1,0 +1,11 @@
+# pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
+
+"""The module {module} povides the {class_name} class.
+
+WARNING!
+
+{warning}
+"""
+
+from {package_name}.db_connector import base_relation_class
+{inheritance_import}

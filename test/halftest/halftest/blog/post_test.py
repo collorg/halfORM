@@ -3,21 +3,19 @@
 
 from halftest.base_test import BaseTest
 from halftest.blog.post import Post
+#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+
+
+#<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
+
 
 class Test(BaseTest):
+    def test_instanciate_relation(self):
+        "It shoud instanciate Post"
+        Post()
 
     def test_is_relation(self):
+        "Post should be a subclass of half_orm.Relation."
         self.assertTrue(issubclass(Post, self.Relation))
 
-    def test_is_not_null_wrong(self):
-        with self.assertRaises(AssertionError):
-            self.hotAssertIsNotNull(Post, 'title')
-
-    def test_is_not_unique(self):
-        with self.assertRaises(AssertionError):
-            self.hotAssertIsUnique(Post, ['title'])
-        with self.assertRaises(AssertionError):
-            self.hotAssertIsUnique(Post, ['content'])
-
-    def test_title_content_is_unique(self):
-        self.hotAssertIsUnique(Post, ['title', 'content'])
+    #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!

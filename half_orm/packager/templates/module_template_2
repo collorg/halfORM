@@ -1,0 +1,7 @@
+
+__RCLS = base_relation_class('{fqtn}')
+
+class {class_name}({inherited_classes}__RCLS):
+    """
+{documentation}
+    """

@@ -1,4 +1,4 @@
-"""Package for PostgreSQL halftest database.
+"""Package for PostgreSQL {dbname} database.
 You can edit the following parameters:
 - version
 - author
@@ -30,14 +30,14 @@ def get_version(package):
         return f.read()
 
 
-package_name='halftest'
+package_name='{package_name}'
 
 setup(
     name=package_name,
 
     version=get_version(package_name),
 
-    description='Package for halftest PG',
+    description='Package for {dbname} PG',
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
     # url='',
@@ -75,7 +75,7 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'patches', 'svg']),
 
     install_requires=[
-        'half_orm==0.8.0-rc1'
+        'half_orm=={half_orm_version}'
     ],
 
 )

@@ -12,11 +12,14 @@ variables:
 .before_script_template: &test
   before_script:
     - apt-get update
-    - apt-get install -y postgresql postgresql-plpython3
+    - apt-get install -y postgresql tree
     - service postgresql start
     - su - postgres -c "psql template1 -c \"create user halftest with password 'halftest';\" "
+    - su - postgres -c "psql template1 -c 'ALTER USER halftest WITH SUPERUSER'"
     - su - postgres -c "createdb halftest -O halftest"
+    - su - postgres -c "createdb hop_test -O halftest"
     - su - postgres -c "psql halftest -f $CI_PROJECT_DIR/test/sql/halftest.sql"
+    - /usr/local/bin/python -m pip install --upgrade pip
     - pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
@@ -39,6 +42,7 @@ test:
       - PYVERSION: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
   script:
     - pytest
+    - "$CI_PROJECT_DIR/half_orm/packager/test/dummy_test.sh"
 
 build:
   stage: build

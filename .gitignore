@@ -14,3 +14,6 @@ halftest.egg-info/
 pyproject.toml
 .tox
 Pipfile.dev
+docs
+half_orm/packager/test/hop_test
+__pycache__

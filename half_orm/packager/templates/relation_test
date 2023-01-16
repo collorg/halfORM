@@ -1,0 +1,19 @@
+"""Test file for the {module} module.
+"""
+
+from {package_name}.base_test import BaseTest
+from {module} import {class_name}
+{BEGIN_CODE}
+
+{END_CODE}
+
+class Test(BaseTest):
+    def test_instanciate_relation(self):
+        "It shoud instanciate {class_name}"
+        {class_name}()
+
+    def test_is_relation(self):
+        "{class_name} should be a subclass of half_orm.Relation."
+        self.assertTrue(issubclass({class_name}, self.Relation))
+
+    {BEGIN_CODE}

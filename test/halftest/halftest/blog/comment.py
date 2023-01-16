@@ -1,4 +1,4 @@
-# hop release: 0.0.21
+# hop release: 0.1.0a0
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.blog.comment povides the Comment class.
@@ -17,20 +17,6 @@ DO NOT REMOVE OR MODIFY THE LINES BEGINING WITH:
 
 MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
-
-To use the foreign keys as direct attributes of the relation class,
-copy/paste the FKEYS bellow in your code and replace the
-empty string(s) with the alias you want to use.
-The aliases must be unique and different from any of the column names. Empty
-strings are ignored.
-
-FKEYS = [
-    ('', 'post'),
-    ('', 'author'),
-]
-
-DEPRECATED! See Fkeys class attribute. Will be removed in half_orm_packager 0.1.0 release.
-
 """
 
 from halftest.db_connector import base_relation_class
@@ -43,18 +29,20 @@ __RCLS = base_relation_class('blog.comment')
 
 class Comment(__RCLS):
     """
-    __RCLS: <class 'half_orm.relation.Table_HalftestBlogComment'>
+    __RCLS: <class 'half_orm.model.Table_HalftestBlogComment'>
     This class allows you to manipulate the data in the PG relation:
     TABLE: "halftest":"blog"."comment"
     DESCRIPTION:
     The table blog.comment contains all the comments
     made by a person on a post.
     FIELDS:
-    - id:        (int4) PK
+    - id:        (int4) NOT NULL
     - content:   (text)
     - post_id:   (int4)
     - author_id: (int4)
     - a = 1:     (text)
+
+    PRIMARY KEY (id)
     FOREIGN KEYS:
     - post: ("post_id")
      ↳ "halftest":"blog"."post"(id)

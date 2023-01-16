@@ -1,0 +1,11 @@
+To use the foreign keys as direct attributes of the relation class,
+copy/paste the FKEYS bellow in your code and replace the
+empty string(s) with the alias you want to use.
+The aliases must be unique and different from any of the column names. Empty
+strings are ignored.
+
+FKEYS = [
+    {}
+]
+
+DEPRECATED! See Fkeys class attribute. Will be removed in half_orm_packager 0.1.0 release.

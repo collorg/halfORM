@@ -1,4 +1,4 @@
-# hop release: 0.0.21
+# hop release: 0.1.0a0
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.blog.view.post_comment povides the PostComment class.
@@ -17,8 +17,6 @@ DO NOT REMOVE OR MODIFY THE LINES BEGINING WITH:
 
 MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
-
-
 """
 
 from halftest.db_connector import base_relation_class
@@ -31,7 +29,7 @@ __RCLS = base_relation_class('blog.view.post_comment')
 
 class PostComment(__RCLS):
     """
-    __RCLS: <class 'half_orm.relation.View_HalftestBlogviewPost_comment'>
+    __RCLS: <class 'half_orm.model.View_HalftestBlogviewPost_comment'>
     This class allows you to manipulate the data in the PG relation:
     VIEW: "halftest":"blog.view"."post_comment"
     DESCRIPTION:
@@ -51,9 +49,9 @@ class PostComment(__RCLS):
     - author_comment_id:         (int4)
     - author_comment_first_name: (text)
     - author_comment_last_name:  (text)
+
     """
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
-
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

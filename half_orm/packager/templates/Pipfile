@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+half-orm = "{half_orm_version}"
+
+[dev-packages]
+half-orm-packager = "{hop_version}"
+pytest = "*"
+build = "*"
+twine = "*"
+tox = "*"

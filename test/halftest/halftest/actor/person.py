@@ -1,4 +1,4 @@
-# hop release: 0.0.21
+# hop release: 0.1.0a0
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.actor.person povides the Person class.
@@ -17,21 +17,6 @@ DO NOT REMOVE OR MODIFY THE LINES BEGINING WITH:
 
 MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
-
-To use the foreign keys as direct attributes of the relation class,
-copy/paste the FKEYS bellow in your code and replace the
-empty string(s) with the alias you want to use.
-The aliases must be unique and different from any of the column names. Empty
-strings are ignored.
-
-FKEYS = [
-    ('', '_reverse_fkey_halftest_blog_comment_author_id'),
-    ('', '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date'),
-    ('', '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date'),
-]
-
-DEPRECATED! See Fkeys class attribute. Will be removed in half_orm_packager 0.1.0 release.
-
 """
 
 from halftest.db_connector import base_relation_class
@@ -46,7 +31,7 @@ __RCLS = base_relation_class('actor.person')
 
 class Person(__RCLS):
     """
-    __RCLS: <class 'half_orm.relation.Table_HalftestActorPerson'>
+    __RCLS: <class 'half_orm.model.Table_HalftestActorPerson'>
     This class allows you to manipulate the data in the PG relation:
     TABLE: "halftest":"actor"."person"
     DESCRIPTION:
@@ -54,10 +39,14 @@ class Person(__RCLS):
     The id attribute is a serial. Just pass first_name, last_name and birth_date
     to insert a new person.
     FIELDS:
-    - id:         (int4) UNIQUE NOT NULL
-    - first_name: (text) PK
-    - last_name:  (text) PK
-    - birth_date: (date) PK
+    - id:         (int4) NOT NULL
+    - first_name: (text) NOT NULL
+    - last_name:  (text) NOT NULL
+    - birth_date: (date) NOT NULL
+
+    PRIMARY KEY (first_name, last_name, birth_date)
+    UNIQUE CONSTRAINT (id)
+    UNIQUE CONSTRAINT (first_name)
     FOREIGN KEYS:
     - _reverse_fkey_halftest_blog_comment_author_id: ("id")
      ↳ "halftest":"blog"."comment"(author_id)

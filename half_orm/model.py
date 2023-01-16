@@ -71,7 +71,6 @@ class Model:
         self.__backend_pid = None
         self.__config_file = config_file
         self.__dbinfo = {}
-        self.__dbname = None
         self.__conn = None
         self._scope = scope and scope.split('.')[0]
         self.__production = False
@@ -202,26 +201,16 @@ class Model:
                 [os.path.join(CONF_DIR, self.__config_file)]):
             raise MissingConfigFile(os.path.join(CONF_DIR, self.__config_file))
 
-        params = dict(config['database'].items())
+        params = config['database']
         if config_file and params['name'] != self.__dbname:
             raise RuntimeError(
                 f"Can't reconnect to another database {params['name']} != {self.__dbname}")
-        self.__dbname = params['name']
         self.__dbinfo['name'] = params['name']
         self.__dbinfo['user'] = params.get('user')
         self.__dbinfo['password'] = params.get('password')
         self.__dbinfo['host'] = params.get('host')
         self.__dbinfo['port'] = params.get('port')
-        self.__production = params.get('production', False)
-        if self.__production == 'True':
-            self.__production = True
-        if self.__production == 'False':
-            self.__production = False
-        if not isinstance(self.__production, bool):
-            raise ValueError
-        if 'name' not in self.__dbinfo:
-            raise MalformedConfigFile(
-                self.__config_file, {'name'})
+        self.__production = params.getboolean('production', False)
         try:
             params = dict(self.__dbinfo)
             params['dbname'] = params.pop('name')
@@ -236,6 +225,10 @@ class Model:
             "select pg_backend_pid()").fetchone()['pg_backend_pid']
 
     reconnect = __connect
+
+    @property
+    def __dbname(self):
+        return self.__dbinfo['name']
 
     def ping(self):
         """Checks if the connection is still established.

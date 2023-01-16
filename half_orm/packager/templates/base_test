@@ -1,4 +1,4 @@
-"""Base test class for the halftest package.
+"""Base test class for the {package_name} package.
 
 This class is inherited by every test modules in the package.
 """
@@ -6,11 +6,9 @@ This class is inherited by every test modules in the package.
 from unittest import TestCase
 from half_orm.relation import Relation
 
-#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+{BEGIN_CODE}
 
-
-#<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
-
+{END_CODE}
 
 class BaseTest(TestCase):
 
@@ -20,4 +18,4 @@ class BaseTest(TestCase):
     def tearDown(self) -> None:
         pass
 
-    #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+    {BEGIN_CODE}
