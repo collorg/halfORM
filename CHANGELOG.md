@@ -1,8 +1,15 @@
+# 0.8.0rc2, hop 0.1.0a1 (2023-01-16)
+
+* [hop][WIP] Integration of the hop command into half_orm. (d801ba5)
+
+NOTE.
+The hop command is a work in progress. It will replace the half_orm_packager package.
+
 # 0.8.0rc1 (2023-01-04)
 
-* 1de3c07 2022-12-19 | [Fix] Foreign keys aliases were wrongly set as class attributes.
-* 393fccc 2022-12-09 | (relation) Remove code used to manage obsolete FKEYS variable.
-* ba1a202 2022-12-09 | Upgrade dependencies.
+* [Fix] Foreign keys aliases were wrongly set as class attributes. (1de3c07)
+* (relation) Remove code used to manage obsolete FKEYS variable. (393fccc)
+* Upgrade dependencies. (ba1a202)
 
 # 0.8.0rc0 (2022-12-07)
 
