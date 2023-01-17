@@ -160,6 +160,7 @@ class Repo:
             hop_version=self.__self_hop_version, dbname=self.__name, package_name=self.__name)
         utils.write(os.path.join(self.__base_dir, 'README.md'), readme)
         utils.write(os.path.join(self.__base_dir, '.gitignore'), git_ignore)
+        Changelog(self)
         Repo.hgit = HGit().init(self.__base_dir)
 
         print(f"\nThe hop project '{self.__name}' has been created.")
@@ -176,9 +177,11 @@ class Repo:
 
     def prepare_release(self, level, message=None):
         "Prepare a new release (devel)"
+        if not self.hgit.repos_is_clean():
+            utils.error('The repository is not clean. Please commit your changes.\n', 1)
         Patch(self).prep_release(level, message)
 
-    def test_release(self):
+    def apply_release(self):
         "Apply the current release (devel)"
         Patch(self).apply(self.hgit.current_release, force=True)
 
