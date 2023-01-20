@@ -40,28 +40,29 @@ class Test(TestCase):
 
     def test_is_set(self):
         post = self.post()
-        self.assertFalse(post.is_set())
+        self.assertFalse(post.ho_is_set())
         pers = self.pers(last_name=('a%', 'like'))
         post.author_.set(pers)
-        self.assertTrue(post.is_set())
+        self.assertTrue(post.ho_is_set())
 
     def test_is_not_set(self):
         post = self.post()
-        self.assertFalse(post.is_set())
+        self.assertFalse(post.ho_is_set())
         pers = self.pers()
-        self.assertFalse(pers.is_set())
+        self.assertFalse(pers.ho_is_set())
         post.author_.set(pers)
-        self.assertFalse(post.is_set())
+        self.assertFalse(post.ho_is_set())
 
     def test_is_set_reverse(self):
         post = self.post(title="toto")
         author = post.author_()
-        self.assertTrue(author.is_set())
+        self.assertTrue(author.ho_is_set())
 
     def test_is_not_set_reverse(self):
         post = self.post()
         author = post.author_
-        self.assertFalse(author.is_set())
+        self.assertFalse(post.author_.is_set())
+        self.assertFalse(post.author_().ho_is_set())
 
     def test_check_FKEYS_class(self):
         pers = self.pers()
@@ -80,4 +81,4 @@ class Test(TestCase):
         with self.assertRaises(RuntimeError) as err:
             print('pers._comment type', type(pers._comment), pers._comment)
             pers._comment = self.comment()
-            # print(next(pers._mogrify().select()))
+            # print(next(pers._ho_mogrify().ho_select()))

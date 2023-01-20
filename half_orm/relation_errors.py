@@ -18,7 +18,7 @@ class IsFrozenError(Exception):
     def __init__(self, cls, msg):
         super().__init__(
             f"ERROR! The class {cls} is forzen.\n"
-            f"Use _unfreeze to add the '{msg}' attribute to it.")
+            f"Use _ho_unfreeze to add the '{msg}' attribute to it.")
 
 class DuplicateAttributeError(Exception):
     """Attempt to setattr to an already existing attribute."""

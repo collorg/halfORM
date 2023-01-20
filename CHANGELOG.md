@@ -325,7 +325,7 @@ lagaffe.join((Post(), 'posts', 'id'))
   to typos in the expression `rel.col = 'a'` vs. `rel.cal = 'a'`. If
   `cal` column doesn't exist in the relation, an exception is raised.
   If you need to add an attribute to a class inheriting from Relation,
-  you can use `_unfreeze` and `_freeze` methods.
+  you can use `_ho_unfreeze` and `_ho_freeze` methods.
 
 # 0.1.0-alpha.7 (2016-11-29)
 

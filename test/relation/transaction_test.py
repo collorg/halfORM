@@ -17,11 +17,11 @@ class Test(TestCase):
     def test_transaction_rollback(self):
         "Should rollback with correct error"
         def error():
-            @self.pers.Transaction
+            @self.pers.HoTransaction
             def uniq_violation(pers):
                 for name in ['abc', 'abd', 'aa']:
                     pers.__class__(
-                        first_name=name, last_name=name, birth_date='1970-01-01').insert()
+                        first_name=name, last_name=name, birth_date='1970-01-01').ho_insert()
 
             uniq_violation(self.pers)
 
@@ -31,20 +31,20 @@ class Test(TestCase):
     def test_transaction_rollback_to_level_0(self):
         "Should rollback to level 0 if nested transcation"
         def error():
-            @self.pers.Transaction
+            @self.pers.HoTransaction
             def uniq_violation2(pers):
                 for name in ['xbc', 'xbd']:
                     pers.__class__(
-                        first_name=name, last_name=name, birth_date='1970-01-01').insert()
+                        first_name=name, last_name=name, birth_date='1970-01-01').ho_insert()
 
-            @self.pers.Transaction
+            @self.pers.HoTransaction
             def uniq_violation1(pers):
                 uniq_violation2(pers)
                 for name in ['abc', 'abd', 'aa']:
                     pers.__class__(
-                        first_name=name, last_name=name, birth_date='1970-01-01').insert()
+                        first_name=name, last_name=name, birth_date='1970-01-01').ho_insert()
 
             uniq_violation1(self.pers)
 
         self.assertRaises(UniqueViolation, error)
-        self.assertEqual(self.pers.Transaction._Transaction__level, 0)
+        self.assertEqual(self.pers.HoTransaction._HoTransaction__level, 0)

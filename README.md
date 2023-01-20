@@ -30,21 +30,21 @@ class Person(halftest.get_relation_class('actor.person')):
     }
     @singleton # This ensures that the author of the post is well defined.
     def add_post(self, title: str=None, content: str=None) -> dict:
-        return self.posts_rfk(title=title, content=content).insert()
+        return self.posts_rfk(title=title, content=content).ho_insert()
     @singleton
     def add_comment(self, post: Post=None, content: str=None) -> dict:
-        return self.comments_rfk(content=content, post_id=post.id.value).insert()
+        return self.comments_rfk(content=content, post_id=post.id.value).ho_insert()
 
 def main():
     gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
-    gaston.delete()
-    if gaston.is_empty(): # gaston defines a subset of the actor.person table.
-        gaston.insert()
+    gaston.ho_delete()
+    if gaston.ho_is_empty(): # gaston defines a subset of the actor.person table.
+        gaston.ho_insert()
     post = Post(**gaston.add_post(title='Easy', content='halfORM is fun!'))
     gaston.add_comment(content='This is a comment on the newly created post.', post=post)
     print(list(post.comments_rfk())) # The relational objects are iterators
-    post.update(title='Super easy')
-    gaston.delete()
+    post.ho_update(title='Super easy')
+    gaston.ho_delete()
 ```
 
 
@@ -258,31 +258,31 @@ my_selection = Person(last_name=('ilike', '_a%')) | Person(first_name=('ilike', 
 `my_selection` represents the set of people whose second letter of the name is an `a` or whose first letter of the first name is an `a`.
 
 
-# DML. The `insert`, `select`, `update`, `delete` methods.
+# DML. The `ho_insert`, `ho_select`, `ho_update`, `ho_delete` methods.
 
 These methods trigger their corresponding SQL querie on the database. 
 For debugging purposes, you can print the SQL query built 
-by half_orm when the DML method is invoked using the _mogrify() method.
+by half_orm when the DML method is invoked using the _ho_mogrify() method.
 
 ```py
-people._mogrify()
-people.select()
+people._ho_mogrify()
+people.ho_select()
 ```
 
-## Insert
-To insert a tuple in the relation, use the `insert` method as shown below:
+## ho_insert
+To insert a tuple in the relation, use the `ho_insert` method as shown below:
 ```python
-Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').insert()
+Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').ho_insert()
 ```
 
-`insert` returns the row as a dict in a list. So, to get the `id` of the newly inserted row, you can write:
+`ho_insert` returns the row as a dict in a list. So, to get the `id` of the newly inserted row, you can write:
 
 ```python
 lagaffe = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
-lagaffe_id = lagaffe.insert()['id']
+lagaffe_id = lagaffe.ho_insert()['id']
 ```
 
-You can trigger a transaction for any combination of insert, modify or delete operations using the `Relation.Transaction` decorator.
+You can trigger a transaction for any combination of insert, modify or delete operations using the `Relation.HoTransaction` decorator.
 
 ```py
 class Person(halftest.get_relation_class('actor.person')):
@@ -290,10 +290,10 @@ class Person(halftest.get_relation_class('actor.person')):
 
     def insert_many(self, *data):
         """Insert serveral people in a single transaction."""
-        @self.Transaction
+        @self.HoTransaction
         def insert(self, *data):
             for d_pers in data:
-                self(**d_pers).insert()
+                self(**d_pers).ho_insert()
         insert(self, *data)
 
 ```
@@ -312,50 +312,50 @@ people.insert_many(*[
 **Note**: half_orm works in autocommit mode by default. Without transaction, all the missing data
 would be inserted.
 
-## Select
-The `select` method is a generator. It returns all the data of the relation that match the constraint defined on the Relation object.
+## ho_select
+The `ho_select` method is a generator. It returns all the data of the relation that match the constraint defined on the Relation object.
 The data is returned in a list of `RealDictRow`s. A `RealDictRow` is a subclass of `dict` provided by [psycopg2](https://www.psycopg.org/docs/).
 
 ```python
 >>> people = Person()
->>> print(list(people.select()))
+>>> print(list(people.ho_select()))
 [RealDictRow([('id', 159), ('first_name', 'Gil'), ('last_name', 'Jourdan'), ('birth_date', datetime.date(1956, 9, 20))]), RealDictRow([('id', 160), ('first_name', 'Gaston'), ('last_name', 'Lagaffe'), ('birth_date', datetime.date(1957, 2, 28))]), RealDictRow([('id', 161), ('first_name', 'Bibi'), ('last_name', 'Fricotin'), ('birth_date', datetime.date(1924, 10, 5))]), RealDictRow([('id', 162), ('first_name', 'Corto'), ('last_name', 'Maltese'), ('birth_date', datetime.date(1975, 1, 7))]), RealDictRow([('id', 163), ('first_name', 'Achile'), ('last_name', 'Talon'), ('birth_date', datetime.date(1963, 11, 7))])]
 >>>
 ```
 
 You can set a limit or an offset:
 ```python
->>> people.offset(1).limit(2)
->>> print([dict(elt) for elt in list(people.select())])
+>>> people.ho_offset(1).ho_limit(2)
+>>> print([dict(elt) for elt in list(people.ho_select())])
 [{'id': 232, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1957, 2, 28)}, {'id': 233, 'first_name': 'Bibi', 'last_name': 'Fricotin', 'birth_date': datetime.date(1924, 10, 5)}]
 ```
 
-You can also get a subset of the attributes by passing a list of columns names to `select`:
+You can also get a subset of the attributes by passing a list of columns names to `ho_select`:
 
 ```python
->>> print(list(people.select('last_name')))
+>>> print(list(people.ho_select('last_name')))
 [{'last_name': 'Lagaffe'}, {'last_name': 'Fricotin'}]
 ```
 
 **Note**: The set offset and limit still apply.
 
-### Select one: the `get` method
+### Select one: the `ho_get` method
 
-The `get` method returns an object whose fields are constrained with the values of the corresponding row in the database.
+The `ho_get` method returns an object whose fields are constrained with the values of the corresponding row in the database.
 It raises an [ExpectedOneError](https://github.com/collorg/halfORM/blob/master/half_orm/relation_errors.py)
 Exception if 0 or more than 1 rows match the intention. The returned object is a singleton (see below).
 
 ```py
-gaston = Person(last_name='Lagaffe').get(*args)
+gaston = Person(last_name='Lagaffe').ho_get(*args)
 ```
 
 is equivalent to
 
 ```py
 lagaffe = Person(last_name='Lagaffe')
-if lagaffe.is_empty() or len(lagaffe) > 1:
+if lagaffe.ho_is_empty() or len(lagaffe) > 1:
     raise ExcpetedOneError
-gaston = Person(**next(lagaffe.select(*args)))
+gaston = Person(**next(lagaffe.ho_select(*args)))
 gaston._is_singleton = True
 ```
 
@@ -413,7 +413,7 @@ class Person(halftest.get_relation_class('actor.person')):
         ...
 
     def do_something(self):
-        for elt in self.select():
+        for elt in self.ho_select():
             pers = Person(**elt)
             pers._is_singleton = True # You must be pretty sure of what you're doing here. See the warning and the explanation.
             pers.do_something_else() # Warning! do_something_else won't check that pers is indeed a singleton
@@ -422,19 +422,19 @@ class Person(halftest.get_relation_class('actor.person')):
 **Warning!** By setting `_is_singleton` value to `True`, you disable the check that `@singleton` would have made before executing `do_something_else`. 
 This example works for two reasons:
 
-1. `select` is called without argument ensuring that
+1. `ho_select` is called without argument ensuring that
 all columns are retreived from the database,
 2. The constraints of the `actor.person` table make it
 a set (ie. each element returned by select is indeed a singleton).
 
-## Update
+## ho_update
 
-To update a subset, you first define the subset an then invoque the `udpate`
+To update a subset, you first define the subset an then invoque the `ho_udpate`
 method with the new values passed as argument.
 
 ```py
 gaston = Person(first_name='Gaston')
-gaston.update(birth_date='1970-01-01')
+gaston.ho_update(birth_date='1970-01-01')
 ```
 
 Let's look at how we could turn the last name into capital letters for a subset of people:
@@ -445,33 +445,33 @@ class Person(halftest.get_relation_class('actor.person')):
 
     def upper_last_name(self):
         "tranform last name to upper case."
-        @self.Transaction
+        @self.HoTransaction
         def update(self):
-            for d_pers in self.select('id', 'last_name'):
+            for d_pers in self.ho_select('id', 'last_name'):
                 pers = Person(**d_pers) # IMPORTANT! See the warning below.
-                pers.update(last_name=d_pers['last_name'].upper())
+                pers.ho_update(last_name=d_pers['last_name'].upper())
                 #    ^^^^^^ here is the actual update
         update(self)
 ```
 
-Again, we insure the atomicity of the transaction using the `Relation.Transaction` decorator.
+Again, we insure the atomicity of the transaction using the `Relation.HoTransaction` decorator.
 
 ```
 >>> a_pers = Person(last_name=('ilike', '_a%'))
->>> print([elt.last_name for elt in list(a_pers.select())])
+>>> print([elt.last_name for elt in list(a_pers.ho_select())])
 >>> a_pers = Person(last_name = ('ilike', '_a%'))
->>> print([elt['last_name'] for elt in a_pers.select('last_name')])
+>>> print([elt['last_name'] for elt in a_pers.ho_select('last_name')])
 ['Lagaffe', 'Maltese', 'Talon']
 >>> a_pers.upper_last_name()
->>> print([elt['last_name'] for elt in a_pers.select('last_name')])
+>>> print([elt['last_name'] for elt in a_pers.ho_select('last_name')])
 ['LAGAFFE', 'MALTESE', 'TALON']
 ```
 
 
-**WARNING!** The following code won't update the database. `people.select()` returns a list of dictionaries and the `update` method invoked here would only update the corresponding dictonary. It's a common pitfall.
+**WARNING!** The following code won't update the database. `people.ho_select()` returns a list of dictionaries and the `update` method invoked here would only update the corresponding dictonary. It's a common pitfall.
 
 ```python
-for pers in people.select():
+for pers in people.ho_select():
     pers.update(...) # Won't work (pers is a dict)!
 ```
 
@@ -480,23 +480,23 @@ for pers in people.select():
 If you want to update all the data in a relation, you must set the argument `update_all` to `True`. A `RuntimeError` is raised otherwise.
 
 ```py
-Person().update(birth_date='1970-01-01', update_all=True)
+Person().ho_update(birth_date='1970-01-01', update_all=True)
 ```
 
-## Delete
+## ho_delete
 
-The delete method allows you to remove a set of elements from a table:
+The `ho_delete` method allows you to remove a set of elements from a table:
 
 ```py
 gaston = Person(first_name='Gaston')
-gaston.delete()
+gaston.ho_delete()
 ```
 
 To remove every tuples from a table, you must set the argument `delete_all` to `True`. A `RuntimeError` is raised otherwise.
 
 ```python
-Person().delete(delete_all=True)
-if not Person().is_empty():
+Person().ho_delete(delete_all=True)
+if not Person().ho_is_empty():
     print('Weird! You should check your "on delete cascade".')
 ```
 Well, there is not much left after this in the `actor.person` table.
@@ -603,16 +603,16 @@ To get the comments made by Gaston, we simply constraint the `author_fk` Fkey to
 gaston = Person(first_name='Gaston')
 gaston_comments = Comment()
 gaston_comments.author_fk.set(gaston)
-print(list(gaston_comments.select())
+print(list(gaston_comments.ho_select())
 ```
 
 > TODO. Some documentation about the chaining of FKeys
 
-## The *`join`* method
+## The *`ho_join`* method
 
-The *`join`* method allows you to integrate the data associated to a Relation object in the result obtained by the *`select`* method by using foreign keys of the object or referencing the object.
+The *`ho_join`* method allows you to integrate the data associated to a Relation object in the result obtained by the *`select`* method by using foreign keys of the object or referencing the object.
 
-Unlike the *`select`* method (which is a generator), the *`join`* method returns a list.
+Unlike the *`select`* method (which is a generator), the *`ho_join`* method returns a list.
 
 It takes a list of tuples each having two or three elements:
 
@@ -626,7 +626,7 @@ It takes a list of tuples each having two or three elements:
 The following code
 ```#python
 lagaffe = Person(last_name='Lagaffe')
-res = lagaffe.join(
+res = lagaffe.ho_join(
     (Comment(), 'comments', ['id', 'post_id']),
     (Post(), 'posts', 'id')
 )
@@ -670,9 +670,9 @@ By the way, this is the code used in the `Model.ping` method that makes sure the
 
 That's it! You've learn pretty much everything there is to know about `half_orm`.
 
-# Next: `hop`, the `half_orm` packager
+# Next: `hop`, the `half_orm` packager [WIP][alpha]
 
-The [`hop`](https://github.com/collorg/halfORM_packager) command, provided by the package [`half_orm_packager`](https://github.com/collorg/halfORM_packager), allows you to ***create*** a Python package corresponding to the model of your database, to ***patch*** the model and the corresponding Python code, to ***test*** your database model and your business code. For more information, see https://github.com/collorg/halfORM_packager.
+The `hop` command, directly provided in this package (from version 0.8.0rc1), allows you to ***create*** a Python package corresponding to the model of your database, to ***patch*** the model and the corresponding Python code, to ***test*** your database model and your business code.
 
 # Want to contribute?
 

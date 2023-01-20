@@ -23,8 +23,8 @@ class Test(TestCase):
         self.post._fkeys['author'].set(self.aa)
         self.post.title = 'title test_direct_fkey_insert'
         self.post.content = 'content test_direct_fkey_insert'
-        self.post.insert()
+        self.post.ho_insert()
         post = halftest.Post(title='title test_direct_fkey_insert')
         self.assertEqual(len(post), 1)
-        self.post.delete()
+        self.post.ho_delete()
         self.assertEqual(len(post), 0)

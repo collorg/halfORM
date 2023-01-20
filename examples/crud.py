@@ -8,11 +8,11 @@ Person = model.get_relation_class('actor.person')
 person = Person()
 print(person.keys())
 
-@Person.Transaction
+@Person.HoTransaction
 def failed_insert(Person):
     "shoud fail as we try to insert the same person twice"
-    Person(last_name="test", first_name="test", birth_date='1970-01-01').insert()
-    Person(last_name="test", first_name="test", birth_date='1970-01-01').insert()
+    Person(last_name="test", first_name="test", birth_date='1970-01-01').ho_insert()
+    Person(last_name="test", first_name="test", birth_date='1970-01-01').ho_insert()
 
 try:
     failed_insert(Person)

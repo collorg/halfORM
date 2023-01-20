@@ -1,15 +1,15 @@
 #-*- coding: utf-8 -*-
 # pylint: disable=too-few-public-methods, protected-access
 
-"""This module provides the Transaction class."""
+"""This module provides the HoTransaction class."""
 
 import sys
 
-class Transaction:
-    """The Transaction class is intended to be used as a class attribute of
+class HoTransaction:
+    """The HoTransaction class is intended to be used as a class attribute of
     relation.Relation class:
 
-    Relation.Transaction = Transaction
+    Relation.HoTransaction = HoTransaction
 
     The Relation.transaction can be used as a decorator of any method of a
     sub class of Relation class or any function receiving a Relation object
@@ -19,7 +19,7 @@ class Transaction:
 
     ```python
     gaston = halftest.relation("actor.person", first_name="Gaston")
-    @gaston.Transaction
+    @gaston.HoTransaction
     def do_something(person):
         #... code to be done
     do_somethin(gaston)
@@ -30,10 +30,10 @@ class Transaction:
     Functions decorated by a transaction can be nested:
 
     ```python
-    @gaston.Transaction
+    @gaston.HoTransaction
     def second(gaston):
         # ... do something else
-    @gaston.Transaction
+    @gaston.HoTransaction
     def first(gaston):
         # ... do something
         second(gaston)
@@ -54,17 +54,17 @@ class Transaction:
         """
         res = None
         try:
-            Transaction.__level += 1
+            HoTransaction.__level += 1
             if relation._model._connection.autocommit:
                 relation._model._connection.autocommit = False
             res = self.__func(relation, *args, **kwargs)
-            Transaction.__level -= 1
-            if Transaction.__level == 0:
+            HoTransaction.__level -= 1
+            if HoTransaction.__level == 0:
                 relation._model._connection.commit()
                 relation._model._connection.autocommit = True
         except Exception as err:
-            sys.stderr.write(f"Transaction error: {err}\nRolling back!\n")
-            Transaction.__level = 0
+            sys.stderr.write(f"HoTransaction error: {err}\nRolling back!\n")
+            HoTransaction.__level = 0
             relation._model._connection.rollback()
             relation._model._connection.autocommit = True
             raise err

@@ -20,7 +20,7 @@ Main methods provided by the class Relation:
 - select: returns a generator of the elements of the set defined by
   the constraint on the Relation object. The elements are dictionaries with the
   keys corresponding to the selected columns names in the relation.
-  The result is affected by the methods: distinct, order_by, limit and offset
+  The result is affected by the methods: ho_distinct, ho_order_by, ho_limit and ho_offset
   (see bellow).
 - update: updates the set defined by the constraint on the Relation object
   with the values passed as arguments.
@@ -33,10 +33,10 @@ Main methods provided by the class Relation:
 
 The following methods can be chained on the object before a select.
 
-- distinct: ensures that there are no duplicates on the select result.
-- order_by: sets the order of the select result.
-- limit: limits the number of elements returned by the select method.
-- offset: sets the offset for the select method.
+- ho_distinct: ensures that there are no duplicates on the select result.
+- ho_order_by: sets the order of the select result.
+- ho_limit: limits the number of elements returned by the select method.
+- ho_offset: sets the offset for the select method.
 
 """
 
@@ -53,7 +53,7 @@ import psycopg2
 import yaml
 
 from half_orm import relation_errors
-from half_orm.transaction import Transaction
+from half_orm.transaction import HoTransaction
 from half_orm.field import Field
 
 class _SetOperators:
@@ -164,14 +164,14 @@ def __init__(self, **kwargs):
          for field_name, value in kwargs.items() if value is not None}
     self.__isfrozen = True
 
-def insert(self, *args) -> '[dict]':
+def ho_insert(self, *args) -> '[dict]':
     """Insert a new tuple into the Relation.
 
     Returns:
         [dict]: A singleton containing the data inserted.
 
     Example:
-        >>> gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1970-01-01').insert()
+        >>> gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1970-01-01').ho_insert()
         >>> print(gaston)
         {'id': 1772, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1970, 1, 1)}
 
@@ -194,7 +194,7 @@ def insert(self, *args) -> '[dict]':
         return res[0]
     return {}
 
-def select(self, *args):
+def ho_select(self, *args):
     """Gets the set of values correponding to the constraint attached to the object.
     This method is a generator.
 
@@ -206,11 +206,11 @@ def select(self, *args):
         the result of the query as a dictionary.
 
     Example:
-        >>> for person in Person(last_name=('like', 'La%')).select('id'):
+        >>> for person in Person(last_name=('like', 'La%')).ho_select('id'):
         >>>     print(person)
         {'id': 1772}
     """
-    query, values = self._prep_select(*args)
+    query, values = self._ho_prep_select(*args)
     try:
         self.__execute(query, values)
     except Exception as err:
@@ -219,7 +219,7 @@ def select(self, *args):
     for elt in self.__cursor:
         yield dict(elt)
 
-def get(self, *args: List[str]) -> Relation:
+def ho_get(self, *args: List[str]) -> Relation:
     """The get method allows you to fetch a singleton from the database.
     It garantees that the constraint references one and only one tuple.
 
@@ -236,7 +236,7 @@ def get(self, *args: List[str]) -> Relation:
         ExpectedOneError: an exception is raised if no or more than one element is found.
 
     Example:
-        >>> gaston = Person(last_name='Lagaffe', first_name='Gaston').get()
+        >>> gaston = Person(last_name='Lagaffe', first_name='Gaston').ho_get()
         >>> type(gaston) is Person
         True
         >>> gaston.id
@@ -250,17 +250,17 @@ def get(self, *args: List[str]) -> Relation:
     if _count != 1:
         raise relation_errors.ExpectedOneError(self, _count)
     self._is_singleton = True
-    ret = self(**(next(self.select(*args))))
+    ret = self(**(next(self.ho_select(*args))))
     ret._is_singleton = True
     return ret
 
-def update(self, *args, update_all=False, **kwargs):
+def ho_update(self, *args, update_all=False, **kwargs):
     """
     kwargs represents the values to be updated {[field name:value]}
     The object self must be set unless update_all is True.
     The constraints of the relations are updated with kwargs.
     """
-    if not (self.is_set() or update_all):
+    if not (self.ho_is_set() or update_all):
         raise RuntimeError(
             f'Attempt to update all rows of {self.__class__.__name__}'
             ' without update_all being set to True!')
@@ -286,11 +286,11 @@ def update(self, *args, update_all=False, **kwargs):
         self._fields[field_name]._set(value)
     return [dict(elt) for elt in self.__cursor.fetchall()]
 
-def delete(self, *args, delete_all=False):
+def ho_delete(self, *args, delete_all=False):
     """Removes a set of tuples from the relation.
     To empty the relation, delete_all must be set to True.
     """
-    if not (self.is_set() or delete_all):
+    if not (self.ho_is_set() or delete_all):
         raise RuntimeError(
             f'Attempt to delete all rows from {self.__class__.__name__}'
             ' without delete_all being set to True!')
@@ -318,11 +318,11 @@ def __add_returning(self, query, *args) -> str:
         returning = ','.join(args)
     return f'{query} returning {returning}'
 
-def _unfreeze(self):
+def _ho_unfreeze(self):
     "Allow to add attributs to a relation"
     self.__isfrozen = False
 
-def _freeze(self):
+def _ho_freeze(self):
     "set __isfrozen to True."
     self.__isfrozen = True
 
@@ -353,17 +353,17 @@ def __execute(self, query, values):
         return self.__cursor.execute(query, values)
 
 @property
-def id_(self):
+def ho_id(self):
     """Return the __id_cast or the id of the relation.
     """
     return self.__id_cast or id(self)
 
 @property
-def only(self):
+def ho_only(self):
     "Returns the value of self.__only"
     return self.__only
-@only.setter
-def only(self, value):
+@ho_only.setter
+def ho_only(self, value):
     """Set the value of self.__only. Restrict the values of a query to
     the elements of the relation (no inherited values).
     """
@@ -402,7 +402,7 @@ def __set_fkeys(self):
                 raise relation_errors.WrongFkeyError(self, value) from exp
     self.__fkeys_properties = True
 
-def group_by(self, yml_directive):
+def ho_group_by(self, yml_directive):
     """Returns an aggregation of the data according to the yml directive
     description.
     """
@@ -473,7 +473,7 @@ def group_by(self, yml_directive):
     inner_group_by(data, directive, grouped_data)
     return grouped_data
 
-def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
+def ho_json(self, yml_directive=None, res_field_name='elements', **kwargs):
     """Returns a JSON representation of the set returned by the select query.
     if kwargs, returns {res_field_name: [list of elements]}.update(kwargs)
     """
@@ -490,7 +490,7 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
             f'Object of type {type(obj)} with value of {repr(obj)} is not JSON serializable')
 
     if yml_directive:
-        res = self.group_by(yml_directive)
+        res = self.ho_group_by(yml_directive)
     else:
         res = list(self)
     if kwargs:
@@ -498,12 +498,12 @@ def to_json(self, yml_directive=None, res_field_name='elements', **kwargs):
         res.update(kwargs)
     return json.dumps(res, default=handler)
 
-def to_dict(self):
+def ho_dict(self):
     """Returns a dictionary containing only the values of the fields
     that are set."""
     return {key:field.value for key, field in self._fields.items() if field.is_set()}
 
-def _to_dict_val_comp(self):
+def __to_dict_val_comp(self):
     """Returns a dictionary containing the values and comparators of the fields
     that are set."""
     return {key:(field._comp(), field.value) for key, field in
@@ -551,14 +551,14 @@ Fkeys = {"""
         ret.append('}')
     return '\n'.join(ret)
 
-def is_set(self):
+def ho_is_set(self):
     """Return True if one field at least is set or if self has been
     constrained by at least one of its foreign keys or self is the
     result of a combination of Relations (using set operators).
     """
     joined_to = False
     for _, jt_ in self._joined_to.items():
-        joined_to |= jt_.is_set()
+        joined_to |= jt_.ho_is_set()
     return (joined_to or bool(self.__set_operators.operator) or bool(self.__neg) or
             bool({field for field in self._fields.values() if field.is_set()}))
 
@@ -597,14 +597,14 @@ def __join(self, orig_rel, deja_vu):
     for fkey, fk_rel in self._joined_to.items():
         fk_rel.__query_type = orig_rel.__query_type
         fk_rel.__get_from(orig_rel, deja_vu)
-        if fk_rel.id_ not in deja_vu:
-            deja_vu[fk_rel.id_] = []
-        elif (fk_rel, fkey) in deja_vu[fk_rel.id_] or fk_rel is orig_rel:
+        if fk_rel.ho_id not in deja_vu:
+            deja_vu[fk_rel.ho_id] = []
+        elif (fk_rel, fkey) in deja_vu[fk_rel.ho_id] or fk_rel is orig_rel:
             #sys.stderr.write(f"déjà vu in from! {fk_rel._fqrn}\n")
             continue
-        deja_vu[fk_rel.id_].append((fk_rel, fkey))
+        deja_vu[fk_rel.ho_id].append((fk_rel, fkey))
         if fk_rel.__set_operators.operator:
-            fk_rel.__get_from(self.id_)
+            fk_rel.__get_from(self.ho_id)
         _, where, values = fk_rel.__where_args()
         where = f" and\n    {where}"
         orig_rel.__sql_query.insert(1, f'\n  join {__sql_id(fk_rel)} on\n   ')
@@ -614,14 +614,14 @@ def __join(self, orig_rel, deja_vu):
 
 def __sql_id(self):
     """Returns the FQRN as alias for the sql query."""
-    return f"{self._qrn} as r{self.id_}"
+    return f"{self._qrn} as r{self.ho_id}"
 
 def __get_from(self, orig_rel=None, deja_vu=None):
     """Constructs the __sql_query and gets the __sql_values for self."""
     if deja_vu is None:
         orig_rel = self
         self.__sql_query = [__sql_id(self)]
-        deja_vu = {self.id_:[(self, None)]}
+        deja_vu = {self.ho_id:[(self, None)]}
     self.__join(orig_rel, deja_vu)
 
 def __where_repr(self, rel_id_):
@@ -637,7 +637,7 @@ def __where_repr(self, rel_id_):
 def __where_args(self, *args):
     """Returns the what, where and values needed to construct the queries.
     """
-    rel_id_ = self.id_
+    rel_id_ = self.ho_id
     what = f'r{rel_id_}.*'
     if args:
         what = ', '.join([f'r{rel_id_}.{arg}' for arg in args])
@@ -676,7 +676,7 @@ def __get_query(self, query_template, *args):
             ' '.join(self.__sql_query), where),
         values)
 
-def _prep_select(self, *args):
+def _ho_prep_select(self, *args):
     self.__sql_values = []
     query_template = f"select\n {self.__select_params.get('distinct', '')} {{}}\nfrom\n  {{}} {{}}\n  {{}}"
     query, values = self.__get_query(query_template, *args)
@@ -689,12 +689,12 @@ def _prep_select(self, *args):
         query = f"{query} offset {self.__select_params['offset']}"
     return query, values
 
-def distinct(self):
+def ho_distinct(self):
     """Set distinct in SQL select request."""
     self.__select_params['distinct'] = 'distinct'
     return self
 
-def unaccent(self, *fields_names):
+def ho_unaccent(self, *fields_names):
     "Sets unaccent for each field listed in fields_names"
     for field_name in fields_names:
         if not isinstance(self.__dict__[field_name], Field):
@@ -702,7 +702,7 @@ def unaccent(self, *fields_names):
         self.__dict__[field_name].unaccent = True
     return self
 
-def order_by(self, _order_):
+def ho_order_by(self, _order_):
     """Set SQL order by according to the "order" string passed
 
     @order string example :
@@ -711,7 +711,7 @@ def order_by(self, _order_):
     self.__select_params['order_by'] = _order_
     return self
 
-def limit(self, _limit_):
+def ho_limit(self, _limit_):
     """Set limit for the next SQL select request."""
     if _limit_:
         self.__select_params['limit'] = _limit_
@@ -719,12 +719,12 @@ def limit(self, _limit_):
         self.__select_params.pop('limit')
     return self
 
-def offset(self, _offset_):
+def ho_offset(self, _offset_):
     """Set the offset for the next SQL select request."""
     self.__select_params['offset'] = _offset_
     return self
 
-def _mogrify(self):
+def _ho_mogrify(self):
     """Prints the select query."""
     self.__mogrify = True
     return self
@@ -741,12 +741,12 @@ def __len__(self):
         vars_ = tuple(self.__sql_values + values)
         self.__execute(query, vars_)
     except Exception as err:
-        self._mogrify()
+        self._ho_mogrify()
         self.__execute(query, vars_)
         raise Exception from err
     return self.__cursor.fetchone()['count']
 
-def is_empty(self):
+def ho_is_empty(self):
     """Returns True if the relation is empty, False otherwise.
 
     Same as __len__ but limits the request to 1 element (faster).
@@ -778,7 +778,7 @@ def __count(self, *args, _distinct=False):
         vars_ = tuple(self.__sql_values + values)
         self.__execute(query, vars_)
     except Exception as err:
-        self._mogrify()
+        self._ho_mogrify()
         self.__execute(query, vars_)
         raise Exception from err
     return self.__cursor.fetchone()['count']
@@ -818,17 +818,17 @@ def __what_to_insert(self):
 def __call__(self, **kwargs):
     return self.__class__(**kwargs)
 
-def cast(self, qrn):
+def ho_cast(self, qrn):
     """Cast a relation into another relation.
     """
-    new = self._model._import_class(qrn)(**self._to_dict_val_comp())
+    new = self._model._import_class(qrn)(**self.__to_dict_val_comp())
     new.__id_cast = id(self)
     new._joined_to = self._joined_to
     new.__set_operators = self.__set_operators
     return new
 
-def join(self, *f_rels):
-    """Joins data to self.select() result. Returns a dict
+def ho_join(self, *f_rels):
+    """Joins data to self.ho_select() result. Returns a dict
     f_rels is a list of [(obj: Relation(), name: str, fields: Optional(<str|str[]>)), ...].
 
     Each obj in f_rels must have a direct or reverse fkey to self.
@@ -861,7 +861,7 @@ def join(self, *f_rels):
 
     res = list(
         {key: to_str(value) for key, value in elt.items()}
-        for elt in self.distinct()
+        for elt in self.ho_distinct()
     )
     result_as_list = False
     ref = self()
@@ -898,7 +898,7 @@ def join(self, *f_rels):
         if not fkey_found:
             raise RuntimeError(f"No foreign key between {self._fqrn} and {f_relation._fqrn}!")
         inter = [{key: to_str(val) for key, val in elt.items()}
-            for elt in remote.distinct().select(
+            for elt in remote.ho_distinct().ho_select(
                 *([f'"{field}"' for field in fields] + f_relation_fk_names))]
         for elt in inter:
             key = tuple(elt[subelt] for subelt in f_relation_fk_names)
@@ -937,7 +937,7 @@ def __set__op__(self, operator=None, right=None):
             if rel is self:
                 rel = new
             new._joined_to[fkey] = rel
-    new = self(**self._to_dict_val_comp())
+    new = self(**self.__to_dict_val_comp())
     new.__id_cast = self.__id_cast
     if operator:
         new.__set_operators.left = self
@@ -996,15 +996,15 @@ def __enter__(self):
 
     Example usage:
     with relation as rel:
-        rel.update(col=new_val)
+        rel.ho_update(col=new_val)
 
     Equivalent to (in a transaction context):
-    rel = relation.select()
+    rel = relation.ho_select()
     for elt in rel:
         new_elt = relation(**elt)
-        new_elt.update(col=new_val)
+        new_elt.ho_update(col=new_val)
     """
-    @self.Transaction
+    @self.HoTransaction
     def context(self):
         return self
     return context(self)
@@ -1017,10 +1017,10 @@ def __exit__(_, *__):
     return False
 
 def __iter__(self):
-    return self.select()
+    return self.ho_select()
 
 def __next__(self):
-    return next(self.select())
+    return next(self.ho_select())
 
 def singleton(fct):
     """Decorator. Enforces the relation to define a singleton.
@@ -1033,53 +1033,31 @@ def singleton(fct):
         if self._is_singleton:
             return fct(self, *args, **kwargs)
         try:
-            self = self.get()
+            self = self.ho_get()
             return fct(self, *args, **kwargs)
         except relation_errors.ExpectedOneError as err:
             raise relation_errors.NotASingletonError(err)
     return wrapper
 
-def _debug(_):
-    """For debug purpose"""
+#### Deprecated
 
 #### END of Relation methods definition
 
 COMMON_INTERFACE = {
     '__init__': __init__,
-    '_freeze': _freeze,
-    '_unfreeze': _unfreeze,
     '__setattr__': __setattr__,
     '__execute': __execute,
-    'id_': id_,
     '__set_fields': __set_fields,
     '__set_fkeys': __set_fkeys,
-    'order_by': order_by,
-    'limit': limit,
-    'offset': offset,
-    'distinct': distinct,
-    'unaccent': unaccent,
     '__call__': __call__,
-    'cast': cast,
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
-    'only': only,
-    'is_empty': is_empty,
-    'group_by':group_by,
-    'to_json': to_json,
-    'to_dict': to_dict,
-    '_to_dict_val_comp': _to_dict_val_comp,
     '__get_from': __get_from,
     '__get_query': __get_query,
-    'is_set': is_set,
     '__where_repr': __where_repr,
     '__where_args': __where_args,
-    '_prep_select': _prep_select,
-    'select': select,
-    '_mogrify': _mogrify,
     '__len__': __len__,
-    # 'count': count,
-    'get': get,
-    'join': join,
+
     '__set__op__': __set__op__,
     '__and__': __and__,
     '__iand__': __iand__,
@@ -1092,23 +1070,47 @@ COMMON_INTERFACE = {
     '__neg__': __neg__,
     '__contains__': __contains__,
     '__eq__': __eq__,
+
     '__sql_id': __sql_id,
     '__walk_op': __walk_op,
     '__join': __join,
-    'insert': insert,
     '__what_to_insert': __what_to_insert,
-    'update': update,
     '__update_args': __update_args,
-    'delete': delete,
     '__add_returning': __add_returning,
-    'Transaction': Transaction,
+    '__to_dict_val_comp': __to_dict_val_comp,
     '__enter__': __enter__,
     '__exit__': __exit__,
     '__iter__': __iter__,
     '__next__': __next__,
-    # test
-    '_debug': _debug,
-    'singleton': singleton,
+
+    # protected methods
+    '_ho_freeze': _ho_freeze,
+    '_ho_unfreeze': _ho_unfreeze,
+    '_ho_prep_select': _ho_prep_select,
+    '_ho_mogrify': _ho_mogrify,
+
+    # public methods
+    'ho_id': ho_id,
+    'ho_order_by': ho_order_by,
+    'ho_limit': ho_limit,
+    'ho_offset': ho_offset,
+    'ho_distinct': ho_distinct,
+    'ho_unaccent': ho_unaccent,
+    'ho_cast': ho_cast,
+    'ho_only': ho_only,
+    'ho_is_empty': ho_is_empty,
+    'ho_group_by':ho_group_by,
+    'ho_json': ho_json,
+    'ho_dict': ho_dict,
+    'ho_is_set': ho_is_set,
+    'ho_get': ho_get,
+    'ho_join': ho_join,
+    'ho_insert': ho_insert,
+    'ho_select': ho_select,
+    'ho_update': ho_update,
+    'ho_delete': ho_delete,
+
+    'HoTransaction': HoTransaction,
 }
 
 
