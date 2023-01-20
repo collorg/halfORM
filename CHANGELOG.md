@@ -1,3 +1,8 @@
+# 0.8.0rc3 (2023-01-20)
+
+* [hop][WIP] Add pytest dependency (replace with unittest ?). (bdd52e8)
+* Rename public and protected methods of half_orm.relation.Relation. (81c1084)
+
 # 0.8.0rc2, hop 0.1.0a1 (2023-01-16)
 
 * [hop][WIP] Integration of the hop command into half_orm. (d801ba5)
