@@ -356,7 +356,7 @@ lagaffe = Person(last_name='Lagaffe')
 if lagaffe.ho_is_empty() or len(lagaffe) > 1:
     raise ExcpetedOneError
 gaston = Person(**next(lagaffe.ho_select(*args)))
-gaston._is_singleton = True
+gaston._ho_is_singleton = True
 ```
 
 ### Is it a set? Is it an element of the set?
@@ -400,9 +400,9 @@ If more than one person has *Gaston* as first name in the `actor.person` table, 
 half_orm.relation_errors.NotASingletonError: Not a singleton. Got X tuples
 ```
 
-### Forcing  `_is_singleton` attribute.
+### Forcing  `_ho_is_singleton` attribute.
 
-By forcing the attribute `_is_singleton` of a Relation object to True, you can avoid some unnecessary `get()` that a `@singleton` decorator would have triggered. Here is an example:
+By forcing the attribute `_ho_is_singleton` of a Relation object to True, you can avoid some unnecessary `get()` that a `@singleton` decorator would have triggered. Here is an example:
 
 ```py
 class Person(halftest.get_relation_class('actor.person')):
@@ -415,11 +415,11 @@ class Person(halftest.get_relation_class('actor.person')):
     def do_something(self):
         for elt in self.ho_select():
             pers = Person(**elt)
-            pers._is_singleton = True # You must be pretty sure of what you're doing here. See the warning and the explanation.
+            pers._ho_is_singleton = True # You must be pretty sure of what you're doing here. See the warning and the explanation.
             pers.do_something_else() # Warning! do_something_else won't check that pers is indeed a singleton
 ```
 
-**Warning!** By setting `_is_singleton` value to `True`, you disable the check that `@singleton` would have made before executing `do_something_else`. 
+**Warning!** By setting `_ho_is_singleton` value to `True`, you disable the check that `@singleton` would have made before executing `do_something_else`. 
 This example works for two reasons:
 
 1. `ho_select` is called without argument ensuring that

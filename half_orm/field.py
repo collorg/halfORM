@@ -87,7 +87,7 @@ class Field():
 
     def __set__(self, obj, *args):
         """Sets the value (and the comparator) associated with the field."""
-        self.__relation._is_singleton = False
+        self.__relation._ho_is_singleton = False
         if len(args) == 1:
             value = args[0]
             if value is None:

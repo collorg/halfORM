@@ -136,16 +136,16 @@ def __init__(self, **kwargs):
     _fqrn = ""
     """The arguments names must correspond to the columns names of the relation.
     """
-    self._fields = {}
-    self._pkey = {}
-    self._fkeys = OrderedDict()
-    self._fkeys_prop = []
-    self._fkeys_attr = set()
+    self._ho_fields = {}
+    self._ho_pkey = {}
+    self._ho_fkeys = OrderedDict()
+    self._ho_fkeys_attr = set()
+    self._ho_join_to = {}
+    self._ho_is_singleton = False
     self.__only = False
     self.__neg = False
     self.__set_fields()
     self.__set_fkeys()
-    self._joined_to = {}
     self.__query = ""
     self.__query_type = None
     self.__sql_query = []
@@ -156,10 +156,9 @@ def __init__(self, **kwargs):
     self.__cursor = self._model._connection.cursor()
     self.__cons_fields = []
     self.__mogrify = False
-    self._is_singleton = False
     kwk_ = set(kwargs.keys())
-    if kwk_.intersection(self._fields.keys()) != kwk_:
-        raise relation_errors.UnknownAttributeError(str(kwk_.difference(self._fields.keys())))
+    if kwk_.intersection(self._ho_fields.keys()) != kwk_:
+        raise relation_errors.UnknownAttributeError(str(kwk_.difference(self._ho_fields.keys())))
     _ = {self.__dict__[field_name]._set(value)
          for field_name, value in kwargs.items() if value is not None}
     self.__isfrozen = True
@@ -249,9 +248,9 @@ def ho_get(self, *args: List[str]) -> Relation:
     _count = len(self)
     if _count != 1:
         raise relation_errors.ExpectedOneError(self, _count)
-    self._is_singleton = True
+    self._ho_is_singleton = True
     ret = self(**(next(self.ho_select(*args))))
-    ret._is_singleton = True
+    ret._ho_is_singleton = True
     return ret
 
 def ho_update(self, *args, update_all=False, **kwargs):
@@ -283,7 +282,7 @@ def ho_update(self, *args, update_all=False, **kwargs):
     query = self.__add_returning(query_template.format(self._qrn, what, where), *args)
     self.__execute(query, tuple(values))
     for field_name, value in update_args.items():
-        self._fields[field_name]._set(value)
+        self._ho_fields[field_name]._set(value)
     return [dict(elt) for elt in self.__cursor.fetchall()]
 
 def ho_delete(self, *args, delete_all=False):
@@ -377,10 +376,10 @@ def __set_fields(self):
 
     for field_name, f_metadata in _fields_metadata.items():
         field = Field(field_name, self, f_metadata)
-        self._fields[field_name] = field
+        self._ho_fields[field_name] = field
         self.__setattr__(field_name, field)
         if field._is_part_of_pk():
-            self._pkey[field_name] = field
+            self._ho_pkey[field_name] = field
 
 def __set_fkeys(self):
     """Initialisation of the foreign keys of the relation"""
@@ -389,15 +388,15 @@ def __set_fkeys(self):
 
     _fkeys_metadata = self._model._fkeys_metadata(self._t_fqrn)
     for fkeyname, f_metadata in _fkeys_metadata.items():
-        self._fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
+        self._ho_fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
     if hasattr(self.__class__, 'Fkeys') and not self.__fkeys_properties:
         # if not hasattr(self.__class__.__base__, 'Fkeys'):
         #     setattr(self.__class__.__base__, 'Fkeys', self.__class__.Fkeys)
         for key, value in self.Fkeys.items():
             try:
                 if key != '': # we skip empty keys
-                    setattr(self, key, self._fkeys[value])
-                    self._fkeys_attr.add(key)
+                    setattr(self, key, self._ho_fkeys[value])
+                    self._ho_fkeys_attr.add(key)
             except KeyError as exp:
                 raise relation_errors.WrongFkeyError(self, value) from exp
     self.__fkeys_properties = True
@@ -416,7 +415,7 @@ def ho_group_by(self, yml_directive):
         keys = set(directive)
         for elt in data:
             res_elt = {}
-            for key in keys.intersection(self._fields.keys()):
+            for key in keys.intersection(self._ho_fields.keys()):
                 deja_vu_key.add(directive[key])
                 try:
                     res_elt.update({directive[key]:elt[key]})
@@ -437,7 +436,7 @@ def ho_group_by(self, yml_directive):
             else:
                 gdata.update(res_elt)
             for group_name in keys.difference(
-                    keys.intersection(self._fields.keys())):
+                    keys.intersection(self._ho_fields.keys())):
                 type_directive = type(directive[group_name])
                 suite = None
                 if not gdata:
@@ -501,13 +500,13 @@ def ho_json(self, yml_directive=None, res_field_name='elements', **kwargs):
 def ho_dict(self):
     """Returns a dictionary containing only the values of the fields
     that are set."""
-    return {key:field.value for key, field in self._fields.items() if field.is_set()}
+    return {key:field.value for key, field in self._ho_fields.items() if field.is_set()}
 
 def __to_dict_val_comp(self):
     """Returns a dictionary containing the values and comparators of the fields
     that are set."""
     return {key:(field._comp(), field.value) for key, field in
-            self._fields.items() if field.is_set()}
+            self._ho_fields.items() if field.is_set()}
 
 def __repr__(self):
 
@@ -528,10 +527,10 @@ Fkeys = {"""
         ret.append(f"DESCRIPTION:\n{self.__metadata['description']}")
     ret.append('FIELDS:')
     mx_fld_n_len = 0
-    for field_name in self._fields.keys():
+    for field_name in self._ho_fields.keys():
         if len(field_name) > mx_fld_n_len:
             mx_fld_n_len = len(field_name)
-    for field_name, field in self._fields.items():
+    for field_name, field in self._ho_fields.items():
         ret.append(f"- {field_name}:{' ' * (mx_fld_n_len + 1 - len(field_name))}{repr(field)}")
     ret.append('')
     pkey = self._model._pkey_constraint(self._t_fqrn)
@@ -539,14 +538,14 @@ Fkeys = {"""
         ret.append(f"PRIMARY KEY ({', '.join(pkey)})")
     for uniq in self._model._unique_constraints_list(self._t_fqrn):
         ret.append(f"UNIQUE CONSTRAINT ({', '.join(uniq)})")
-    if self._fkeys.keys():
-        plur = 'S' if len(self._fkeys) > 1 else ''
+    if self._ho_fkeys.keys():
+        plur = 'S' if len(self._ho_fkeys) > 1 else ''
         ret.append(f'FOREIGN KEY{plur}:')
-        for fkey in self._fkeys.values():
+        for fkey in self._ho_fkeys.values():
             ret.append(repr(fkey))
         ret.append('')
         ret.append(fkeys_usage)
-        for fkey in self._fkeys:
+        for fkey in self._ho_fkeys:
             ret.append(f"    '': '{fkey}',")
         ret.append('}')
     return '\n'.join(ret)
@@ -557,14 +556,14 @@ def ho_is_set(self):
     result of a combination of Relations (using set operators).
     """
     joined_to = False
-    for _, jt_ in self._joined_to.items():
+    for _, jt_ in self._ho_join_to.items():
         joined_to |= jt_.ho_is_set()
     return (joined_to or bool(self.__set_operators.operator) or bool(self.__neg) or
-            bool({field for field in self._fields.values() if field.is_set()}))
+            bool({field for field in self._ho_fields.values() if field.is_set()}))
 
 def __get_set_fields(self):
     """Returns a list containing only the fields that are set."""
-    return [field for field in self._fields.values() if field.is_set()]
+    return [field for field in self._ho_fields.values() if field.is_set()]
 
 def __walk_op(self, rel_id_, out=None, _fields_=None):
     """Walk the set operators tree and return a list of SQL where
@@ -594,7 +593,7 @@ def __walk_op(self, rel_id_, out=None, _fields_=None):
     return out, _fields_
 
 def __join(self, orig_rel, deja_vu):
-    for fkey, fk_rel in self._joined_to.items():
+    for fkey, fk_rel in self._ho_join_to.items():
         fk_rel.__query_type = orig_rel.__query_type
         fk_rel.__get_from(orig_rel, deja_vu)
         if fk_rel.ho_id not in deja_vu:
@@ -661,7 +660,7 @@ def __get_query(self, query_template, *args):
         if elt.find('\n  join ') == 0 and self.__sql_query.count(elt) > 1:
             self.__sql_query[idx] = '  and\n'
     # check that fkeys are fkeys
-    for fkey_name in self._fkeys_attr:
+    for fkey_name in self._ho_fkeys_attr:
         fkey_cls = self.__dict__[fkey_name].__class__
         if fkey_cls != FKey:
             raise RuntimeError(
@@ -802,11 +801,11 @@ def __what_to_insert(self):
     set_fields = self.__get_set_fields()
     if set_fields:
         fields_names = [
-            f'"{name}"' for name, field in self._fields.items() if field.is_set()]
+            f'"{name}"' for name, field in self._ho_fields.items() if field.is_set()]
     fk_fields = []
     fk_queries = ''
     fk_values = []
-    for fkey in self._fkeys.values():
+    for fkey in self._ho_fkeys.values():
         fk_prep_select = fkey._prep_select()
         if fk_prep_select is not None:
             fk_values += list(fkey.values()[0])
@@ -823,7 +822,7 @@ def ho_cast(self, qrn):
     """
     new = self._model._import_class(qrn)(**self.__to_dict_val_comp())
     new.__id_cast = id(self)
-    new._joined_to = self._joined_to
+    new._ho_join_to = self._ho_join_to
     new.__set_operators = self.__set_operators
     return new
 
@@ -872,7 +871,7 @@ def ho_join(self, *f_rels):
             f_relation, name, fields = f_rel
         elif len(f_rel) == 2:
             f_relation, name = f_rel
-            fields = list(f_relation._fields.keys())
+            fields = list(f_relation._ho_fields.keys())
         else:
             raise RuntimeError(f"f_rel must have 2 or 3 arguments. Got {len(f_rel)}.")
         if isinstance(fields, str):
@@ -882,13 +881,13 @@ def ho_join(self, *f_rels):
 
         f_relation_fk_names = []
         fkey_found = False
-        for fkey_12 in ref._fkeys:
-            if type(ref._fkeys[fkey_12]) != FKey:
+        for fkey_12 in ref._ho_fkeys:
+            if type(ref._ho_fkeys[fkey_12]) != FKey:
                 raise RuntimeError("This is not an Fkey")
-            remote_fk = ref._fkeys[fkey_12]
+            remote_fk = ref._ho_fkeys[fkey_12]
             remote = remote_fk()
             if remote.__class__ == f_relation.__class__:
-                for field in f_relation._fields.keys():
+                for field in f_relation._ho_fields.keys():
                     if f_relation.__dict__[field].is_set():
                         remote.__dict__[field]._set(f_relation.__dict__[field])
                 fkey_found = True
@@ -931,21 +930,21 @@ def __set__op__(self, operator=None, right=None):
     On crée un nouvel objet sans contrainte et on a left et right et opérateur
     """
     def check_fk(new, jt_list):
-        """Sets the _joined_to dictionary for the new relation.
+        """Sets the _ho_join_to dictionary for the new relation.
         """
         for fkey, rel in jt_list.items():
             if rel is self:
                 rel = new
-            new._joined_to[fkey] = rel
+            new._ho_join_to[fkey] = rel
     new = self(**self.__to_dict_val_comp())
     new.__id_cast = self.__id_cast
     if operator:
         new.__set_operators.left = self
         new.__set_operators.operator = operator
-    dct_join = self._joined_to
+    dct_join = self._ho_join_to
     if right is not None:
         new.__set_operators.right = right
-        dct_join.update(right._joined_to)
+        dct_join.update(right._ho_join_to)
     check_fk(new, dct_join)
     return new
 
@@ -1025,12 +1024,12 @@ def __next__(self):
 def singleton(fct):
     """Decorator. Enforces the relation to define a singleton.
 
-    _is_singleton is set by Relation.get.
-    _is_singleton is unset as soon as a Field is set.
+    _ho_is_singleton is set by Relation.get.
+    _ho_is_singleton is unset as soon as a Field is set.
     """
     @wraps(fct)
     def wrapper(self, *args, **kwargs):
-        if self._is_singleton:
+        if self._ho_is_singleton:
             return fct(self, *args, **kwargs)
         try:
             self = self.ho_get()

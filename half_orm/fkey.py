@@ -44,11 +44,11 @@ class FKey:
             f_cast = __cast__
         f_relation = get_rel(f_cast or normalize_qrn(self.__fk_fqrn))(**kwargs)
         rev_fkey_name = f'_reverse_{f_relation.ho_id}'
-        f_relation._fkeys[rev_fkey_name] = FKey(
+        f_relation._ho_fkeys[rev_fkey_name] = FKey(
             rev_fkey_name,
             f_relation,
             f_relation._t_fqrn, self.__fields, self.__fk_names)
-        f_relation._fkeys[rev_fkey_name].set(self.__relation)
+        f_relation._ho_fkeys[rev_fkey_name].set(self.__relation)
         return f_relation
 
     def values(self):
@@ -72,7 +72,7 @@ class FKey:
         self.__fk_from = from_
         self.__fk_to = to_
         self.__is_set = to_.ho_is_set()
-        from_._joined_to[self] = to_
+        from_._ho_join_to[self] = to_
 
     @classmethod
     def __set__(cls, *args):

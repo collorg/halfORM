@@ -20,11 +20,11 @@ class Test(TestCase):
 
     def test_post_fkeys_names(self):
         self.assertEqual(
-            list(self.post._fkeys.keys()),
+            list(self.post._ho_fkeys.keys()),
             ['_reverse_fkey_halftest_blog_comment_post_id', 'author'])
 
     def test_comment_fkeys_names(self):
-        self.assertEqual(list(self.comment._fkeys.keys()), ['post', 'author'])
+        self.assertEqual(list(self.comment._ho_fkeys.keys()), ['post', 'author'])
 
     def test_post_author_fkey_type(self):
         author = self.post.author_()
@@ -35,7 +35,7 @@ class Test(TestCase):
         self.assertTrue(isinstance(author, halftest.Person))
 
     def test_comment_post_fkey_type(self):
-        post = self.comment._fkeys['post']()
+        post = self.comment._ho_fkeys['post']()
         self.assertTrue(isinstance(post, halftest.Post))
 
     def test_is_set(self):

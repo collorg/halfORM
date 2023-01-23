@@ -84,7 +84,7 @@ class Test(HoTestCase):
         self.assertTrue(isinstance(posts, list))
         self.assertEqual(posts[0]['id'], self.post0['id'])
         self.assertEqual(len(comments), 2)
-        self.assertEqual(set(list(comments[0].keys())), set(list(self.comment()._fields)))
+        self.assertEqual(set(list(comments[0].keys())), set(list(self.comment()._ho_fields)))
         comment_ids = {self.comment0['id'], self.comment1['id']}
         res_ids = {comments[0]['id'], comments[1]['id']}
         self.assertEqual(comment_ids, res_ids)

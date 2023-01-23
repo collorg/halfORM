@@ -5,7 +5,7 @@ from half_orm.relation import Relation
 class HoTestCase(unittest.TestCase):
     def hotAssertIsPkey(self, relation: Relation, field_names: List[str]):
         "it shoud be the primary key"
-        pkey = set(relation()._pkey.keys())
+        pkey = set(relation()._ho_pkey.keys())
         if set(field_names) != pkey:
             raise self.fail(f'PKey failure: {set(field_names)} != {pkey}')
 
@@ -29,9 +29,9 @@ class HoTestCase(unittest.TestCase):
             raise self.fail(f"'{field_name}' is not 'not null'.")
         
     def hotAssertReferences(self, relation: Relation, fk_name: str, f_relation: Relation):
-        referenced = relation()._fkeys[fk_name]()
+        referenced = relation()._ho_fkeys[fk_name]()
         if not referenced._qrn == f_relation._qrn:
-            raise self.fail(f"{relation}()._fkeys['{fk_name}']() does not reference {f_relation}")
+            raise self.fail(f"{relation}()._ho_fkeys['{fk_name}']() does not reference {f_relation}")
 
     def hotAssertAliasReferences(self, relation: Relation, alias: str, f_relation: Relation):
         referenced = eval(f"relation().{alias}")
@@ -39,10 +39,10 @@ class HoTestCase(unittest.TestCase):
             raise self.fail(f"{relation}.{alias}() does not reference {f_relation}")
 
     def __check_update_action(self, relation: Relation, fk_name: str, update_type: str):
-        return self.assertEqual(relation()._fkeys[fk_name].confupdtype, update_type)
+        return self.assertEqual(relation()._ho_fkeys[fk_name].confupdtype, update_type)
 
     def __check_delete_action(self, relation: Relation, fk_name: str, delete_type: str):
-        return self.assertEqual(relation()._fkeys[fk_name].confdeltype, delete_type)
+        return self.assertEqual(relation()._ho_fkeys[fk_name].confdeltype, delete_type)
 
     def hotAssertOnUpdateNoAction(self, relation: Relation, fk_name: str):
         return self.__check_update_action(relation, fk_name, 'a')
