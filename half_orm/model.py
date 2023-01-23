@@ -21,6 +21,7 @@ Note:
 """
 
 
+import inspect
 import os
 import sys
 from configparser import ConfigParser
@@ -45,10 +46,15 @@ def deprecated(fct):
     def wrapper(self, *args, **kwargs):
         name = fct.__name__
         dep_name = fct.__name__[0:3] == 'ho_' and fct.__name__[3:] or f'_{fct.__name__[4:0]}'
+        callerframerecord = inspect.stack()[1]
+        frame = callerframerecord[0]
+        info = inspect.getframeinfo(frame)
         sys.stderr.write(
             f'HalfORM WARNING! "{utils.Color.bold(dep_name)}" is deprecated. '
             'It will be removed in half_orm 1.0.\n'
             f'Use "{utils.Color.bold(name)}" instead.\n'
+            f'File {info.filename}, line {info.lineno}, in {info.function}\n'
+            f'{info.code_context[0]}\n'
             )
         return fct(self, *args, **kwargs)
     return wrapper
