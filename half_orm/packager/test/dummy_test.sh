@@ -18,8 +18,6 @@ tree .
 
 rm -rf /tmp/hop_test.git
 git init --bare /tmp/hop_test.git
-git remote add origin /tmp/hop_test.git
-git push -u origin hop_main
 
 hop prepare-release -m "First patch release" << EOF
 patch
@@ -85,6 +83,14 @@ if [ $? = 0 ]; then exit 1; fi
 set -e
 git reset HEAD~ --hard
 
+set +e
+# git repo must have an origin to push
+hop commit-release --push
+if [ $? = 0 ]; then exit 1; fi
+set -e
+
+git remote add origin /tmp/hop_test.git
+git status
 hop commit-release --push
 
 git status

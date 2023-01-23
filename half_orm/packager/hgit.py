@@ -1,6 +1,7 @@
 "Provides the HGit class"
 
 import os
+import sys
 import subprocess
 from git import Repo
 from git.exc import GitCommandError
@@ -11,19 +12,35 @@ from half_orm.packager.manifest import Manifest
 class HGit:
     "Manages the git operations on the repo."
     def __init__(self, repo=None):
+        self.__origin = None
         self.__repo = repo
         self.__base_dir = None
         self.__git_repo: Repo = None
         if repo:
+            self.__origin = repo.git_origin
             self.__base_dir = repo.base_dir
             self.__post_init()
 
     def __post_init(self):
         self.__git_repo = Repo(self.__base_dir)
+        origin = None
+        try:
+            origin = self.__git_repo.git.remote('get-url', 'origin')
+        except Exception as err:
+            utils.warning('No origin\n')
+        if self.__origin == '' and origin:
+            self.__repo.git_origin = origin
+            self.add(os.path.join('.hop', 'config'))
+            self.commit("-m", f"[hop] Set remote for origin: {origin}.")
+            self.__git_repo.git.push('-u', 'origin', 'hop_main')
+            self.__origin = origin
+        elif origin and self.__origin != origin:
+            utils.error(f'Git remote origin should be {self.__origin}. Got {origin}\n', 1)
         self.__current_branch = self.branch
 
     def __str__(self):
         res = ['[Git]']
+        res.append(f'- origin: {self.__origin or utils.Color.red("No origin")}')
         res.append(f'- current branch: {self.__current_branch}')
         clean = self.repos_is_clean()
         clean = utils.Color.green(clean) \
@@ -125,8 +142,11 @@ class HGit:
     def rebase_to_hop_main(self, push=False):
         "Rebase a hop_X.Y.Z branch to hop_main"
         release = self.current_release
+        if push and not self.__repo.git_origin:
+            utils.error("Git: No remote specified for \"origin\". Can't push!\n", 1)
         try:
-            self.__git_repo.git.pull('origin', 'hop_main')
+            if self.__origin:
+                self.__git_repo.git.pull('origin', 'hop_main')
             hop_main_last_commit = self.__git_repo.commit('hop_main').hexsha[0:8]
             self.__git_repo.git.rebase('hop_main')
             self.__git_repo.git.checkout('hop_main')

@@ -19,8 +19,8 @@ class Repo:
     __base_dir: str = None
     __name: str = None
     __database: Database = Database()
-    __hgit: HGit = None
     __conf_file: str = None
+    __git_origin: str = ''
     def __init__(self):
         self.__check()
 
@@ -78,12 +78,23 @@ class Repo:
     def name(self, name):
         self.__name = name
 
+    @property
+    def git_origin(self):
+        "Returns the git origin registered in .hop/config"
+        return self.__git_origin
+    @git_origin.setter
+    def git_origin(self, origin):
+        "Sets the git origin and register it in .hop/config"
+        self.__git_origin = origin
+        self.__write_config()
+
     def __load_config(self):
         "Sets __name and __hop_version"
         config = ConfigParser()
         config.read(self.__conf_file)
         self.__name = config['halfORM']['package_name']
         self.__self_hop_version = config['halfORM'].get('hop_version')
+        self.__git_origin = config['halfORM'].get('git_origin')
 
     def __write_config(self):
         "Helper: write file in utf8"
@@ -92,7 +103,8 @@ class Repo:
         config['halfORM'] = {
             'config_file': self.__name,
             'package_name': self.__name,
-            'hop_version': utils.hop_version()
+            'hop_version': utils.hop_version(),
+            'git_origin': self.__git_origin
         }
         with open(Repo.__conf_file, 'w', encoding='utf-8') as configfile:
             config.write(configfile)
