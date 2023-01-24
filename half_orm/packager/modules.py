@@ -113,12 +113,15 @@ def __get_inheritance_info(rel, package_name):
 def __assemble_module_template(module_path):
     """Construct the module after slicing it if it already exists.
     """
+    ALT_BEGIN_CODE = "#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!\n"
     user_s_code = ""
     global_user_s_code = "\n"
     module_template = MODULE_FORMAT
     user_s_class_attr = ''
     if os.path.exists(module_path):
         module_code = utils.read(module_path)
+        if module_code.find(ALT_BEGIN_CODE) != -1:
+            module_code = module_code.replace(ALT_BEGIN_CODE, utils.BEGIN_CODE)
         user_s_code = module_code.rsplit(utils.BEGIN_CODE, 1)[1]
         user_s_code = user_s_code.replace('{', '{{').replace('}', '}}')
         global_user_s_code = module_code.rsplit(utils.END_CODE)[0].split(utils.BEGIN_CODE)[1]

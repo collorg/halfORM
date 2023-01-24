@@ -21,7 +21,7 @@ Main methods provided by the class Relation:
   the constraint on the Relation object. The elements are dictionaries with the
   keys corresponding to the selected columns names in the relation.
   The result is affected by the methods: ho_distinct, ho_order_by, ho_limit and ho_offset
-  (see bellow).
+  (see below).
 - update: updates the set defined by the constraint on the Relation object
   with the values passed as arguments.
 - delete: deletes from the relation the set of elements defined by the constraint
@@ -510,8 +510,8 @@ def __to_dict_val_comp(self):
 
 def __repr__(self):
 
-    fkeys_usage = """To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
-your code as a class attribute and replace the empty string(s) key(s) with the alias you
+    fkeys_usage = """To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
+your code as a class attribute and replace the empty string key(s) with the alias(es) you
 want to use. The aliases must be unique and different from any of the column names. Empty
 string keys are ignored.
 

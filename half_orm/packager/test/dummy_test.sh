@@ -142,7 +142,7 @@ hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 
 from hop_test.db_connector import base_relation_class
 
-#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+#>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 import datetime
 #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
 
@@ -162,8 +162,8 @@ class B(__RCLS):
     - b_a_fkey: ("a")
      ↳ "hop_test":"public"."a"(a)
 
-    To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
-    your code as a class attribute and replace the empty string(s) key(s) with the alias you
+    To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
+    your code as a class attribute and replace the empty string key(s) with the alias(es) you
     want to use. The aliases must be unique and different from any of the column names. Empty
     string keys are ignored.
 
@@ -171,7 +171,7 @@ class B(__RCLS):
         '': 'b_a_fkey',
     }
     """
-    #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+    #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
     Fkeys = {
         'a_fk': 'b_a_fkey',
     }
@@ -179,7 +179,7 @@ class B(__RCLS):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+        #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 EOF
 
 git add .

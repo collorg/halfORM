@@ -181,8 +181,8 @@ FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
  ↳ "halftest":"blog"."post"(author_first_name, author_last_name, author_birth_date)
 
-To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
-your code as a class attribute and replace the empty string(s) key(s) with the alias you
+To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
+your code as a class attribute and replace the empty string key(s) with the alias(es) you
 want to use. The aliases must be unique and different from any of the column names. Empty
 string keys are ignored.
 
@@ -510,8 +510,8 @@ foreign keys that point to this object. When you print the object, its represent
 with the information about the foreign keys:
 
 ```
-To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
-your code as a class attribute and replace the empty string(s) key(s) with the alias you
+To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
+your code as a class attribute and replace the empty string key(s) with the alias(es) you
 want to use. The aliases must be unique and different from any of the column names. Empty
 string keys are ignored.
 
@@ -551,8 +551,8 @@ FOREIGN KEYS:
 - author: ("author_birth_date", "author_first_name", "author_last_name")
  ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)
 
-To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
-your code as a class attribute and replace the empty string(s) key(s) with the alias you
+To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
+your code as a class attribute and replace the empty string key(s) with the alias(es) you
 want to use. The aliases must be unique and different from any of the column names. Empty
 string keys are ignored.
 
