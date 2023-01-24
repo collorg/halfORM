@@ -26,6 +26,14 @@ echo 'create table first ( a text primary key )' > Patches/0/0/1/a.sql
 hop test-release
 git add .
 git commit -m "First table"
+set +e
+which pytest
+if [ $? = 0 ]; then pip uninstall -y pytest ; fi
+# pytest must be install to commit release
+hop commit-release
+if [ $? = 0 ]; then exit 1; fi
+set -e
+pip install pytest
 hop commit-release
 
 hop prepare-release -l patch -m "Second patch release"

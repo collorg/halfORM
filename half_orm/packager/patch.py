@@ -270,13 +270,18 @@ class Patch:
             utils.error(
                 'Something has changed when re-applying the release. This should not happen.\n',
                 exit_code=1)
-        # the tests must pass
+        # do we have pytest
         try:
-            subprocess.run(['pytest', self.__repo.name], check=True)
-        except subprocess.CalledProcessError:
-            utils.error('Tests must pass in order to release.\n', exit_code=1)
-        # So far, so good
-        self.__repo.hgit.rebase_to_hop_main(push)
+            subprocess.run(['pytest', '--version'], check=True)
+            # the tests must pass
+            try:
+                subprocess.run(['pytest', self.__repo.name], check=True)
+            except subprocess.CalledProcessError:
+                utils.error('Tests must pass in order to release.\n', exit_code=1)
+            # So far, so good
+            self.__repo.hgit.rebase_to_hop_main(push)
+        except FileNotFoundError:
+            utils.error('pytest is not installed!\n', 1)
 
     def upgrade_prod(self):
         "Upgrade the production"

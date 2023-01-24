@@ -35,8 +35,7 @@ setup(
         'PyYAML',
         'pydash',
         'click',
-        'GitPython',
-        'pytest'],
+        'GitPython'],
     package_data={'half_orm': ['version.txt', 'packager/version.txt'], '': extra_files},
     classifiers=[
         # How mature is this project? Common values are
