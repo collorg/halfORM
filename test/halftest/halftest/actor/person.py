@@ -1,4 +1,3 @@
-# hop release: 0.1.0a0
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.actor.person povides the Person class.
@@ -21,7 +20,7 @@ hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 
 from halftest.db_connector import base_relation_class
 
-#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+#>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 from half_orm.relation import singleton
 
 
@@ -55,8 +54,8 @@ class Person(__RCLS):
     - _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
      ↳ "halftest":"blog"."post"(author_first_name, author_last_name, author_birth_date)
 
-    To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
-    your code as a class attribute and replace the empty string(s) key(s) with the alias you
+    To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
+    your code as a class attribute and replace the empty string key(s) with the alias(es) you
     want to use. The aliases must be unique and different from any of the column names. Empty
     string keys are ignored.
 
@@ -66,7 +65,7 @@ class Person(__RCLS):
         '': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
     }
     """
-    #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+    #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
     Fkeys = {
         '_comment': '_reverse_fkey_halftest_blog_comment_author_id',
         '_event': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
@@ -76,7 +75,7 @@ class Person(__RCLS):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+        #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 
     @singleton
     def name(self):

@@ -1,4 +1,3 @@
-# hop release: 0.1.0a0
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.blog.event povides the Event class.
@@ -21,7 +20,7 @@ hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 
 from halftest.db_connector import base_relation_class
 from halftest.blog.post import Post as BlogPost
-#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+#>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 
 #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
 
@@ -52,8 +51,8 @@ class Event(BlogPost, __RCLS):
     - author: ("author_birth_date", "author_first_name", "author_last_name")
      ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)
 
-    To use the foreign keys as direct attributes of the class, copy/paste the Fkeys bellow in
-    your code as a class attribute and replace the empty string(s) key(s) with the alias you
+    To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
+    your code as a class attribute and replace the empty string key(s) with the alias(es) you
     want to use. The aliases must be unique and different from any of the column names. Empty
     string keys are ignored.
 
@@ -61,7 +60,7 @@ class Event(BlogPost, __RCLS):
         '': 'author',
     }
     """
-    #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+    #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
     Fkeys = {
         'author': 'author'
     }
@@ -69,4 +68,4 @@ class Event(BlogPost, __RCLS):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+        #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!

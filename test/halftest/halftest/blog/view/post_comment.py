@@ -1,4 +1,3 @@
-# hop release: 0.1.0a0
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
 """The module halftest.blog.view.post_comment povides the PostComment class.
@@ -21,7 +20,7 @@ hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 
 from halftest.db_connector import base_relation_class
 
-#>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+#>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 
 #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
 
@@ -51,9 +50,9 @@ class PostComment(__RCLS):
     - author_comment_last_name:  (text)
 
     """
-    #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+    #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!
+        #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
