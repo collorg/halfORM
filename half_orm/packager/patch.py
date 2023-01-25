@@ -12,6 +12,12 @@ from half_orm.packager import utils
 from half_orm.packager import modules
 from half_orm.packager.changelog import Changelog
 
+try:
+    PYTEST_OK = True
+    import pytest
+except ImportError:
+    PYTEST_OK = False
+
 class Patch:
     "The Patch class..."
     __levels = ['patch', 'minor', 'major']
@@ -279,16 +285,12 @@ class Patch:
                 'Something has changed when re-applying the release. This should not happen.\n',
                 exit_code=1)
         # do we have pytest
-        try:
-            subprocess.run(['pytest', '--version'], check=True)
-            # the tests must pass
-            try:
-                subprocess.run(['pytest', self.__repo.name], check=True)
-            except subprocess.CalledProcessError:
+        if PYTEST_OK:
+            if pytest.main([self.__repo.name]) != 0:
                 utils.error('Tests must pass in order to release.\n', exit_code=1)
             # So far, so good
             self.__repo.hgit.rebase_to_hop_main(push)
-        except FileNotFoundError:
+        else:
             utils.error('pytest is not installed!\n', 1)
 
     def upgrade_prod(self):

@@ -26,7 +26,6 @@ variables:
     - virtualenv venv
     - source venv/bin/activate
     - pip install .
-    - pip install pytest
     - useradd halftest
 
 .before_script_template: &build
@@ -44,8 +43,8 @@ test:
     matrix:
       - PYVERSION: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
   script:
-    - pytest
     - "$CI_PROJECT_DIR/half_orm/packager/test/dummy_test.sh"
+    - pytest
 
 build:
   stage: build
