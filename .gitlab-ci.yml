@@ -16,6 +16,8 @@ variables:
     - service postgresql start
     - su - postgres -c "psql template1 -c \"create user halftest with password 'halftest';\" "
     - su - postgres -c "psql template1 -c 'ALTER USER halftest WITH SUPERUSER'"
+    - su - postgres -c "psql template1 -c \"create user root with password 'root';\" "
+    - su - postgres -c "psql template1 -c 'ALTER USER root WITH SUPERUSER'"
     - su - postgres -c "createdb halftest -O halftest"
     - su - postgres -c "createdb hop_test -O halftest"
     - su - postgres -c "psql halftest -f $CI_PROJECT_DIR/test/sql/halftest.sql"

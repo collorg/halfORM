@@ -8,7 +8,7 @@ perl -spi -e 's=True=False=' $CI_PROJECT_DIR/.config/hop_test
 clean_db() {
     rm -rf hop_test
     set +e
-    su halftest -c 'dropdb hop_test'
+    dropdb hop_test
     set -e
 }
 
