@@ -1,3 +1,13 @@
+# 0.8.0rc4 (2023-01-25)
+
+* [hop][WIP] Add --devel option to hop new. (03b4750)
+* [hop][halftest] Update to latest hop release. (cb73fb9)
+* Fix a spelling mistake with below. (6659943)
+* Remove pytest requirement from setup.py. (5ef9a13)
+* [hop] Add git origin in .hop/config (a remote is no longer mandatory.) (0efe5d0)
+* [relation] Prefix protected attributes of class Relation with _ho. (269f3e9)
+* Add context information for deprectated methods. (9869e9b)
+
 # 0.8.0rc3 (2023-01-20)
 
 * [hop][WIP] Add pytest dependency (replace with unittest ?). (bdd52e8)
