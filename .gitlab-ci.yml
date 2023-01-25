@@ -25,6 +25,7 @@ variables:
     - source venv/bin/activate
     - pip install .
     - pip install pytest
+    - useradd halftest
 
 .before_script_template: &build
   before_script:

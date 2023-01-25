@@ -16,22 +16,25 @@ class Database:
     """Reads and writes the halfORM connection file
     """
 
-    def __init__(self, name: str = None):
+    def __init__(self, repo):
+        self.__repo = repo
         self.__model = None
-        self.__name = name
         self.__last_release = None
-        self.__connection_params: DbConn = DbConn(name)
-        if name:
-            self.__model = Model(name)
-            self.__init(name)
+        self.__connection_params: DbConn = DbConn(self.__repo.name)
+        if self.__repo.name:
+            try:
+                self.__model = Model(self.__repo.name)
+                self.__init(self.__repo.name)
+            except OperationalError:
+                pass
 
     def __call__(self, name):
-        return self.__class__(name)
+        return self.__class__(self.__repo)
 
     def __init(self, name, get_release=True):
         self.__name = name
         self.__connection_params = DbConn(name)
-        if get_release:
+        if get_release and self.__repo.devel:
             self.__last_release = self.last_release
 
     @property
@@ -59,9 +62,11 @@ class Database:
         res.append(f'- user: {self.__connection_params.user}')
         res.append(f'- host: {self.__connection_params.host}')
         res.append(f'- port: {self.__connection_params.port}')
-        prod = utils.Color.blue(True) if self.__connection_params.production else False
+        prod = utils.Color.blue(
+            True) if self.__connection_params.production else False
         res.append(f'- production: {prod}')
-        res.append(f'- last release: {self.last_release_s}')
+        if self.__repo.devel:
+            res.append(f'- last release: {self.last_release_s}')
         return '\n'.join(res)
 
     @property
@@ -95,16 +100,17 @@ class Database:
                 utils.error(
                     f'Aborting! Please remove {self.__name} directory.\n', exit_code=1)
         self.__model = Model(self.__name)
-        try:
-            self.__model.get_relation_class('half_orm_meta.hop_release')
-        except UnknownRelation:
-            hop_init_sql_file = os.path.join(
-                utils.HOP_PATH, 'patches', 'sql', 'half_orm_meta.sql')
-            self.execute_pg_command(
-                'psql', '-f', hop_init_sql_file, stdout=subprocess.DEVNULL)
-            self.__model.reconnect(reload=True)
-            self.__last_release = self.register_release(
-                major=0, minor=0, patch=0, changelog='Initial release')
+        if self.__repo.devel:
+            try:
+                self.__model.get_relation_class('half_orm_meta.hop_release')
+            except UnknownRelation:
+                hop_init_sql_file = os.path.join(
+                    utils.HOP_PATH, 'patches', 'sql', 'half_orm_meta.sql')
+                self.execute_pg_command(
+                    'psql', '-f', hop_init_sql_file, stdout=subprocess.DEVNULL)
+                self.__model.reconnect(reload=True)
+                self.__last_release = self.register_release(
+                    major=0, minor=0, patch=0, changelog='Initial release')
         return self(self.__name)
 
     @property
@@ -115,5 +121,5 @@ class Database:
     def register_release(self, major, minor, patch, changelog):
         "Register the release into half_orm_meta.hop_release"
         return self.__model.get_relation_class('half_orm_meta.hop_release')(
-                major=major, minor=minor, patch=patch, changelog=changelog
-            ).ho_insert()
+            major=major, minor=minor, patch=patch, changelog=changelog
+        ).ho_insert()

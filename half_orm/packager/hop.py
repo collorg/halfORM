@@ -35,13 +35,16 @@ class Hop:
         if not self.repo_checked:
             Hop.__available_cmds = ['new']
         else:
-            if not self.__repo.production:
-                if self.__repo.hgit.branch == 'hop_main':
-                    Hop.__available_cmds = ['prepare-release']
-                elif self.__repo.hgit.is_hop_patch_branch:
-                    Hop.__available_cmds = ['test-release', 'undo-release', 'commit-release']
+            if not self.__repo.devel:
+                Hop.__available_cmds = ['sync-package']
             else:
-                Hop.__available_cmds = ['upgrade', 'restore']
+                if not self.__repo.production and self.__repo:
+                    if self.__repo.hgit.branch == 'hop_main':
+                        Hop.__available_cmds = ['prepare-release']
+                    elif self.__repo.hgit.is_hop_patch_branch:
+                        Hop.__available_cmds = ['test-release', 'undo-release', 'commit-release']
+                elif self:
+                    Hop.__available_cmds = ['upgrade', 'restore']
 
     @property
     def repo_checked(self):
@@ -71,7 +74,7 @@ class Hop:
         def new(package_name, devel=False):
             """ Creates a new hop project named <package_name>.
             """
-            self.__repo.new(package_name)
+            self.__repo.new(package_name, devel)
 
 
         @click.command()
@@ -125,12 +128,17 @@ class Hop:
         def commit_release(push=False):
             self.__repo.commit_release(push)
 
+        @click.command()
+        def sync_package():
+            self.__repo.sync_package()
+
         cmds = {
             'new': new,
             'prepare-release': prepare_release,
             'test-release': test_release,
             'undo-release': undo_release,
             'commit-release': commit_release,
+            'sync-package': sync_package,
             'upgrade': upgrade,
             'restore': restore
         }

@@ -5,13 +5,30 @@ set -ex
 cat $CI_PROJECT_DIR/.config/hop_test
 perl -spi -e 's=True=False=' $CI_PROJECT_DIR/.config/hop_test
 
-rm -rf hop_test
+clean_db() {
+    rm -rf hop_test
+    set +e
+    su halftest -c 'dropdb hop_test'
+    set -e
+}
+
+pwd
+clean_db
+# it should be able to create a repo not in devel mode
+yes | hop new hop_test
+cd hop_test
+hop sync-package
 set +e
-dropdb hop_test
+# prepare-release is only available in devel mode
+hop prepare-release
+if [ $? = 0 ]; then exit 1; fi
 set -e
 
-yes | hop new hop_test
-
+cd ..
+pwd
+clean_db
+# it should be able to create a repo in devel mode
+yes | hop new hop_test --devel
 cd hop_test
 
 tree .

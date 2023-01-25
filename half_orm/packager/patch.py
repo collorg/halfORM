@@ -19,9 +19,10 @@ class Patch:
     def __init__(self, repo):
         self.__repo = repo
         self.__patches_base_dir = os.path.join(repo.base_dir, 'Patches')
-        self.__changelog = Changelog(repo)
-        if not os.path.exists(self.__patches_base_dir):
-            os.makedirs(self.__patches_base_dir)
+        if self.__repo.devel:
+            self.__changelog = Changelog(repo)
+            if not os.path.exists(self.__patches_base_dir):
+                os.makedirs(self.__patches_base_dir)
 
     @classmethod
     @property
@@ -225,18 +226,21 @@ class Patch:
     @property
     def state(self):
         "The state of a patch"
-        if not self.__repo.production:
-            resp = ['[Releases in development]']
-            if len(self.__changelog.releases_in_dev) == 0:
-                resp.append("No release in development.\nUse `hop prepare-release`.")
-            for release in self.__changelog.releases_in_dev:
-                resp.append(f'- {release} (branch hop_{release})')
+        if self.__repo.devel:
+            if not self.__repo.production:
+                resp = ['[Releases in development]']
+                if len(self.__changelog.releases_in_dev) == 0:
+                    resp.append("No release in development.\nUse `hop prepare-release`.")
+                for release in self.__changelog.releases_in_dev:
+                    resp.append(f'- {release} (branch hop_{release})')
+            else:
+                resp = ['[Releases to apply]']
+                if len(self.__changelog.releases_to_apply_in_prod) == 0:
+                    resp.append("No new release to apply.")
+                for release in self.__changelog.releases_to_apply_in_prod:
+                    resp.append(f'- {release}')
         else:
-            resp = ['[Releases to apply]']
-            if len(self.__changelog.releases_to_apply_in_prod) == 0:
-                resp.append("No new release to apply.")
-            for release in self.__changelog.releases_to_apply_in_prod:
-                resp.append(f'- {release}')
+            resp = ['This repo is not in developement mode.']
         return '\n'.join(resp)
 
 
@@ -248,6 +252,10 @@ class Patch:
         if not database_only:
             modules.generate(self.__repo)
         os.remove(self.__backup_file(previous_release))
+
+    def sync_package(self):
+        "Synchronise the package with the current database model"
+        modules.generate(self.__repo)
 
     def release(self, push):
         "Release a patch"
