@@ -235,7 +235,7 @@ class Repo:
         "Prepare a new release (devel)"
         Patch(self).prep_release(level, message)
 
-    def test_release(self):
+    def apply_release(self):
         "Apply the current release (devel)"
         Patch(self).apply(self.hgit.current_release, force=True)
 

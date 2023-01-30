@@ -40,7 +40,7 @@ hop prepare-release -m "First patch release" << EOF
 patch
 EOF
 echo 'create table first ( a text primary key )' > Patches/0/0/1/a.sql
-hop test-release
+hop apply-release
 git add .
 git commit -m "First table"
 set +e
@@ -58,15 +58,15 @@ hop prepare-release -l patch -m "Second patch release"
 echo 'create table a ( a text primary key )' > Patches/0/0/2/a.sql
 echo 'print("I am a script without x permission...")' > Patches/0/0/2/a.py
 
-hop test-release
+hop apply-release
 
 tree .
 
 hop
 
-yes | hop test-release
+yes | hop apply-release
 
-hop test-release
+hop apply-release
 
 git add .
 git commit -m "(wip) First"
@@ -76,7 +76,7 @@ echo 'create table a ( a text primary key, bla text )' > Patches/0/0/2/a.sql
 
 hop undo-release
 
-hop test-release
+hop apply-release
 git diff hop_test/public/a.py
 
 git status
@@ -126,7 +126,7 @@ hop prepare-release -l minor -m "First minor patch"
 
 echo 'create table b ( b text primary key, a text references a )' > Patches/0/1/0/b.sql
 
-hop test-release
+hop apply-release
 
 tree
 
@@ -237,40 +237,40 @@ if [ $? = 0 ]; then exit 1; fi
 set -e
 
 git checkout hop_0.1.1
-hop test-release
+hop apply-release
 touch Patches/0/1/1/coucou
 git add .
 git commit -m "[WIP] 0.1.1 test"
-hop test-release
+hop apply-release
 hop commit-release
 
 cat > TODO << EOF
 something
 EOF
 git add TODO
-git commit -m "Add todo to check rebase on test-release"
+git commit -m "Add todo to check rebase on apply-release"
 
 git checkout hop_0.2.0
-hop test-release
+hop apply-release
 touch Patches/0/2/0/coucou
 git add .
 git commit -m "[WIP] 0.2.0 test"
-hop test-release
+hop apply-release
 hop commit-release
 
 hop prepare-release -l patch -m "0.2.1..."
-hop test-release
+hop apply-release
 touch Patches/0/2/1/coucou
 git add .
 git commit -m "[0.2.1] coucou"
 hop commit-release
 
 git checkout hop_1.0.0
-hop test-release
+hop apply-release
 touch Patches/1/0/0/coucou
 git add .
 git commit -m "[WIP] 1.0.0 test"
-hop test-release
+hop apply-release
 hop commit-release
 
 git push
@@ -278,7 +278,7 @@ git push
 echo 'APPLY PATCH IN PRODUCTION'
 perl -spi -e 's=False=True=' $CI_PROJECT_DIR/.config/hop_test
 hop
-hop restore 0.1.1
+hop restore 0.0.1
 hop
 hop upgrade
 perl -spi -e 's=True=False=' $CI_PROJECT_DIR/.config/hop_test

@@ -155,7 +155,7 @@ class Patch:
     def __restore_db(self, release):
         """Restore the database to the release_s version.
         """
-        print(f'Restoring the database to {utils.Color.bold(release)}')
+        print(f'{utils.Color.green("Restoring the database to")} {utils.Color.bold(release)}')
         self.__repo.model.disconnect()
         self.__repo.database.execute_pg_command('dropdb')
         self.__repo.database.execute_pg_command('createdb')
@@ -206,7 +206,8 @@ class Patch:
                 if okay.upper() != 'Y':
                     sys.exit()
             self.__restore_db(self.previous(db_release))
-        print(f'Applying release {utils.Color.bold(release)}')
+        app_upg = utils.Color.green('Upgrading to') if self.__repo.production else utils.Color.bold('Applying')
+        print(f'{app_upg} {utils.Color.bold(release)}')
         files = []
         major, minor, patch = release.split('.')
         path = os.path.join(self.__patches_base_dir, major, minor, patch)

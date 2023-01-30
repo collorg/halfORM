@@ -42,7 +42,7 @@ class Hop:
                     if self.__repo.hgit.branch == 'hop_main':
                         Hop.__available_cmds = ['prepare-release']
                     elif self.__repo.hgit.is_hop_patch_branch:
-                        Hop.__available_cmds = ['test-release', 'undo-release', 'commit-release']
+                        Hop.__available_cmds = ['apply-release', 'undo-release', 'commit-release']
                 elif self:
                     Hop.__available_cmds = ['upgrade', 'restore']
 
@@ -90,11 +90,11 @@ class Hop:
             sys.exit()
 
         @click.command()
-        def test_release():
+        def apply_release():
             """Apply the current release.
             """
-            self.__command = 'test-release'
-            self.__repo.test_release()
+            self.__command = 'apply-release'
+            self.__repo.apply_release()
 
         @click.command()
         @click.option(
@@ -135,7 +135,7 @@ class Hop:
         cmds = {
             'new': new,
             'prepare-release': prepare_release,
-            'test-release': test_release,
+            'apply-release': apply_release,
             'undo-release': undo_release,
             'commit-release': commit_release,
             'sync-package': sync_package,
