@@ -14,11 +14,10 @@ click = "*"
 pydash = "5"
 
 [dev-packages]
-half-orm = {editable = true, path = "."}
 coverage = "*"
 pytest = "*"
-halftest = {path = "./test/halftest", editable = "true"}
 build = "*"
 twine = "*"
 tox = "*"
 flake8 = "*"
+half-orm = {editable = true, path = "."}

@@ -2,6 +2,11 @@
 
 set -ex
 
+cd -- "$( dirname -- "${BASH_SOURCE[0]}" )"
+HALFORM_DIR=$PWD/../../..
+CI_PROJECT_DIR=$HALFORM_DIR
+HALFORM_CONF_DIR=$HALFORM_DIR/.config
+
 cat $CI_PROJECT_DIR/.config/hop_test
 perl -spi -e 's=True=False=' $CI_PROJECT_DIR/.config/hop_test
 
