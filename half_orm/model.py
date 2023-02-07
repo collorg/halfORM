@@ -27,10 +27,11 @@ import sys
 from configparser import ConfigParser
 from os import environ
 from functools import wraps
-import psycopg2
-from psycopg2.extras import RealDictCursor
 from typing import Generator, List
 
+import psycopg2
+
+from psycopg2.extras import RealDictCursor
 from half_orm.model_errors import MalformedConfigFile, MissingConfigFile, MissingSchemaInName, UnknownRelation
 from half_orm.relation import Relation, REL_INTERFACES, REL_CLASS_NAMES
 from half_orm import pg_meta
@@ -89,13 +90,68 @@ class Model:
         Use @config_file in your scripts. The @dbname parameter is
         reserved to the __factory metaclass.
         """
-        self.__backend_pid = None
-        self.__config_file = config_file
         self.__dbinfo = {}
-        self.__conn = None
+        self.__load_config(config_file)
+        self.__backend_pid = None
         self._scope = scope and scope.split('.')[0]
-        self.__production = False
+        self.__conn = None
         self.__connect()
+
+    def __load_config(self, config_file):
+        self.__config_file = config_file
+        config = ConfigParser()
+
+        if not config.read(
+                [os.path.join(CONF_DIR, self.__config_file)]):
+            raise MissingConfigFile(os.path.join(CONF_DIR, self.__config_file))
+
+        params = config['database']
+
+        if self.__dbinfo and config_file and params['name'] != self.__dbname:
+            raise RuntimeError(
+                f"Can't reconnect to another database {params['name']} != {self.__dbname}")
+
+        self.__dbinfo['name'] = params['name']
+        self.__dbinfo['user'] = params.get('user')
+        self.__dbinfo['password'] = params.get('password')
+        self.__dbinfo['host'] = params.get('host')
+        self.__dbinfo['port'] = params.get('port')
+
+    def __connect(self, config_file: str=None, reload: bool=False):
+        """Setup a new connection to the database.
+
+        The reconnect method is an alias to the ``__connect`` method.
+
+        Parameters:
+            config_file (str): If a config_file is provided, the connection is made with the new
+                parameters, allowing to change role. The database name must be the same.
+            reload (bool): If set to True, reloads the metadata from the database. Usefull if
+                the model has changed.
+
+        Raises:
+            MissingConfigFile: If the **config_file** is not found in *HALFORM_CONF_DIR*.
+            MalformedConfigFile: if the *name* is missing in the **config_file**. 
+            RuntimeError: If the reconnection is attempted on another database.
+        """
+        self.disconnect()
+
+        if config_file:
+            self.__load_config(config_file)
+
+        try:
+            params = dict(self.__dbinfo)
+            params['dbname'] = params.pop('name')
+            self.__conn = psycopg2.connect(
+                **params, cursor_factory=RealDictCursor)
+            self.__conn.autocommit = True
+            self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
+            self.__deja_vu[self.__dbname] = self
+            self.__backend_pid = self.execute_query(
+                "select pg_backend_pid()").fetchone()['pg_backend_pid']
+        except psycopg2.OperationalError as err:
+            raise err.__class__(err)
+
+    reconnect = __connect
 
     def get_relation_class(self, relation_name: str) -> 'class(Relation)':
         """This method is a factory that generates a class that inherits the `Relation <#half_orm.relation.Relation>`_ class.
@@ -204,57 +260,6 @@ class Model:
         database. The Model object is loaded only once for a given database.
         """
         return Model.__deja_vu.get(dbname)
-
-    def __connect(self, config_file: str=None, reload: bool=False):
-        """Setup a new connection to the database.
-
-        The reconnect method is an alias to the ``__connect`` method.
-
-        Parameters:
-            config_file (str): If a config_file is provided, the connection is made with the new
-                parameters, allowing to change role. The database name must be the same.
-            reload (bool): If set to True, reloads the metadata from the database. Usefull if
-                the model has changed.
-
-        Raises:
-            MissingConfigFile: If the **config_file** is not found in *HALFORM_CONF_DIR*.
-            MalformedConfigFile: if the *name* is missing in the **config_file**. 
-            RuntimeError: If the reconnection is attempted on another database.
-        """
-        self.disconnect()
-        if config_file:
-            self.__config_file = config_file
-
-        config = ConfigParser()
-
-        if not config.read(
-                [os.path.join(CONF_DIR, self.__config_file)]):
-            raise MissingConfigFile(os.path.join(CONF_DIR, self.__config_file))
-
-        params = config['database']
-        if config_file and params['name'] != self.__dbname:
-            raise RuntimeError(
-                f"Can't reconnect to another database {params['name']} != {self.__dbname}")
-        self.__dbinfo['name'] = params['name']
-        self.__dbinfo['user'] = params.get('user')
-        self.__dbinfo['password'] = params.get('password')
-        self.__dbinfo['host'] = params.get('host')
-        self.__dbinfo['port'] = params.get('port')
-        self.__production = params.getboolean('production', False)
-        try:
-            params = dict(self.__dbinfo)
-            params['dbname'] = params.pop('name')
-            self.__conn = psycopg2.connect(
-                **params, cursor_factory=RealDictCursor)
-        except psycopg2.OperationalError as err:
-            raise err.__class__(err)
-        self.__conn.autocommit = True
-        self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
-        self.__deja_vu[self.__dbname] = self
-        self.__backend_pid = self.execute_query(
-            "select pg_backend_pid()").fetchone()['pg_backend_pid']
-
-    reconnect = __connect
 
     @property
     def __dbname(self):
@@ -462,14 +467,3 @@ class Model:
 
     def __str__(self):
         return self.__pg_meta.str(self.__dbname)
-
-    @property
-    def production(self):
-        """Returns the production status of the db. Production is set by adding
-        ``production = True`` to the **config file**.
-
-        Returns:
-            bool: True if the database is in production, False otherwise
-        """
-        return self.__production
-
