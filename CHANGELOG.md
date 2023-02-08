@@ -1,3 +1,13 @@
+# 0.8.0rc5 (2023-02-08)
+
+* Bump cryptography from 39.0.0 to 39.0.1 (5d5c200)
+* [model] Add connection pool. (71f96fd)
+* [model] Refactor. (274318c)
+* [hop] Test script. (b85422c)
+* [hop][WIP] Rename command test-release to apply-release. (71fdada)
+* [hop][WIP] Use pytest as a module. (github/master) (69b0c55)
+* [CI] Add superuser to root role (postgresql). (1f73a97)
+
 # 0.8.0rc4 (2023-01-25)
 
 * [hop][WIP] Add --devel option to hop new. (03b4750)
