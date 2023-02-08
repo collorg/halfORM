@@ -5,7 +5,7 @@ from unittest import TestCase
 from psycopg2 import InterfaceError
 from psycopg2.errors import UndefinedTable
 
-from ..init import halftest, model
+from ..init import halftest, model, model2
 
 class Test(TestCase):
     def tearDown(self):
@@ -51,3 +51,11 @@ class Test(TestCase):
         model.execute_query('select * from test')
         model._reload()
         self.assertTrue(model.has_relation('public.test'))
+        model.execute_query('drop table test')
+        model._reload()
+        self.assertFalse(model.has_relation('public.test'))
+
+    def test_model2(self):
+        "it should have load model2"
+        self.assertEqual(model2.desc(), [('r', ('hop_test', 'public', 'a'), []), ('r', ('hop_test', 'public', 'b'), []), ('r', ('hop_test', 'public', 'first'), [])])
+        self.assertEqual(model.desc(), [('r', ('halftest', 'actor', 'person'), []), ('r', ('halftest', 'blog', 'comment'), []), ('r', ('halftest', 'blog', 'event'), [('halftest', 'blog', 'post')]), ('r', ('halftest', 'blog', 'post'), []), ('v', ('halftest', 'blog.view', 'post_comment'), [])])

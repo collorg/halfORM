@@ -48,6 +48,7 @@ from datetime import date, datetime, time, timedelta
 import json
 import sys
 import psycopg2
+from psycopg2.extras import RealDictCursor
 
 
 import yaml
@@ -153,7 +154,7 @@ def __init__(self, **kwargs):
     self.__set_operators = _SetOperators(self)
     self.__select_params = {}
     self.__id_cast = None
-    self.__cursor = self._model._connection.cursor()
+    self.__cursor = self._model._connection.cursor(cursor_factory=RealDictCursor)
     self.__cons_fields = []
     self.__mogrify = False
     kwk_ = set(kwargs.keys())
@@ -348,7 +349,7 @@ def __execute(self, query, values):
         return self.__cursor.execute(query, values)
     except (psycopg2.OperationalError, psycopg2.InterfaceError):
         self._model.ping()
-        self.__cursor = self._model._connection.cursor()
+        self.__cursor = self._model._connection.cursor(cursor_factory=RealDictCursor)
         return self.__cursor.execute(query, values)
 
 @property

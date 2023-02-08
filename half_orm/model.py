@@ -30,8 +30,9 @@ from functools import wraps
 from typing import Generator, List
 
 import psycopg2
-
+from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
+
 from half_orm.model_errors import MalformedConfigFile, MissingConfigFile, MissingSchemaInName, UnknownRelation
 from half_orm.relation import Relation, REL_INTERFACES, REL_CLASS_NAMES
 from half_orm import pg_meta
@@ -91,7 +92,13 @@ class Model:
         reserved to the __factory metaclass.
         """
         self.__dbinfo = {}
+        self.__minconn = None
+        self.__maxconn = None
         self.__load_config(config_file)
+        self.__pool = None
+        if self.__minconn and self.__maxconn:
+            self.__pool =  pool.ThreadedConnectionPool(
+                self.__minconn, self.__maxconn, **self.__dbinfo)
         self.__backend_pid = None
         self._scope = scope and scope.split('.')[0]
         self.__conn = None
@@ -105,17 +112,22 @@ class Model:
                 [os.path.join(CONF_DIR, self.__config_file)]):
             raise MissingConfigFile(os.path.join(CONF_DIR, self.__config_file))
 
-        params = config['database']
+        database = config['database']
 
-        if self.__dbinfo and config_file and params['name'] != self.__dbname:
+        if self.__dbinfo and config_file and database['name'] != self.__dbname:
             raise RuntimeError(
-                f"Can't reconnect to another database {params['name']} != {self.__dbname}")
+                f"Can't reconnect to another database {database['name']} != {self.__dbname}")
 
-        self.__dbinfo['name'] = params['name']
-        self.__dbinfo['user'] = params.get('user')
-        self.__dbinfo['password'] = params.get('password')
-        self.__dbinfo['host'] = params.get('host')
-        self.__dbinfo['port'] = params.get('port')
+        self.__dbinfo['dbname'] = database['name']
+        self.__dbinfo['user'] = database.get('user')
+        self.__dbinfo['password'] = database.get('password')
+        self.__dbinfo['host'] = database.get('host')
+        self.__dbinfo['port'] = database.get('port')
+
+        if config.has_section('pool'):
+            c_pool = config['pool']
+            self.__minconn = c_pool.get('minconn')
+            self.__maxconn = c_pool.get('maxconn')
 
     def __connect(self, config_file: str=None, reload: bool=False):
         """Setup a new connection to the database.
@@ -139,10 +151,11 @@ class Model:
             self.__load_config(config_file)
 
         try:
-            params = dict(self.__dbinfo)
-            params['dbname'] = params.pop('name')
-            self.__conn = psycopg2.connect(
-                **params, cursor_factory=RealDictCursor)
+            if self.__pool is None:
+                self.__conn = psycopg2.connect(
+                    **self.__dbinfo, cursor_factory=RealDictCursor)
+            else:
+                self.__conn = self.__pool.getconn()
             self.__conn.autocommit = True
             self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
             self.__deja_vu[self.__dbname] = self
@@ -263,7 +276,7 @@ class Model:
 
     @property
     def __dbname(self):
-        return self.__dbinfo['name']
+        return self.__dbinfo['dbname']
 
     def ping(self):
         """Checks if the connection is still established.
@@ -343,7 +356,7 @@ class Model:
             Please read the psycopg2 documentation on
             `passing parameters to SQL queries <https://www.psycopg.org/docs/usage.html#query-parameters>`_.
         """
-        cursor = self.__conn.cursor()
+        cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute(query, values)
         return cursor
 
@@ -365,7 +378,7 @@ class Model:
         """
         if bool(args) and bool(kwargs):
             raise RuntimeError("You can't mix args and kwargs with the execute_function method!")
-        cursor = self.__conn.cursor()
+        cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
         if kwargs:
             values = kwargs
         else:
@@ -398,7 +411,7 @@ class Model:
             params = ', '.join(['%s' for elt in range(len(args))])
             values = args
         query = f'call {proc_name}({params})'
-        cursor = self.__conn.cursor()
+        cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute(query, values)
         try:
             return cursor.fetchall()
@@ -440,7 +453,6 @@ class Model:
         _class_name = pg_meta.class_name(qtn) # XXX
         module = __import__(
             module_path, globals(), locals(), [_class_name], 0)
-        print(dir(module))
         return module.__dict__[_class_name]
 
     def _relations(self):

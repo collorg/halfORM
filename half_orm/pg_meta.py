@@ -3,6 +3,7 @@ PostgreSQL database.
 """
 
 from collections import OrderedDict
+from psycopg2.extras import RealDictCursor
 
 def strip_quotes(qrn):
     "Removes all double quotes from the qrn/fqrn"
@@ -187,7 +188,7 @@ class PgMeta:
         metadata = {'relations_list': []}
         byname = metadata['byname'] = OrderedDict()
         byid = metadata['byid'] = {}
-        with connection.cursor() as cur:
+        with connection.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(_REQUEST)
             all_ = [elt for elt in cur.fetchall()]
             for dct in all_:
