@@ -33,7 +33,7 @@ import psycopg2
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
 
-from half_orm.model_errors import MalformedConfigFile, MissingConfigFile, MissingSchemaInName, UnknownRelation
+from half_orm import model_errors
 from half_orm.relation import Relation, REL_INTERFACES, REL_CLASS_NAMES
 from half_orm import pg_meta
 from half_orm.packager import utils
@@ -108,20 +108,32 @@ class Model:
         self.__connect()
 
     def __load_config(self, config_file):
+        """Load the config file
+
+        Raises:
+            MissingConfigFile: If the **config_file** is not found in *HALFORM_CONF_DIR*.
+            MalformedConfigFile: if the *name* is missing in the **config_file**. 
+            RuntimeError: If the reconnection is attempted on another database.
+        """
         self.__config_file = config_file
         config = ConfigParser()
+        file_ = os.path.join(CONF_DIR, self.__config_file)
+        if not config.read([file_]):
+            raise model_errors.MissingConfigFile(file_)
+        try:
+            database = config['database']
+        except KeyError as exc:
+            raise model_errors.MalformedConfigFile(file_, 'Missing section', 'database') from exc
+        try:
+            dbname = database['name']
+        except KeyError as exc:
+            raise model_errors.MalformedConfigFile(file_, 'Missing mandatory parameter', 'name') from exc
 
-        if not config.read(
-                [os.path.join(CONF_DIR, self.__config_file)]):
-            raise MissingConfigFile(os.path.join(CONF_DIR, self.__config_file))
-
-        database = config['database']
-
-        if self.__dbinfo and config_file and database['name'] != self.__dbname:
+        if self.__dbinfo and config_file and dbname != self.__dbname:
             raise RuntimeError(
-                f"Can't reconnect to another database {database['name']} != {self.__dbname}")
+                f"Can't reconnect to another database {dbname} != {self.__dbname}")
 
-        self.__dbinfo['dbname'] = database['name']
+        self.__dbinfo['dbname'] = dbname
         self.__dbinfo['user'] = database.get('user')
         self.__dbinfo['password'] = database.get('password')
         self.__dbinfo['host'] = database.get('host')
@@ -142,11 +154,6 @@ class Model:
                 parameters, allowing to change role. The database name must be the same.
             reload (bool): If set to True, reloads the metadata from the database. Usefull if
                 the model has changed.
-
-        Raises:
-            MissingConfigFile: If the **config_file** is not found in *HALFORM_CONF_DIR*.
-            MalformedConfigFile: if the *name* is missing in the **config_file**. 
-            RuntimeError: If the reconnection is attempted on another database.
         """
         self.disconnect()
 
@@ -234,7 +241,7 @@ class Model:
             try:
                 metadata = tbl_attr['_model']._relation_metadata(dct['fqrn'])
             except KeyError as exc:
-                raise UnknownRelation(dct['fqrn']) from exc
+                raise model_errors.UnknownRelation(dct['fqrn']) from exc
             if metadata['inherits']:
                 metadata['inherits'].sort()
                 bases = []
@@ -264,7 +271,7 @@ class Model:
         try:
             schema, table = relation_name.replace('"', '').rsplit('.', 1)
         except ValueError as err:
-            raise MissingSchemaInName(relation_name) from err
+            raise model_errors.MissingSchemaInName(relation_name) from err
         return factory({'fqrn': (self.__dbname, schema, table), 'model': self})
 
 
