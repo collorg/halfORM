@@ -51,12 +51,15 @@ def deprecated(fct):
         callerframerecord = inspect.stack()[1]
         frame = callerframerecord[0]
         info = inspect.getframeinfo(frame)
+        context = ''
+        if info.code_context:
+            context = info.code_context['0']
         sys.stderr.write(
             f'HalfORM WARNING! "{utils.Color.bold(dep_name)}" is deprecated. '
             'It will be removed in half_orm 1.0.\n'
             f'Use "{utils.Color.bold(name)}" instead.\n'
             f'File {info.filename}, line {info.lineno}, in {info.function}\n'
-            f'{info.code_context[0]}\n'
+            f'{context}\n'
             )
         return fct(self, *args, **kwargs)
     return wrapper
