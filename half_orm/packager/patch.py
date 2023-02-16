@@ -128,8 +128,8 @@ class Patch:
             return 're-apply'
         return 'apply'
 
-    def __backup_file(self, release, commit=None):
-        backup_dir = os.path.join(self.__repo.base_dir, 'Backups')
+    def __backup_file(self, directory, release, commit=None):
+        backup_dir = os.path.join(self.__repo.base_dir, directory)
         if not os.path.isdir(backup_dir):
             os.mkdir(backup_dir)
         file_name = f'{self.__repo.name}-{release}'
@@ -143,7 +143,7 @@ class Patch:
         commit = None
         if self.__repo.production:
             commit = self.__repo.hgit.last_commit()
-        svg_file = self.__backup_file(release, commit)
+        svg_file = self.__backup_file('Backups', release, commit)
         print(f'Saving the database into {svg_file}')
         if os.path.isfile(svg_file):
             utils.error(
@@ -160,7 +160,7 @@ class Patch:
         self.__repo.database.execute_pg_command('dropdb')
         self.__repo.database.execute_pg_command('createdb')
         self.__repo.database.execute_pg_command(
-            'psql', '-f', self.__backup_file(release), stdout=subprocess.DEVNULL)
+            'psql', '-f', self.__backup_file('Backups', release), stdout=subprocess.DEVNULL)
         self.__repo.model.ping()
 
     def __execute_sql(self, file_):
@@ -175,7 +175,7 @@ class Patch:
             db_release = self.__repo.database.last_release_s
             previous_release = self.previous(db_release)
             self.__restore_db(previous_release)
-            os.remove(self.__backup_file(previous_release))
+            os.remove(self.__backup_file('Backups', previous_release))
             sys.exit(1)
 
     def __execute_script(self, file_):
@@ -189,7 +189,7 @@ class Patch:
             db_release = self.__repo.database.last_release_s
             previous_release = self.previous(db_release)
             self.__restore_db(previous_release)
-            os.remove(self.__backup_file(previous_release))
+            os.remove(self.__backup_file('Backups', previous_release))
             sys.exit(1)
 
     def apply(self, release, force=False, save_db=True):
@@ -258,7 +258,7 @@ class Patch:
         self.__restore_db(previous_release)
         if not database_only:
             modules.generate(self.__repo)
-        os.remove(self.__backup_file(previous_release))
+        os.remove(self.__backup_file('Backups', previous_release))
 
     def sync_package(self):
         "Synchronise the package with the current database model"
@@ -290,6 +290,12 @@ class Patch:
             if pytest.main([self.__repo.name]) != 0:
                 utils.error('Tests must pass in order to release.\n', exit_code=1)
             # So far, so good
+            svg_file = self.__backup_file('Releases', next_release)
+            print(f'Saving the database into {svg_file}')
+            self.__repo.database.execute_pg_command(
+                'pg_dump', '-xO', '-f', svg_file, stderr=subprocess.PIPE)
+            self.__repo.hgit.add(svg_file)
+            self.__repo.hgit.commit("-m", f"Add sql for release {next_release}")
             self.__repo.hgit.rebase_to_hop_main(push)
         else:
             utils.error('pytest is not installed!\n', 1)
