@@ -164,7 +164,7 @@ def __init__(self, **kwargs):
          for field_name, value in kwargs.items() if value is not None}
     self.__isfrozen = True
 
-def ho_insert(self, *args) -> '[dict]':
+def ho_insert(self, *args, data=None) -> '[dict]':
     """Insert a new tuple into the Relation.
 
     Returns:
@@ -186,11 +186,15 @@ def ho_insert(self, *args) -> '[dict]':
         fields_names += fk_fields
         what_to_insert += fk_query
         values += fk_values
-    query = self.__add_returning(
-        query_template.format(self._qrn, ", ".join(fields_names), ", ".join(what_to_insert)), *args)
+    query = query_template.format(self._qrn, ", ".join(fields_names), ", ".join(what_to_insert))
+    returning = args
+    if not (data or returning):
+        returning = ['*']
+    if returning:
+        query = self.__add_returning(query, *returning)
     self.__execute(query, tuple(values))
     res = [dict(elt) for elt in self.__cursor.fetchall()]
-    if len(res):
+    if (args or not data) and len(res):
         return res[0]
     return {}
 
@@ -271,7 +275,7 @@ def ho_update(self, *args, update_all=False, **kwargs):
         if value is None:
             update_args.pop(key)
     if not update_args:
-        return []# no new value update. Should we raise an error here?
+        return None # no new value update. Should we raise an error here?
 
     query_template = "update {} set {} {}"
     what, where, values = self.__update_args(**update_args)
@@ -280,11 +284,14 @@ def ho_update(self, *args, update_all=False, **kwargs):
         fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
         where = f"{where} and {fk_where}"
         values += fk_values
-    query = self.__add_returning(query_template.format(self._qrn, what, where), *args)
+    query = query_template.format(self._qrn, what, where)
+    if args:
+        query = self.__add_returning(query, *args)
     self.__execute(query, tuple(values))
     for field_name, value in update_args.items():
         self._ho_fields[field_name]._set(value)
-    return [dict(elt) for elt in self.__cursor.fetchall()]
+    if args:
+        return [dict(elt) for elt in self.__cursor.fetchall()]
 
 def ho_delete(self, *args, delete_all=False):
     """Removes a set of tuples from the relation.
@@ -307,16 +314,19 @@ def ho_delete(self, *args, delete_all=False):
         where = f"{where} and {fk_where}"
         values += fk_values
     query = query_template.format(self._qrn, where)
-    query = self.__add_returning(query, *args)
+    if args:
+        query = self.__add_returning(query, *args)
     self.__execute(query, tuple(values))
-    return [dict(elt) for elt in self.__cursor.fetchall()]
+    if args:
+        return [dict(elt) for elt in self.__cursor.fetchall()]
 
-def __add_returning(self, query, *args) -> str:
+@staticmethod
+def __add_returning(query, *args) -> str:
     "Adds the SQL returning clause to the query"
-    returning = '*'
     if args:
         returning = ','.join(args)
-    return f'{query} returning {returning}'
+        return f'{query} returning {returning}'
+    return query
 
 def _ho_unfreeze(self):
     "Allow to add attributs to a relation"
@@ -378,7 +388,7 @@ def __set_fields(self):
     for field_name, f_metadata in _fields_metadata.items():
         field = Field(field_name, self, f_metadata)
         self._ho_fields[field_name] = field
-        self.__setattr__(field_name, field)
+        setattr(self, field_name, field)
         if field._is_part_of_pk():
             self._ho_pkey[field_name] = field
 

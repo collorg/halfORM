@@ -95,7 +95,7 @@ the environment variable `HALFORM_CONF_DIR` if defined, in `/etc/half_orm` other
 
 ## Get a rapid description of the database structure
 
-Once connected to the database, you can easily have an overview of its structure:
+Once you are connected, you can easily have an overview of the structure of the database:
 
 ```py
 print(my_db)
@@ -275,7 +275,7 @@ To insert a tuple in the relation, use the `ho_insert` method as shown below:
 Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').ho_insert()
 ```
 
-`ho_insert` returns the row as a dict in a list. So, to get the `id` of the newly inserted row, you can write:
+By default, `ho_insert` returns the inserted row as a dict:
 
 ```python
 lagaffe = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
@@ -309,25 +309,30 @@ people.insert_many(*[
 ])
 ```
 
-**Note**: half_orm works in autocommit mode by default. Without transaction, all the missing data
+**Note**: half_orm works in autocommit mode by default. Without a transaction, any missing data
 would be inserted.
 
+### Returned values
+
+By default `ho_insert` returns all the inserted values as a dictionary. You can specify the columns
+you want to get by passing their names as argurments to `ho_insert`.
+
 ## ho_select
-The `ho_select` method is a generator. It returns all the data of the relation that match the constraint defined on the Relation object.
-The data is returned in a list of `RealDictRow`s. A `RealDictRow` is a subclass of `dict` provided by [psycopg2](https://www.psycopg.org/docs/).
+The `ho_select` method is a generator. It returns all the data of the relation that matches the constraint defined on the Relation object.
+The data is returned in a list of `dict`s.
 
 ```python
 >>> people = Person()
 >>> print(list(people.ho_select()))
-[RealDictRow([('id', 159), ('first_name', 'Gil'), ('last_name', 'Jourdan'), ('birth_date', datetime.date(1956, 9, 20))]), RealDictRow([('id', 160), ('first_name', 'Gaston'), ('last_name', 'Lagaffe'), ('birth_date', datetime.date(1957, 2, 28))]), RealDictRow([('id', 161), ('first_name', 'Bibi'), ('last_name', 'Fricotin'), ('birth_date', datetime.date(1924, 10, 5))]), RealDictRow([('id', 162), ('first_name', 'Corto'), ('last_name', 'Maltese'), ('birth_date', datetime.date(1975, 1, 7))]), RealDictRow([('id', 163), ('first_name', 'Achile'), ('last_name', 'Talon'), ('birth_date', datetime.date(1963, 11, 7))])]
+[{'id': 6753, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1957, 2, 28)}, {'id': 6754, 'first_name': 'Bibi', 'last_name': 'Fricotin', 'birth_date': datetime.date(1924, 10, 5)}, {'id': 6755, 'first_name': 'Corto', 'last_name': 'Maltese', 'birth_date': datetime.date(1975, 1, 7)}, {'id': 6756, 'first_name': 'Achile', 'last_name': 'Talon', 'birth_date': datetime.date(1963, 11, 7)}, {'id': 6757, 'first_name': 'Gil', 'last_name': 'Jourdan', 'birth_date': datetime.date(1956, 9, 20)}]
 >>>
 ```
 
 You can set a limit or an offset:
 ```python
 >>> people.ho_offset(1).ho_limit(2)
->>> print([dict(elt) for elt in list(people.ho_select())])
-[{'id': 232, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1957, 2, 28)}, {'id': 233, 'first_name': 'Bibi', 'last_name': 'Fricotin', 'birth_date': datetime.date(1924, 10, 5)}]
+>>> print(list(people)) # Relation objects are iterators. so ho_select is optional
+[{'id': 6754, 'first_name': 'Bibi', 'last_name': 'Fricotin', 'birth_date': datetime.date(1924, 10, 5)}, {'id': 6755, 'first_name': 'Corto', 'last_name': 'Maltese', 'birth_date': datetime.date(1975, 1, 7)}]
 ```
 
 You can also get a subset of the attributes by passing a list of columns names to `ho_select`:
@@ -337,7 +342,7 @@ You can also get a subset of the attributes by passing a list of columns names t
 [{'last_name': 'Lagaffe'}, {'last_name': 'Fricotin'}]
 ```
 
-**Note**: The set offset and limit still apply.
+**Note**: The offset and limit still apply.
 
 ### Select one: the `ho_get` method
 
@@ -372,14 +377,14 @@ class Person(halftest.get_relation_class('actor.person')):
         return f'{self.first_name} {self.last_name}'
 ```
 
-Used in the following context, the `full_name` property wouldn't make much sens:
+As such, the `full_name` property wouldn't make much sense:
 
 ```py
 lagaffe = Person(last_name='Lagaffe')
 lagaffe.full_name # returns 'None Lagaffe'
 ```
 
-In this case, you can use the `@singleton` decorator to ensure that the self object references one and only one element:
+In this case, you can use the `@singleton` decorator to ensure that the self object refers to one and only one element:
 
 ```py
 from half_orm.relation import singleton
@@ -394,13 +399,13 @@ gaston = Person(first_name='Gaston')
 gaston.full_name # now returns 'Gaston Lagaffe'
 ```
 
-If more than one person has *Gaston* as first name in the `actor.person` table, a `NotASingletonError` exception would be raised:
+If more than one person in the `actor.person` table had *Gaston* as their first name, a `NotASingletonError` exception would be raised:
 
 ```
 half_orm.relation_errors.NotASingletonError: Not a singleton. Got X tuples
 ```
 
-### Forcing  `_ho_is_singleton` attribute.
+### Forcing  `_ho_is_singleton` attribute. (*advanced*)
 
 By forcing the attribute `_ho_is_singleton` of a Relation object to True, you can avoid some unnecessary `get()` that a `@singleton` decorator would have triggered. Here is an example:
 
@@ -422,10 +427,10 @@ class Person(halftest.get_relation_class('actor.person')):
 **Warning!** By setting `_ho_is_singleton` value to `True`, you disable the check that `@singleton` would have made before executing `do_something_else`. 
 This example works for two reasons:
 
-1. `ho_select` is called without argument ensuring that
-all columns are retreived from the database,
-2. The constraints of the `actor.person` table make it
-a set (ie. each element returned by select is indeed a singleton).
+1. `ho_select` is called without argument ensuring that all columns are retreived from the database.
+Note: Calling `ho_select` with columns corresponding to the primary key as arguments would also have worked;
+2. The table `actor.person` has a primary key which makes it a set (ie. each element returned by select is
+indeed a singleton).
 
 ## ho_update
 
@@ -448,9 +453,8 @@ class Person(halftest.get_relation_class('actor.person')):
         @self.HoTransaction
         def update(self):
             for d_pers in self.ho_select('id', 'last_name'):
-                pers = Person(**d_pers) # IMPORTANT! See the warning below.
+                pers = Person(**d_pers)
                 pers.ho_update(last_name=d_pers['last_name'].upper())
-                #    ^^^^^^ here is the actual update
         update(self)
 ```
 
@@ -467,12 +471,12 @@ Again, we insure the atomicity of the transaction using the `Relation.HoTransact
 ['LAGAFFE', 'MALTESE', 'TALON']
 ```
 
+### Returning values
 
-**WARNING!** The following code won't update the database. `people.ho_select()` returns a list of dictionaries and the `update` method invoked here would only update the corresponding dictonary. It's a common pitfall.
+To return the updated values, you can add to `ho_update` the column names you want to get, or `*` if you want to get all the columns.
 
 ```python
-for pers in people.ho_select():
-    pers.update(...) # Won't work (pers is a dict)!
+>>> gaston.ho_update('*', birth_date='1970-01-01')
 ```
 
 ### Update all data in a table
@@ -500,6 +504,14 @@ if not Person().ho_is_empty():
     print('Weird! You should check your "on delete cascade".')
 ```
 Well, there is not much left after this in the `actor.person` table.
+
+### Returning values
+
+As for `ho_update`, to return the deleted values, you can add to `ho_delete` the column names you want to get, or `*` if you want to get all the columns.
+
+```python
+>>> gaston.ho_delete('first_name', 'last_name', 'birth_date')
+```
 
 # Working with foreign keys [WIP]
 
@@ -670,9 +682,11 @@ By the way, this is the code used in the `Model.ping` method that makes sure the
 
 That's it! You've learn pretty much everything there is to know about `half_orm`.
 
-# Next: `hop`, the `half_orm` packager [WIP][alpha]
+# Next: `hop`, the GitOps `half_orm` packager [WIP][alpha]
 
 The `hop` command, directly provided in this package (from version 0.8.0rc1), allows you to ***create*** a Python package corresponding to the model of your database, to ***patch*** the model and the corresponding Python code, to ***test*** your database model and your business code.
+
+No documentation at the moment, but you can check the idea with the [test script](https://github.com/collorg/halfORM/blob/master/half_orm/packager/test/dummy_test.sh).
 
 # Want to contribute?
 

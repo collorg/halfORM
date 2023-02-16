@@ -52,15 +52,14 @@ def deprecated(fct):
         frame = callerframerecord[0]
         info = inspect.getframeinfo(frame)
         context = ''
+        warn_msg = (f'HalfORM WARNING! "{utils.Color.bold(dep_name)}" is deprecated. '
+            'It will be removed in half_orm 1.0.\n'
+            f'Use "{utils.Color.bold(name)}" instead.\n')
         if info.code_context:
             context = info.code_context['0']
-        sys.stderr.write(
-            f'HalfORM WARNING! "{utils.Color.bold(dep_name)}" is deprecated. '
-            'It will be removed in half_orm 1.0.\n'
-            f'Use "{utils.Color.bold(name)}" instead.\n'
-            f'File {info.filename}, line {info.lineno}, in {info.function}\n'
-            f'{context}\n'
-            )
+            warn_msg += (f'File {info.filename}, line {info.lineno}, in {info.function}\n'
+                f'{context}\n')
+        sys.stderr.write(warn_msg)
         return fct(self, *args, **kwargs)
     return wrapper
 
@@ -314,7 +313,10 @@ class Model:
                 self.__conn.close()
 
     def _reload(self, config_file=None):
-        "Reload metadata"
+        """Reload metadata
+
+        Updates the model according to changes made to the database.
+        """
         self.__connect(config_file, True)
 
     @property

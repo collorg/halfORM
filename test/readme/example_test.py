@@ -25,7 +25,7 @@ class Person(halftest.get_relation_class('actor.person')):
     }
     @singleton # we ensure that self is a singleton of the actor.person table
     def add_post(self, title: str=None, content: str=None) -> dict:
-        return self.posts(title=title, content=content).ho_insert() # we use the insert method
+        return self.posts(title=title, content=content).ho_insert() # we use the ho_insert method
     @singleton
     def add_comment(self, post: Post=None, content: str=None) -> dict:
         return self.comments(content=content, post_id=post.id.value, author_id=self.id.value).ho_insert()

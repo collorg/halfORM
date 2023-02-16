@@ -27,17 +27,17 @@ class Test(HoTestCase):
         post0.author_last_name = self.personne.last_name
         post0.author_first_name = self.personne.first_name
         post0.author_birth_date = self.personne.birth_date
-        self.post0 = post0.ho_insert()
+        self.post0 = post0.ho_insert('id')
         post1 = self.post(title="post 1", content="essai ab")
         post1.author_last_name = self.personne_ab.last_name
         post1.author_first_name = self.personne_ab.first_name
         post1.author_birth_date = self.personne_ab.birth_date
-        self.post1 = post1.ho_insert()
+        self.post1 = post1.ho_insert('id')
         post2 = self.post(title="post 2", content="essai 2 ab")
         post2.author_last_name = self.personne_ab.last_name
         post2.author_first_name = self.personne_ab.first_name
         post2.author_birth_date = self.personne_ab.birth_date
-        self.post2 = post2.ho_insert()
+        self.post2 = post2.ho_insert('title')
         self.comment_post = "comment post"
         self.comment_post_1 = "comment post 1"
         self.comment_ab_post = "comment ab post"
