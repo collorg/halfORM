@@ -1,3 +1,11 @@
+# 0.8.0rc6 (2023-02-16)
+
+* [hop] Add release SQL files. (HEAD -> master, origin/master, origin/HEAD) (2a2b2d1)
+* [relation] BREAKING CHANGE. Returning values must be specified except for ho_insert. (acf363e)
+* [pipenv] Add pylint. (github/master) (035a589)
+* [model] Config file load error management. (be281e9)
+* [model] Fix deprecation warning on Python interpretor call. (30adfcc)
+
 # 0.8.0rc5 (2023-02-08)
 
 * Bump cryptography from 39.0.0 to 39.0.1 (5d5c200)
