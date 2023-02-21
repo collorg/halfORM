@@ -56,7 +56,7 @@ def deprecated(fct):
             'It will be removed in half_orm 1.0.\n'
             f'Use "{utils.Color.bold(name)}" instead.\n')
         if info.code_context:
-            context = info.code_context['0']
+            context = info.code_context[0]
             warn_msg += (f'File {info.filename}, line {info.lineno}, in {info.function}\n'
                 f'{context}\n')
         sys.stderr.write(warn_msg)
