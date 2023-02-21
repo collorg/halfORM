@@ -1,3 +1,7 @@
+# 0.8.0rc7 (2023-02-21)
+
+* [model] Fix typo in deprecated message. (6b76f6e)
+
 # 0.8.0rc6 (2023-02-16)
 
 * [hop] Add release SQL files. (2a2b2d1)
