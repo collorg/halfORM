@@ -1,5 +1,11 @@
 # A simple PostgreSQL to Python mapper.
 
+![PyPI version](https://img.shields.io/pypi/v/half_orm)
+![Python versions](https://img.shields.io/pypi/pyversions/half_orm)
+![CI badge](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg) 
+![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)
+![Contributors](https://img.shields.io/github/contributors/collorg/halform)
+
 You have a PostgreSQL database at hand and you want to interact with it in Python; `half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data.
 
 The 'half' part of `half_orm` name indicates that it only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL. Basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands. This is what makes `half_orm` so easy to learn an use.
