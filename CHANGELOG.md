@@ -1,3 +1,12 @@
+# 0.8.0rc8 (2023-02-24)
+
+* [Field] Register psycopg2 json adapter. (053d39e)
+* [test] deprecated methods in relation. (7f96874)
+* [gitlab][CI] Fix dependency. (3c6ad02)
+* Add shields to README. (9446b35)
+* [github][ci] OK. (b637929)
+* [model] Fix annotation. (598570a)
+
 # 0.8.0rc7 (2023-02-21)
 
 * [model] Fix typo in deprecated message. (6b76f6e)
