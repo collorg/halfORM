@@ -24,6 +24,7 @@ FIELDS:
 - author_first_name: (text)
 - author_last_name:  (text)
 - author_birth_date: (date)
+- data:              (jsonb)
 
 PRIMARY KEY (id)
 UNIQUE CONSTRAINT (title, content)

@@ -3,8 +3,7 @@
 
 """This module provides the Field class. It is used by the `relation <#module-half_orm.relation>`_ module."""
 
-import types
-from psycopg2.extensions import register_adapter, adapt
+import psycopg2
 
 from half_orm.null import NULL
 
@@ -17,6 +16,7 @@ class Field():
         self.__name = name
         self.__is_set = False
         self.__metadata = metadata
+        self.__sql_type = self.__metadata['fieldtype']
         self.__value = None
         self.__unaccent = False
         self.__comp = '='
@@ -66,7 +66,7 @@ class Field():
         if comp == '@@':
             comp_str = 'websearch_to_tsquery(%s)'
         if isinstance(self.__value, (list, tuple)):
-            if self.type_[0] != '_': # not an array type
+            if self.__sql_type[0] != '_': # not an array type
                 comp_str = 'any(%s)'
                 if comp == '@@':
                     comp_str = 'any(websearch_to_tsquery(%s))'
@@ -124,11 +124,6 @@ class Field():
         self.__comp = '='
 
     @property
-    def type_(self):
-        "Returns the SQL type of the field"
-        return self.__metadata['fieldtype']
-
-    @property
     def unaccent(self):
         return self.__unaccent
     @unaccent.setter
@@ -154,10 +149,7 @@ class Field():
 
     def _psycopg_adapter(self):
         """Return the SQL representation of self.__value"""
-        import json
-        if self.type_ in {'json', 'jsonb'}:
-            self.__value = json.dumps(self.__value)
-        return adapt(self.__value)
+        return psycopg2.extensions.adapt(self.__value)
 
     @property
     def _name(self):
@@ -181,4 +173,5 @@ class Field():
             err_msg = f"{err_msg}\n                Do not use '{self.__name}' as a method name."
         raise TypeError(err_msg)
 
-register_adapter(Field, Field._psycopg_adapter)
+psycopg2.extensions.register_adapter(Field, Field._psycopg_adapter)
+psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
