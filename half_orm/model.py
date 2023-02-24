@@ -175,7 +175,7 @@ class Model:
 
     reconnect = __connect
 
-    def get_relation_class(self, relation_name: str) -> 'class(Relation)':
+    def get_relation_class(self, relation_name: str) -> Relation:
         """This method is a factory that generates a class that inherits the `Relation <#half_orm.relation.Relation>`_ class.
 
         Args:
