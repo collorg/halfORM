@@ -57,7 +57,7 @@ def deprecated(fct):
             f'Use "{utils.Color.bold(name)}" instead.\n')
         if info.code_context:
             context = info.code_context[0]
-            warn_msg += (f'File {info.filename}, line {info.lineno}, in {info.function}\n'
+            warn_msg += (f'{info.filename}:{info.lineno}, in {info.function}\n'
                 f'{context}\n')
         sys.stderr.write(warn_msg)
         return fct(self, *args, **kwargs)
