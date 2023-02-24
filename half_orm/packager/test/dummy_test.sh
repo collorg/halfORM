@@ -2,6 +2,9 @@
 
 set -ex
 
+git config --global user.email "half_orm_ci@collorg.org"
+git config --global user.name "HalfORM CI"
+
 cd -- "$( dirname -- "${BASH_SOURCE[0]}" )"
 HALFORM_DIR=$PWD/../../..
 CI_PROJECT_DIR=$HALFORM_DIR

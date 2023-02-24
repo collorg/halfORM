@@ -1,0 +1,55 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: half_orm package
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ $default-branch ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql tree
+        sudo service postgresql start
+        sudo su - postgres -c "psql template1 -c \"create user halftest with password 'halftest';\" "
+        sudo su - postgres -c "psql template1 -c 'ALTER USER halftest WITH SUPERUSER'"
+        sudo useradd halftest
+        id
+        sudo su - postgres -c "psql template1 -c \"create user runner with password 'root';\" "
+        sudo su - postgres -c "psql template1 -c 'ALTER USER runner WITH SUPERUSER'"
+        sudo su - postgres -c "createdb halftest -O halftest"
+        sudo su - postgres -c "createdb hop_test -O halftest"
+        PGPASSWORD=root psql halftest -h localhost -f $PWD/test/sql/halftest.sql
+
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest virtualenv psycopg2-binary
+        pip install .
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 half_orm --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 half_orm --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      run: |
+        HALFORM_CONF_DIR=$PWD/.config ./half_orm/packager/test/dummy_test.sh
+        HALFORM_CONF_DIR=$PWD/.config pytest test
