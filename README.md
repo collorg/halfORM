@@ -1,4 +1,5 @@
-# A simple PostgreSQL to Python mapper.
+# A simple PostgreSQL to Python mapper [0.8.0rc8]
+
 
 ![PyPI version](https://img.shields.io/pypi/v/half_orm)
 ![Python versions](https://img.shields.io/pypi/pyversions/half_orm)
@@ -6,7 +7,7 @@
 ![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)
 ![Contributors](https://img.shields.io/github/contributors/collorg/halform)
 
-You have a PostgreSQL database at hand and you want to interact with it in Python; `half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data.
+You have a PostgreSQL database at hand and you want to interact with it in Python (&ge; 3.6); `half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data.
 
 The 'half' part of `half_orm` name indicates that it only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL. Basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands. This is what makes `half_orm` so easy to learn an use.
 
@@ -62,6 +63,10 @@ def main():
 
 run `pip install half_orm` in a virtual environment.
 
+## Install `half_orm` pre-release
+
+`pip install half_orm==0.8.0rc8`
+
 ### Set your HALFORM_CONF_DIR
 
 Create a directory to store your connection files and set the shell variable `HALFORM_CONF_DIR`:
@@ -87,7 +92,7 @@ host = localhost
 port = 5432
 ```
 
-Your ready to go!
+You are ready to go!
 ## Connect to the database
 
 ```py
@@ -208,10 +213,10 @@ It provides you with information extracted from the database metadata:
 
 ## Constraining a relation
 
-When you instantiate an object with no arguments, its intention corresponds to all the data present in the corresponding relation.
-`Person()` represents the set of people contained in the `actor.person` table (ie. there is no constraint on the set). You can get the number of elements in a relation whith the `len` function as in `len(Person())`.
+When you instantiate an object with no arguments, its intent corresponds to all the data present in the corresponding relation.
+`Person()` represents the set of persons contained in the `actor.person` table (i.e., there is no constraint on the set). You can get the number of elements in a relation with the `len` function, as in `len(Person())`.
 
-To constrain a set, you must specify one or more values for the fields/columns in the set with a tuple of the form: `(comp, value)`.
+To define a subset, you must specify conditions on the values of the fields (columns) with tuples of the form: `(comp, value)`.
 The `comp` value ('`=`' if ommited) is either a SQL 
 [comparison operator](https://www.postgresql.org/docs/current/static/functions-comparison.html) or a [pattern matching operator (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html).
 
@@ -258,10 +263,10 @@ Take a look at [the algebra test file](https://github.com/collorg/halfORM/blob/m
 - you can also use the `==`, `!=` and `in` operators to compare two sets.
 
 ```python
-my_selection = Person(last_name=('ilike', '_a%')) | Person(first_name=('ilike', 'A%'))
+my_selection = Person(last_name=('ilike', '_a%')) | Person(first_name=('like', 'A%'))
 ```
 
-`my_selection` represents the set of people whose second letter of the name is an `a` or whose first letter of the first name is an `a`.
+`my_selection` represents the set of people whose second letter of the name is in `['a', 'A']` or whose first letter of the first name is an `A`.
 
 
 # DML. The `ho_insert`, `ho_select`, `ho_update`, `ho_delete` methods.
@@ -623,25 +628,39 @@ gaston_comments = Comment()
 gaston_comments.author_fk.set(gaston)
 print(list(gaston_comments.ho_select())
 ```
+## Chaining foreign keys
 
-> TODO. Some documentation about the chaining of FKeys
+You can easily chain foreign keys. For example, if you want to get all the comments made by Gaston
+on his own posts:
+
+```py
+gaston = {'last_name':'Lagaffe', 'first_name':'Gaston', 'birth_date':'1957-02-28'}
+gaston_id = Person(**gaston).ho_get('id').id.value # we ensure that Gaston is a singleton
+list(gaston
+    .post_rfk(**gaston)
+    .comment_rfk(author_id=gaston_id))
+```
+
+**Note** : the table `blog.post` declares a foreign key on `actor.person(first_name, last_name, birth_date)` when the table `blog.comment` declares a foreign key on `actor.person(id)`.
 
 ## The *`ho_join`* method
 
-The *`ho_join`* method allows you to integrate the data associated to a Relation object in the result obtained by the *`select`* method by using foreign keys of the object or referencing the object.
+The *`ho_join`* method allows you to integrate the data associated with a Relation object into the result obtained by the *`select`* method by using foreign keys of the object or by referencing the object.
 
 Unlike the *`select`* method (which is a generator), the *`ho_join`* method returns a list.
 
-It takes a list of tuples each having two or three elements:
+It takes a list of tuples each with two or three elements:
 
-* a remote Relation object which must be reachable using a direct or "reverse" foreign key,
-* the name of the key under which the associated data would be stored,
-* an optional list of columns (str[]) or the name of a column (str) to be extracted from the
+* a remote Relation object that must be accessible by a foreign key (direct or "reverse");
+* the name of the key under which the associated data would be stored;
+* an optional list of columns (`str[]`) or the name of a column (`str`) to be retreived from the
   remote object.
 
   If the third argument is omitted, all columns are retreived.
 
-The following code
+For example, the following code would return the list of people named `Lagaffe` with two
+additional attributes (`comments` and `posts`):
+
 ```#python
 lagaffe = Person(last_name='Lagaffe')
 res = lagaffe.ho_join(
@@ -649,11 +668,9 @@ res = lagaffe.ho_join(
     (Post(), 'posts', 'id')
 )
 ```
-would return the list of people named `Lagaffe` with two
-additional attributes : `comments` and `posts`.
 
-The data associated with `comments` is a list of dictionaries whose keys are 'id' and 'post_id'.
-The data associated  with  `posts` is a simple list of values corresponding to the 'id' column.
+* The data associated with `comments` is a list of dictionaries whose keys are 'id' and 'post_id'.
+* The data associated  with  `posts` is a simple list of values corresponding to the 'id' column.
 
 # PostgreSQL functions and stored procedures
 

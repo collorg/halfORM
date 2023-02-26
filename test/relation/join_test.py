@@ -103,7 +103,7 @@ class Test(HoTestCase):
 
     def test_join_should_work_with_FKEYS(self):
         "ho_join should work with the use of FKEYS"
-        author_ab = self.comment(content=self.comment_ab_post_1).author_()
+        author_ab = self.comment(content=self.comment_ab_post_1).author_fk()
         res3 = author_ab.ho_join(
             (self.comment(), 'comments', 'content')
         )[0]

@@ -62,7 +62,7 @@ class Event(BlogPost, __RCLS):
     """
     #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
     Fkeys = {
-        'author': 'author'
+        'author_fk': 'author'
     }
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
     def __init__(self, **kwargs):

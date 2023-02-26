@@ -62,8 +62,8 @@ class Post(__RCLS):
     """
     #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
     Fkeys = {
-        'comment_fk': '_reverse_fkey_halftest_blog_comment_post_id',
-        'author_': 'author',
+        'comment_rfk': '_reverse_fkey_halftest_blog_comment_post_id',
+        'author_fk': 'author',
     }
 
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!

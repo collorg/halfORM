@@ -61,7 +61,7 @@ class Comment(__RCLS):
     #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
     Fkeys = {
         'post_fk': 'post',
-        'author_': 'author',
+        'author_fk': 'author',
     }
 
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!

@@ -27,11 +27,11 @@ class Test(TestCase):
         self.assertEqual(list(self.comment._ho_fkeys.keys()), ['post', 'author'])
 
     def test_post_author_fkey_type(self):
-        author = self.post.author_()
+        author = self.post.author_fk()
         self.assertTrue(isinstance(author, halftest.Person))
 
     def test_comment_author_fkey_type(self):
-        author = self.comment.author_()
+        author = self.comment.author_fk()
         self.assertTrue(isinstance(author, halftest.Person))
 
     def test_comment_post_fkey_type(self):
@@ -42,7 +42,7 @@ class Test(TestCase):
         post = self.post()
         self.assertFalse(post.ho_is_set())
         pers = self.pers(last_name=('a%', 'like'))
-        post.author_.set(pers)
+        post.author_fk.set(pers)
         self.assertTrue(post.ho_is_set())
 
     def test_is_not_set(self):
@@ -50,27 +50,27 @@ class Test(TestCase):
         self.assertFalse(post.ho_is_set())
         pers = self.pers()
         self.assertFalse(pers.ho_is_set())
-        post.author_.set(pers)
+        post.author_fk.set(pers)
         self.assertFalse(post.ho_is_set())
 
     def test_is_set_reverse(self):
         post = self.post(title="toto")
-        author = post.author_()
+        author = post.author_fk()
         self.assertTrue(author.ho_is_set())
 
     def test_is_not_set_reverse(self):
         post = self.post()
-        author = post.author_
-        self.assertFalse(post.author_.is_set())
-        self.assertFalse(post.author_().ho_is_set())
+        author = post.author_fk
+        self.assertFalse(post.author_fk.is_set())
+        self.assertFalse(post.author_fk().ho_is_set())
 
     def test_check_FKEYS_class(self):
         pers = self.pers()
-        self.assertEqual(pers._post().__class__.__name__, self.post.__class__.__name__)
-        self.assertEqual(pers._comment().__class__.__name__, self.comment.__class__.__name__)
+        self.assertEqual(pers.post_rfk().__class__.__name__, self.post.__class__.__name__)
+        self.assertEqual(pers.comment_rfk().__class__.__name__, self.comment.__class__.__name__)
         post = self.post()
-        self.assertEqual(post.author_().__class__.__name__, self.pers.__class__.__name__)
-        self.assertEqual(post.comment_fk().__class__.__name__, self.comment.__class__.__name__)
+        self.assertEqual(post.author_fk().__class__.__name__, self.pers.__class__.__name__)
+        self.assertEqual(post.comment_rfk().__class__.__name__, self.comment.__class__.__name__)
 
     @skip("Work in progress")
     def test_runtime_error(self):
@@ -79,6 +79,6 @@ class Test(TestCase):
         # A relation fkey attribute is a FKey class and the __set__ descriptor doesn't work on a class
 
         with self.assertRaises(RuntimeError) as err:
-            print('pers._comment type', type(pers._comment), pers._comment)
-            pers._comment = self.comment()
+            print('pers.comment_rfk type', type(pers.comment_rfk), pers.comment_rfk)
+            pers.comment_rfk = self.comment()
             # print(next(pers._ho_mogrify().ho_select()))

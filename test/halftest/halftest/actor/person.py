@@ -67,9 +67,9 @@ class Person(__RCLS):
     """
     #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
     Fkeys = {
-        '_comment': '_reverse_fkey_halftest_blog_comment_author_id',
-        '_event': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
-        '_post': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date'
+        'comment_rfk': '_reverse_fkey_halftest_blog_comment_author_id',
+        'event_rfk': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
+        'post_rfk': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date'
     }
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
     def __init__(self, **kwargs):
