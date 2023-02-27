@@ -55,11 +55,11 @@ set +e
 which pytest
 if [ $? = 0 ]; then pip uninstall -y pytest ; fi
 # pytest must be install to commit release
-hop commit
+hop release
 if [ $? = 0 ]; then exit 1; fi
 set -e
 pip install pytest
-hop commit
+hop release
 
 hop prepare -l patch -m "Second patch release"
 
@@ -91,7 +91,7 @@ git status
 
 set +e
 # should commit before release
-hop commit -m "First release"
+hop release -m "First release"
 if [ $? = 0 ]; then exit 1; fi
 set -e
 
@@ -101,7 +101,7 @@ git commit -m "(wip) ajout de a.bla"
 touch dirty
 set +e
 # git repo must be clean
-hop commit
+hop release
 if [ $? = 0 ]; then exit 1; fi
 set -e
 rm dirty
@@ -111,20 +111,20 @@ git add .
 git commit -m "(bad)"
 set +e
 # git repo must be clean
-hop commit
+hop release
 if [ $? = 0 ]; then exit 1; fi
 set -e
 git reset HEAD~ --hard
 
 set +e
 # git repo must have an origin to push
-hop commit --push
+hop release --push
 if [ $? = 0 ]; then exit 1; fi
 set -e
 
 git remote add origin /tmp/hop_test.git
 git status
-hop commit --push
+hop release --push
 
 git status
 
@@ -218,7 +218,7 @@ echo 'print ("coucou")' > hop_test/Api/coucou/__init__.py
 git add .
 git commit -m "Add API"
 
-hop commit
+hop release
 
 git status
 git push
@@ -240,7 +240,7 @@ hop
 
 git checkout hop_0.2.0
 set +e
-hop commit
+hop release
 if [ $? = 0 ]; then exit 1; fi
 set -e
 
@@ -250,7 +250,7 @@ touch Patches/0/1/1/coucou
 git add .
 git commit -m "[WIP] 0.1.1 test"
 hop apply
-hop commit
+hop release
 
 cat > TODO << EOF
 something
@@ -264,14 +264,14 @@ touch Patches/0/2/0/coucou
 git add .
 git commit -m "[WIP] 0.2.0 test"
 hop apply
-hop commit
+hop release
 
 hop prepare -l patch -m "0.2.1..."
 hop apply
 touch Patches/0/2/1/coucou
 git add .
 git commit -m "[0.2.1] coucou"
-hop commit
+hop release
 
 git checkout hop_1.0.0
 hop apply
@@ -279,7 +279,7 @@ touch Patches/1/0/0/coucou
 git add .
 git commit -m "[WIP] 1.0.0 test"
 hop apply
-hop commit
+hop release
 
 git push
 

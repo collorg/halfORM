@@ -42,7 +42,7 @@ class Hop:
                     if self.__repo.hgit.branch == 'hop_main':
                         Hop.__available_cmds = ['prepare']
                     elif self.__repo.hgit.is_hop_patch_branch:
-                        Hop.__available_cmds = ['apply', 'undo', 'commit']
+                        Hop.__available_cmds = ['apply', 'undo', 'release']
                 elif self:
                     Hop.__available_cmds = ['upgrade', 'restore']
 
@@ -81,7 +81,7 @@ class Hop:
         @click.option(
             '-l', '--level',
             type=click.Choice(['patch', 'minor', 'major']), help="Release level.")
-        @click.option('-m', '--message', type=str, help="The commit message")
+        @click.option('-m', '--message', type=str, help="The git commit message")
         def prepare(level, message=None):
             """ Prepares the next release.
             """
@@ -125,7 +125,7 @@ class Hop:
 
         @click.command()
         @click.option('-p', '--push', is_flag=True, help='Push git repo to origin')
-        def commit(push=False):
+        def release(push=False):
             self.__repo.commit_release(push)
 
         @click.command()
@@ -137,7 +137,7 @@ class Hop:
             'prepare': prepare,
             'apply': apply,
             'undo': undo,
-            'commit': commit,
+            'release': release,
             'sync-package': sync_package,
             'upgrade': upgrade,
             'restore': restore
