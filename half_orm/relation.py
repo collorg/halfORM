@@ -54,7 +54,7 @@ from psycopg2.extras import RealDictCursor
 import yaml
 
 from half_orm import relation_errors
-from half_orm.transaction import HoTransaction
+from half_orm.transaction import Transaction
 from half_orm.field import Field
 
 class _SetOperators:
@@ -1014,7 +1014,7 @@ def __enter__(self):
         new_elt = relation(**elt)
         new_elt.ho_update(col=new_val)
     """
-    @self.HoTransaction
+    @self.ho_transaction
     def context(self):
         return self
     return context(self)
@@ -1120,7 +1120,7 @@ COMMON_INTERFACE = {
     'ho_update': ho_update,
     'ho_delete': ho_delete,
 
-    'HoTransaction': HoTransaction,
+    'ho_transaction': Transaction,
 }
 
 

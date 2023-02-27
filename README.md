@@ -294,7 +294,7 @@ lagaffe = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-2
 lagaffe_id = lagaffe.ho_insert()['id']
 ```
 
-You can trigger a transaction for any combination of insert, modify or delete operations using the `Relation.HoTransaction` decorator.
+You can trigger a transaction for any combination of insert, modify or delete operations using the `Relation.ho_transaction` decorator.
 
 ```py
 class Person(halftest.get_relation_class('actor.person')):
@@ -302,7 +302,7 @@ class Person(halftest.get_relation_class('actor.person')):
 
     def insert_many(self, *data):
         """Insert serveral people in a single transaction."""
-        @self.HoTransaction
+        @self.ho_transaction
         def insert(self, *data):
             for d_pers in data:
                 self(**d_pers).ho_insert()
@@ -468,7 +468,7 @@ class Person(halftest.get_relation_class('actor.person')):
 
     def upper_last_name(self):
         "tranform last name to upper case."
-        @self.HoTransaction
+        @self.ho_transaction
         def update(self):
             for d_pers in self.ho_select('id', 'last_name'):
                 pers = Person(**d_pers)
@@ -476,7 +476,7 @@ class Person(halftest.get_relation_class('actor.person')):
         update(self)
 ```
 
-Again, we insure the atomicity of the transaction using the `Relation.HoTransaction` decorator.
+Again, we insure the atomicity of the transaction using the `Relation.ho_transaction` decorator.
 
 ```
 >>> a_pers = Person(last_name=('ilike', '_a%'))

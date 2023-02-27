@@ -20,7 +20,7 @@ class Person(halftest.get_relation_class('actor.person')):
 
     def insert_many(self, *data):
         "insert many people in a single transaction"
-        @self.HoTransaction
+        @self.ho_transaction
         def insert(self, *data):
             for d_pers in data:
                 self(**d_pers).ho_insert()
@@ -29,7 +29,7 @@ class Person(halftest.get_relation_class('actor.person')):
 
     def upper_last_name(self):
         "tranform last name to upper case."
-        @self.HoTransaction
+        @self.ho_transaction
         def update(self):
             for d_pers in self.ho_select('id', 'last_name'):
                 pers = Person(**d_pers)

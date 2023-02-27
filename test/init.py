@@ -48,7 +48,7 @@ class HalfTest:
         self.pc = PC()
         self.relation = model._import_class
 
-        @self._person.HoTransaction
+        @self._person.ho_transaction
         def init_pers(pers):
             sys.stderr.write('Initializing actor.person\n')
             self.Person().ho_delete(delete_all=True)

@@ -55,7 +55,7 @@ class Test(HoTestCase):
     def test_update(self):
         pers = self.pers(last_name=('like', 'a%'))
         self.assertEqual(len(pers), 10)
-        @pers.HoTransaction
+        @pers.ho_transaction
         def update(pers, fct):
             for elt in pers:
                 pers = self.pers.__class__(**elt)
