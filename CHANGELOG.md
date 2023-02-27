@@ -1,3 +1,5 @@
+* [hop] Don't override global git user infos in dummy_test.py. (b8fc5cc)
+
 # 0.8.0rc8 (2023-02-24)
 
 * [Field] Register psycopg2 json adapter. (053d39e)

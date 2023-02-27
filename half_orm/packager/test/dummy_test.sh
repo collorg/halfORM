@@ -2,6 +2,12 @@
 
 set -ex
 
+if [ -n "$GITHUB_ENV" ]
+then
+   git config --global user.email "half_orm_ci@collorg.org"
+   git config --global user.name "HalfORM CI"
+fi
+
 cd -- "$( dirname -- "${BASH_SOURCE[0]}" )"
 HALFORM_DIR=$PWD/../../..
 CI_PROJECT_DIR=$HALFORM_DIR
@@ -22,9 +28,6 @@ clean_db
 # it should be able to create a repo not in devel mode
 yes | hop new hop_test
 cd hop_test
-
-git config user.email "half_orm_ci@collorg.org"
-git config user.name "HalfORM CI"
 
 hop sync-package
 set +e
