@@ -27,8 +27,8 @@ yes | hop new hop_test
 cd hop_test
 hop sync-package
 set +e
-# prepare-release is only available in devel mode
-hop prepare-release
+# prepare is only available in devel mode
+hop prepare
 if [ $? = 0 ]; then exit 1; fi
 set -e
 
@@ -44,37 +44,37 @@ tree .
 rm -rf /tmp/hop_test.git
 git init --bare /tmp/hop_test.git
 
-hop prepare-release -m "First patch release" << EOF
+hop prepare -m "First patch release" << EOF
 patch
 EOF
 echo 'create table first ( a text primary key )' > Patches/0/0/1/a.sql
-hop apply-release
+hop apply
 git add .
 git commit -m "First table"
 set +e
 which pytest
 if [ $? = 0 ]; then pip uninstall -y pytest ; fi
 # pytest must be install to commit release
-hop commit-release
+hop commit
 if [ $? = 0 ]; then exit 1; fi
 set -e
 pip install pytest
-hop commit-release
+hop commit
 
-hop prepare-release -l patch -m "Second patch release"
+hop prepare -l patch -m "Second patch release"
 
 echo 'create table a ( a text primary key )' > Patches/0/0/2/a.sql
 echo 'print("I am a script without x permission...")' > Patches/0/0/2/a.py
 
-hop apply-release
+hop apply
 
 tree .
 
 hop
 
-yes | hop apply-release
+yes | hop apply
 
-hop apply-release
+hop apply
 
 git add .
 git commit -m "(wip) First"
@@ -82,16 +82,16 @@ git status
 
 echo 'create table a ( a text primary key, bla text )' > Patches/0/0/2/a.sql
 
-hop undo-release
+hop undo
 
-hop apply-release
+hop apply
 git diff hop_test/public/a.py
 
 git status
 
 set +e
 # should commit before release
-hop commit-release -m "First release"
+hop commit -m "First release"
 if [ $? = 0 ]; then exit 1; fi
 set -e
 
@@ -101,7 +101,7 @@ git commit -m "(wip) ajout de a.bla"
 touch dirty
 set +e
 # git repo must be clean
-hop commit-release
+hop commit
 if [ $? = 0 ]; then exit 1; fi
 set -e
 rm dirty
@@ -111,30 +111,30 @@ git add .
 git commit -m "(bad)"
 set +e
 # git repo must be clean
-hop commit-release
+hop commit
 if [ $? = 0 ]; then exit 1; fi
 set -e
 git reset HEAD~ --hard
 
 set +e
 # git repo must have an origin to push
-hop commit-release --push
+hop commit --push
 if [ $? = 0 ]; then exit 1; fi
 set -e
 
 git remote add origin /tmp/hop_test.git
 git status
-hop commit-release --push
+hop commit --push
 
 git status
 
 hop
 
-hop prepare-release -l minor -m "First minor patch"
+hop prepare -l minor -m "First minor patch"
 
 echo 'create table b ( b text primary key, a text references a )' > Patches/0/1/0/b.sql
 
-hop apply-release
+hop apply
 
 tree
 
@@ -218,21 +218,21 @@ echo 'print ("coucou")' > hop_test/Api/coucou/__init__.py
 git add .
 git commit -m "Add API"
 
-hop commit-release
+hop commit
 
 git status
 git push
 git tag
 
-hop prepare-release -l major -m major
+hop prepare -l major -m major
 git checkout hop_main
-hop prepare-release -l minor -m minor
+hop prepare -l minor -m minor
 git checkout hop_main
-hop prepare-release -l patch -m patch
+hop prepare -l patch -m patch
 git checkout hop_main
 
 set +e
-hop prepare-release -l minor -m coucou
+hop prepare -l minor -m coucou
 if [ $? = 0 ]; then exit 1; fi
 set -e
 
@@ -240,46 +240,46 @@ hop
 
 git checkout hop_0.2.0
 set +e
-hop commit-release
+hop commit
 if [ $? = 0 ]; then exit 1; fi
 set -e
 
 git checkout hop_0.1.1
-hop apply-release
+hop apply
 touch Patches/0/1/1/coucou
 git add .
 git commit -m "[WIP] 0.1.1 test"
-hop apply-release
-hop commit-release
+hop apply
+hop commit
 
 cat > TODO << EOF
 something
 EOF
 git add TODO
-git commit -m "Add todo to check rebase on apply-release"
+git commit -m "Add todo to check rebase on apply"
 
 git checkout hop_0.2.0
-hop apply-release
+hop apply
 touch Patches/0/2/0/coucou
 git add .
 git commit -m "[WIP] 0.2.0 test"
-hop apply-release
-hop commit-release
+hop apply
+hop commit
 
-hop prepare-release -l patch -m "0.2.1..."
-hop apply-release
+hop prepare -l patch -m "0.2.1..."
+hop apply
 touch Patches/0/2/1/coucou
 git add .
 git commit -m "[0.2.1] coucou"
-hop commit-release
+hop commit
 
 git checkout hop_1.0.0
-hop apply-release
+hop apply
 touch Patches/1/0/0/coucou
 git add .
 git commit -m "[WIP] 1.0.0 test"
-hop apply-release
-hop commit-release
+hop apply
+hop commit
 
 git push
 

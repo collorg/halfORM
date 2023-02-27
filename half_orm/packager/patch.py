@@ -237,7 +237,7 @@ class Patch:
             if not self.__repo.production:
                 resp = ['[Releases in development]']
                 if len(self.__changelog.releases_in_dev) == 0:
-                    resp.append("No release in development.\nUse `hop prepare-release`.")
+                    resp.append("No release in development.\nUse `hop prepare`.")
                 for release in self.__changelog.releases_in_dev:
                     resp.append(f'- {release} (branch hop_{release})')
             else:
@@ -277,7 +277,7 @@ class Patch:
                 f'Please `git commit` your changes before releasing {next_release}.\n', exit_code=1)
         # The patch must be applied and the last to apply
         if not self.__repo.database.last_release_s == next_release:
-            utils.error(f'Please `hop test-release` before releasing {next_release}.\n', exit_code=1)
+            utils.error(f'Please `hop test` before releasing {next_release}.\n', exit_code=1)
         # If we undo the patch (db only) and re-apply it the repo must still be clear.
         self.undo(database_only=True)
         self.apply(next_release, force=True)

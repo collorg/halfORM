@@ -40,9 +40,9 @@ class Hop:
             else:
                 if not self.__repo.production and self.__repo:
                     if self.__repo.hgit.branch == 'hop_main':
-                        Hop.__available_cmds = ['prepare-release']
+                        Hop.__available_cmds = ['prepare']
                     elif self.__repo.hgit.is_hop_patch_branch:
-                        Hop.__available_cmds = ['apply-release', 'undo-release', 'commit-release']
+                        Hop.__available_cmds = ['apply', 'undo', 'commit']
                 elif self:
                     Hop.__available_cmds = ['upgrade', 'restore']
 
@@ -82,28 +82,28 @@ class Hop:
             '-l', '--level',
             type=click.Choice(['patch', 'minor', 'major']), help="Release level.")
         @click.option('-m', '--message', type=str, help="The commit message")
-        def prepare_release(level, message=None):
+        def prepare(level, message=None):
             """ Prepares the next release.
             """
-            self.__command = 'prepare-release'
+            self.__command = 'prepare'
             self.__repo.prepare_release(level, message)
             sys.exit()
 
         @click.command()
-        def apply_release():
+        def apply():
             """Apply the current release.
             """
-            self.__command = 'apply-release'
+            self.__command = 'apply'
             self.__repo.apply_release()
 
         @click.command()
         @click.option(
             '-d', '--database-only', is_flag=True,
             help='Restore the database to the previous release.')
-        def undo_release(database_only):
+        def undo(database_only):
             """Undo the last release.
             """
-            self.__command = 'undo-release'
+            self.__command = 'undo'
             self.__repo.undo_release(database_only)
 
         @click.command()
@@ -125,7 +125,7 @@ class Hop:
 
         @click.command()
         @click.option('-p', '--push', is_flag=True, help='Push git repo to origin')
-        def commit_release(push=False):
+        def commit(push=False):
             self.__repo.commit_release(push)
 
         @click.command()
@@ -134,10 +134,10 @@ class Hop:
 
         cmds = {
             'new': new,
-            'prepare-release': prepare_release,
-            'apply-release': apply_release,
-            'undo-release': undo_release,
-            'commit-release': commit_release,
+            'prepare': prepare,
+            'apply': apply,
+            'undo': undo,
+            'commit': commit,
             'sync-package': sync_package,
             'upgrade': upgrade,
             'restore': restore
