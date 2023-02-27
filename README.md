@@ -55,7 +55,7 @@ def main():
 ```
 
 
-# Learn `half_orm` in half an hour
+# Tutorial: Learn `half_orm` in half an hour
 
 
 
@@ -69,8 +69,9 @@ run `pip install half_orm` in a virtual environment.
 
 ### Set your HALFORM_CONF_DIR
 
-Create a directory to store your connection files and set the shell variable `HALFORM_CONF_DIR`:
-
+Create a directory to store your connection files and set the shell variable `HALFORM_CONF_DIR`
+(by default, `half_orm` looks in the /etc/half_orm directory):
+ 
 ```sh
 % mkdir ~/.half_orm
 % export HALFORM_CONF_DIR=~/.half_orm
@@ -357,12 +358,12 @@ You can also get a subset of the attributes by passing a list of columns names t
 
 ### Select one: the `ho_get` method
 
-The `ho_get` method returns an object whose fields are constrained with the values of the corresponding row in the database.
+The `ho_get` method returns an Relation object whose fields are populated with the values from the corresponding row in the database.
 It raises an [ExpectedOneError](https://github.com/collorg/halfORM/blob/master/half_orm/relation_errors.py)
 Exception if 0 or more than 1 rows match the intention. The returned object is a singleton (see below).
 
 ```py
-gaston = Person(last_name='Lagaffe').ho_get(*args)
+gaston = Person(last_name='Lagaffe').ho_get()
 ```
 
 is equivalent to
@@ -371,8 +372,14 @@ is equivalent to
 lagaffe = Person(last_name='Lagaffe')
 if lagaffe.ho_is_empty() or len(lagaffe) > 1:
     raise ExcpetedOneError
-gaston = Person(**next(lagaffe.ho_select(*args)))
+gaston = Person(**next(lagaffe.ho_select()))
 gaston._ho_is_singleton = True
+```
+
+You could use `ho_get` to retreive the `id` of the row:
+
+```py
+gaston_id = Person(last_name='Lagaffe').ho_get('id').id.value
 ```
 
 ### Is it a set? Is it an element of the set?
@@ -630,6 +637,9 @@ print(list(gaston_comments.ho_select())
 ```
 ## Chaining foreign keys
 
+**Important note**: Foreign key chaining will only work if the modules corresponding to the tables are ordered
+according to the names of the tables in the package. See the `hop` command.
+
 You can easily chain foreign keys. For example, if you want to get all the comments made by Gaston
 on his own posts:
 
@@ -641,7 +651,8 @@ list(gaston
     .comment_rfk(author_id=gaston_id))
 ```
 
-**Note** : the table `blog.post` declares a foreign key on `actor.person(first_name, last_name, birth_date)` when the table `blog.comment` declares a foreign key on `actor.person(id)`.
+**Note**: the `blog.post` table declares a foreign key on `actor.person(first_name, last_name, birth_date)` 
+while the `blog.comment` table declares a foreign key on `actor.person(id)`.
 
 ## The *`ho_join`* method
 
