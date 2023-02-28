@@ -7,6 +7,11 @@ from unittest import TestCase, skip
 from ..init import halftest
 from half_orm import relation_errors, model
 
+
+ERR_MSG = """self.comment_rfk is not a FKey (got a Comment object instead).
+- use: self.comment_rfk.set(Comment(...))
+- not: self.comment_rfk = Comment(...)"""
+
 class Test(TestCase):
     def setUp(self):
         self.pers = halftest.Person()
@@ -72,13 +77,13 @@ class Test(TestCase):
         self.assertEqual(post.author_fk().__class__.__name__, self.pers.__class__.__name__)
         self.assertEqual(post.comment_rfk().__class__.__name__, self.comment.__class__.__name__)
 
-    @skip("Work in progress")
     def test_runtime_error(self):
         "should raise a RuntimeError exception"
         pers = self.pers()
         # A relation fkey attribute is a FKey class and the __set__ descriptor doesn't work on a class
 
+        pers.comment_rfk = self.comment()
+        err = None
         with self.assertRaises(RuntimeError) as err:
-            print('pers.comment_rfk type', type(pers.comment_rfk), pers.comment_rfk)
-            pers.comment_rfk = self.comment()
-            # print(next(pers._ho_mogrify().ho_select()))
+            list(pers.ho_select())
+        self.assertEqual(str(err.exception), ERR_MSG)
