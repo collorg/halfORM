@@ -254,10 +254,8 @@ class Model:
             for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
                 tbl_attr[fct_name] = fct
                 dep_fct_name = None
-                print('XXX', fct_name, fct_name[0:4])
                 if fct_name[0:4] == '_ho_':
                     dep_fct_name = fct_name[4:]
-                    print('XXX', fct_name, dep_fct_name)
                 if dep_fct_name:
                     tbl_attr[dep_fct_name] = deprecated(tbl_attr[fct_name])
             class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
