@@ -20,20 +20,20 @@ class Person(halftest.get_relation_class('actor.person')):
 
     def insert_many(self, *data):
         "insert many people in a single transaction"
-        @self.ho_transaction
+        @self._ho_transaction
         def insert(self, *data):
             for d_pers in data:
-                self(**d_pers).ho_insert()
+                self(**d_pers)._ho_insert()
         insert(self, *data)
 
 
     def upper_last_name(self):
         "tranform last name to upper case."
-        @self.ho_transaction
+        @self._ho_transaction
         def update(self):
-            for d_pers in self.ho_select('id', 'last_name'):
+            for d_pers in self._ho_select('id', 'last_name'):
                 pers = Person(**d_pers)
-                pers.ho_update(last_name=d_pers['last_name'].upper())
+                pers._ho_update(last_name=d_pers['last_name'].upper())
 
         update(self)
 
@@ -43,8 +43,8 @@ if __name__ == '__main__':
     # print(people)
     # sys.exit()
 
-    people.ho_delete(delete_all=True)
-    Person(**{'last_name':'Jourdan', 'first_name':'Gil', 'birth_date':'1956-09-20'}).ho_insert()
+    people._ho_delete(delete_all=True)
+    Person(**{'last_name':'Jourdan', 'first_name':'Gil', 'birth_date':'1956-09-20'})._ho_insert()
     try:
         people.insert_many(*[
             {'last_name':'Lagaffe', 'first_name':'Gaston', 'birth_date':'1957-02-28'},
@@ -56,14 +56,14 @@ if __name__ == '__main__':
     except Exception as err:
         print(err)
 
-    print(list(people.ho_select()))
+    print(list(people._ho_select()))
 
-    people.ho_offset(1).ho_limit(2)
-    print([dict(elt) for elt in list(people.ho_select())])
+    people._ho_offset(1)._ho_limit(2)
+    print([dict(elt) for elt in list(people._ho_select())])
 
-    print([dict(elt) for elt in list(people.ho_select('last_name'))])
+    print([dict(elt) for elt in list(people._ho_select('last_name'))])
 
     a_pers = Person(last_name = ('ilike', '_a%'))
-    print([elt['last_name'] for elt in a_pers.ho_select('last_name')])
+    print([elt['last_name'] for elt in a_pers._ho_select('last_name')])
     a_pers.upper_last_name()
-    print([elt['last_name'] for elt in a_pers.ho_select('last_name')])
+    print([elt['last_name'] for elt in a_pers._ho_select('last_name')])

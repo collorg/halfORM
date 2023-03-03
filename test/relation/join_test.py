@@ -19,25 +19,25 @@ class Test(HoTestCase):
         self.post = halftest.Post()
         self.comment = halftest.Comment()
         self.today = halftest.today
-        self.post().ho_delete(delete_all=True)
-        self.comment().ho_delete(delete_all=True)
+        self.post()._ho_delete(delete_all=True)
+        self.comment()._ho_delete(delete_all=True)
         self.personne = self.pers(**next(self.pers(last_name='aa')))
         self.personne_ab = self.pers(**next(self.pers(last_name='ab')))
         post0 = self.post(title='post', content='essai')
         post0.author_last_name = self.personne.last_name
         post0.author_first_name = self.personne.first_name
         post0.author_birth_date = self.personne.birth_date
-        self.post0 = post0.ho_insert('id')
+        self.post0 = post0._ho_insert('id')
         post1 = self.post(title="post 1", content="essai ab")
         post1.author_last_name = self.personne_ab.last_name
         post1.author_first_name = self.personne_ab.first_name
         post1.author_birth_date = self.personne_ab.birth_date
-        self.post1 = post1.ho_insert('id')
+        self.post1 = post1._ho_insert('id')
         post2 = self.post(title="post 2", content="essai 2 ab")
         post2.author_last_name = self.personne_ab.last_name
         post2.author_first_name = self.personne_ab.first_name
         post2.author_birth_date = self.personne_ab.birth_date
-        self.post2 = post2.ho_insert('title')
+        self.post2 = post2._ho_insert('title')
         self.comment_post = "comment post"
         self.comment_post_1 = "comment post 1"
         self.comment_ab_post = "comment ab post"
@@ -46,35 +46,35 @@ class Test(HoTestCase):
         self.comment0 = self.comment(
             author_id=self.personne.id,
             post_id=self.post0['id'],
-            content=self.comment_post).ho_insert()
+            content=self.comment_post)._ho_insert()
         self.comment1 = self.comment(
             author_id=self.personne.id,
             post_id=self.post1['id'],
-            content=self.comment_post_1).ho_insert()
+            content=self.comment_post_1)._ho_insert()
         self.comment0_ab = self.comment(
             author_id=self.personne_ab.id,
             post_id=self.post0['id'],
-            content=self.comment_ab_post).ho_insert()
+            content=self.comment_ab_post)._ho_insert()
         self.comment1_ab = self.comment(
             author_id=self.personne_ab.id,
             post_id=self.post1['id'],
-            content=self.comment_ab_post_1).ho_insert()
+            content=self.comment_ab_post_1)._ho_insert()
         self.comment_2_1_ab = self.comment(
             author_id=self.personne_ab.id,
             post_id=self.post1['id'],
-            content=self.comment_2_ab_post_1).ho_insert()
-        self.res = self.personne.ho_join(
+            content=self.comment_2_ab_post_1)._ho_insert()
+        self.res = self.personne._ho_join(
             (self.comment(), 'comments'),
             (self.post(), 'posts')
         )[0]
-        self.res1 = self.comment(content=self.comment_ab_post_1).ho_join(
+        self.res1 = self.comment(content=self.comment_ab_post_1)._ho_join(
             (self.personne(), 'author', ['id', 'last_name']),
             (self.post(), 'post', 'title')
         )[0]
 
     def tearDown(self):
-        self.post().ho_delete(delete_all=True)
-        self.comment().ho_delete(delete_all=True)
+        self.post()._ho_delete(delete_all=True)
+        self.comment()._ho_delete(delete_all=True)
 
     def test_join_without_fields(self):
         "should join the objects with all fields"
@@ -90,21 +90,21 @@ class Test(HoTestCase):
         self.assertEqual(comment_ids, res_ids)
 
     def test_join_with_string(self):
-        "ho_join should return a list of values if fields is a string"
+        "_ho_join should return a list of values if fields is a string"
         self.assertIsInstance(self.res1['post'][0], str)
         self.assertEqual(self.res1['post'][0], 'post 1')
 
     def test_join_with_list(self):
-        "ho_join should return a list of dict if fields is a string"
+        "_ho_join should return a list of dict if fields is a string"
         author = self.res1['author'][0]
         self.assertIsInstance(author, dict)
         self.assertEqual(author['last_name'], 'ab')
         self.assertEqual(set(list(author.keys())), {'id', 'last_name'})
 
     def test_join_should_work_with_FKEYS(self):
-        "ho_join should work with the use of FKEYS"
+        "_ho_join should work with the use of FKEYS"
         author_ab = self.comment(content=self.comment_ab_post_1).author_fk()
-        res3 = author_ab.ho_join(
+        res3 = author_ab._ho_join(
             (self.comment(), 'comments', 'content')
         )[0]
         self.assertEqual(
@@ -112,8 +112,8 @@ class Test(HoTestCase):
           set(res3['comments']))
 
     def test_join_with_constraint(self):
-        "ho_join should work with constraints on the joined objects"
-        res = self.personne_ab.ho_join(
+        "_ho_join should work with constraints on the joined objects"
+        res = self.personne_ab._ho_join(
             (self.comment(content=self.comment_ab_post_1), 'comments'),
             (self.post(), 'posts')
         )[0]
@@ -122,7 +122,7 @@ class Test(HoTestCase):
         self.assertEqual(len(comments), 1)
         self.assertEqual(comments[0]['content'], self.comment_ab_post_1)
 
-        comments_by_posts = self.post().ho_join((self.comment(), 'comments'))
+        comments_by_posts = self.post()._ho_join((self.comment(), 'comments'))
         # print('comments_by_posts')
         # PrettyPrinter().pprint(comments_by_posts)
         count = {'essai': 2, 'essai ab': 3}
@@ -133,7 +133,7 @@ class Test(HoTestCase):
             self.assertEqual(len(comments_by_posts[0]['comments']), count['essai ab'])
             self.assertEqual(len(comments_by_posts[1]['comments']), count['essai'])
 
-        comments_by_post = self.post().ho_join((self.comment(content=self.comment_post), 'comments'))
+        comments_by_post = self.post()._ho_join((self.comment(content=self.comment_post), 'comments'))
         # print('comments_by_post')
         # PrettyPrinter().pprint(comments_by_post)
         self.assertEqual(len(comments_by_post), 1)
@@ -141,7 +141,7 @@ class Test(HoTestCase):
         self.assertEqual(len(comments_by_post[0]['comments']), 1)
         self.assertEqual(comments_by_post[0]['comments'][0]['content'], self.comment_post)
 
-        comments_by_post_1 = self.post().ho_join((self.comment(content=self.comment_ab_post_1), 'comments'))
+        comments_by_post_1 = self.post()._ho_join((self.comment(content=self.comment_ab_post_1), 'comments'))
         # print('comments_by_post_1')
         # PrettyPrinter().pprint(comments_by_post_1)
         self.assertEqual(len(comments_by_post_1), 1)
@@ -151,9 +151,9 @@ class Test(HoTestCase):
 
 
     def test_join_with_joined_object_with_FKEYS(self):
-        "ho_join should work with constraints on the joined objects"
+        "_ho_join should work with constraints on the joined objects"
 
-        post_by_comment = self.comment(content=self.comment_post).ho_join(
+        post_by_comment = self.comment(content=self.comment_post)._ho_join(
             (self.comment(content=self.comment_post).post_fk(), 'post')
         )
         # print('post_by_comment')
@@ -163,7 +163,7 @@ class Test(HoTestCase):
         self.assertEqual(len(post_by_comment[0]['post']), 1)
         self.assertEqual(post_by_comment[0]['post'][0]['title'], 'post')
 
-        post_by_comment_ab_post_1 = self.comment(content=self.comment_ab_post_1).ho_join(
+        post_by_comment_ab_post_1 = self.comment(content=self.comment_ab_post_1)._ho_join(
             (self.comment(content=self.comment_ab_post_1).post_fk(), 'post')
         )
         # print('post_by_comment_ab_post_1')

@@ -47,7 +47,7 @@ def deprecated(fct):
     @wraps(fct)
     def wrapper(self, *args, **kwargs):
         name = fct.__name__
-        dep_name = fct.__name__[0:3] == 'ho_' and fct.__name__[3:] or f'_{fct.__name__[4:0]}'
+        dep_name = name.replace('_ho_', '')
         callerframerecord = inspect.stack()[1]
         frame = callerframerecord[0]
         info = inspect.getframeinfo(frame)
@@ -254,14 +254,12 @@ class Model:
             for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
                 tbl_attr[fct_name] = fct
                 dep_fct_name = None
-                if fct_name[0:3] == 'ho_':
-                    dep_fct_name = fct_name[3:]
-                    # print('XXX', fct_name, dep_fct_name)
+                print('XXX', fct_name, fct_name[0:4])
                 if fct_name[0:4] == '_ho_':
-                    dep_fct_name = f'_{fct_name[4:]}'
-                    # print('XXX', fct_name, dep_fct_name)
+                    dep_fct_name = fct_name[4:]
+                    print('XXX', fct_name, dep_fct_name)
                 if dep_fct_name:
-                    tbl_attr[dep_fct_name] = deprecated(fct)
+                    tbl_attr[dep_fct_name] = deprecated(tbl_attr[fct_name])
             class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
             rel_class = type(class_name, tuple(bases), tbl_attr)
             Model._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class

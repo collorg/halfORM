@@ -23,13 +23,13 @@ class Test(TestCase):
         self.post._ho_fkeys['author'].set(self.aa)
         self.post.title = 'title test_direct_fkey_insert'
         self.post.content = 'content test_direct_fkey_insert'
-        self.post.ho_insert()
+        self.post._ho_insert()
         post = halftest.Post(title='title test_direct_fkey_insert')
         self.assertEqual(len(post), 1)
-        self.post.ho_update(title='title test_direct_fkey_insert updated')
+        self.post._ho_update(title='title test_direct_fkey_insert updated')
         upost = halftest.Post(title='title test_direct_fkey_insert updated')
         self.assertEqual(len(post), 0)
         self.assertEqual(len(upost), 1)
-        upost.ho_delete()
+        upost._ho_delete()
         self.assertEqual(len(post), 0)
 

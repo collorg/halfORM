@@ -10,7 +10,7 @@ class FKey:
 
     A foreign key is set by assigning to it a Relation object of the
     corresponding type (see FKey.set method).
-    It is then used to construct the join query for Relation.ho_select
+    It is then used to construct the join query for Relation._ho_select
     method.
     """
 
@@ -39,11 +39,11 @@ class FKey:
         f_cast = None
         get_rel = model._import_class if model._scope is not None else model.get_relation_class
         if self.__name.find('_reverse_fkey_') == 0 and __cast__:
-            self.__relation = get_rel(__cast__)(**self.__relation.ho_dict())
+            self.__relation = get_rel(__cast__)(**self.__relation._ho_dict())
         else:
             f_cast = __cast__
         f_relation = get_rel(f_cast or normalize_qrn(self.__fk_fqrn))(**kwargs)
-        rev_fkey_name = f'_reverse_{f_relation.ho_id}'
+        rev_fkey_name = f'_reverse_{f_relation._ho_id}'
         f_relation._ho_fkeys[rev_fkey_name] = FKey(
             rev_fkey_name,
             f_relation,
@@ -52,7 +52,7 @@ class FKey:
         return f_relation
 
     def values(self):
-        return [list(elt.values()) for elt in self.__to_relation.ho_select(*self.__fk_names)]
+        return [list(elt.values()) for elt in self.__to_relation._ho_select(*self.__fk_names)]
 
     def set(self, to_):
         """Sets the relation associated to the foreign key."""
@@ -71,7 +71,7 @@ class FKey:
             raise Exception(f"Type mismatch:\n{self.__fk_fqrn} != {to_._fqrn}")
         self.__fk_from = from_
         self.__fk_to = to_
-        self.__is_set = to_.ho_is_set()
+        self.__is_set = to_._ho_is_set()
         from_._ho_join_to[self] = to_
 
     @classmethod
@@ -117,9 +117,9 @@ class FKey:
         to_ = self.to_
         if id(from_) == id(to_):
             raise RuntimeError("You can't join a relation with itself!")
-        orig_rel_id = f'r{orig_rel.ho_id}'
-        to_id = f'r{to_.ho_id}'
-        from_id = f'r{from_.ho_id}'
+        orig_rel_id = f'r{orig_rel._ho_id}'
+        to_id = f'r{to_._ho_id}'
+        from_id = f'r{from_._ho_id}'
         if to_._qrn == orig_rel._qrn:
             to_id = orig_rel_id
         if from_._qrn == orig_rel._qrn:

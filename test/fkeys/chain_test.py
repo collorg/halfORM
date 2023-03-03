@@ -25,13 +25,13 @@ class Test(TestCase):
             name = f'fkeys chain tester {author_idx}'
             self.authors.append(
                 halftest.Person(last_name=name, first_name=name, birth_date='1970-01-01')
-                .ho_insert())
+                ._ho_insert())
         for post_idx in range(5):
             author_id = self.authors[random.randint(0, len(self.authors) - 1)]['id']
             title = f"test chaining post {post_idx} by {author_id}"
             self.posts.append(
                 halftest.Person(id=author_id).post_rfk(title=title, content=title)
-                .ho_insert())
+                ._ho_insert())
             post_id = self.posts[-1]['id']
             if not post_id in self.authors_by_post:
                 self.authors_by_post[post_id] = []
@@ -46,7 +46,7 @@ class Test(TestCase):
                 content = f"test chaining comment {comment_idx} by {author_id} on {post['title']}"
                 self.comments.append(
                     halftest.Post(id=post_id).comment_rfk(content=content, author_id=author_id)
-                    .ho_insert())
+                    ._ho_insert())
                 comment_id = self.comments[-1]['id']
                 self.author_of_comment[comment_id] = author_id
                 if not author_id in self.comments_by_author:
@@ -64,7 +64,7 @@ class Test(TestCase):
         # print(self.comments_by_author)
 
     def tearDown(self):
-        halftest.Person(last_name=('like', 'fkeys chain tester%')).ho_delete()
+        halftest.Person(last_name=('like', 'fkeys chain tester%'))._ho_delete()
 
     def test_chain_person_post_comment(self):
         "it should be possible to chain from person to comment via post"

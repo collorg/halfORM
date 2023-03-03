@@ -45,29 +45,29 @@ class Test(TestCase):
 
     def test_is_set(self):
         post = self.post()
-        self.assertFalse(post.ho_is_set())
+        self.assertFalse(post._ho_is_set())
         pers = self.pers(last_name=('a%', 'like'))
         post.author_fk.set(pers)
-        self.assertTrue(post.ho_is_set())
+        self.assertTrue(post._ho_is_set())
 
     def test_is_not_set(self):
         post = self.post()
-        self.assertFalse(post.ho_is_set())
+        self.assertFalse(post._ho_is_set())
         pers = self.pers()
-        self.assertFalse(pers.ho_is_set())
+        self.assertFalse(pers._ho_is_set())
         post.author_fk.set(pers)
-        self.assertFalse(post.ho_is_set())
+        self.assertFalse(post._ho_is_set())
 
     def test_is_set_reverse(self):
         post = self.post(title="toto")
         author = post.author_fk()
-        self.assertTrue(author.ho_is_set())
+        self.assertTrue(author._ho_is_set())
 
     def test_is_not_set_reverse(self):
         post = self.post()
         author = post.author_fk
         self.assertFalse(post.author_fk.is_set())
-        self.assertFalse(post.author_fk().ho_is_set())
+        self.assertFalse(post.author_fk()._ho_is_set())
 
     def test_check_FKEYS_class(self):
         pers = self.pers()
@@ -85,5 +85,5 @@ class Test(TestCase):
         pers.comment_rfk = self.comment()
         err = None
         with self.assertRaises(RuntimeError) as err:
-            list(pers.ho_select())
+            list(pers._ho_select())
         self.assertEqual(str(err.exception), ERR_MSG)
