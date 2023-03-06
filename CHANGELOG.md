@@ -1,3 +1,9 @@
+# 0.8.0rc9 (2023-03-06)
+
+* [CI][github] Test on push/pull request on default branch. (49e5db2)
+* [relation] Relation methods are now prefixed with '_ho_'. (5e981f8)
+* [test] Reenable fkeys test_runtime_error. (81a9446)
+* [CI] Only set git user.email and user.name if in Github CI environment. (bc8aaee)
 * [hop] Don't override global git user infos in dummy_test.py. (b8fc5cc)
 
 # 0.8.0rc8 (2023-02-24)
