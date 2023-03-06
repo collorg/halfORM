@@ -1,4 +1,4 @@
-# A simple PostgreSQL to Python mapper [0.8.0rc8]
+# A simple PostgreSQL to Python mapper [0.8.0rc9]
 
 
 ![PyPI version](https://img.shields.io/pypi/v/half_orm)
