@@ -3,7 +3,8 @@
 
 ![PyPI version](https://img.shields.io/pypi/v/half_orm)
 ![Python versions](https://img.shields.io/pypi/pyversions/half_orm)
-![CI badge](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg) 
+![CI badge](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg)
+![Coveralls](https://img.shields.io/coverallsCoverage/github/collorg/halfORM)
 ![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)
 ![Contributors](https://img.shields.io/github/contributors/collorg/halform)
 

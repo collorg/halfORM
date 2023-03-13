@@ -17,3 +17,4 @@ Pipfile.dev
 docs
 half_orm/packager/test/hop_test
 __pycache__
+.coverage
