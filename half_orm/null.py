@@ -12,10 +12,6 @@ __all__ = ['NULL']
 class Null:
     """The Null class"""
 
-def adapt_null(_):
-    """NULL adapter"""
-    return AsIs("NULL")
-
-register_adapter(Null, adapt_null)
+register_adapter(Null, AsIs("NULL"))
 
 NULL = Null()

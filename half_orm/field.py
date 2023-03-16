@@ -22,7 +22,7 @@ class Field():
         self.__comp = '='
 
     @property
-    def _relation(self):
+    def _relation(self): # pragma: no cover
         return self.__relation
 
     def is_set(self):
@@ -88,28 +88,23 @@ class Field():
     def __set__(self, obj, *args):
         """Sets the value (and the comparator) associated with the field."""
         self.__relation._ho_is_singleton = False
-        if len(args) == 1:
-            value = args[0]
-            if value is None:
-                self._unset()
-                return
-            comp = None
-            self.__relation = obj
-            if isinstance(value, tuple):
-                if len(value) != 2:
-                    raise ValueError(f"Can't match {value} with (comp, value)!")
-                comp, value = value
-            if value is NULL and comp is None:
-                comp = 'is'
-            elif comp is None:
-                comp = '='
-        elif len(args) == 2:
-            # The first argument IS comp.
-            comp, value = args
-            if value is None:
-                raise ValueError("Can't have a None value with a comparator!")
-        else:
-            raise RuntimeError('')
+        value = args[0]
+        if value is None:
+            self._unset()
+            return
+        comp = None
+        self.__relation = obj
+        if isinstance(value, tuple):
+            if len(value) != 2:
+                raise ValueError(f"Can't match {value} with (comp, value)!")
+            comp, value = value
+        if value is None:
+            raise ValueError("Can't have a None value with a comparator!")
+        if value is NULL and comp is None:
+            comp = 'is'
+        elif comp is None:
+            comp = '='
+        comp = comp.lower()
         if value is NULL:
             if not comp in {'is', 'is not'}:
                 raise ValueError("comp should be 'is' or 'is not' with NULL value!")
@@ -129,7 +124,7 @@ class Field():
     @unaccent.setter
     def unaccent(self, value):
         if not isinstance(value, bool):
-            raise RuntimeError('unaccent argument must be of boolean type!')
+            raise RuntimeError('unaccent value must be True or False!')
         self.__unaccent = value
 
     def _comp(self):
@@ -159,18 +154,12 @@ class Field():
         """In case someone inadvertently uses the name of a field for a method."""
         rel_class = self.__relation.__class__
         rcn = rel_class.__name__
-        method = None
-        try:
-            method = rel_class.__dict__[self.__name]
-            # print('XXX', isinstance(method, types.FunctionType))
-        except KeyError as err:
-            # genuine attemp to call a Field.
-            raise err
+        method = rel_class.__dict__.get(self.__name)
         err_msg = "'Field' object is not callable."
         warn_msg = f"'{self.__name}' is an attribute of type Field of the '{rcn}' object."
-        err_msg = f"{err_msg}\nWARNING:        {warn_msg}"
         if method:
-            err_msg = f"{err_msg}\n                Do not use '{self.__name}' as a method name."
+            err_msg = f"{err_msg}\n{warn_msg}"
+            err_msg = f"{err_msg}\nDo not use '{self.__name}' as a method name."
         raise TypeError(err_msg)
 
 psycopg2.extensions.register_adapter(Field, Field._psycopg_adapter)

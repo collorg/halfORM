@@ -1,5 +1,5 @@
 from unittest import TestCase
-from ..init import halftest, model
+from ..init import halftest, model, HALFTEST_STR, HALFTEST_REL_LISTS
 from half_orm import model_errors
 
 class Test(TestCase):
@@ -8,6 +8,12 @@ class Test(TestCase):
 
     def setUp(self):
         pass
+
+    def test_str(self):
+        self.assertEqual(str(halftest.model), HALFTEST_STR)
+
+    def test_relations_list(self):
+        self.assertEqual(halftest.model._relations(), HALFTEST_REL_LISTS)
 
     def test_unknown_relation(self):
         "it should raise an error for unknown relations"

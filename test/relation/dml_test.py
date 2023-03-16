@@ -65,3 +65,9 @@ class Test(HoTestCase):
         pers = self.pers(last_name=('like', 'A%'))
         self.assertEqual(len(pers), 10)
         update(pers, str.lower)
+
+    def test_update_with_none_values(self):
+        "it should return None (do nothing) if no update values are provided."
+        pers = self.pers(last_name=None, first_name=None, birth_date=None)
+        res = pers.update(update_all=True)
+        self.assertEqual(res, None)

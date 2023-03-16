@@ -158,17 +158,13 @@ class _Meta(dict):
     def __getitem__(self, key):
         return _Meta.__d_meta.__getitem__(key)
 
-    def __setitem__(self, key, val):
-        _Meta.__d_meta.__setitem__(key, val)
+    # def __setitem__(self, key, val):
+    #     _Meta.__d_meta.__setitem__(key, val)
 
-    def __repr__(self):
-        dictrepr = dict.__repr__(self.__d_meta)
-        return f'{type(self).__name__}({dictrepr})'
+    # def __repr__(self):
+    #     dictrepr = dict.__repr__(self.__d_meta)
+    #     return f'{type(self).__name__}({dictrepr})'
   
-    def update(self, *args, **kwargs):
-        for key, value in dict(*args, **kwargs).items():
-            self.__d_meta[key] = value
-
 class PgMeta:
     meta = _Meta()
     def __init__(self, connection, reload=False):
@@ -241,11 +237,6 @@ class PgMeta:
         metadata['relations_list'].sort()
         self.__metadata = metadata
         PgMeta.meta.register(self.__dbname, self)
-
-    def getFqrn(self, dbname, qrn):
-        "Returns the Fully qualified relation name (quoted) from the unquoted (qrn)"
-        schema, table = qrn.rsplit('.', 1)
-        return f'"{dbname}":"{schema}"."{table}"'
 
     def has_relation(self, dbname, schema, relation):
         """Checks if the qrn is a relation in the database

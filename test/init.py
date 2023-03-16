@@ -24,6 +24,32 @@ To drop halftest database and user when you're done with the tests:
 model = Model('halftest', scope="halftest")
 model2 = Model('hop_test')
 
+HALFTEST_STR = '''r "actor"."person"
+r "blog"."comment"
+r "blog"."event"
+r "blog"."post"
+v "blog.view"."post_comment"'''
+
+HALFTEST_REL_LISTS = [
+    ('r', ('halftest', 'actor', 'person')),
+    ('r', ('halftest', 'blog', 'comment')),
+    ('r', ('halftest', 'blog', 'event')),
+    ('r', ('halftest', 'blog', 'post')),
+    ('r', ('halftest', 'half_orm_meta', 'hop_release')),
+    ('r', ('halftest', 'half_orm_meta', 'hop_release_issue')),
+    ('v', ('halftest', 'blog.view', 'post_comment')),
+    ('v', ('halftest', 'half_orm_meta.view', 'hop_last_release')),
+    ('v', ('halftest', 'half_orm_meta.view', 'hop_penultimate_release'))
+]
+
+HALFTEST_DESC = [
+    ('r', ('halftest', 'actor', 'person'), []),
+    ('r', ('halftest', 'blog', 'comment'), []),
+    ('r', ('halftest', 'blog', 'event'), [('halftest', 'blog', 'post')]),
+    ('r', ('halftest', 'blog', 'post'), []),
+    ('v', ('halftest', 'blog.view', 'post_comment'), [])
+]
+
 def name(letter, integer):
     return f"{letter}{chr(ord('a') + integer)}"
 

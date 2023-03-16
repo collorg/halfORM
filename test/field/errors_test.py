@@ -6,8 +6,8 @@ from ..init import halftest
 from half_orm import field_errors, model
 
 conflict_msg = """'Field' object is not callable.
-WARNING:        'last_name' is an attribute of type Field of the 'PC' object.
-                Do not use 'last_name' as a method name."""
+'last_name' is an attribute of type Field of the 'PC' object.
+Do not use 'last_name' as a method name."""
 
 class Test(TestCase):
     def reset(self):

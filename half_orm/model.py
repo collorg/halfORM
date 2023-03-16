@@ -27,7 +27,7 @@ import sys
 from configparser import ConfigParser
 from os import environ
 from functools import wraps
-from typing import Generator, List
+from typing import List
 
 import psycopg2
 from psycopg2 import pool
@@ -130,7 +130,7 @@ class Model:
 
         if self.__dbinfo and config_file and dbname != self.__dbname:
             raise RuntimeError(
-                f"Can't reconnect to another database {dbname} != {self.__dbname}")
+                f"Can't reconnect to another database: {dbname} != {self.__dbname}")
 
         self.__dbinfo['dbname'] = dbname
         self.__dbinfo['user'] = database.get('user')
