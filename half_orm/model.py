@@ -30,7 +30,6 @@ from functools import wraps
 from typing import List
 
 import psycopg2
-from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
 
 from half_orm import model_errors
@@ -97,10 +96,6 @@ class Model:
         self.__minconn = None
         self.__maxconn = None
         self.__load_config(config_file)
-        self.__pool = None
-        if self.__minconn and self.__maxconn:
-            self.__pool =  pool.ThreadedConnectionPool(
-                self.__minconn, self.__maxconn, **self.__dbinfo)
         self.__backend_pid = None
         self._scope = scope and scope.split('.')[0]
         self.__conn = None
@@ -138,11 +133,6 @@ class Model:
         self.__dbinfo['host'] = database.get('host')
         self.__dbinfo['port'] = database.get('port')
 
-        if config.has_section('pool'):
-            c_pool = config['pool']
-            self.__minconn = c_pool.get('minconn')
-            self.__maxconn = c_pool.get('maxconn')
-
     def __connect(self, config_file: str=None, reload: bool=False):
         """Setup a new connection to the database.
 
@@ -160,11 +150,8 @@ class Model:
             self.__load_config(config_file)
 
         try:
-            if self.__pool is None:
-                self.__conn = psycopg2.connect(
-                    **self.__dbinfo, cursor_factory=RealDictCursor)
-            else:
-                self.__conn = self.__pool.getconn()
+            self.__conn = psycopg2.connect(
+                **self.__dbinfo, cursor_factory=RealDictCursor)
             self.__conn.autocommit = True
             self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
             self.__deja_vu[self.__dbname] = self
