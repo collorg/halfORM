@@ -1,3 +1,10 @@
+# 0.8.0rc10 (2023-03-17)
+
+* [hop] Check that we are on hop_main branch before upgrade in prod. (7702aed)
+* [model] Remove psycopg2.pool. (c7d99e3)
+* [test] More coverage. (9d66be0)
+* [test] Coverage (without half_orm/packager) still pre-alpha. (78edfd1)
+
 # 0.8.0rc9 (2023-03-06)
 
 * [CI][github] Test on push/pull request on default branch. (49e5db2)
