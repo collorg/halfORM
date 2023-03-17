@@ -65,15 +65,18 @@ class Patch:
             n_rels[level] = n_rel
         return n_rels
 
+    def __assert_main_branch(self):
+        if str(self.__repo.hgit.branch) != 'hop_main':
+            utils.error(
+                'ERROR! Wrong branch. Please, switch to the hop_main branch before.\n', exit_code=1)
+
     def prep_release(self, release_level, message=None):
         """Returns the next (major, minor, patch) tuple according to the release_level
 
         Args:
             release_level (str): one of ['patch', 'minor', 'major']
         """
-        if str(self.__repo.hgit.branch) != 'hop_main':
-            utils.error(
-                'ERROR! Wrong branch. Please, switch to the hop_main branch before.\n', exit_code=1)
+        self.__assert_main_branch()
         next_releases = self.__next_releases
         if release_level is None:
             next_levels = '\n'.join(
@@ -302,6 +305,7 @@ class Patch:
 
     def upgrade_prod(self):
         "Upgrade the production"
+        self.__assert_main_branch()
         self.__save_db(self.__repo.database.last_release_s)
         for release in self.__repo.changelog.releases_to_apply_in_prod:
             self.apply(release, save_db=False)
