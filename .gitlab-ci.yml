@@ -12,7 +12,7 @@ variables:
 .before_script_template: &test
   before_script:
     - apt-get update
-    - apt-get install -y postgresql tree
+    - apt-get install -y postgresql tree sudo
     - service postgresql start
     - su - postgres -c "psql template1 -c \"create user halftest with password 'halftest';\" "
     - su - postgres -c "psql template1 -c 'ALTER USER halftest WITH SUPERUSER'"

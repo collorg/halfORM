@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
+import sys
+import subprocess
+from unittest import TestCase
 from time import sleep
 from random import randint
+
 import psycopg2
-import sys
-from unittest import TestCase
+
 from half_orm.hotest import HoTestCase
+from half_orm import relation_errors, model
 
 from ..init import halftest
-from half_orm import relation_errors, model
 
 class Test(HoTestCase):
     def setUp(self):
@@ -71,3 +74,7 @@ class Test(HoTestCase):
         pers = self.pers(last_name=None, first_name=None, birth_date=None)
         res = pers.update(update_all=True)
         self.assertEqual(res, None)
+
+    def test_pg_down_ping(self):
+        subprocess.run(["sudo", "service", "postgresql", "restart"], check=True)
+        list(self.pers())
