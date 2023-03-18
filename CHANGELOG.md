@@ -1,3 +1,7 @@
+# 0.8.0rc11 (2023-03-18)
+
+* [field] Fix Bad adapter for NULL. (2f07867)
+
 # 0.8.0rc10 (2023-03-17)
 
 * [hop] Check that we are on hop_main branch before upgrade in prod. (7702aed)

@@ -66,7 +66,7 @@ run `pip install half_orm` in a virtual environment.
 
 ## Install `half_orm` pre-release
 
-`pip install half_orm==0.8.0rc10`
+`pip install half_orm==0.8.0rc11`
 
 ### Set your HALFORM_CONF_DIR
 
