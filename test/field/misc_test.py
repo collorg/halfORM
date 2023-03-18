@@ -78,6 +78,7 @@ class Test(TestCase):
     def test_null_value(self):
         self.post.content = NULL
         self.assertEqual(self.post.content._comp(), 'is')
+        list(self.post)
 
     def test_comp_is_none_error(self):
         with self.assertRaises(ValueError) as exc:
