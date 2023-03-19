@@ -18,7 +18,7 @@ class Test(HoTestCase):
         self.pers = halftest.Person()
         self.post = halftest.Post()
         self.today = halftest.today
-        self.blog_view = halftest.Blog_view()
+        self.blog_view = halftest.BlogView()
 
     def test_count(self):
         self.pers._ho_mogrify()

@@ -18,6 +18,7 @@ class Test(HoTestCase):
         self.pers = halftest.Person()
         self.post = halftest.Post()
         self.comment = halftest.Comment()
+        self.blog_view = halftest.BlogView()
         self.today = halftest.today
         self.post()._ho_delete(delete_all=True)
         self.comment()._ho_delete(delete_all=True)
@@ -200,3 +201,10 @@ class Test(HoTestCase):
             )
         self.assertEqual(str(exc.exception), 'f_rel must have 2 or 3 arguments. Got 1.')
 
+    def test_join_error_4(self):
+        with self.assertRaises(RuntimeError) as exc:
+            self.comment()._ho_join(
+                (self.blog_view(), 'post'),
+                (self.post(), 'post', 'title')
+            )
+        self.assertEqual(str(exc.exception), 'No foreign key between "halftest":"blog"."comment" and "halftest":"blog.view"."post_comment"!')

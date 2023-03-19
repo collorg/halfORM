@@ -68,7 +68,7 @@ class HalfTest:
         self.Post = model._import_class("blog.post")
         self.Comment = model._import_class("blog.comment")
         self.Event = model._import_class("blog.event")
-        self.Blog_view = model._import_class("blog.view.post_comment")
+        self.BlogView = model._import_class("blog.view.post_comment")
         class PC(self.Person):
             def last_name(self):
                 pass
