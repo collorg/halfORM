@@ -506,7 +506,7 @@ def _ho_json(self, yml_directive=None, res_field_name='elements', **kwargs): #pr
 def _ho_dict(self):
     """Returns a dictionary containing only the values of the fields
     that are set."""
-    return {key:field.value for key, field in self._ho_fields.items()} # if field.is_set()}
+    return {key:field.value for key, field in self._ho_fields.items() if field.is_set()}
 
 def __to_dict_val_comp(self):
     """Returns a dictionary containing the values and comparators of the fields
@@ -598,7 +598,16 @@ def __walk_op(self, rel_id_, out=None, _fields_=None):
         _fields_ += self.__get_set_fields()
     return out, _fields_
 
-def __join(self, orig_rel, deja_vu):
+def __sql_id(self):
+    """Returns the FQRN as alias for the sql query."""
+    return f"{self._qrn} as r{self._ho_id}"
+
+def __get_from(self, orig_rel=None, deja_vu=None):
+    """Constructs the __sql_query and gets the __sql_values for self."""
+    if deja_vu is None:
+        orig_rel = self
+        self.__sql_query = [__sql_id(self)]
+        deja_vu = {self._ho_id:[(self, None)]}
     for fkey, fk_rel in self._ho_join_to.items():
         fk_rel.__query_type = orig_rel.__query_type
         fk_rel.__get_from(orig_rel, deja_vu)
@@ -616,18 +625,6 @@ def __join(self, orig_rel, deja_vu):
         orig_rel.__sql_query.insert(2, fkey._join_query(self))
         orig_rel.__sql_query.append(where)
         orig_rel.__sql_values += values
-
-def __sql_id(self):
-    """Returns the FQRN as alias for the sql query."""
-    return f"{self._qrn} as r{self._ho_id}"
-
-def __get_from(self, orig_rel=None, deja_vu=None):
-    """Constructs the __sql_query and gets the __sql_values for self."""
-    if deja_vu is None:
-        orig_rel = self
-        self.__sql_query = [__sql_id(self)]
-        deja_vu = {self._ho_id:[(self, None)]}
-    self.__join(orig_rel, deja_vu)
 
 def __where_repr(self, rel_id_):
     where_repr = []
@@ -859,7 +856,7 @@ def _ho_join(self, *f_rels):
         f_relation_fk_names = []
         fkey_found = False
         for fkey_12 in ref._ho_fkeys:
-            if type(ref._ho_fkeys[fkey_12]) != FKey:
+            if type(ref._ho_fkeys[fkey_12]) != FKey: #pragma: no cover
                 raise RuntimeError("This is not an Fkey")
             remote_fk = ref._ho_fkeys[fkey_12]
             remote = remote_fk()
@@ -1049,7 +1046,6 @@ COMMON_INTERFACE = {
 
     '__sql_id': __sql_id,
     '__walk_op': __walk_op,
-    '__join': __join,
     '__what_to_insert': __what_to_insert,
     '__update_args': __update_args,
     '__add_returning': __add_returning,
