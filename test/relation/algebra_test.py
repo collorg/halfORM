@@ -33,6 +33,39 @@ class Test(TestCase):
             last_name=('like', f'{self.c1}{self.c2}%'))
         self.set_3 = self.pers(last_name=('like', f'__{self.c3}%'))
 
+    def test_iand(self):
+        a = self.set_1
+        b = self.set_2
+        c = a & b
+        a &= b
+        self.assertTrue(a, c)
+
+    def test_ior(self):
+        a = self.set_1
+        b = self.set_2
+        c = a | b
+        a |= b
+        self.assertTrue(a, c)
+
+    def test_isub(self):
+        a = self.set_1
+        b = self.set_2
+        c = a - b
+        a -= b
+        self.assertTrue(a, c)
+
+    def test_xor(self):
+        a = self.set_1
+        b = self.set_2
+        self.assertEqual(a ^ b, (a | b) - (a & b))
+
+    def test_ixor(self):
+        a = self.set_1
+        b = self.set_2
+        c = a ^ b
+        a ^= b
+        self.assertTrue(a, c)
+
     def test_and_1(self):
         a = self.set_1
         b = self.set_2
