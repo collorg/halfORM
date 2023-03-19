@@ -793,6 +793,8 @@ def __call__(self, **kwargs):
 
 def _ho_cast(self, qrn):
     """Cast a relation into another relation.
+
+    TODO: check that qrn inherits self (or is inherited by self)?
     """
     new = self._model._import_class(qrn)(**self.__to_dict_val_comp())
     new.__id_cast = id(self)

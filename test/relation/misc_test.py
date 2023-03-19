@@ -30,7 +30,7 @@ class Test(TestCase):
         self.assertEqual(len(posts1), 2)
         posts2 = self.gaston.post_rfk(title=('ilike', '%super%'))
         posts = posts1 | posts2
-        posts._ho_mogrify()
+        # posts._ho_mogrify()
         list(posts)
         self.assertEqual(len(posts), 3)
         posts1._ho_only = True
@@ -87,3 +87,14 @@ class Test(TestCase):
         offset = randint(0, len(halftest.Post()))
         posts._ho_offset(offset)
         self.assertEqual(len(list(posts)), len(halftest.Post()) - offset)
+
+    def test_cast(self):
+        "it should cast to the new relation"
+        events = halftest.Post()._ho_cast('blog.event')
+        self.assertEqual(len(events), 1)
+
+    def test_cast_error(self):
+        "it should raise an error if the set attributes are not known in the new relation"
+        with self.assertRaises(relation_errors.UnknownAttributeError) as exc:
+            halftest.Post(title='coucou')._ho_cast('actor.person')
+        self.assertEqual(str(exc.exception), "ERROR! Unknown attribute: {'title'}.")
