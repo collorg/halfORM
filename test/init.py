@@ -50,6 +50,10 @@ HALFTEST_DESC = [
     ('v', ('halftest', 'blog.view', 'post_comment'), [])
 ]
 
+GASTON = {
+    'last_name': 'Lagaffe', 'first_name': 'Gaston', 'birth_date': date.today()
+}
+
 def name(letter, integer):
     return f"{letter}{chr(ord('a') + integer)}"
 
@@ -71,6 +75,7 @@ class HalfTest:
 
         self.PublicA = model2.get_relation_class('public.a')
         self._person = self.Person()
+        self.gaston = self.Person(**GASTON)
         self.pc = PC()
         self.relation = model._import_class
 

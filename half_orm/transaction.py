@@ -69,3 +69,25 @@ class Transaction:
             relation._model._connection.autocommit = True
             raise err
         return res
+
+    @classmethod
+    def __enter(cls, model):
+        model._connection.autocommit = False
+        Transaction.__level += 1
+
+    @classmethod
+    def __exit(cls, model):
+        Transaction.__level -= 1
+        if Transaction.__level == 0:
+            try:
+                model._connection.commit()
+                model._connection.autocommit = True
+            except Exception as err:
+                sys.stderr.write(f"Transaction error: {err}\nRolling back!\n")
+                model._connection.rollback()
+                model._connection.autocommit = True
+                raise err
+
+    @classmethod
+    def is_set(cls):
+        return Transaction.__level > 0
