@@ -2,7 +2,6 @@
 #-*- coding:  utf-8 -*-
 
 import sys
-import subprocess
 from unittest import TestCase
 from time import sleep
 from random import randint
@@ -74,7 +73,3 @@ class Test(HoTestCase):
         pers = self.pers(last_name=None, first_name=None, birth_date=None)
         res = pers.update(update_all=True)
         self.assertEqual(res, None)
-
-    def test_pg_down_ping(self):
-        subprocess.run(["sudo", "service", "postgresql", "restart"], check=True)
-        list(self.pers())

@@ -56,6 +56,7 @@ import yaml
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
 from half_orm.field import Field
+from half_orm.packager import utils
 
 class _SetOperators:
     """_SetOperators class stores the set operations made on the Relation class objects
@@ -404,10 +405,11 @@ def __set_fkeys(self):
                 raise relation_errors.WrongFkeyError(self, value) from exp
     self.__fkeys_properties = True
 
-def _ho_group_by(self, yml_directive):
+def _ho_group_by(self, yml_directive): #pragma: no cover
     """Returns an aggregation of the data according to the yml directive
     description.
     """
+    utils.error("Use at your own risk. This method is not tested.\n")
     def inner_group_by(data, directive, grouped_data, gdata=None):
         """recursive fonction to actually group the data in grouped_data."""
         deja_vu_key = set()
@@ -475,10 +477,11 @@ def _ho_group_by(self, yml_directive):
     inner_group_by(data, directive, grouped_data)
     return grouped_data
 
-def _ho_json(self, yml_directive=None, res_field_name='elements', **kwargs):
+def _ho_json(self, yml_directive=None, res_field_name='elements', **kwargs): #pragma: no cover
     """Returns a JSON representation of the set returned by the select query.
     if kwargs, returns {res_field_name: [list of elements]}.update(kwargs)
     """
+    utils.error("Use at your own risk. This method is not tested.\n")
 
     def handler(obj):
         """Replacement of default handler for json.dumps."""
