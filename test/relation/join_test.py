@@ -172,3 +172,31 @@ class Test(HoTestCase):
         self.assertEqual(post_by_comment_ab_post_1[0]['content'], self.comment_ab_post_1)
         self.assertEqual(len(post_by_comment_ab_post_1[0]['post']), 1)
         self.assertEqual(post_by_comment_ab_post_1[0]['post'][0]['title'], 'post 1')
+
+    def test_join_error_1(self):
+        "f_rels should be tuples"
+        with self.assertRaises(RuntimeError) as exc:
+            self.comment()._ho_join(
+                self.personne(),
+                (self.post(), 'post', 'title')
+            )
+        self.assertEqual(str(exc.exception), 'f_rels must be a list of tuples.')
+
+    def test_join_error_2(self):
+        "f_rels should have 2 or 3 arguments"
+        with self.assertRaises(RuntimeError) as exc:
+            self.comment()._ho_join(
+                (self.personne(), ),
+                (self.post(), 'post', 'title')
+            )
+        self.assertEqual(str(exc.exception), 'f_rel must have 2 or 3 arguments. Got 1.')
+
+    def test_join_error_3(self):
+        "f_rels should have 2 or 3 arguments"
+        with self.assertRaises(RuntimeError) as exc:
+            self.comment()._ho_join(
+                (self.personne(), ),
+                (self.post(), 'post', 'title')
+            )
+        self.assertEqual(str(exc.exception), 'f_rel must have 2 or 3 arguments. Got 1.')
+
