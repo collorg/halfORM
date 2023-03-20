@@ -18,6 +18,7 @@ class FKey:
                  fk_name, relation, fk_sfqrn,
                  fk_names=None, fields=None, confupdtype=None, confdeltype=None):
         self.__relation = relation
+        self.__expected_to_relation = self.__get_rel(normalize_qrn(fk_sfqrn))
         self.__to_relation = None
         self.__name = fk_name
         self.__is_set = False
@@ -30,19 +31,26 @@ class FKey:
         self.__fields_names = fields
         self.__fields = [f'"{name}"' for name in fields]
 
+    def __get_rel(self, fqtn):
+        """Returns the relation class referenced by fqtn.
+        First try model._import_class fallback to model.get_relation_class on ImportError.
+        """
+        try:
+            return self.__relation._model._import_class(fqtn)
+        except ImportError:
+            return self.__relation._model.get_relation_class(fqtn)
+
     def __call__(self, __cast__=None, **kwargs):
         """Returns the relation referenced by the fkey.
-        If model._scope is set, instanciate the class from the scoped module.
-        Uses the __cast if it is set.
+        Uses the __cast__ if it is set.
         """
-        model = self.__relation._model
         f_cast = None
-        get_rel = model._import_class if model._scope is not None else model.get_relation_class
+        # get_rel = model._import_class if model._scope is not None else model.get_relation_class
         if self.__name.find('_reverse_fkey_') == 0 and __cast__:
-            self.__relation = get_rel(__cast__)(**self.__relation._ho_dict())
+            self.__relation = self.__get_rel(__cast__)(**self.__relation._ho_dict())
         else:
             f_cast = __cast__
-        f_relation = get_rel(f_cast or normalize_qrn(self.__fk_fqrn))(**kwargs)
+        f_relation = self.__get_rel(f_cast or normalize_qrn(self.__fk_fqrn))(**kwargs)
         rev_fkey_name = f'_reverse_{f_relation._ho_id}'
         f_relation._ho_fkeys[rev_fkey_name] = FKey(
             rev_fkey_name,
@@ -54,50 +62,33 @@ class FKey:
     def values(self):
         return [list(elt.values()) for elt in self.__to_relation._ho_select(*self.__fk_names)]
 
-    def set(self, to_):
-        """Sets the relation associated to the foreign key."""
+    def set(self, __to):
+        """Sets the relation associated to the foreign key.
+
+        TODO: check that the __to is indeed atteinable from self
+        """
+        # pylint: disable=import-outside-toplevel
         from half_orm.relation import Relation
 
-        self.__to_relation = to_
+        if not issubclass(__to.__class__, Relation):
+            raise RuntimeError("Fkey.set excepts an argument of type Relation")
+        if id(self.__relation) == id(__to):
+            raise RuntimeError(f"Can't set Fkey {self.__name} on the same object")
+        self.__to_relation = __to
         from_ = self.__relation
-        if not issubclass(to_.__class__, Relation):
-            raise Exception("Expecting a Relation")
-        to_classes = set(type.mro(to_.__class__))
-        self_classes = set(type.mro(self.__relation.__class__))
-        common_classes = to_classes.intersection(self_classes)
-        if object in common_classes:
-            common_classes.remove(object)
-        if not common_classes:
-            raise Exception(f"Type mismatch:\n{self.__fk_fqrn} != {to_._fqrn}")
+        # to_classes = set(type.mro(__to.__class__))
+        # to_classes.add(__to.__class__)
+        # print('XXX', to_classes, self.__expected_to_relation)
+        # if not self.__expected_to_relation in to_classes:
+        #     raise RuntimeError(f"Type mismatch:\n{self.__fk_fqrn} != {__to._fqrn}")
         self.__fk_from = from_
-        self.__fk_to = to_
-        self.__is_set = to_._ho_is_set()
-        from_._ho_join_to[self] = to_
-
-    @classmethod
-    def __set__(cls, *args):
-        "Setting an Fkey is prohibited"
-        print('XXX', cls, '\n', args)
-        raise RuntimeError
+        self.__fk_to = __to
+        self.__is_set = __to._ho_is_set()
+        from_._ho_join_to[self] = __to
 
     def is_set(self):
         """Return if the foreign key is set (boolean)."""
         return self.__is_set
-
-    @property
-    def to_(self):
-        """Returns the destination relation of the fkey."""
-        return self.__fk_to
-
-    @to_.setter
-    def to_(self, to_):
-        """Sets the destination relation of the fkey."""
-        self.__fk_to = to_
-
-    @property
-    def fk_fqrn(self):
-        """Returns the FQRN of the relation pointed to."""
-        return self.__fk_fqrn
 
     @property
     def confupdtype(self):
@@ -111,39 +102,32 @@ class FKey:
 
     def _join_query(self, orig_rel):
         """Returns the join_query, join_values of a foreign key.
-        fkey interface: frel, from_, to_, fields, fk_names
+        fkey interface: frel, from_, __to, fields, fk_names
         """
         from_ = self.__fk_from
-        to_ = self.to_
-        if id(from_) == id(to_):
-            raise RuntimeError("You can't join a relation with itself!")
+        __to = self.__fk_to
         orig_rel_id = f'r{orig_rel._ho_id}'
-        to_id = f'r{to_._ho_id}'
+        to_id = f'r{__to._ho_id}'
         from_id = f'r{from_._ho_id}'
-        if to_._qrn == orig_rel._qrn:
+        if __to._qrn == orig_rel._qrn:
             to_id = orig_rel_id
         if from_._qrn == orig_rel._qrn:
             from_id = orig_rel_id
         from_fields = (f'{from_id}.{name}' for name in self.__fields)
-        to_fields = (f'{to_id}.{name}' for name in self.fk_names)
+        to_fields = (f'{to_id}.{name}' for name in self.__fk_names)
         bounds = " and ".join(
             [f'{a} = {b}' for a, b in zip(to_fields, from_fields)])
         return f"({bounds})"
 
     def _prep_select(self):
         if self.__is_set:
-            return self.__fields, self.to_._ho_prep_select(*self.fk_names)
+            return self.__fields, self.__fk_to._ho_prep_select(*self.fk_names)
         return None
 
     @property
     def fk_names(self):
         """Returns the names of the fields composing the foreign key in the foreign table."""
         return self.__fk_names
-
-    @fk_names.setter
-    def fk_names(self, fk_names):
-        """Sets the names of the fields in the foreign table."""
-        self.__fk_names = fk_names
 
     @property
     def names(self):
@@ -158,7 +142,7 @@ class FKey:
         fields = f"({', '.join(fields)})"
         repr_ = f"- {self.__name}: {fields}\n ↳ {normalize_fqrn(self.__fk_fqrn)}({', '.join(self.fk_names)})"
         if self.__is_set:
-            repr_value = str(self.to_)
+            repr_value = str(self.__fk_to)
             res = []
             for line in repr_value.split('\n'):
                 res.append(f'     {line}')

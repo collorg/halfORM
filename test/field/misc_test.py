@@ -17,6 +17,7 @@ class Test(TestCase):
 
     def tearDown(self):
         halftest.model.execute_query('alter table blog.post alter column content drop not null')
+        halftest.model.reconnect(reload=True)
 
     def test_not_set_field(self):
         pers = self.pers()
@@ -33,14 +34,12 @@ class Test(TestCase):
 
     def test_fields_names(self):
         field_names = set(self.pers._ho_fields.keys())
-        print(field_names)
         self.assertEqual(
             field_names,
             {'id', 'first_name', 'last_name', 'birth_date'})
 
     def test_relation_ref(self):
         first_name = self.pers.first_name
-        print(first_name._relation)
         self.assertEqual(id(first_name._relation), id(self.pers))
 
     def test_unset_field_with_none(self):

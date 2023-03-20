@@ -30,7 +30,6 @@ class Test(TestCase):
         self.assertEqual(len(posts1), 2)
         posts2 = self.gaston.post_rfk(title=('ilike', '%super%'))
         posts = posts1 | posts2
-        # posts._ho_mogrify()
         list(posts)
         self.assertEqual(len(posts), 3)
         posts1._ho_only = True

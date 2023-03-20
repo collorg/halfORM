@@ -21,7 +21,6 @@ class Test(HoTestCase):
         self.blog_view = halftest.BlogView()
 
     def test_count(self):
-        self.pers._ho_mogrify()
         self.assertEqual(len(self.pers()), 60)
 
     def test_expected_one_error_0(self):
@@ -71,5 +70,5 @@ class Test(HoTestCase):
     def test_update_with_none_values(self):
         "it should return None (do nothing) if no update values are provided."
         pers = self.pers(last_name=None, first_name=None, birth_date=None)
-        res = pers.update(update_all=True)
+        res = pers._ho_update(update_all=True)
         self.assertEqual(res, None)

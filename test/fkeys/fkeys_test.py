@@ -17,6 +17,7 @@ class Test(TestCase):
         self.pers = halftest.Person()
         self.post = halftest.Post()
         self.comment = halftest.Comment()
+        self.view = halftest.BlogView()
         aa = self.pers(last_name='aa')
         assert(len(aa) == 1)
 
@@ -87,3 +88,14 @@ class Test(TestCase):
         with self.assertRaises(RuntimeError) as err:
             list(pers._ho_select())
         self.assertEqual(str(err.exception), ERR_MSG)
+
+    def test_expecting_a_relation_error(self):
+        "it should raise an exception if we set with anything but a Relation object"
+        with self.assertRaises(RuntimeError) as exc:
+            self.pers().post_rfk.set('coucou')
+
+    # def test_type_mismatch_error(self):
+    #     "it should raise an exception if we set with a Relation "
+    #     print(halftest.model)
+    #     with self.assertRaises(RuntimeError) as exc:
+    #         self.pers().post_rfk.set(self.view)

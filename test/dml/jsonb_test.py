@@ -18,13 +18,12 @@ class Test(TestCase):
         "should insert, update, delete jsonb in blog.post"
         title = 'title test_jsonb'
         self.post.title = title
-        self.post._ho_mogrify()
         self.post.content = 'content test_jsonb'
         data = {'a': 'b'}
         self.post.data = data
         self.post._ho_insert()
         self.assertEqual(len(self.post), 1)
-        self.assertEqual(next(self.post.select('data'))['data'], data)
+        self.assertEqual(next(self.post._ho_select('data'))['data'], data)
         self.post = halftest.Post(title=title)
         ndata = {'a': 'c'}
         self.post._ho_update(data=ndata)

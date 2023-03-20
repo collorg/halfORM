@@ -23,7 +23,6 @@ class Test(TestCase):
 
     def test_singleton_ok(self):
         """name method is decorated with @singleton in halftest.actor.person.Person class"""
-        print(type(self.pers))
         aa = self.pers(last_name='aa')
         aa.name()
 

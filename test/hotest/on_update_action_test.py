@@ -13,7 +13,6 @@ class Test(HoTestCase):
         halftest.model.reconnect(reload=True)
         self.RelA = halftest.model.get_relation_class('tmp.a')
         self.RelB = halftest.model.get_relation_class('tmp.b')
-        print(self.RelB())
 
     def tearDown(self):
         halftest.model.execute_query('drop schema tmp cascade')

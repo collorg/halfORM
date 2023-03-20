@@ -610,12 +610,12 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         deja_vu = {self._ho_id:[(self, None)]}
     for fkey, fk_rel in self._ho_join_to.items():
         fk_rel.__query_type = orig_rel.__query_type
-        fk_rel.__get_from(orig_rel, deja_vu)
         if fk_rel._ho_id not in deja_vu:
             deja_vu[fk_rel._ho_id] = []
         elif (fk_rel, fkey) in deja_vu[fk_rel._ho_id] or fk_rel is orig_rel:
             #sys.stderr.write(f"déjà vu in from! {fk_rel._fqrn}\n")
             continue
+        fk_rel.__get_from(orig_rel, deja_vu)
         deja_vu[fk_rel._ho_id].append((fk_rel, fkey))
         if fk_rel.__set_operators.operator:
             fk_rel.__get_from(self._ho_id)

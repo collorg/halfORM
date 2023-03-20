@@ -19,7 +19,7 @@ class Test(TestCase):
             model.execute_query('drop table test')
             model.disconnect()
         except UndefinedTable as exc:
-            print(exc)
+            pass
 
     def reset(self):
         pass
