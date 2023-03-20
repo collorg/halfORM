@@ -3,8 +3,9 @@
 
 import os
 from unittest import TestCase
-from ..init import halftest
+
 from half_orm import model_errors, model
+from ..init import halftest
 
 
 

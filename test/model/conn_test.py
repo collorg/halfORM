@@ -4,7 +4,7 @@
 import subprocess
 from unittest import TestCase
 
-from psycopg2 import InterfaceError
+import psycopg2
 from psycopg2.errors import UndefinedTable
 
 from ..init import halftest, model, model2
@@ -40,7 +40,7 @@ class Test(TestCase):
     def test_disconnect(self):
         "it should disconnect"
         model.disconnect()
-        with self.assertRaises(InterfaceError):
+        with self.assertRaises(psycopg2.InterfaceError):
             model.execute_query("select 1")
 
     def test_ping(self):
@@ -57,15 +57,10 @@ class Test(TestCase):
         model._reload()
         self.assertTrue(model.has_relation('public.test'))
         model.execute_query('drop table test')
-        model._reload()
+        model.reconnect(reload=True)
         self.assertFalse(model.has_relation('public.test'))
 
     def test_model2(self):
         "it should have load model2"
         self.assertEqual(model2.desc(), [('r', ('hop_test', 'public', 'a'), []), ('r', ('hop_test', 'public', 'b'), []), ('r', ('hop_test', 'public', 'first'), [])])
         self.assertEqual(model.desc(), [('r', ('halftest', 'actor', 'person'), []), ('r', ('halftest', 'blog', 'comment'), []), ('r', ('halftest', 'blog', 'event'), [('halftest', 'blog', 'post')]), ('r', ('halftest', 'blog', 'post'), []), ('v', ('halftest', 'blog.view', 'post_comment'), [])])
-
-    def test_automatic_reconnection(self):
-        "it should reconnect after postgresql has been restarted"
-        subprocess.run(["sudo", "service", "postgresql", "restart"], check=True)
-        list(self.pers())

@@ -979,14 +979,14 @@ def __enter__(self):
         new_elt = relation(**elt)
         new_elt._ho_update(col=new_val)
     """
-    self._ho_transaction._Transaction__enter(self._model)
+    self._ho_transaction._enter(self._model)
     return self
 
 def __exit__(self, *__):
     """Context management exit
 
     """
-    self._ho_transaction._Transaction__exit(self._model)
+    self._ho_transaction._exit(self._model)
     return False
 
 def __iter__(self):

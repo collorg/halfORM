@@ -17,12 +17,6 @@ class MalformedConfigFile(Exception):
             self,
             f"Malformed config file: {filename}\n{msg}: {missing_param}")
 
-class UnknownDatabase(Exception):
-    """The database dbname couldn't be found. Connexion error ?"""
-    def __init__(self, dbname):
-        self.dbname = dbname
-        Exception.__init__(self, f'Unknown database: {dbname}')
-
 class UnknownRelation(Exception):
     """The FQRN doesn't match any relation in the database."""
     def __init__(self, sfqrn):

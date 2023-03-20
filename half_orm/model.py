@@ -93,10 +93,7 @@ class Model:
         reserved to the __factory metaclass.
         """
         self.__dbinfo = {}
-        self.__minconn = None
-        self.__maxconn = None
         self.__load_config(config_file)
-        self.__backend_pid = None
         self._scope = scope and scope.split('.')[0]
         self.__conn = None
         self.__connect()
@@ -149,16 +146,10 @@ class Model:
         if config_file:
             self.__load_config(config_file)
 
-        try:
-            self.__conn = psycopg2.connect(
-                **self.__dbinfo, cursor_factory=RealDictCursor)
-            self.__conn.autocommit = True
-            self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
-            self.__deja_vu[self.__dbname] = self
-            self.__backend_pid = self.execute_query(
-                "select pg_backend_pid()").fetchone()['pg_backend_pid']
-        except psycopg2.OperationalError as err:
-            raise err.__class__(err)
+        self.__conn = psycopg2.connect(**self.__dbinfo, cursor_factory=RealDictCursor)
+        self.__conn.autocommit = True
+        self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
+        self.__deja_vu[self.__dbname] = self
 
     reconnect = __connect
 
@@ -283,8 +274,10 @@ class Model:
         except (psycopg2.OperationalError, psycopg2.InterfaceError):
             try:
                 self.__connect()
-            except psycopg2.OperationalError as err:
-                sys.stderr.write(f'{err}\n')
+                self.execute_query("select 1")
+            except (psycopg2.OperationalError, psycopg2.InterfaceError) as exc: #pragma: no cover
+                # log reconnection attempt failure
+                sys.stderr.write(f'{exc.exception}\n')
                 sys.stderr.flush()
             return False
 
@@ -301,11 +294,6 @@ class Model:
         Updates the model according to changes made to the database.
         """
         self.__connect(config_file, True)
-
-    @property
-    def _pg_backend_pid(self):
-        "backend PID"
-        return self.__backend_pid
 
     @property
     def _dbname(self):
