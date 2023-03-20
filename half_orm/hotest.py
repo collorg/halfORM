@@ -1,3 +1,5 @@
+# pylint: disable=protected-access
+
 import unittest
 from typing import List
 from half_orm.relation import Relation
@@ -11,32 +13,26 @@ class HoTestCase(unittest.TestCase):
 
     def hotAssertIsUnique(self, relation: Relation, fields_names: List[str]):
         "Checks if a list of fields is unique for the relation."
-        fields_nums = set()
-        pkeynum = []
+        if (set(fields_names) == set(relation._ho_pkey.keys())):
+            return # OK it's the primary key
         for field_name in fields_names:
-            field = relation()._fields[field_name]
-            metadata = field._Field__metadata
-            fields_nums.add(metadata['fieldnum'])
-            if not pkeynum and metadata['pkeynum']:
-                pkeynum = metadata['pkeynum']
-            if not metadata['uniq'] and pkeynum != metadata['pkeynum']:
+            field = relation()._ho_fields[field_name]
+            if not field._Field__metadata['uniq']:
                 raise self.fail(f"'{fields_names}' is not unique.")
-        if fields_nums != set(pkeynum):
-            raise self.fail(f"'{fields_names}' is not unique.")
 
     def hotAssertIsNotNull(self, relation: Relation, field_name: str):
-        if not relation()._fields[field_name].is_not_null():
+        if not relation()._ho_fields[field_name].is_not_null():
             raise self.fail(f"'{field_name}' is not 'not null'.")
         
     def hotAssertReferences(self, relation: Relation, fk_name: str, f_relation: Relation):
         referenced = relation()._ho_fkeys[fk_name]()
         if not referenced._qrn == f_relation._qrn:
-            raise self.fail(f"{relation}()._ho_fkeys['{fk_name}']() does not reference {f_relation}")
+            raise self.fail(f"{relation.__class__.__name__}()._ho_fkeys['{fk_name}']() does not reference {f_relation.__name__}")
 
     def hotAssertAliasReferences(self, relation: Relation, alias: str, f_relation: Relation):
         referenced = eval(f"relation().{alias}")
         if not referenced()._qrn == f_relation._qrn:
-            raise self.fail(f"{relation}.{alias}() does not reference {f_relation}")
+            raise self.fail(f"{relation.__class__.__name__}.{alias}() does not reference {f_relation.__name__}")
 
     def __check_update_action(self, relation: Relation, fk_name: str, update_type: str):
         return self.assertEqual(relation()._ho_fkeys[fk_name].confupdtype, update_type)

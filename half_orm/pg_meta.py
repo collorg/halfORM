@@ -232,7 +232,7 @@ class PgMeta:
                     rev_fkey_name = strip_quotes(rev_fkey_name.replace(".", "_").replace(":", "_"))
                     byname[table_key]['fkeys'][fkeyname] = (
                         ftable_key, ffields, fields, confupdtype, confdeltype)
-                    byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields)
+                    byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields, confupdtype, confdeltype)
 
         metadata['relations_list'].sort()
         self.__metadata = metadata
