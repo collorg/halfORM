@@ -749,10 +749,12 @@ def _ho_is_empty(self):
     Same as __len__ but limits the request to 1 element (faster).
     Use it instead of len(relation) == 0.
     """
-    self._ho_limit = 1
-    empty = len(self) == 0
-    self._ho_limit = 0
-    return empty
+    self.__query = "select"
+    query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {} limit 1"
+    query, values = self.__get_query(query_template)
+    vars_ = tuple(self.__sql_values + values)
+    self.__execute(query, vars_)
+    return self.__cursor.fetchone()['count'] != 1
 
 def __update_args(self, **kwargs):
     """Returns the what, where an values for the update query."""
