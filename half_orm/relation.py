@@ -822,18 +822,19 @@ def _ho_join(self, *f_rels):
     Returns:
         dict: all values are converted to string.
     """
+    # pylint: disable=import-outside-toplevel
     from half_orm.fkey import FKey
 
     def to_str(value):
         """Returns value in string format if the type of value is
-        in TO_PROCESS
+        in to_process
 
         Args:
             value (any): the value to return in string format.
         """
 
-        TO_PROCESS = {UUID, date, datetime, time, timedelta}
-        if value.__class__ in TO_PROCESS:
+        to_process = {UUID, date, datetime, time, timedelta}
+        if value.__class__ in to_process:
             return str(value)
         return value
 
