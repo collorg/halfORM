@@ -181,7 +181,7 @@ def _ho_insert(self, *args) -> '[dict]':
     """
     query_template = "insert into {} ({}) values ({})"
     self.__query_type = 'insert'
-    fields_names, values, fk_fields, fk_query, fk_values = self.__what_to_insert()
+    fields_names, values, fk_fields, fk_query, fk_values = self.__what()
     what_to_insert = ["%s" for _ in range(len(values))]
     if fk_fields:
         fields_names += fk_fields
@@ -769,8 +769,8 @@ def __update_args(self, **kwargs):
     what = ", ".join([f'"{elt}" = %s' for elt in what_fields])
     return what, where, new_values + values
 
-def __what_to_insert(self):
-    """Returns the field names and values to be inserted."""
+def __what(self):
+    """Returns the set fields and foreign keys"""
     fields_names = []
     set_fields = self.__get_set_fields()
     if set_fields:
@@ -1046,7 +1046,7 @@ COMMON_INTERFACE = {
 
     '__sql_id': __sql_id,
     '__walk_op': __walk_op,
-    '__what_to_insert': __what_to_insert,
+    '__what': __what,
     '__update_args': __update_args,
     '__add_returning': __add_returning,
     '__to_dict_val_comp': __to_dict_val_comp,
