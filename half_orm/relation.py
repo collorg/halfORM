@@ -780,7 +780,7 @@ def __what_to_insert(self):
     fk_queries = ''
     fk_values = []
     for fkey in self._ho_fkeys.values():
-        fk_prep_select = fkey._prep_select()
+        fk_prep_select = fkey._fkey_prep_select()
         if fk_prep_select is not None:
             fk_values += list(fkey.values()[0])
             fk_fields += fk_prep_select[0]

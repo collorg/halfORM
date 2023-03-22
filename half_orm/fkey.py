@@ -119,7 +119,7 @@ class FKey:
             [f'{a} = {b}' for a, b in zip(to_fields, from_fields)])
         return f"({bounds})"
 
-    def _prep_select(self):
+    def _fkey_prep_select(self):
         if self.__is_set:
             return self.__fields, self.__fk_to._ho_prep_select(*self.fk_names)
         return None
