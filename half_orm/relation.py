@@ -251,6 +251,18 @@ def _ho_get(self, *args: List[str]) -> Relation:
     ret._ho_is_singleton = True
     return ret
 
+def __fkey_where(self, where, values):
+    _, _, fk_fields, fk_query, fk_values = self.__what()
+    if fk_fields:
+        fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
+        if fk_where:
+            if where:
+                where = f"{where} and {fk_where}"
+            else:
+                where = fk_where
+        values += fk_values
+    return where, values
+
 def _ho_update(self, *args, update_all=False, **kwargs):
     """
     kwargs represents the values to be updated {[field name:value]}
@@ -272,11 +284,7 @@ def _ho_update(self, *args, update_all=False, **kwargs):
 
     query_template = "update {} set {} {}"
     what, where, values = self.__update_args(**update_args)
-    _, _, fk_fields, fk_query, fk_values = self.__what_to_insert()
-    if fk_fields:
-        fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
-        where = f"{where} and {fk_where}"
-        values += fk_values
+    where, values = self.__fkey_where(where, values)
     query = query_template.format(self._qrn, what, where)
     if args:
         query = self.__add_returning(query, *args)
@@ -298,15 +306,10 @@ def _ho_delete(self, *args, delete_all=False):
     _, values = self.__get_query(query_template)
     self.__query_type = 'delete'
     _, where, _ = self.__where_args()
-    _, _, fk_fields, fk_query, fk_values = self.__what_to_insert()
-    where = f" where {where}"
-    if where == "(1 = 1)" and not delete_all:
-        raise RuntimeError
-    if fk_fields:
-        fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
-        where = f"{where} and {fk_where}"
-        values += fk_values
-    query = query_template.format(self._qrn, where)
+    where, values = self.__fkey_where(where, values)
+    if where:
+        where = f" where {where}"
+    query = f"delete from {self._qrn} {where}"
     if args:
         query = self.__add_returning(query, *args)
     self.__execute(query, tuple(values))
@@ -1027,6 +1030,7 @@ COMMON_INTERFACE = {
     '__repr__': __repr__,
     '__get_from': __get_from,
     '__get_query': __get_query,
+    '__fkey_where': __fkey_where,
     '__where_repr': __where_repr,
     '__where_args': __where_args,
     '__len__': __len__,
