@@ -589,7 +589,7 @@ def __walk_op(self, rel_id_, out=None, _fields_=None):
         left.__query_type = self.__query_type
         left.__walk_op(rel_id_, out, _fields_)
         if self.__set_operators.right is not None:
-            out.append(f" {self.__set_operators.operator}\n    ")
+            out.append(f" {self.__set_operators.operator} ")
             right = self.__set_operators.right
             right.__query_type = self.__query_type
             right.__walk_op(rel_id_, out, _fields_)
@@ -623,7 +623,7 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         if fk_rel.__set_operators.operator:
             fk_rel.__get_from(self._ho_id)
         _, where, values = fk_rel.__where_args()
-        where = f" and\n    {where}"
+        where = f" and {where}"
         orig_rel.__sql_query.insert(1, f'\n  join {__sql_id(fk_rel)} on\n   ')
         orig_rel.__sql_query.insert(2, fkey._join_query(self))
         orig_rel.__sql_query.append(where)
@@ -633,7 +633,7 @@ def __where_repr(self, rel_id_):
     where_repr = []
     for field in self.__get_set_fields():
         where_repr.append(field._where_repr(self.__query_type, rel_id_))
-    where_repr = ' and\n    '.join(where_repr) or '1 = 1'
+    where_repr = ' and '.join(where_repr) or '1 = 1'
     ret = f"({where_repr})"
     if self.__neg:
         ret = f"not ({ret})"
@@ -659,7 +659,7 @@ def __get_query(self, query_template, *args):
     self.__sql_values = []
     self.__query_type = 'select'
     what, where, values = self.__where_args(*args)
-    where = f"\nwhere\n    {where}"
+    where = f"\nwhere {where}"
     self.__get_from()
     # remove duplicates
     for idx, elt in reversed(list(enumerate(self.__sql_query))):
