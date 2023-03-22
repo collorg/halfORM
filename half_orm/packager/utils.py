@@ -2,6 +2,7 @@
 
 import os
 import sys
+from functools import wraps
 
 class Color:
     "Colors for the console"
@@ -59,3 +60,17 @@ def error(msg: str, exit_code: int=None):
 def warning(msg: str):
     "Write warning message on stderr"
     sys.stderr.write(Color.bold(f'HOP WARNING: {msg}'))
+
+trace_depth = 0
+def trace(fct):
+    @wraps(fct)
+    def wrapper(self, *args, **kwargs):
+        global trace_depth
+        name = fct.__name__
+        print(f'{" " * trace_depth}>>[{trace_depth}]>> {name}')
+        trace_depth += 1
+        res = fct(self, *args, **kwargs)
+        trace_depth -= 1
+        return res
+    return wrapper
+
