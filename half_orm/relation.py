@@ -272,7 +272,7 @@ def _ho_update(self, *args, update_all=False, **kwargs):
     """
     kwargs represents the values to be updated {[field name:value]}
     The object self must be set unless update_all is True.
-    The constraints of the relations are updated with kwargs.
+    The constraints of self are updated with kwargs.
     """
     if not (self._ho_is_set() or update_all):
         raise RuntimeError(
@@ -310,8 +310,10 @@ def _ho_delete(self, *args, delete_all=False):
             ' without delete_all being set to True!')
     query_template = "delete from {} {}"
     _, values = self.__get_query(query_template)
+    print('XXX __get_query _', _)
     self.__query_type = 'delete'
     _, where, _ = self.__where_args()
+    print('XXX where delete', where)
     where, values = self.__fkey_where(where, values)
     if where:
         where = f" where {where}"
@@ -597,7 +599,7 @@ def __walk_op(self, rel_id_, out=None, _fields_=None):
         left.__query_type = self.__query_type
         left.__walk_op(rel_id_, out, _fields_)
         if self.__set_operators.right is not None:
-            out.append(f" {self.__set_operators.operator} ")
+            out.append(f" {self.__set_operators.operator}\n    ")
             right = self.__set_operators.right
             right.__query_type = self.__query_type
             right.__walk_op(rel_id_, out, _fields_)
@@ -632,7 +634,7 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         if fk_rel.__set_operators.operator:
             fk_rel.__get_from(self._ho_id)
         _, where, values = fk_rel.__where_args()
-        where = f" and {where}"
+        where = f" and\n    {where}"
         orig_rel.__sql_query.insert(1, f'\n  join {__sql_id(fk_rel)} on\n   ')
         orig_rel.__sql_query.insert(2, fkey._join_query(self))
         orig_rel.__sql_query.append(where)
@@ -671,7 +673,7 @@ def __get_query(self, query_template, *args):
     self.__sql_values = []
     self.__query_type = 'select'
     what, where, values = self.__where_args(*args)
-    where = f"\nwhere {where}"
+    where = f"\nwhere\n    {where}"
     self.__get_from()
     # remove duplicates
     for idx, elt in reversed(list(enumerate(self.__sql_query))):
@@ -788,7 +790,8 @@ def __update_args(self, **kwargs):
 
 @utils.trace
 def __what(self):
-    """Returns the set fields and foreign keys"""
+    """Returns the constrained fields and foreign keys.
+    """
     fields_names = []
     set_fields = self.__get_set_fields()
     if set_fields:
@@ -837,19 +840,18 @@ def _ho_join(self, *f_rels):
     Returns:
         dict: all values are converted to string.
     """
-    # pylint: disable=import-outside-toplevel
     from half_orm.fkey import FKey
 
     def to_str(value):
         """Returns value in string format if the type of value is
-        in to_process
+        in TO_PROCESS
 
         Args:
             value (any): the value to return in string format.
         """
 
-        to_process = {UUID, date, datetime, time, timedelta}
-        if value.__class__ in to_process:
+        TO_PROCESS = {UUID, date, datetime, time, timedelta}
+        if value.__class__ in TO_PROCESS:
             return str(value)
         return value
 
