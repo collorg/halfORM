@@ -65,6 +65,7 @@ class HalfTest:
         self.dbname = model._dbname
         self.today = date.today()
         self.Person = model._import_class("actor.person")
+        self.Person()._ho_delete(delete_all=True)
         self.Post = model._import_class("blog.post")
         self.Comment = model._import_class("blog.comment")
         self.Event = model._import_class("blog.event")
