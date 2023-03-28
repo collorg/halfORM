@@ -19,7 +19,6 @@ class FKey:
                  fk_name, relation, fk_sfqrn,
                  fk_names=None, fields=None, confupdtype=None, confdeltype=None):
         self.__relation = relation
-        self.__expected_to_relation = self.__get_rel(normalize_qrn(fk_sfqrn))
         self.__to_relation = None
         self.__name = fk_name
         self.__is_set = False
@@ -124,6 +123,7 @@ class FKey:
     @utils.trace
     def _fkey_prep_select(self):
         if self.__is_set:
+            print('XXX _fkey_prep_select', self.__fields, self.__fk_to._ho_prep_select(*self.fk_names))
             return self.__fields, self.__fk_to._ho_prep_select(*self.fk_names)
         return None
 

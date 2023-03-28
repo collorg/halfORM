@@ -309,11 +309,9 @@ def _ho_delete(self, *args, delete_all=False):
             f'Attempt to delete all rows from {self.__class__.__name__}'
             ' without delete_all being set to True!')
     query_template = "delete from {} {}"
-    _, values = self.__get_query(query_template)
-    print('XXX __get_query _', _)
+    _, values = self.__prep_query(query_template)
     self.__query_type = 'delete'
     _, where, _ = self.__where_args()
-    print('XXX where delete', where)
     where, values = self.__fkey_where(where, values)
     if where:
         where = f" where {where}"
@@ -631,10 +629,8 @@ def __get_from(self, orig_rel=None, deja_vu=None):
             continue
         fk_rel.__get_from(orig_rel, deja_vu)
         deja_vu[fk_rel._ho_id].append((fk_rel, fkey))
-        if fk_rel.__set_operators.operator:
-            fk_rel.__get_from(self._ho_id)
         _, where, values = fk_rel.__where_args()
-        where = f" and\n    {where}"
+        where = f" and\n {where}"
         orig_rel.__sql_query.insert(1, f'\n  join {__sql_id(fk_rel)} on\n   ')
         orig_rel.__sql_query.insert(2, fkey._join_query(self))
         orig_rel.__sql_query.append(where)
@@ -661,12 +657,10 @@ def __where_args(self, *args):
         what = ', '.join([f'r{rel_id_}.{arg}' for arg in args])
     s_where, set_fields = self.__walk_op(rel_id_)
     s_where = ''.join(s_where)
-    if s_where == '()':
-        s_where = '(1 = 1)'
     return what, s_where, set_fields
 
 @utils.trace
-def __get_query(self, query_template, *args):
+def __prep_query(self, query_template, *args):
     """Prepare the SQL query to be executed."""
     from half_orm.fkey import FKey
 
@@ -688,6 +682,7 @@ def __get_query(self, query_template, *args):
                 f'- use: self.{fkey_name}.set({fkey_cls.__name__}(...))\n'
                 f'- not: self.{fkey_name} = {fkey_cls.__name__}(...)'
                 )
+    # print('XXX __prep_query', what, self.__sql_query, where, values)
     return (
         query_template.format(
             what,
@@ -699,7 +694,7 @@ def __get_query(self, query_template, *args):
 def _ho_prep_select(self, *args):
     self.__sql_values = []
     query_template = f"select\n {self.__select_params.get('distinct', '')} {{}}\nfrom\n  {{}} {{}}\n  {{}}"
-    query, values = self.__get_query(query_template, *args)
+    query, values = self.__prep_query(query_template, *args)
     values = tuple(self.__sql_values + values)
     if 'order_by' in self.__select_params.keys():
         query = f"{query} order by {self.__select_params['order_by']}"
@@ -756,7 +751,7 @@ def __len__(self):
     """
     self.__query = "select"
     query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {}"
-    query, values = self.__get_query(query_template)
+    query, values = self.__prep_query(query_template)
     vars_ = tuple(self.__sql_values + values)
     self.__execute(query, vars_)
     return self.__cursor.fetchone()['count']
@@ -769,7 +764,7 @@ def _ho_is_empty(self):
     """
     self.__query = "select"
     query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {} limit 1"
-    query, values = self.__get_query(query_template)
+    query, values = self.__prep_query(query_template)
     vars_ = tuple(self.__sql_values + values)
     self.__execute(query, vars_)
     return self.__cursor.fetchone()['count'] != 1
@@ -982,9 +977,6 @@ def __eq__(self, right):
         return True
     return self in right and right in self
 
-def __ne__(self, right):
-    return not self == right
-
 def __enter__(self):
     """Context management entry
 
@@ -1047,7 +1039,7 @@ COMMON_INTERFACE = {
     '__get_set_fields': __get_set_fields,
     '__repr__': __repr__,
     '__get_from': __get_from,
-    '__get_query': __get_query,
+    '__prep_query': __prep_query,
     '__fkey_where': __fkey_where,
     '__where_repr': __where_repr,
     '__where_args': __where_args,

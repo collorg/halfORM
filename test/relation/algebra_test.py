@@ -535,3 +535,7 @@ class Test(TestCase):
     def test_inequality_0(self):
         a = self.set_1
         self.assertFalse(a != a)
+
+    def test_ne(self):
+        a = self.set_1
+        self.assertTrue(-a != a)
