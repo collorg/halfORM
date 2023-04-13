@@ -122,10 +122,7 @@ class FKey:
 
     @utils.trace
     def _fkey_prep_select(self):
-        if self.__is_set:
-            print('XXX _fkey_prep_select', self.__fields, self.__fk_to._ho_prep_select(*self.fk_names))
-            return self.__fields, self.__fk_to._ho_prep_select(*self.fk_names)
-        return None
+        return (self.__fields, self.__fk_to._ho_prep_select(*self.fk_names)) if self.__is_set else None
 
     @property
     def fk_names(self):

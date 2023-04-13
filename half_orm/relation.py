@@ -16,20 +16,18 @@ Example:
 
 """
 Main methods provided by the class Relation:
-- insert: inserts a tuple into the pg table.
-- select: returns a generator of the elements of the set defined by
+- _ho_insert: inserts a tuple into the pg table.
+- _ho_select: returns a generator of the elements of the set defined by
   the constraint on the Relation object. The elements are dictionaries with the
   keys corresponding to the selected columns names in the relation.
   The result is affected by the methods: _ho_distinct, _ho_order_by, _ho_limit and _ho_offset
   (see below).
-- update: updates the set defined by the constraint on the Relation object
+- _ho_update: updates the set defined by the constraint on the Relation object
   with the values passed as arguments.
-- delete: deletes from the relation the set of elements defined by the constraint
+- _ho_delete: deletes from the relation the set of elements defined by the constraint
   on the Relation object.
-- get: returns the unique element defined by the constraint on the Relation object.
+- _ho_get: returns the unique element defined by the constraint on the Relation object.
   the element returned if of the type of the Relation object.
-- count: returns the number of elements in the set defined by the constraint on the
-  Relation object.
 
 The following methods can be chained on the object before a select.
 
@@ -692,15 +690,14 @@ def __prep_query(self, query_template, *args):
 
 @utils.trace
 def _ho_prep_select(self, *args):
-    self.__sql_values = []
     query_template = f"select\n {self.__select_params.get('distinct', '')} {{}}\nfrom\n  {{}} {{}}\n  {{}}"
     query, values = self.__prep_query(query_template, *args)
     values = tuple(self.__sql_values + values)
-    if 'order_by' in self.__select_params.keys():
+    if 'order_by' in self.__select_params:
         query = f"{query} order by {self.__select_params['order_by']}"
-    if 'limit' in self.__select_params.keys():
+    if 'limit' in self.__select_params:
         query = f"{query} limit {self.__select_params['limit']}"
-    if 'offset' in self.__select_params.keys():
+    if 'offset' in self.__select_params:
         query = f"{query} offset {self.__select_params['offset']}"
     return query, values
 
@@ -787,11 +784,9 @@ def __update_args(self, **kwargs):
 def __what(self):
     """Returns the constrained fields and foreign keys.
     """
-    fields_names = []
     set_fields = self.__get_set_fields()
-    if set_fields:
-        fields_names = [
-            f'"{name}"' for name, field in self._ho_fields.items() if field.is_set()]
+    fields_names = [
+        f'"{name}"' for name, field in self._ho_fields.items() if field.is_set()]
     fk_fields = []
     fk_queries = ''
     fk_values = []

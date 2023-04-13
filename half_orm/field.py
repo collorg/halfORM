@@ -48,7 +48,7 @@ class Field():
     def __str__(self):
         return str(self.__value)
 
-    def _praf(self, query, _ho_id):
+    def __praf(self, query, _ho_id):
         """Returns field_name prefixed with relation alias if the query is
         select. Otherwise, returns the field name quoted with ".
         """
@@ -71,9 +71,9 @@ class Field():
                 if comp == '@@':
                     comp_str = 'any(websearch_to_tsquery(%s))'
         if not self.unaccent:
-            where_repr = f"{self._praf(query, _ho_id)} {comp} {comp_str}"
+            where_repr = f"{self.__praf(query, _ho_id)} {comp} {comp_str}"
         else:
-            where_repr = f"unaccent({self._praf(query, _ho_id)}) {comp} unaccent({comp_str})"
+            where_repr = f"unaccent({self.__praf(query, _ho_id)}) {comp} unaccent({comp_str})"
         return where_repr
 
     @property
