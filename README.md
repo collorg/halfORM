@@ -718,9 +718,9 @@ That's it! You've learn pretty much everything there is to know about `half_orm`
 
 # Next: `hop`, the GitOps `half_orm` packager [WIP][alpha]
 
-The [`hop`](https://github.com/collorg/halfORM/blob/main/half_orm/main/hop.md) command, directly provided in this package (from version 0.8.0rc1), allows you to ***create*** a Python package corresponding to the model of your database, to ***patch*** the model and the corresponding Python code, to ***test*** your database model and your business code.
+The [`hop`](https://github.com/collorg/halfORM/blob/main/doc/hop.md) command, directly provided in this package (from version 0.8.0rc1), allows you to ***create*** a Python package corresponding to the model of your database, to ***patch*** the model and the corresponding Python code, to ***test*** your database model and your business code.
 
-* More at https://github.com/collorg/halfORM/blob/main/half_orm/main/hop.md
+* More at https://github.com/collorg/halfORM/blob/main/doc/hop.md
 
 # Want to contribute?
 

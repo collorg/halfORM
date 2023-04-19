@@ -34,7 +34,7 @@
 
 The green arrows represent the typical workflow for patching a model:
 
-<img title="hop workflow" alt="Alt text" src="https://github.com/collorg/halfORM/blob/main/doc/hop_workflow.svg" style="width: 70%">
+<img title="hop workflow" alt="Alt text" style="background-color: white" src="https://github.com/collorg/halfORM/blob/main/doc/hop_workflow.svg" style="width: 70%">
 
 ### Inside a hop repository created **without** the option `--devel`
 
