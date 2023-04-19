@@ -1,5 +1,4 @@
-# A simple PostgreSQL to Python mapper [0.8.0rc11]
-
+# A simple PostgreSQL to Python mapper [0.8.0rc11] and its packager [0.1.0a2]
 
 ![PyPI version](https://img.shields.io/pypi/v/half_orm)
 ![Python versions](https://img.shields.io/pypi/pyversions/half_orm)
@@ -8,7 +7,7 @@
 ![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)
 ![Contributors](https://img.shields.io/github/contributors/collorg/halform)
 
-You have a PostgreSQL database at hand and you want to interact with it in Python (&ge; 3.6); `half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data.
+You have a PostgreSQL database at hand and you want to interact with it in Python (&ge; 3.6); `half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data. If you want to build or patch a model, you might be interested in the [`half_orm packager`](#next-hop-the-gitops-half_orm-packager-wipalpha).
 
 The 'half' part of `half_orm` name indicates that it only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL. Basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands. This is what makes `half_orm` so easy to learn an use.
 
@@ -261,7 +260,7 @@ assert len(nobody) == 0 # last_name is part of the PK
 
 You can use the set operators to set more complex constraints on your relations:
 - `&`, `|`, `^` and `-` for `and`, `or`, `xor` and `not`.
-Take a look at [the algebra test file](https://github.com/collorg/halfORM/blob/master/test/relation/algebra_test.py).
+Take a look at [the algebra test file](https://github.com/collorg/halfORM/blob/main/test/relation/algebra_test.py).
 - you can also use the `==`, `!=` and `in` operators to compare two sets.
 
 ```python
@@ -360,7 +359,7 @@ You can also get a subset of the attributes by passing a list of columns names t
 ### Select one: the `_ho_get` method
 
 The `_ho_get` method returns an Relation object whose fields are populated with the values from the corresponding row in the database.
-It raises an [ExpectedOneError](https://github.com/collorg/halfORM/blob/master/half_orm/relation_errors.py)
+It raises an [ExpectedOneError](https://github.com/collorg/halfORM/blob/main/half_orm/relation_errors.py)
 Exception if 0 or more than 1 rows match the intention. The returned object is a singleton (see below).
 
 ```py
@@ -719,9 +718,9 @@ That's it! You've learn pretty much everything there is to know about `half_orm`
 
 # Next: `hop`, the GitOps `half_orm` packager [WIP][alpha]
 
-The `hop` command, directly provided in this package (from version 0.8.0rc1), allows you to ***create*** a Python package corresponding to the model of your database, to ***patch*** the model and the corresponding Python code, to ***test*** your database model and your business code.
+The [`hop`](https://github.com/collorg/halfORM/blob/main/half_orm/main/hop.md) command, directly provided in this package (from version 0.8.0rc1), allows you to ***create*** a Python package corresponding to the model of your database, to ***patch*** the model and the corresponding Python code, to ***test*** your database model and your business code.
 
-No documentation at the moment, but you can check the idea with the [test script](https://github.com/collorg/halfORM/blob/master/half_orm/packager/test/dummy_test.sh).
+* More at https://github.com/collorg/halfORM/blob/main/half_orm/main/hop.md
 
 # Want to contribute?
 
