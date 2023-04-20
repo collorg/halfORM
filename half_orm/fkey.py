@@ -100,7 +100,7 @@ class FKey:
         "on delete configuration"
         return self.__confdeltype
 
-    @utils.trace
+    #@utils.trace
     def _join_query(self, orig_rel):
         """Returns the join_query, join_values of a foreign key.
         fkey interface: frel, from_, __to, fields, fk_names
@@ -120,7 +120,7 @@ class FKey:
             [f'{a} = {b}' for a, b in zip(to_fields, from_fields)])
         return f"({bounds})"
 
-    @utils.trace
+    #@utils.trace
     def _fkey_prep_select(self):
         return (self.__fields, self.__fk_to._ho_prep_select(*self.fk_names)) if self.__is_set else None
 

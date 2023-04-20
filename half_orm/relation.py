@@ -160,7 +160,7 @@ def __init__(self, **kwargs):
          for field_name, value in kwargs.items() if value is not None}
     self.__isfrozen = True
 
-@utils.trace
+#@utils.trace
 def _ho_insert(self, *args) -> '[dict]':
     """Insert a new tuple into the Relation.
 
@@ -191,7 +191,7 @@ def _ho_insert(self, *args) -> '[dict]':
     res = [dict(elt) for elt in self.__cursor.fetchall()] or [{}]
     return res[0]
 
-@utils.trace
+#@utils.trace
 def _ho_select(self, *args):
     """Gets the set of values correponding to the constraint attached to the object.
     This method is a generator.
@@ -213,7 +213,7 @@ def _ho_select(self, *args):
     for elt in self.__cursor:
         yield dict(elt)
 
-@utils.trace
+#@utils.trace
 def _ho_get(self, *args: List[str]) -> Relation:
     """The get method allows you to fetch a singleton from the database.
     It garantees that the constraint references one and only one tuple.
@@ -249,7 +249,7 @@ def _ho_get(self, *args: List[str]) -> Relation:
     ret._ho_is_singleton = True
     return ret
 
-@utils.trace
+#@utils.trace
 def __fkey_where(self, where, values):
     _, _, fk_fields, fk_query, fk_values = self.__what()
     if fk_fields:
@@ -262,7 +262,7 @@ def __fkey_where(self, where, values):
         values += fk_values
     return where, values
 
-@utils.trace
+#@utils.trace
 def _ho_update(self, *args, update_all=False, **kwargs):
     """
     kwargs represents the values to be updated {[field name:value]}
@@ -294,7 +294,7 @@ def _ho_update(self, *args, update_all=False, **kwargs):
     if args:
         return [dict(elt) for elt in self.__cursor.fetchall()]
 
-@utils.trace
+#@utils.trace
 def _ho_delete(self, *args, delete_all=False):
     """Removes a set of tuples from the relation.
     To empty the relation, delete_all must be set to True.
@@ -349,7 +349,7 @@ def __setattr__(self, key, value):
         return
     object.__setattr__(self, key, value)
 
-@utils.trace
+#@utils.trace
 def __execute(self, query, values):
     try:
         if self.__mogrify:
@@ -576,7 +576,7 @@ def __get_set_fields(self):
     """Returns a list containing only the fields that are set."""
     return [field for field in self._ho_fields.values() if field.is_set()]
 
-@utils.trace
+#@utils.trace
 def __walk_op(self, rel_id_, out=None, _fields_=None):
     """Walk the set operators tree and return a list of SQL where
     representation of the query with a list of the fields of the query.
@@ -608,7 +608,7 @@ def __sql_id(self):
     """Returns the FQRN as alias for the sql query."""
     return f"{self._qrn} as r{self._ho_id}"
 
-@utils.trace
+#@utils.trace
 def __get_from(self, orig_rel=None, deja_vu=None):
     """Constructs the __sql_query and gets the __sql_values for self."""
     if deja_vu is None:
@@ -631,7 +631,7 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         orig_rel.__sql_query.append(where)
         orig_rel.__sql_values += values
 
-@utils.trace
+#@utils.trace
 def __where_repr(self, rel_id_):
     where_repr = []
     for field in self.__get_set_fields():
@@ -642,7 +642,7 @@ def __where_repr(self, rel_id_):
         ret = f"not ({ret})"
     return ret
 
-@utils.trace
+#@utils.trace
 def __where_args(self, *args):
     """Returns the what, where and values needed to construct the queries.
     """
@@ -654,7 +654,7 @@ def __where_args(self, *args):
     s_where = ''.join(s_where)
     return what, s_where, set_fields
 
-@utils.trace
+#@utils.trace
 def __prep_query(self, query_template, *args):
     """Prepare the SQL query to be executed."""
     from half_orm.fkey import FKey
@@ -685,7 +685,7 @@ def __prep_query(self, query_template, *args):
             ' '.join(self.__sql_query), where),
         values)
 
-@utils.trace
+#@utils.trace
 def _ho_prep_select(self, *args):
     query_template = f"select\n {self.__select_params.get('distinct', '')} {{}}\nfrom\n  {{}} {{}}\n  {{}}"
     query, values = self.__prep_query(query_template, *args)
@@ -763,7 +763,7 @@ def _ho_is_empty(self):
     self.__execute(query, vars_)
     return self.__cursor.fetchone()['count'] != 1
 
-@utils.trace
+#@utils.trace
 def __update_args(self, **kwargs):
     """Returns the what, where an values for the update query."""
     what_fields = []
@@ -777,7 +777,7 @@ def __update_args(self, **kwargs):
     what = ", ".join([f'"{elt}" = %s' for elt in what_fields])
     return what, where, new_values + values
 
-@utils.trace
+#@utils.trace
 def __what(self):
     """Returns the constrained fields and foreign keys.
     """
