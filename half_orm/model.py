@@ -339,13 +339,6 @@ class Model:
         """
         return self.__pg_meta.has_relation(self.__dbname, *qtn.rsplit('.', 1))
 
-    @classmethod
-    def _check_deja_vu_class(cls, dbname, schema, relation):
-        """Not to use with _import_class.
-        """
-        if cls._classes_.get(dbname):
-            return cls._classes_[dbname].get((dbname, schema, relation))
-
     def _import_class(self, qtn, scope=None):
         """Used to return the class from the scope module.
 

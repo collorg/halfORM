@@ -62,7 +62,11 @@ def factory(dct):
     ModelCls = model.__class__
     ModelCls._classes_.setdefault(tbl_attr['_dbname'], {})
     tbl_attr['_model'] = dct['model']
-    rel_class = ModelCls._check_deja_vu_class(*dct['fqrn'])
+    dbname, schema, relation = dct['fqrn']
+    rel_class = None
+    if ModelCls._classes_.get(dbname):
+        rel_class = ModelCls._classes_[dbname].get((dbname, schema, relation))
+
     if rel_class:
         return rel_class
 
