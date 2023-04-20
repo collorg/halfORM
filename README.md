@@ -1,4 +1,4 @@
-# A simple PostgreSQL to Python mapper [0.8.0rc11] and its packager [0.1.0a2]
+# A simple PostgreSQL to Python mapper [0.8.0] and its packager [0.1.0a2]
 
 ![PyPI version](https://img.shields.io/pypi/v/half_orm)
 ![Python versions](https://img.shields.io/pypi/pyversions/half_orm)
@@ -62,10 +62,6 @@ def main():
 ## Install `half_orm`
 
 run `pip install half_orm` in a virtual environment.
-
-## Install `half_orm` pre-release
-
-`pip install half_orm==0.8.0rc11`
 
 ### Set your HALFORM_CONF_DIR
 
