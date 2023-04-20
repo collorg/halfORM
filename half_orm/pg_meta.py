@@ -1,5 +1,34 @@
-"""This module provides the SQL request to extract the metadata of a
-PostgreSQL database.
+"""This module provides the SQL query to extract the metadata of a PostgreSQL
+database. The query extracts information about tables, views, materialized
+views, foreign tables, and partitioned tables along with their columns,
+data types, constraints, inheritance hierarchy, and other related information.
+
+The module provides several helper functions to format the results of the
+query. These include functions to normalize fully qualified relation names,
+convert relation names to CamelCase, and strip double quotes from relation
+names.
+
+Functions:
+
+    * strip_quotes(qrn): Removes all double quotes from the given fully qualified
+      relation name (fqrn).
+    * __get_qrn(fqrn): Returns the qualified relation name (<schema>.<relation>)
+      from the given fully qualified relation name (fqrn).
+    * normalize_fqrn(t_fqrn): Transforms the tuple (<db name>, <schema name>, <table name>)
+      to "<db name>":"<schema name>"."<table name>". Dots are allowed only in the schema name.
+    * normalize_qrn(t_qrn): Returns "<schema name>"."<relation name>" for the given qualified
+      relation name (qrn) tuple. A schema name can have any number of dots in it, and a table
+      name can't have a dot in it.
+    * camel_case(string): Returns the given string transformed to camel case.
+    * class_name(qrn): Returns the class name from the given qualified relation name (qrn).
+
+The main query is defined as a string variable named _REQUEST. It includes joins
+between several PostgreSQL system tables and views to extract the metadata.
+The resulting query returns data about tables, views, materialized views, foreign
+tables, and partitioned tables in the database, along with information about their
+columns and constraints.
+
+Note that this module requires the psycopg2 library to be installed.
 """
 
 from collections import OrderedDict
@@ -164,22 +193,53 @@ class _Meta(dict):
     # def __repr__(self):
     #     dictrepr = dict.__repr__(self.__d_meta)
     #     return f'{type(self).__name__}({dictrepr})'
-  
+
 class PgMeta:
+    """A utility class for loading and storing metadata of a PostgreSQL database.
+
+    Attributes:
+        meta (_Meta): A singleton instance of the `_Meta` class.
+    """
     meta = _Meta()
     def __init__(self, connection, reload=False):
+        """Initializes a new instance of the `PgMeta` class.
+
+        Args:
+            connection (psycopg2.extensions.connection): A connection object to a PostgreSQL database.
+            reload (bool, optional): A flag indicating whether to reload the metadata from the database. \
+            Defaults to False.
+        """
         self.__dbname = connection.get_dsn_parameters()['dbname']
         if not PgMeta.meta.deja_vu(self.__dbname) or reload:
             self.__load_metadata(connection)
 
     def metadata(self, dbname):
+        """Retrieves the metadata for the specified database name.
+
+        Args:
+            dbname (str): The name of the PostgreSQL database.
+
+        Returns:
+            dict: The metadata of the specified database.
+        """
         return self.meta[dbname].__metadata
 
     def relations_list(self, dbname):
+        """Retrieves a list of relations for the specified database.
+
+        Args:
+            dbname (str): The name of the PostgreSQL database.
+
+        Returns:
+            list: A list of relations for the specified database.
+        """
         return self.metadata(dbname)['relations_list']
 
     def __load_metadata(self, connection):
-        """Loads the metadata by querying the _REQUEST.
+        """Loads the metadata by querying the PostgreSQL database and registers it in the _Meta singleton.
+
+        Args:
+            connection (psycopg2.extensions.connection): A connection object to a PostgreSQL database.
         """
         metadata = {'relations_list': []}
         byname = metadata['byname'] = OrderedDict()
@@ -239,26 +299,31 @@ class PgMeta:
         PgMeta.meta.register(self.__dbname, self)
 
     def has_relation(self, dbname, schema, relation):
-        """Checks if the qrn is a relation in the database
+        """Checks whether the specified relation exists in the specified database.
 
-        @qrn is in the form <schema>.<table>
-        Returns True if the relation exists, False otherwise.
-        Also works for views and materialized views.
+        Args:
+            dbname (str): The name of the PostgreSQL database.
+            schema (str): The name of the schema containing the relation.
+            relation (str): The name of the relation.
+
+        Returns:
+            bool: True if the relation exists, False otherwise.
         """
         return (dbname, schema, relation) in self.meta[dbname].__metadata['byname']
 
 
     def desc(self, dbname):
-        """Returns the list of the relations of the model.
+        """Returns a list of relations for the specified database.
 
-        Each line contains:
-        - the relation type: 'r' relation, 'v' view, 'm' materialized view,
-        - the quoted FQRN (Fully qualified relation name)
-          <"db name">:"<schema name>"."<relation name>"
-        - the list of the FQRN of the inherited relations.
+        Args:
+            dbname (str): The name of the PostgreSQL database.
 
-        If a qualified relation name (<schema name>.<table name>) is
-        passed, prints only the description of the corresponding relation.
+        Returns:
+            list: A list of relations for the specified database, with each item containing:
+                - The relation type ('r' for table, 'v' for view, or 'm' for materialized view).
+                - The fully qualified relation name (FQRN) in the format\
+                "<database name>:<schema name>.<relation name>".
+                - A list of the FQRN of the inherited relations.
         """
         ret_val = []
         entry = self.metadata(dbname)['byname']
@@ -272,18 +337,54 @@ class PgMeta:
         return ret_val
 
     def fields_meta(self, dbname, sfqrn):
-        "Retruns the fields metadata for a given sfqrn"
+        """Retrieves the metadata of the fields for the specified fully qualified relation name (FQRN).
+
+        Args:
+            dbname (str): The name of the PostgreSQL database.
+            sfqrn (str): The fully qualified relation name (FQRN) in the format \
+            "<schema name>.<relation name>".
+
+        Returns:
+            dict: The metadata of the fields for the specified relation.
+        """
         return self.metadata(dbname)['byname'][sfqrn]['fields']
 
     def fkeys_meta(self, dbname, sfqrn):
-        "Returns the foreign keys metadata for a given sfqrn"
+        """
+        Returns the foreign keys metadata for a given sfqrn.
+
+        Args:
+            dbname (str): The name of the database.
+            sfqrn (str): The fully qualified relation name for the table whose foreign key metadata you want.
+
+        Returns:
+            dict: A dictionary containing metadata about the foreign keys for the given table.
+        """
         return self.metadata(dbname)['byname'][sfqrn]['fkeys']
 
     def relation_meta(self, dbname, fqrn):
-        "Returns the relation metadata for a given fqrn"
+        """
+        Returns the relation metadata for a given fqrn.
+
+        Args:
+            dbname (str): The name of the database.
+            fqrn (str): The fully qualified relation name for the table whose metadata you want.
+
+        Returns:
+            dict: A dictionary containing metadata about the given table.
+        """
         return self.metadata(dbname)['byname'][fqrn]
 
     def str(self, dbname):
+        """
+        Returns a string representation of the metadata for all tables in the given database.
+
+        Args:
+            dbname (str): The name of the database.
+
+        Returns:
+            str: A string containing metadata about all tables in the given database.
+        """
         out = []
         entry = self.metadata(dbname)['byname']
         for key in entry:
@@ -292,7 +393,16 @@ class PgMeta:
         return '\n'.join(out)
 
     def _unique_constraints_list(self, dbname, sfqrn):
-        "Returns the unique constraints of the given sfqrn"
+        """
+        Returns the unique constraints of the given sfqrn.
+
+        Args:
+            dbname (str): The name of the database.
+            sfqrn (str): The fully qualified relation name for the table whose unique constraints you want.
+
+        Returns:
+            list: A list of tuples, where each tuple contains the names of the fields that make up a unique constraint.
+        """
         rel_meta_by_name = self.metadata(dbname)['byname'][sfqrn]
         tableid = rel_meta_by_name['tableid']
         rel_meta_by_id = self.metadata(dbname)['byid']
@@ -311,7 +421,15 @@ class PgMeta:
         return unique
 
     def _pkey_constraint(self, dbname, sfqrn):
-        "Returns the pkey constraint"
+        """Returns the primary key constraint for the given sfqrn.
+
+        Args:
+            dbname (str): The name of the database.
+            sfqrn (str): The fully qualified relation name for the table whose primary key constraint you want.
+
+        Returns:
+            list: A list of the names of the fields that make up the primary key constraint.
+        """
         rel_meta_by_name = self.metadata(dbname)['byname'][sfqrn]
         tableid = rel_meta_by_name['tableid']
         rel_meta_by_id = self.metadata(dbname)['byid']
