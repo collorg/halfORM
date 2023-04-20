@@ -179,7 +179,7 @@ __RCLS = base_relation_class('public.b')
 
 class B(__RCLS):
     """
-    __RCLS: <class 'half_orm.model.Table_Hop_testPublicB'>
+    __RCLS: <class 'half_orm.relation_factory.Table_Hop_testPublicB'>
     This class allows you to manipulate the data in the PG relation:
     TABLE: "hop_test":"public"."b"
     FIELDS:
