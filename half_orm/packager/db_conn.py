@@ -11,6 +11,11 @@ from configparser import ConfigParser
 from half_orm.model import CONF_DIR
 from half_orm.packager import utils
 
+CONF_NOT_FOUND = '''
+The configuration file {} is missing.
+You must create it before proceeding.
+
+'''
 
 class DbConn:
     """Handles the connection parameters to the database.
@@ -26,7 +31,7 @@ class DbConn:
         if name:
             self.__connection_file = os.path.join(self.__conf_dir, self.__name)
             if not os.path.exists(self.__connection_file):
-                raise FileNotFoundError
+                utils.error(CONF_NOT_FOUND.format(self.__connection_file), 1)
             self.__init()
 
     @property
