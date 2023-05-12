@@ -1,6 +1,16 @@
+# 0.9.0 (2023-05-12)
+
+* [breaking][relation] Prefix methods with 'ho_*' instead of the ugly '_ho_*'. (0d11bc0)
+* [relation] Raises a DeprecationWarning error if FKEYS is defined in a module. (b9a8622)
+* [packager] Check if the connection file exists before proceeding. (17884cc)
+
+## BREAKING CHANGE
+
+`_ho_*` methods in half_orm.relation.Relation are replaced by `ho_*`
+
 # 0.8.0 (2023-04-20)
 
-* [doc] Add margin to hop_workflow png. (HEAD -> main) (903c707)
+* [doc] Add margin to hop_workflow png. (903c707)
 * [doc] pg_meta. (3ff7c7b)
 * [test] Add tests for deprecated and function and procedure. (2824622)
 * [model] Remove Model._check_deja_vu_class method. (c3a1d0f)
