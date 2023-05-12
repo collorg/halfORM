@@ -29,7 +29,7 @@ class Test(HoTestCase):
             relation_errors.ExpectedOneError, pers._ho_get)
 
     def test_expected_one_error_many(self):
-        pers = self.pers(last_name=('like', '%'))
+        pers = self.pers()
         self.assertRaises(
             relation_errors.ExpectedOneError, pers._ho_get)
 

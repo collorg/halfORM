@@ -17,7 +17,6 @@ class Test(TestCase):
         self.pers = halftest.Person()
         self.post = halftest.Post()
         self.comment = halftest.Comment()
-        self.view = halftest.BlogView()
         aa = self.pers(last_name='aa')
         assert(len(aa) == 1)
 

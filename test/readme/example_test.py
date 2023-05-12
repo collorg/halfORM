@@ -39,7 +39,6 @@ def main():
     post_dct = gaston.add_post(title='Easy', content='halfORM is fun!')
     post = Post(**post_dct)
     gaston.add_comment(content='This is a comment on the newly created post.', post=post)
-    print(list(post.comments()))
     post._ho_update(title='Super easy')
     gaston._ho_delete()
 

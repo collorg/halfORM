@@ -131,8 +131,15 @@ class Relation:
 
 def __init__(self, **kwargs):
     _fqrn = ""
-    """The arguments names must correspond to the columns names of the relation.
+    """The names of the arguments must correspond to the names of the columns in the relation.
     """
+    module = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES', 'FKEYS'], 0)
+    #TODO: remove in release 1.0.0
+    if hasattr(module, 'FKEYS_PROPERTIES') or hasattr(module, 'FKEYS'):
+        err = f'''{utils.Color.bold(module.__name__ + '.FKEYS')} variable is no longer supported!\n'''
+        err += f'''\tUse the "{utils.Color.bold(self.__class__.__name__ + '.Fkeys')}"''' + \
+            ''' class attribute instead.\n'''
+        raise DeprecationWarning(err)
     self._ho_fields = {}
     self._ho_pkey = {}
     self._ho_fkeys = OrderedDict()
@@ -1077,7 +1084,7 @@ COMMON_INTERFACE = {
     '_ho_cast': _ho_cast,
     '_ho_only': _ho_only,
     '_ho_is_empty': _ho_is_empty,
-    '_ho_group_by':_ho_group_by,
+    '_ho_group_by': _ho_group_by,
     '_ho_json': _ho_json,
     '_ho_dict': _ho_dict,
     '_ho_is_set': _ho_is_set,

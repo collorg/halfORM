@@ -83,7 +83,6 @@ def factory(dct):
     tbl_attr['_t_fqrn'] = dct['fqrn']
     tbl_attr['_fqrn'] = pg_meta.normalize_fqrn(dct['fqrn'])
     tbl_attr['__kind'] = REL_CLASS_NAMES[metadata['tablekind']]
-    tbl_attr['_fkeys'] = []
     for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
         tbl_attr[fct_name] = fct
         dep_fct_name = None
