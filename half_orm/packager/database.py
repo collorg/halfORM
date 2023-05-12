@@ -41,7 +41,7 @@ class Database:
     def last_release(self):
         "Returns the last release"
         self.__last_release = next(
-            self.__model.get_relation_class('half_orm_meta.view.hop_last_release')()._ho_select())
+            self.__model.get_relation_class('half_orm_meta.view.hop_last_release')().ho_select())
         return self.__last_release
 
     @property
@@ -122,4 +122,4 @@ class Database:
         "Register the release into half_orm_meta.hop_release"
         return self.__model.get_relation_class('half_orm_meta.hop_release')(
             major=major, minor=minor, patch=patch, changelog=changelog
-        )._ho_insert()
+        ).ho_insert()

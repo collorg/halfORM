@@ -25,22 +25,22 @@ class Person(halftest.get_relation_class('actor.person')):
     }
     @singleton # we ensure that self is a singleton of the actor.person table
     def add_post(self, title: str=None, content: str=None) -> dict:
-        return self.posts(title=title, content=content)._ho_insert() # we use the _ho_insert method
+        return self.posts(title=title, content=content).ho_insert() # we use the ho_insert method
     @singleton
     def add_comment(self, post: Post=None, content: str=None) -> dict:
-        return self.comments(content=content, post_id=post.id.value, author_id=self.id.value)._ho_insert()
+        return self.comments(content=content, post_id=post.id.value, author_id=self.id.value).ho_insert()
 
 def main():
     # let's define a Person set (a singleton here) by instanciating a set with some constraints
     gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
-    gaston._ho_delete() # the delete method
-    if gaston._ho_is_empty(): # always true since we've just deleted gaston
-        gaston._ho_insert()
+    gaston.ho_delete() # the delete method
+    if gaston.ho_is_empty(): # always true since we've just deleted gaston
+        gaston.ho_insert()
     post_dct = gaston.add_post(title='Easy', content='halfORM is fun!')
     post = Post(**post_dct)
     gaston.add_comment(content='This is a comment on the newly created post.', post=post)
-    post._ho_update(title='Super easy')
-    gaston._ho_delete()
+    post.ho_update(title='Super easy')
+    gaston.ho_delete()
 
 class Test(TestCase):
     def reset(self):
@@ -50,7 +50,7 @@ class Test(TestCase):
         self.gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
 
     def tearDown(self):
-        self.gaston._ho_delete()
+        self.gaston.ho_delete()
 
     def test_readme(self):
         "it should run main"

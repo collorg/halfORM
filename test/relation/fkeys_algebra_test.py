@@ -13,14 +13,14 @@ from half_orm import relation_errors, model
 class Test(TestCase):
     def setUp(self):
         self.gaston = halftest.gaston
-        self.gaston._ho_insert()
-        self.gaston.post_rfk(title='Easy', content='bla')._ho_insert()
-        self.gaston.post_rfk(title='Super', content='bli')._ho_insert()
-        self.gaston.post_rfk(title='Super easy', content='blu')._ho_insert()
-        self.gaston.post_rfk(title='Bad', content='blo')._ho_insert()
+        self.gaston.ho_insert()
+        self.gaston.post_rfk(title='Easy', content='bla').ho_insert()
+        self.gaston.post_rfk(title='Super', content='bli').ho_insert()
+        self.gaston.post_rfk(title='Super easy', content='blu').ho_insert()
+        self.gaston.post_rfk(title='Bad', content='blo').ho_insert()
 
     def tearDown(self):
-        self.gaston._ho_delete()
+        self.gaston.ho_delete()
 
     def test_or_on_fkeys(self):
         posts = self.gaston.post_rfk(title=('ilike', '%easy%')) | self.gaston.post_rfk(title=('ilike', '%super%'))

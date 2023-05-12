@@ -65,7 +65,7 @@ class HalfTest:
         self.dbname = model._dbname
         self.today = date.today()
         self.Person = model._import_class("actor.person")
-        self.Person()._ho_delete(delete_all=True)
+        self.Person().ho_delete(delete_all=True)
         self.Post = model._import_class("blog.post")
         self.Comment = model._import_class("blog.comment")
         self.Event = model._import_class("blog.event")
@@ -80,11 +80,11 @@ class HalfTest:
         self.pc = PC()
         self.relation = model._import_class
 
-        @self._person._ho_transaction
+        @self._person.ho_transaction
         def init_pers(pers):
             sys.stderr.write('Initializing actor.person\n')
-            self.Person()._ho_delete(delete_all=True)
-            self.Post()._ho_delete(delete_all=True)
+            self.Person().ho_delete(delete_all=True)
+            self.Post().ho_delete(delete_all=True)
             for letter in 'abcdef':
                 for i in range(10):
                     last_name = name(letter, i)
@@ -93,7 +93,7 @@ class HalfTest:
                     pers(
                         last_name=last_name,
                         first_name=first_name,
-                        birth_date=birth_date)._ho_insert()
+                        birth_date=birth_date).ho_insert()
 
         if len(self.Person()) != 60:
             init_pers(self.Person())

@@ -21,13 +21,13 @@ class Test(TestCase):
         self.post.content = 'content test_jsonb'
         data = {'a': 'b'}
         self.post.data = data
-        self.post._ho_insert()
+        self.post.ho_insert()
         self.assertEqual(len(self.post), 1)
-        self.assertEqual(next(self.post._ho_select('data'))['data'], data)
+        self.assertEqual(next(self.post.ho_select('data'))['data'], data)
         self.post = halftest.Post(title=title)
         ndata = {'a': 'c'}
-        self.post._ho_update(data=ndata)
+        self.post.ho_update(data=ndata)
         self.post = halftest.Post(title=title, data=ndata)
         self.assertEqual(len(self.post), 1)
-        self.post._ho_delete()
+        self.post.ho_delete()
         self.assertEqual(len(self.post), 0)

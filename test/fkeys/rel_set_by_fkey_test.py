@@ -15,16 +15,16 @@ class Test(HoTestCase):
         "it should pass"
         gaston = halftest.Person(last_name='Lagaffe')
         posts = gaston.post_rfk()
-        posts._ho_limit = 1
-        # posts._ho_mogrify()
-        list(posts._ho_select())
+        posts.ho_limit = 1
+        # posts.ho_mogrify()
+        list(posts.ho_select())
 
     @skip
     def test_just_fkey_set_delete(self):
         "it should pass"
         gaston = halftest.Person(last_name='Lagaffe')
         posts = gaston.post_rfk()
-        posts._ho_mogrify()
+        posts.ho_mogrify()
         print('XXX ICI')
-        posts._ho_delete()
+        posts.ho_delete()
     

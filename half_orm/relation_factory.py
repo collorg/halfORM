@@ -13,7 +13,7 @@ def __deprecated(fct):
     @wraps(fct)
     def wrapper(self, *args, **kwargs):
         name = fct.__name__
-        dep_name = name.replace('_ho_', '')
+        dep_name = name.replace('ho_', '')
         callerframerecord = inspect.stack()[1]
         frame = callerframerecord[0]
         info = inspect.getframeinfo(frame)
@@ -86,8 +86,8 @@ def factory(dct):
     for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
         tbl_attr[fct_name] = fct
         dep_fct_name = None
-        if fct_name[0:4] == '_ho_':
-            dep_fct_name = fct_name[4:]
+        if fct_name.find('ho_') == 0:
+            dep_fct_name = fct_name.replace('ho_', '', 1)
         if dep_fct_name:
             tbl_attr[dep_fct_name] = __deprecated(tbl_attr[fct_name])
     class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])

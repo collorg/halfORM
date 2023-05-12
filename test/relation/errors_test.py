@@ -51,11 +51,11 @@ class Test(TestCase):
     def test_update_all_error(self):
         "it should raise RuntimeError if update_all is not set to True."
         with self.assertRaises(RuntimeError) as exc:
-            self.pers._ho_update(last_name='coucou')
+            self.pers.ho_update(last_name='coucou')
         self.assertEqual(str(exc.exception), UPDATE_ALL_ERR_MSG)
 
     def test_delete_all_error(self):
         "it should raise RuntimeError if delete_all is not set to True."
         with self.assertRaises(RuntimeError) as exc:
-            self.pers._ho_delete()
+            self.pers.ho_delete()
         self.assertEqual(str(exc.exception), DELETE_ALL_ERR_MSG)

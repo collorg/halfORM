@@ -27,6 +27,6 @@ class Test(TestCase):
             str(exc.exception), "You can't mix args and kwargs with the execute_function method!")
 
     def test_procedure_with_args(self):
-        self.tbl._ho_delete(delete_all=True)
+        self.tbl.ho_delete(delete_all=True)
         halftest.model.call_procedure('insert_data', 10, 18)
         self.assertEqual(len(self.tbl()), 2)

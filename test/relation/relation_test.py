@@ -31,28 +31,28 @@ class Test(TestCase):
         self.assertEqual(add_returning('query', 'a', 'b'), 'query returning a, b')
         self.assertEqual(add_returning('query'), 'query')
 
-    def test_ho_is_frozen(self):
+    def testho_is_frozen(self):
         frozen = self.pers.__dict__['__isfrozen']
         self.assertEqual(True, frozen)
-        self.pers._ho_unfreeze()
+        self.pers.ho_unfreeze()
         frozen = self.pers.__dict__['__isfrozen']
         self.assertEqual(False, frozen)
-        self.pers._ho_freeze()
+        self.pers.ho_freeze()
         frozen = self.pers.__dict__['__isfrozen']
         self.assertEqual(True, frozen)
 
-    def test_ho_unaccent(self):
+    def testho_unaccent(self):
         self.assertFalse(self.pers.first_name.unaccent)
         self.assertFalse(self.pers.last_name.unaccent)
-        self.pers._ho_unaccent('first_name', 'last_name')
+        self.pers.ho_unaccent('first_name', 'last_name')
         self.assertTrue(self.pers.first_name.unaccent)
         self.assertTrue(self.pers.last_name.unaccent)
 
-    def test_ho_unaccent_error(self):
+    def testho_unaccent_error(self):
         class Person(halftest.model.get_relation_class('actor.person')):
             def __init__(self):
                 self.coucou = 'coucou'
         pers = Person()
         with self.assertRaises(ValueError) as exc:
-            pers._ho_unaccent('coucou')
+            pers.ho_unaccent('coucou')
         self.assertEqual("coucou is not a Field!", str(exc.exception))
