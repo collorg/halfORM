@@ -53,7 +53,7 @@ class Changelog:
     def update_release(self, release, commit, previous_commit):
         "Add the commit sha1 to the release in the .hop/CHANGELOG file"
         out = []
-        previous = self.previous(release)
+        previous = self.previous(release, 1)
         for line in utils.readlines(self.__file):
             if line and line.split()[1] not in {release, previous}:
                 out.append(line)
@@ -67,10 +67,10 @@ class Changelog:
         # self.__repo.hgit.commit('-m', f'[hop][{release}] CHANGELOG')
         self.__seq()
 
-    def previous(self, release):
+    def previous(self, release, index):
         "Return previous release of release."
         index_of_release = self.__releases.index(release)
-        return self.__releases[index_of_release - 1]
+        return self.__releases[index_of_release - index]
 
     @property
     def file(self):

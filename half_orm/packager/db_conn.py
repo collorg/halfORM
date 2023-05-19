@@ -128,7 +128,6 @@ class DbConn:
         cmd_list.append(self.__name)
         if args:
             cmd_list += args
-        # print('XXX', cmd_list)
         try:
             subprocess.run(
                 cmd_list, env=env, shell=False, check=True,

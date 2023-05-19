@@ -36,9 +36,9 @@ class Patch:
         "Returns the levels"
         return cls.__levels
 
-    def previous(self, release):
+    def previous(self, release, index=0):
         "Return .hop/CHANGELOG second to last line."
-        return self.__changelog.previous(release)
+        return self.__changelog.previous(release, index)
 
     @property
     def __next_releases(self):
@@ -166,6 +166,13 @@ class Patch:
             'psql', '-f', self.__backup_file('Backups', release), stdout=subprocess.DEVNULL)
         self.__repo.model.ping()
 
+    def __restore_previous_release(self):
+        db_release = self.__repo.database.last_release_s
+        previous_release = self.previous(db_release, 1)
+        self.__restore_db(db_release)
+        os.remove(self.__backup_file('Backups', db_release))
+        sys.exit(1)
+
     def __execute_sql(self, file_):
         "Execute sql query contained in sql file_"
         query = utils.read(file_.path).replace('%', '%%')
@@ -175,11 +182,7 @@ class Patch:
             self.__repo.model.execute_query(query)
         except (psycopg2.Error, psycopg2.OperationalError, psycopg2.InterfaceError) as err:
             utils.error(f'Problem with query in {file_.name}\n{err}\n')
-            db_release = self.__repo.database.last_release_s
-            previous_release = self.previous(db_release)
-            self.__restore_db(previous_release)
-            os.remove(self.__backup_file('Backups', previous_release))
-            sys.exit(1)
+            self.__restore_previous_release()
 
     def __execute_script(self, file_):
         try:
@@ -189,11 +192,7 @@ class Patch:
                 shell=False, check=True)
         except subprocess.CalledProcessError as err:
             utils.error(f'Problem with script {file_}\n{err}\n')
-            db_release = self.__repo.database.last_release_s
-            previous_release = self.previous(db_release)
-            self.__restore_db(previous_release)
-            os.remove(self.__backup_file('Backups', previous_release))
-            sys.exit(1)
+            self.__restore_previous_release()
 
     def apply(self, release, force=False, save_db=True):
         "Apply the release in 'path'"
@@ -208,7 +207,7 @@ class Patch:
                 okay = input(f'Do you want to re-apply the release {release} [y/N]?') or 'y'
                 if okay.upper() != 'Y':
                     sys.exit()
-            self.__restore_db(self.previous(db_release))
+            self.__restore_db(self.previous(db_release, 1))
         app_upg = utils.Color.green('Upgrading to') if self.__repo.production else utils.Color.bold('Applying')
         print(f'{app_upg} {utils.Color.bold(release)}')
         files = []
@@ -257,7 +256,7 @@ class Patch:
     def undo(self, database_only=False):
         "Undo a patch."
         db_release = self.__repo.database.last_release_s
-        previous_release = self.previous(db_release)
+        previous_release = self.previous(db_release, 1)
         self.__restore_db(previous_release)
         if not database_only:
             modules.generate(self.__repo)
