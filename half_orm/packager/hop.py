@@ -74,7 +74,7 @@ class Hop:
         def new(package_name, devel=False):
             """ Creates a new hop project named <package_name>.
             """
-            self.__repo.new(package_name, devel)
+            self.__repo.init(package_name, devel)
 
 
         @click.command()
@@ -159,9 +159,9 @@ def main(ctx):
         click.echo(hop.state)
     elif not hop.repo_checked and ctx.invoked_subcommand != 'new':
         click.echo(hop.state)
-        print(utils.Color.bold(
+        print(
             "\nNot in a hop repository.\n"
-            "Try `hop new [--devel] <package name>` or change directory.\n"))
+            f"Try {utils.Color.bold('hop new [--devel] <package name>')} or change directory.\n")
 
 hop.add_commands(main)
 

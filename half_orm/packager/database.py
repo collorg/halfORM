@@ -25,8 +25,9 @@ class Database:
             try:
                 self.__model = Model(self.__repo.name)
                 self.__init(self.__repo.name)
-            except OperationalError:
-                pass
+            except OperationalError as err:
+                if not self.__repo.new:
+                    utils.error(err, 1)
 
     def __call__(self, name):
         return self.__class__(self.__repo)

@@ -83,6 +83,7 @@ class Config:
 class Repo:
     """Reads and writes the hop repo conf file.
     """
+    __new = False
     __checked: bool = False
     __base_dir: str = None
     __config: Config = None
@@ -90,6 +91,11 @@ class Repo:
     hgit: HGit = None
     def __init__(self):
         self.__check()
+
+    @property
+    def new(self):
+        "Returns if the repo is being created or not."
+        return Repo.__new
 
     @property
     def checked(self):
@@ -180,8 +186,9 @@ class Repo:
             res.append(Patch(self).state)
         return '\n'.join(res)
 
-    def new(self, package_name, devel):
+    def init(self, package_name, devel):
         "Create a new hop repository"
+        Repo.__new = True
         cur_dir = os.path.abspath(os.path.curdir)
         self.__base_dir = os.path.join(cur_dir, package_name)
         self.__config = Config(self.__base_dir, name=package_name, devel=devel)
