@@ -163,19 +163,21 @@ class Repo:
     @property
     def state(self):
         "Returns the state (str) of the repository."
-        res = [f'Half-ORM packager: {utils.hop_version()}\n']
-        hop_version = utils.Color.red(self.__config.hop_version) if \
-            self.__hop_version_mismatch() else \
-            utils.Color.green(self.__config.hop_version)
-        res += [
-            '[Hop repository]',
-            f'- base directory: {self.__base_dir}',
-            f'- package name: {self.__config.name}',
-            f'- hop version: {hop_version}'
-        ]
-        res.append(self.database.state)
-        res.append(str(self.hgit))
-        res.append(Patch(self).state)
+        res = [f'hop version: {utils.Color.bold(utils.hop_version())}']
+        res += [f'half-orm version: {utils.Color.bold(half_orm.VERSION)}\n']
+        if self.__config:
+            hop_version = utils.Color.red(self.__config.hop_version) if \
+                self.__hop_version_mismatch() else \
+                utils.Color.green(self.__config.hop_version)
+            res += [
+                '[Hop repository]',
+                f'- base directory: {self.__base_dir}',
+                f'- package name: {self.__config.name}',
+                f'- hop version: {hop_version}'
+            ]
+            res.append(self.database.state)
+            res.append(str(self.hgit))
+            res.append(Patch(self).state)
         return '\n'.join(res)
 
     def new(self, package_name, devel):
