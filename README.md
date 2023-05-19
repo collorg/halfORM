@@ -1,13 +1,14 @@
 # A simple PostgreSQL to Python mapper [0.9.0] and its packager [0.1.0a2]
 
 ![PyPI version](https://img.shields.io/pypi/v/half_orm)
-![Python versions](https://img.shields.io/pypi/pyversions/half_orm)
+![Python versions](https://img.shields.io/badge/Python-%20&ge;%203.7-blue)
+![PostgreSQL versions](https://img.shields.io/badge/PostgreSQL-%20&ge;%209.6-blue)
 ![CI badge](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg)
 ![Coveralls](https://img.shields.io/coverallsCoverage/github/collorg/halfORM)
 ![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)
 ![Contributors](https://img.shields.io/github/contributors/collorg/halform)
 
-You have a PostgreSQL database at hand and you want to interact with it in Python (&ge; 3.6); `half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data. If you want to build or patch a model, you might be interested in the [`half_orm packager`](#next-hop-the-gitops-half_orm-packager-wipalpha).
+You have a PostgreSQL database at hand and you want to interact with it in Python (&ge; 3.7). `Half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data. If you want to build or patch a model, you might be interested in the [`half_orm packager`](#next-hop-the-gitops-half_orm-packager-wipalpha).
 
 The 'half' part of `half_orm` name indicates that it only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL. Basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands. This is what makes `half_orm` so easy to learn an use.
 
