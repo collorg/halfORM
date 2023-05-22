@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.10 (Debian 13.10-1.pgdg110+1)
--- Dumped by pg_dump version 13.10 (Debian 13.10-1.pgdg110+1)
+-- Dumped from database version 13.11 (Debian 13.11-1.pgdg110+1)
+-- Dumped by pg_dump version 13.11 (Debian 13.11-1.pgdg110+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -70,6 +70,49 @@ CREATE EXTENSION IF NOT EXISTS plpython3u WITH SCHEMA pg_catalog;
 --
 
 COMMENT ON EXTENSION plpython3u IS 'PL/Python3U untrusted procedural language';
+
+
+--
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+
+--
+-- Name: check_database(text); Type: FUNCTION; Schema: half_orm_meta; Owner: -
+--
+
+CREATE FUNCTION half_orm_meta.check_database(old_dbid text DEFAULT NULL::text) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    dbname text;
+    dbid text;
+BEGIN
+    select current_database() into dbname;
+    --XXX: use a materialized view.
+    BEGIN
+        select encode(hmac(dbname, pg_read_file('hop_key'), 'sha1'), 'hex') into dbid;
+    EXCEPTION
+        when undefined_file then
+            raise NOTICE 'No hop_key file for the cluster. Will use % for dbid', dbname;
+            dbid := dbname;
+    END;
+    if old_dbid is not null and old_dbid != dbid
+    then
+        raise Exception 'Not the same database!';
+    end if;
+    return dbid;
+END;
+$$;
 
 
 --
@@ -285,6 +328,27 @@ COMMENT ON VIEW "blog.view".post_comment IS 'This view joins:
 
 
 --
+-- Name: database; Type: TABLE; Schema: half_orm_meta; Owner: -
+--
+
+CREATE TABLE half_orm_meta.database (
+    id text NOT NULL,
+    name text NOT NULL,
+    description text
+);
+
+
+--
+-- Name: TABLE database; Type: COMMENT; Schema: half_orm_meta; Owner: -
+--
+
+COMMENT ON TABLE half_orm_meta.database IS '
+id identifies the database in the cluster. It uses the key
+in hop_key.
+';
+
+
+--
 -- Name: hop_release; Type: TABLE; Schema: half_orm_meta; Owner: -
 --
 
@@ -298,6 +362,8 @@ CREATE TABLE half_orm_meta.hop_release (
     "time" time(0) with time zone DEFAULT CURRENT_TIME,
     changelog text,
     commit text,
+    dbid text,
+    hop_release text,
     CONSTRAINT hop_release_major_check CHECK ((major >= 0)),
     CONSTRAINT hop_release_minor_check CHECK ((minor >= 0)),
     CONSTRAINT hop_release_patch_check CHECK ((patch >= 0)),
@@ -347,149 +413,17 @@ CREATE VIEW "half_orm_meta.view".hop_last_release AS
 --
 
 CREATE VIEW "half_orm_meta.view".hop_penultimate_release AS
- WITH sub AS (
-         SELECT hop_release.major,
+ SELECT penultimate.major,
+    penultimate.minor,
+    penultimate.patch
+   FROM ( SELECT hop_release.major,
             hop_release.minor,
-            hop_release.patch,
-            row_number() OVER (ORDER BY hop_release.major DESC, hop_release.minor DESC, hop_release.patch DESC) AS rn
+            hop_release.patch
            FROM half_orm_meta.hop_release
-        )
- SELECT sub.major,
-    sub.minor,
-    sub.patch
-   FROM sub
-  WHERE (sub.rn = 2);
-
-
---
--- Data for Name: person; Type: TABLE DATA; Schema: actor; Owner: -
---
-
-COPY actor.person (id, first_name, last_name, birth_date) FROM stdin;
-6768	ba	ba	2023-02-15
-6769	bb	bb	2023-02-15
-6770	bc	bc	2023-02-15
-6771	bd	bd	2023-02-15
-6772	be	be	2023-02-15
-6773	bf	bf	2023-02-15
-6774	bg	bg	2023-02-15
-6775	bh	bh	2023-02-15
-6776	bi	bi	2023-02-15
-6777	bj	bj	2023-02-15
-6778	ca	ca	2023-02-15
-6779	cb	cb	2023-02-15
-6780	cc	cc	2023-02-15
-6781	cd	cd	2023-02-15
-6782	ce	ce	2023-02-15
-6783	cf	cf	2023-02-15
-6784	cg	cg	2023-02-15
-6785	ch	ch	2023-02-15
-6786	ci	ci	2023-02-15
-6787	cj	cj	2023-02-15
-6788	da	da	2023-02-15
-6789	db	db	2023-02-15
-6790	dc	dc	2023-02-15
-6791	dd	dd	2023-02-15
-6792	de	de	2023-02-15
-6793	df	df	2023-02-15
-6794	dg	dg	2023-02-15
-6795	dh	dh	2023-02-15
-6796	di	di	2023-02-15
-6797	dj	dj	2023-02-15
-6798	ea	ea	2023-02-15
-6799	eb	eb	2023-02-15
-6800	ec	ec	2023-02-15
-6801	ed	ed	2023-02-15
-6802	ee	ee	2023-02-15
-6803	ef	ef	2023-02-15
-6804	eg	eg	2023-02-15
-6805	eh	eh	2023-02-15
-6806	ei	ei	2023-02-15
-6807	ej	ej	2023-02-15
-6808	fa	fa	2023-02-15
-6809	fb	fb	2023-02-15
-6810	fc	fc	2023-02-15
-6811	fd	fd	2023-02-15
-6812	fe	fe	2023-02-15
-6813	ff	ff	2023-02-15
-6814	fg	fg	2023-02-15
-6815	fh	fh	2023-02-15
-6816	fi	fi	2023-02-15
-6817	fj	fj	2023-02-15
-6758	aa	aa	2023-02-15
-6759	ab	ab	2023-02-15
-6760	ac	ac	2023-02-15
-6761	ad	ad	2023-02-15
-6762	ae	ae	2023-02-15
-6763	af	af	2023-02-15
-6764	ag	ag	2023-02-15
-6765	ah	ah	2023-02-15
-6766	ai	ai	2023-02-15
-6767	aj	aj	2023-02-15
-\.
-
-
---
--- Data for Name: comment; Type: TABLE DATA; Schema: blog; Owner: -
---
-
-COPY blog.comment (id, content, post_id, author_id, "a = 1") FROM stdin;
-\.
-
-
---
--- Data for Name: event; Type: TABLE DATA; Schema: blog; Owner: -
---
-
-COPY blog.event (id, title, content, author_first_name, author_last_name, author_birth_date, begin, "end", location, data) FROM stdin;
-\.
-
-
---
--- Data for Name: post; Type: TABLE DATA; Schema: blog; Owner: -
---
-
-COPY blog.post (id, title, content, author_first_name, author_last_name, author_birth_date, data) FROM stdin;
-\.
-
-
---
--- Data for Name: hop_release; Type: TABLE DATA; Schema: half_orm_meta; Owner: -
---
-
-COPY half_orm_meta.hop_release (major, minor, patch, pre_release, pre_release_num, date, "time", changelog, commit) FROM stdin;
-0	0	0			2023-01-05	09:03:55+01	Initial release	\N
-0	0	1			2023-01-24	14:20:25+01		\N
-\.
-
-
---
--- Data for Name: hop_release_issue; Type: TABLE DATA; Schema: half_orm_meta; Owner: -
---
-
-COPY half_orm_meta.hop_release_issue (num, issue_release, release_major, release_minor, release_patch, release_pre_release, release_pre_release_num, changelog) FROM stdin;
-\.
-
-
---
--- Name: id_person; Type: SEQUENCE SET; Schema: actor; Owner: -
---
-
-SELECT pg_catalog.setval('actor.id_person', 7188, true);
-
-
---
--- Name: id_comment; Type: SEQUENCE SET; Schema: blog; Owner: -
---
-
-SELECT pg_catalog.setval('blog.id_comment', 21099, true);
-
-
---
--- Name: post_id; Type: SEQUENCE SET; Schema: blog; Owner: -
---
-
-SELECT pg_catalog.setval('blog.post_id', 15255, true);
+          ORDER BY hop_release.major DESC, hop_release.minor DESC, hop_release.patch DESC
+         LIMIT 2) penultimate
+  ORDER BY penultimate.major, penultimate.minor, penultimate.patch
+ LIMIT 1;
 
 
 --
@@ -549,6 +483,14 @@ ALTER TABLE ONLY blog.post
 
 
 --
+-- Name: database database_pkey; Type: CONSTRAINT; Schema: half_orm_meta; Owner: -
+--
+
+ALTER TABLE ONLY half_orm_meta.database
+    ADD CONSTRAINT database_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hop_release_issue hop_release_issue_pkey; Type: CONSTRAINT; Schema: half_orm_meta; Owner: -
 --
 
@@ -594,6 +536,14 @@ ALTER TABLE ONLY blog.event
 
 ALTER TABLE ONLY blog.comment
     ADD CONSTRAINT post FOREIGN KEY (post_id) REFERENCES blog.post(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: hop_release hop_release_dbid_fkey; Type: FK CONSTRAINT; Schema: half_orm_meta; Owner: -
+--
+
+ALTER TABLE ONLY half_orm_meta.hop_release
+    ADD CONSTRAINT hop_release_dbid_fkey FOREIGN KEY (dbid) REFERENCES half_orm_meta.database(id) ON UPDATE CASCADE;
 
 
 --

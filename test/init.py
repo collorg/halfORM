@@ -35,6 +35,7 @@ HALFTEST_REL_LISTS = [
     ('r', ('halftest', 'blog', 'comment')),
     ('r', ('halftest', 'blog', 'event')),
     ('r', ('halftest', 'blog', 'post')),
+    ('r', ('halftest', 'half_orm_meta', 'database')),
     ('r', ('halftest', 'half_orm_meta', 'hop_release')),
     ('r', ('halftest', 'half_orm_meta', 'hop_release_issue')),
     ('v', ('halftest', 'blog.view', 'post_comment')),

@@ -19,4 +19,5 @@ class Test(TestCase):
         self.assertEqual(self.pg_meta.str('halftest'), HALFTEST_STR)
 
     def test_relations_list(self):
-        self.assertEqual(self.pg_meta.relations_list('halftest'), HALFTEST_REL_LISTS)
+        self.maxDiff = None
+        self.assertEqual(HALFTEST_REL_LISTS, self.pg_meta.relations_list('halftest'))
