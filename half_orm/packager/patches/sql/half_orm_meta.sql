@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 15.1 (Debian 15.1-1.pgdg110+1)
--- Dumped by pg_dump version 15.1 (Debian 15.1-1.pgdg110+1)
+-- Dumped from database version 13.11 (Debian 13.11-1.pgdg110+1)
+-- Dumped by pg_dump version 13.11 (Debian 13.11-1.pgdg110+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -30,9 +30,59 @@ CREATE SCHEMA half_orm_meta;
 CREATE SCHEMA "half_orm_meta.view";
 
 
+--
+-- Name: check_database(text); Type: FUNCTION; Schema: half_orm_meta; Owner: -
+--
+
+CREATE FUNCTION half_orm_meta.check_database(old_dbid text DEFAULT NULL::text) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    dbname text;
+    dbid text;
+BEGIN
+    select current_database() into dbname;
+    --XXX: use a materialized view.
+    BEGIN
+        select encode(hmac(dbname, pg_read_file('hop_key'), 'sha1'), 'hex') into dbid;
+    EXCEPTION
+        when undefined_file then
+            raise NOTICE 'No hop_key file for the cluster. Will use % for dbid', dbname;
+            dbid := dbname;
+    END;
+    if old_dbid is not null and old_dbid != dbid
+    then
+        raise Exception 'Not the same database!';
+    end if;
+    return dbid;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: database; Type: TABLE; Schema: half_orm_meta; Owner: -
+--
+
+CREATE TABLE half_orm_meta.database (
+    id text NOT NULL,
+    name text NOT NULL,
+    description text
+);
+
+
+--
+-- Name: TABLE database; Type: COMMENT; Schema: half_orm_meta; Owner: -
+--
+
+COMMENT ON TABLE half_orm_meta.database IS '
+id identifies the database in the cluster. It uses the key
+in hop_key.
+';
+
 
 --
 -- Name: hop_release; Type: TABLE; Schema: half_orm_meta; Owner: -
@@ -48,6 +98,8 @@ CREATE TABLE half_orm_meta.hop_release (
     "time" time(0) with time zone DEFAULT CURRENT_TIME,
     changelog text,
     commit text,
+    dbid text,
+    hop_release text,
     CONSTRAINT hop_release_major_check CHECK ((major >= 0)),
     CONSTRAINT hop_release_minor_check CHECK ((minor >= 0)),
     CONSTRAINT hop_release_patch_check CHECK ((patch >= 0)),
@@ -97,18 +149,25 @@ CREATE VIEW "half_orm_meta.view".hop_last_release AS
 --
 
 CREATE VIEW "half_orm_meta.view".hop_penultimate_release AS
- WITH sub AS (
-         SELECT hop_release.major,
+ SELECT penultimate.major,
+    penultimate.minor,
+    penultimate.patch
+   FROM ( SELECT hop_release.major,
             hop_release.minor,
-            hop_release.patch,
-            row_number() OVER (ORDER BY hop_release.major DESC, hop_release.minor DESC, hop_release.patch DESC) AS rn
+            hop_release.patch
            FROM half_orm_meta.hop_release
-        )
- SELECT sub.major,
-    sub.minor,
-    sub.patch
-   FROM sub
-  WHERE (sub.rn = 2);
+          ORDER BY hop_release.major DESC, hop_release.minor DESC, hop_release.patch DESC
+         LIMIT 2) penultimate
+  ORDER BY penultimate.major, penultimate.minor, penultimate.patch
+ LIMIT 1;
+
+
+--
+-- Name: database database_pkey; Type: CONSTRAINT; Schema: half_orm_meta; Owner: -
+--
+
+ALTER TABLE ONLY half_orm_meta.database
+    ADD CONSTRAINT database_pkey PRIMARY KEY (id);
 
 
 --
@@ -125,6 +184,14 @@ ALTER TABLE ONLY half_orm_meta.hop_release_issue
 
 ALTER TABLE ONLY half_orm_meta.hop_release
     ADD CONSTRAINT hop_release_pkey PRIMARY KEY (major, minor, patch, pre_release, pre_release_num);
+
+
+--
+-- Name: hop_release hop_release_dbid_fkey; Type: FK CONSTRAINT; Schema: half_orm_meta; Owner: -
+--
+
+ALTER TABLE ONLY half_orm_meta.hop_release
+    ADD CONSTRAINT hop_release_dbid_fkey FOREIGN KEY (dbid) REFERENCES half_orm_meta.database(id) ON UPDATE CASCADE;
 
 
 --
