@@ -12,6 +12,7 @@ pyyaml = "*"
 gitpython = "3"
 click = "*"
 pydash = "5"
+twine = "*"
 
 [dev-packages]
 coverage = "*"
