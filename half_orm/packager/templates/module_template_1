@@ -7,5 +7,5 @@ WARNING!
 {warning}
 """
 
-from {package_name}.db_connector import base_relation_class
+from {package_name} import base_relation_class
 {inheritance_import}

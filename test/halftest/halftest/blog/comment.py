@@ -18,7 +18,7 @@ MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 """
 
-from halftest.db_connector import base_relation_class
+from halftest import base_relation_class
 
 #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 
@@ -28,7 +28,7 @@ __RCLS = base_relation_class('blog.comment')
 
 class Comment(__RCLS):
     """
-    __RCLS: <class 'half_orm.model.Table_HalftestBlogComment'>
+    __RCLS: <class 'half_orm.relation_factory.Table_HalftestBlogComment'>
     This class allows you to manipulate the data in the PG relation:
     TABLE: "halftest":"blog"."comment"
     DESCRIPTION:

@@ -169,7 +169,7 @@ MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 """
 
-from hop_test.db_connector import base_relation_class
+from hop_test import base_relation_class
 
 #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 import datetime

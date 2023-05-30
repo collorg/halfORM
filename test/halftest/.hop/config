@@ -2,4 +2,4 @@
 config_file = halftest
 package_name = halftest
 hop_version = 0.1.0a0
-
+devel = True

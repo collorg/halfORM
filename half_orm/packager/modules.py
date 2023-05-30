@@ -34,7 +34,7 @@ def read_template(file_name):
     with open(os.path.join(utils.TEMPLATE_DIRS, file_name), encoding='utf-8') as file_:
         return file_.read()
 
-DB_CONNECTOR_TEMPLATE = read_template('db_connector.py')
+INIT_MODULE_TEMPLATE = read_template('init_module_template')
 MODULE_TEMPLATE_1 = read_template('module_template_1')
 MODULE_TEMPLATE_2 = read_template('module_template_2')
 MODULE_TEMPLATE_3 = read_template('module_template_3')
@@ -51,7 +51,7 @@ MODULE_FORMAT = (
     "{rt3}\n        " +
     "{bc_}{user_s_code}")
 AP_EPILOG = """"""
-DO_NOT_REMOVE = ['db_connector.py', '__init__.py', 'base_test.py']
+DO_NOT_REMOVE = ['__init__.py', 'base_test.py']
 
 MODEL = None
 
@@ -60,6 +60,8 @@ def __update_init_files(package_dir, files_list, warning):
     """
     skip = re.compile('[A-Z]')
     for root, dirs, files in os.walk(package_dir):
+        if root == package_dir:
+            continue
         all_ = []
         reldir = root.replace(package_dir, '')
         if re.findall(skip, reldir):
@@ -67,8 +69,6 @@ def __update_init_files(package_dir, files_list, warning):
         for dir_ in dirs:
             if re.findall(skip, dir_):
                 continue
-            if dir_ != '__pycache__':
-                all_.append(dir_)
         for file_ in files:
             if re.findall(skip, file_):
                 continue
@@ -85,7 +85,7 @@ def __update_init_files(package_dir, files_list, warning):
                 all_.append(file_.replace('.py', ''))
         all_.sort()
         with open(os.path.join(root, '__init__.py'), 'w', encoding='utf-8') as init_file:
-            init_file.write(f'"""{warning}"""\n\n')
+            init_file.write(f'"""{root}\n{warning}"""\n\n')
 
             all_ = ",\n    ".join([f"'{elt}'" for elt in all_])
             init_file.write(f'__all__ = [\n    {all_}\n]\n')
@@ -195,8 +195,8 @@ def generate(repo):
     repo.database.model._reload()
     if not os.path.exists(package_dir):
         os.mkdir(package_dir)
-    with open(os.path.join(package_dir, 'db_connector.py'), 'w', encoding='utf-8') as file_:
-        file_.write(DB_CONNECTOR_TEMPLATE.format(dbname=package_name, package_name=package_name))
+    with open(os.path.join(package_dir, '__init__.py'), 'w', encoding='utf-8') as file_:
+        file_.write(INIT_MODULE_TEMPLATE.format(package_name=package_name))
 
     if not os.path.exists(os.path.join(package_dir, 'base_test.py')):
         with open(os.path.join(package_dir, 'base_test.py'), 'w', encoding='utf-8') as file_:
