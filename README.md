@@ -166,7 +166,8 @@ To get a full description of the corresponding relation, print an instance of th
 >>> print(Person())
 ```
 ```
-__RCLS: <class 'half_orm.relation.Table_HalftestActorPerson'>
+Inherits: <class 'half_orm.relation.Table_HalftestActorPerson'>
+
 This class allows you to manipulate the data in the PG relation:
 TABLE: "halftest":"actor"."person"
 DESCRIPTION:
@@ -556,7 +557,8 @@ Let's see an example with the `blog.post` relation:
 >>> Post()
 ```
 ```
-__RCLS: <class '__main__.Post'>
+Inherits: <class '__main__.Post'>
+
 This class allows you to manipulate the data in the PG relation:
 TABLE: "halftest":"blog"."post"
 DESCRIPTION:
