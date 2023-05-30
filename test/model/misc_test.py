@@ -43,3 +43,9 @@ class Test(TestCase):
         self.assertEqual(
             id(model._import_class('actor.person')),
             id(model._import_class('"actor"."person"')))
+
+    def test_classes(self):
+        "it should return all the classes in the model"
+        self.assertEqual("\n".join(
+            [f"{cls[1]} {cls[0]._qrn}" for cls in model.classes()]), HALFTEST_STR)
+    

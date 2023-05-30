@@ -20,7 +20,7 @@ Note:
     ``my_table`` in this schema you'll have to use ``pubic.my_table``.
 """
 
-
+import importlib
 import os
 import sys
 from configparser import ConfigParser
@@ -379,3 +379,17 @@ class Model:
 
     def __str__(self):
         return self.__pg_meta.str(self.__dbname)
+
+    def classes(self):
+        "Returns the all the classes of the model"
+        for relation in self._relations():
+            package_name = relation[1][0]
+            module_name = ".".join(relation[1][1:])
+            if module_name.find('half_orm_meta') == 0:
+                continue
+            class_name = pg_meta.camel_case(relation[1][-1])
+            try:
+                module = importlib.import_module(f".{module_name}", package_name)
+            except ModuleNotFoundError as err:
+                raise err
+            yield getattr(module, class_name), relation[0]

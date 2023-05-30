@@ -803,6 +803,15 @@ def __what(self):
 
     return fields_names, set_fields, fk_fields, fk_queries, fk_values
 
+@classmethod
+def ho_description(self):
+    """Returns the description (comment) of the relation
+    """
+    description = self.__metadata['description']
+    if description:
+        description = description.strip()
+    return description or 'No description available'
+
 def __call__(self, **kwargs):
     return self.__class__(**kwargs)
 
@@ -1075,6 +1084,7 @@ COMMON_INTERFACE = {
     'ho_mogrify': ho_mogrify,
 
     # public methods
+    'ho_description': ho_description,
     'ho_id': ho_id,
     'ho_order_by': ho_order_by,
     'ho_limit': ho_limit,
