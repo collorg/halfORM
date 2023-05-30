@@ -169,17 +169,16 @@ MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 """
 
-from hop_test import base_relation_class
+from hop_test import MODEL
 
 #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 import datetime
 #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
 
-__RCLS = base_relation_class('public.b')
-
-class B(__RCLS):
+class B(MODEL.get_relation_class('public.b')):
     """
-    __RCLS: <class 'half_orm.relation_factory.Table_Hop_testPublicB'>
+    Inherits: <class 'half_orm.relation_factory.Table_Hop_testPublicB'>
+
     This class allows you to manipulate the data in the PG relation:
     TABLE: "hop_test":"public"."b"
     FIELDS:

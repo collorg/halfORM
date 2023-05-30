@@ -12,7 +12,8 @@ from half_orm.hotest import HoTestCase
 from ..init import halftest
 from half_orm import relation_errors, model
 
-PERS_REPR = """__RCLS: <class 'halftest.blog.post.Post'>
+PERS_REPR = """Inherits: <class 'halftest.blog.post.Post'>
+
 This class allows you to manipulate the data in the PG relation:
 TABLE: "halftest":"blog"."post"
 DESCRIPTION:
@@ -45,7 +46,8 @@ Fkeys = {
     '': 'author',
 }"""
 
-SET_PERS_REPR = """__RCLS: <class 'halftest.actor.person.Person'>
+SET_PERS_REPR = """Inherits: <class 'halftest.actor.person.Person'>
+
 This class allows you to manipulate the data in the PG relation:
 TABLE: "halftest":"actor"."person"
 DESCRIPTION:
@@ -80,7 +82,8 @@ Fkeys = {
     '': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
 }"""
 
-PERS_POSTS="""__RCLS: <class 'halftest.blog.post.Post'>
+PERS_POSTS="""Inherits: <class 'halftest.blog.post.Post'>
+
 This class allows you to manipulate the data in the PG relation:
 TABLE: "halftest":"blog"."post"
 DESCRIPTION:
@@ -104,7 +107,8 @@ FOREIGN KEYS:
  ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)
 - _reverse_...............: ("author_birth_date", "author_first_name", "author_last_name")
  ↳ "halftest":"blog"."post"("first_name", "last_name", "birth_date")
-     __RCLS: <class 'halftest.actor.person.Person'>
+     Inherits: <class 'halftest.actor.person.Person'>
+     
      This class allows you to manipulate the data in the PG relation:
      TABLE: "halftest":"actor"."person"
      DESCRIPTION:
@@ -159,11 +163,11 @@ class Test(HoTestCase):
         self.pers.birth_date = ('<=', '1970-01-01')
 
     def test_rel(self):
-        # self.maxDiff = None
+        self.maxDiff = None
         self.assertEqual(''.join(repr(self.Post())), PERS_REPR)
 
     def test_set_rel(self):
-        # self.maxDiff = None
+        self.maxDiff = None
         self.assertEqual(''.join(repr(self.pers)), SET_PERS_REPR)
 
     def test_repr_with_fkey_set(self):

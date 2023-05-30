@@ -18,17 +18,16 @@ MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 """
 
-from halftest import base_relation_class
+from halftest import MODEL
 
 #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 
 #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
 
-__RCLS = base_relation_class('blog.view.post_comment')
-
-class PostComment(__RCLS):
+class PostComment(MODEL.get_relation_class('blog.view.post_comment')):
     """
-    __RCLS: <class 'half_orm.relation_factory.View_HalftestBlogviewPost_comment'>
+    Inherits: <class 'half_orm.relation_factory.View_HalftestBlogviewPost_comment'>
+
     This class allows you to manipulate the data in the PG relation:
     VIEW: "halftest":"blog.view"."post_comment"
     DESCRIPTION:

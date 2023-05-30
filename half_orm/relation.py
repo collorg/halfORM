@@ -537,7 +537,7 @@ Fkeys = {"""
 
     rel_kind = self.__kind
     ret = []
-    ret.append(f"__RCLS: {self.__class__}")
+    ret.append(f"Inherits: {self.__class__}\n")
     ret.append(
         "This class allows you to manipulate the data in the PG relation:")
     ret.append(f"{rel_kind.upper()}: {self._fqrn}")
