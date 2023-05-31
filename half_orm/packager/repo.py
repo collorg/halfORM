@@ -4,7 +4,7 @@
 import os
 from configparser import ConfigParser
 import half_orm
-from half_orm.packager import utils
+from half_orm import utils
 from half_orm.packager.database import Database
 from half_orm.packager.hgit import HGit
 from half_orm.packager import modules

@@ -6,7 +6,7 @@ from functools import wraps
 
 from half_orm import pg_meta
 from half_orm import model_errors
-from half_orm.packager import utils
+from half_orm import utils
 from half_orm.relation import Relation, REL_INTERFACES, REL_CLASS_NAMES
 
 def __deprecated(fct):

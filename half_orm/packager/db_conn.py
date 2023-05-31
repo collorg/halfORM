@@ -9,7 +9,7 @@ from getpass import getpass
 from configparser import ConfigParser
 
 from half_orm.model import CONF_DIR
-from half_orm.packager import utils
+from half_orm import utils
 
 CONF_NOT_FOUND = '''
 The configuration file {} is missing.

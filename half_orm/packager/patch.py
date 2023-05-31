@@ -8,7 +8,7 @@ import sys
 import pydash
 import psycopg2
 
-from half_orm.packager import utils
+from half_orm import utils
 from half_orm.packager import modules
 from half_orm.packager.changelog import Changelog
 

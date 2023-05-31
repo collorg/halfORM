@@ -54,7 +54,7 @@ import yaml
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
 from half_orm.field import Field
-from half_orm.packager import utils
+from half_orm import utils
 
 class _SetOperators:
     """_SetOperators class stores the set operations made on the Relation class objects

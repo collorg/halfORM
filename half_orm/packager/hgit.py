@@ -6,7 +6,7 @@ import subprocess
 from git import Repo
 from git.exc import GitCommandError
 
-from half_orm.packager import utils
+from half_orm import utils
 from half_orm.packager.manifest import Manifest
 
 class HGit:

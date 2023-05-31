@@ -4,7 +4,7 @@
 import json
 import os
 
-from half_orm.packager import utils
+from half_orm import utils
 
 class Manifest:
     "Manages the manifest of a release"

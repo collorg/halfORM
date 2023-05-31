@@ -15,7 +15,7 @@ A line is of the form:
 
 import os
 
-from half_orm.packager import utils
+from half_orm import utils
 
 class Changelog:
     "The Changelog class..."

@@ -24,7 +24,7 @@ import sys
 import click
 
 from half_orm.packager.repo import Repo
-from half_orm.packager import utils
+from half_orm import utils
 
 class Hop:
     "Sets the options available to the hop command"

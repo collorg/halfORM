@@ -8,7 +8,7 @@ import sys
 from psycopg2 import OperationalError
 from half_orm.model import Model
 from half_orm.model_errors import UnknownRelation
-from half_orm.packager import utils
+from half_orm import utils
 from half_orm.packager.db_conn import DbConn
 
 

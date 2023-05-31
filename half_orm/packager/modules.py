@@ -27,7 +27,7 @@ from keyword import iskeyword
 from half_orm.pg_meta import camel_case
 from half_orm.model_errors import UnknownRelation
 
-from half_orm.packager import utils
+from half_orm import utils
 
 def read_template(file_name):
     "helper"

@@ -23,7 +23,8 @@ class Color:
         "bold"
         return f"\033[1m{text}\033[0m"
 
-HOP_PATH = os.path.dirname(__file__)
+PWD = os.path.dirname(__file__)
+HOP_PATH = os.path.join(PWD, 'packager')
 TEMPLATE_DIRS = os.path.join(HOP_PATH, 'templates')
 
 BEGIN_CODE = "#>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!\n"

@@ -4,7 +4,7 @@
 """This module provides the FKey class."""
 
 from half_orm.pg_meta import normalize_fqrn, normalize_qrn
-from half_orm.packager import utils
+from half_orm import utils
 
 class FKey:
     """Foreign key class
