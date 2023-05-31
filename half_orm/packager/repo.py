@@ -10,6 +10,7 @@ from half_orm.packager.hgit import HGit
 from half_orm.packager import modules
 from half_orm.packager.patch import Patch
 from half_orm.packager.changelog import Changelog
+from half_orm.packager.api import Api
 
 class Config:
     """
@@ -255,3 +256,7 @@ class Repo:
     def commit_release(self, push):
         "Release a 'release' (devel)"
         Patch(self).release(push)
+
+    def gen_api(self):
+        "Generates the API for the package"
+        Api(self).generate()
