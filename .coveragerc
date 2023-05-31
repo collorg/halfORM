@@ -1,0 +1,2 @@
+[run]
+omit = half_orm/packager
