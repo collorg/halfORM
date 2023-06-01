@@ -177,10 +177,10 @@ import datetime
 
 class B(MODEL.get_relation_class('public.b')):
     """
-    Inherits: <class 'half_orm.relation_factory.Table_Hop_testPublicB'>
+    DATABASE: hop_test
+    SCHEMA: public
+    TABLE: b
 
-    This class allows you to manipulate the data in the PG relation:
-    TABLE: "hop_test":"public"."b"
     FIELDS:
     - b: (text) NOT NULL
     - a: (text)

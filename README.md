@@ -166,10 +166,10 @@ To get a full description of the corresponding relation, print an instance of th
 >>> print(Person())
 ```
 ```
-Inherits: <class 'half_orm.relation.Table_HalftestActorPerson'>
+DATABASE: halftest
+SCHEMA: actor
+TABLE: person
 
-This class allows you to manipulate the data in the PG relation:
-TABLE: "halftest":"actor"."person"
 DESCRIPTION:
 The table actor.person contains the persons of the blogging system.
 The id attribute is a serial. Just pass first_name, last_name and birth_date

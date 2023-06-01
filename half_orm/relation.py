@@ -537,10 +537,10 @@ Fkeys = {"""
 
     rel_kind = self.__kind
     ret = []
-    ret.append(f"Inherits: {self.__class__}\n")
-    ret.append(
-        "This class allows you to manipulate the data in the PG relation:")
-    ret.append(f"{rel_kind.upper()}: {self._fqrn}")
+    database, schema, relation = self._t_fqrn
+    ret.append(f"DATABASE: {database}")
+    ret.append(f"SCHEMA: {schema}")
+    ret.append(f"{rel_kind.upper()}: {relation}\n")
     if self.__metadata['description']:
         ret.append(f"DESCRIPTION:\n{self.__metadata['description']}")
     ret.append('FIELDS:')

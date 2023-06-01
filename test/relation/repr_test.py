@@ -12,10 +12,10 @@ from half_orm.hotest import HoTestCase
 from ..init import halftest
 from half_orm import relation_errors, model
 
-PERS_REPR = """Inherits: <class 'halftest.blog.post.Post'>
+PERS_REPR = """DATABASE: halftest
+SCHEMA: blog
+TABLE: post
 
-This class allows you to manipulate the data in the PG relation:
-TABLE: "halftest":"blog"."post"
 DESCRIPTION:
 The table blog.post contains all the post
 made by a person in the blogging system.
@@ -46,10 +46,10 @@ Fkeys = {
     '': 'author',
 }"""
 
-SET_PERS_REPR = """Inherits: <class 'halftest.actor.person.Person'>
+SET_PERS_REPR = """DATABASE: halftest
+SCHEMA: actor
+TABLE: person
 
-This class allows you to manipulate the data in the PG relation:
-TABLE: "halftest":"actor"."person"
 DESCRIPTION:
 The table actor.person contains the persons of the blogging system.
 The id attribute is a serial. Just pass first_name, last_name and birth_date
@@ -82,10 +82,10 @@ Fkeys = {
     '': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
 }"""
 
-PERS_POSTS="""Inherits: <class 'halftest.blog.post.Post'>
+PERS_POSTS="""DATABASE: halftest
+SCHEMA: blog
+TABLE: post
 
-This class allows you to manipulate the data in the PG relation:
-TABLE: "halftest":"blog"."post"
 DESCRIPTION:
 The table blog.post contains all the post
 made by a person in the blogging system.
@@ -107,10 +107,10 @@ FOREIGN KEYS:
  ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)
 - _reverse_...............: ("author_birth_date", "author_first_name", "author_last_name")
  ↳ "halftest":"blog"."post"("first_name", "last_name", "birth_date")
-     Inherits: <class 'halftest.actor.person.Person'>
+     DATABASE: halftest
+     SCHEMA: actor
+     TABLE: person
      
-     This class allows you to manipulate the data in the PG relation:
-     TABLE: "halftest":"actor"."person"
      DESCRIPTION:
      The table actor.person contains the persons of the blogging system.
      The id attribute is a serial. Just pass first_name, last_name and birth_date
