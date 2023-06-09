@@ -36,11 +36,21 @@ class Changelog:
         self.__log_dict = {elt[1]: elt for elt in self.__log_list}
         self.__releases = list(self.__log_dict.keys())
 
+    @staticmethod
+    def _sort_releases(releases):
+        "Sort the releases"
+        int_releases = list([tuple(int(elt) for elt in release.split('.'))
+            for release in releases])
+        int_releases.sort()
+        releases = list([".".join(str(elt) for elt in release)
+            for release in int_releases])
+        return releases
+
     def new_release(self, release):
         """Update with the release the .hop/CHANGELOG file"""
         releases = self.__releases
         releases.append(release)
-        releases.sort()
+        releases = Changelog._sort_releases(releases)
         utils.write(self.__file, '')
         for elt in releases:
             rel = self.__log_dict.get(elt)
