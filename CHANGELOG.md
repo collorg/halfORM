@@ -1,3 +1,27 @@
+# 0.9.2 -- hop 0.1.0a4 (2023-06-09)
+
+* [hop] Fix: wrong order in CHANGELOG. (HEAD -> main) (c763300)
+* Change the representation of a Relation object. (c2a18cb)
+* [hop][WIP] Add gen-api command. (d2b180e)
+* Add Makefile for test and build. (04ba7c2)
+* [test] pipenv install pytest-cov. (5f3647e)
+* Move utils.py to half_orm directory. (0b63fbd)
+* Update README. (ec7c62c)
+* [hop] The __init__ module of the package exports only the MODEL of the database. (69b4d74)
+* [hop] Remove db_connector.py (5a00896)
+* [model] Add the method classes. (badda81)
+* [pipenv] Add twine. (782f0b1)
+
+# 0.9.1 -- hop 0.1.0a3 (2023-05-22)
+
+* [release] 0.9.1 (hop 0.1.0a3) (tag: 0.9.1) (a87bb21)
+* [test] Upgrade halftest schemas half_orm_meta and half_orm_meta.view. (ed1769a)
+* [hop] Refactor view "half_orm_meta.view".hop_penultimate_release. (ba401a3)
+* [hop] Fix. Restore the correct DB release in case of error. (9b9acde)
+* [hop] Print error message and exit if the database is missing. (72ac017)
+* [hop] Add half-orm version to hop state. (2a1b504)
+* [ci][github] Tests with postgresql 9.6 to 15 (Python 3.11). (44c180f)
+
 # 0.9.0 (2023-05-12)
 
 * [breaking][relation] Prefix methods with 'ho_*' instead of the ugly '_ho_*'. (0d11bc0)

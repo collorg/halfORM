@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-half-orm = "0.9.1"
+half-orm = "0.9.2"
 
 [dev-packages]
 pytest = "*"
