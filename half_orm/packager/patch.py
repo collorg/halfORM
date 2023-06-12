@@ -289,7 +289,9 @@ class Patch:
                 exit_code=1)
         # do we have pytest
         if PYTEST_OK:
-            if pytest.main([self.__repo.name]) != 0:
+            try:
+                subprocess.run(['pytest', self.__repo.name], check=True)
+            except subprocess.CalledProcessError as err:
                 utils.error('Tests must pass in order to release.\n', exit_code=1)
             # So far, so good
             svg_file = self.__backup_file('Releases', next_release)

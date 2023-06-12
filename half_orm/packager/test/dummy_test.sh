@@ -114,7 +114,7 @@ echo '        verybad' >> hop_test/public/a.py
 git add .
 git commit -m "(bad)"
 set +e
-# git repo must be clean
+# test must pass
 hop release
 if [ $? = 0 ]; then exit 1; fi
 set -e
