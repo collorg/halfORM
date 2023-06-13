@@ -2,6 +2,7 @@
 """
 
 import os
+import sys
 from configparser import ConfigParser
 import half_orm
 from half_orm import utils
@@ -24,6 +25,7 @@ class Config:
         self.__name = kwargs.get('name')
         self.__devel = kwargs.get('devel', False)
         if os.path.exists(self.__file):
+            sys.path.insert(0, base_dir)
             self.read()
 
     def read(self):
