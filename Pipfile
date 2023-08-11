@@ -9,7 +9,7 @@ python_version = "3.9"
 [packages]
 psycopg2-binary = ">=2, <3"
 pyyaml = "*"
-gitpython = "3"
+gitpython = "3.1.32"
 click = "*"
 pydash = "5"
 twine = "*"
