@@ -25,6 +25,10 @@ class Field():
     def _relation(self): # pragma: no cover
         return self.__relation
 
+    @property
+    def _metadata(self): # pragma: no cover
+        return self.__metadata
+
     def is_set(self):
         "Returns if the field is set or not."
         return self.__is_set

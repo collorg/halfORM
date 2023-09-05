@@ -36,13 +36,13 @@ class Hop:
             Hop.__available_cmds = ['new']
         else:
             if not self.__repo.devel:
-                Hop.__available_cmds = ['sync-package', 'gen-api']
+                Hop.__available_cmds = ['sync-package']
             else:
                 if not self.__repo.production and self.__repo:
                     if self.__repo.hgit.branch == 'hop_main':
-                        Hop.__available_cmds = ['prepare', 'gen-api']
+                        Hop.__available_cmds = ['prepare']
                     elif self.__repo.hgit.is_hop_patch_branch:
-                        Hop.__available_cmds = ['apply', 'undo', 'release', 'gen-api']
+                        Hop.__available_cmds = ['apply', 'undo', 'release']
                 elif self:
                     Hop.__available_cmds = ['upgrade', 'restore']
 
@@ -132,10 +132,6 @@ class Hop:
         def sync_package():
             self.__repo.sync_package()
 
-        @click.command()
-        def gen_api():
-            self.__repo.gen_api()
-
         cmds = {
             'new': new,
             'prepare': prepare,
@@ -143,7 +139,6 @@ class Hop:
             'undo': undo,
             'release': release,
             'sync-package': sync_package,
-            'gen-api': gen_api,
             'upgrade': upgrade,
             'restore': restore
         }
