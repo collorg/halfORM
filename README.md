@@ -1,4 +1,4 @@
-# A simple PostgreSQL to Python mapper [0.9.2] and its packager [0.1.0a4]
+# A simple PostgreSQL to Python mapper [0.9.3] and its packager [0.1.0a5]
 
 ![PyPI version](https://img.shields.io/pypi/v/half_orm)
 ![Python versions](https://img.shields.io/badge/Python-%20&ge;%203.7-blue)
