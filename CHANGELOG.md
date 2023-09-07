@@ -1,3 +1,14 @@
+# 0.9.3 -- hop 0.1.0a5 (2023-09-07)
+
+* Bump gitpython from 3.1.32 to 3.1.34 (9735d3f)
+* [hop] Remove gen-api command. (4fd4061)
+* Bump gitpython from 3.1.31 to 3.1.32 (1289178)
+* Bump cryptography from 41.0.2 to 41.0.3 (262d560)
+* Bump certifi from 2023.5.7 to 2023.7.22 (ea2eceb)
+* Bump cryptography from 41.0.0 to 41.0.2 (af58b62)
+* [hop] Add base_dir to PYTHONPATH. (4a49763)
+* [hop] Use subprocess.run to run the tests with pytest. Module doesn't behave as command. (cf910ad)
+
 # 0.9.2 -- hop 0.1.0a4 (2023-06-09)
 
 * [hop] Fix: wrong order in CHANGELOG. (HEAD -> main) (c763300)
