@@ -12,3 +12,6 @@ clean_coverage:
 
 clean_build:
 	rm -rf dist
+
+publish: build
+	twine upload -r half-orm dist/*
