@@ -151,7 +151,7 @@ git commit -m "(wip) Second"
 cat > hop_test/public/b.py << EOF
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
-"""The module hop_test.public.b povides the B class.
+"""The module hop_test.public.b provides the B class.
 
 WARNING!
 

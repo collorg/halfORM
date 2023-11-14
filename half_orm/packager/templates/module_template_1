@@ -1,6 +1,6 @@
 # pylint: disable=wrong-import-order, invalid-name, attribute-defined-outside-init
 
-"""The module {module} povides the {class_name} class.
+"""The module {module} provides the {class_name} class.
 
 WARNING!
 

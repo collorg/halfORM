@@ -85,7 +85,7 @@ def __update_init_files(package_dir, files_list, warning):
                 all_.append(file_.replace('.py', ''))
         all_.sort()
         with open(os.path.join(root, '__init__.py'), 'w', encoding='utf-8') as init_file:
-            init_file.write(f'"""{root}\n{warning}"""\n\n')
+            init_file.write(f'"""{warning}"""\n\n')
 
             all_ = ",\n    ".join([f"'{elt}'" for elt in all_])
             init_file.write(f'__all__ = [\n    {all_}\n]\n')
