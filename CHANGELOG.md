@@ -1,3 +1,12 @@
+# 0.9.4 -- hop 0.1.0a6 (2023-11-14)
+
+* [hop] Remove path from __init__.py. (bbdeed9)
+* Bump gitpython from 3.1.34 to 3.1.37 (9c46991)
+* Bump urllib3 from 2.0.5 to 2.0.6 (6f7c903)
+* [make] Add target build. (0178a3c)
+* Bump cryptography from 41.0.3 to 41.0.4 (d9e8d84)
+* Update REAMDE (78ac59b)
+
 # 0.9.3 -- hop 0.1.0a5 (2023-09-07)
 
 * Bump gitpython from 3.1.32 to 3.1.34 (9735d3f)
