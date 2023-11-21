@@ -1,3 +1,10 @@
+# 0.9.5 -- hop 0.1.0a6 (2023-11-21)
+
+* [relation] @singleton decorator sets the attributes __is_signleton and __orig_args on the decorated function. (ff80877)
+* [make] split tests. (23401ea)
+* [CI][github] Add Python 3.12 and PostgreSQL 16. (fe4d43b)
+* [CI][gitlab] Add Python 3.12. (9c8b863)
+
 # 0.9.4 -- hop 0.1.0a6 (2023-11-14)
 
 * [hop] Remove path from __init__.py. (bbdeed9)
