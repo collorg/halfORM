@@ -1,6 +1,10 @@
-test: clean_coverage
+hop_test:
 	PYTHONPATH=$$PWD HALFORM_CONF_DIR=$$PWD/.config $$PWD/half_orm/packager/test/dummy_test.sh
+
+py_test:
 	PYTHONPATH=$$PWD HALFORM_CONF_DIR=$$PWD/.config pytest --cov-config=.coveragerc --cov=half_orm --cov-report html test
+
+test: clean_coverage py_test hop_test
 
 build: clean_build
 	python -m build
