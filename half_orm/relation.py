@@ -38,6 +38,7 @@ The following methods can be chained on the object before a select.
 
 """
 
+import inspect
 from functools import wraps
 from collections import OrderedDict
 from uuid import UUID
@@ -1031,6 +1032,8 @@ def singleton(fct):
             return fct(self, *args, **kwargs)
         except relation_errors.ExpectedOneError as err:
             raise relation_errors.NotASingletonError(err)
+    wrapper.__is_singleton = True
+    wrapper.__orig_args = inspect.getfullargspec(fct)
     return wrapper
 
 #### Deprecated

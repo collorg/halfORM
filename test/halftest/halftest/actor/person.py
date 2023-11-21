@@ -77,6 +77,6 @@ class Person(MODEL.get_relation_class('actor.person')):
         #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 
     @singleton
-    def name(self):
+    def name(self, last_name: str=None):
         """To test Relation.singleton decorator"""
         return self.last_name
