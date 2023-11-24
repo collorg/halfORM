@@ -35,6 +35,28 @@ class Test(TestCase):
         with self.assertRaises(relation_errors.UnknownAttributeError):
             halftest.Person(lost_name='Lagaffe')
 
+    def test_unknown_attr_error_on_insert(self):
+        "it should raise relation_errors.UnknownAttributeError"
+        with self.assertRaises(relation_errors.UnknownAttributeError):
+            halftest.Person(last_name='Lagaffe').ho_insert('lost_name')
+
+    def test_unknown_attr_error_on_select(self):
+        "it should raise relation_errors.UnknownAttributeError"
+        with self.assertRaises(relation_errors.UnknownAttributeError):
+            _ = [elt for elt in halftest.Person().ho_select('lost_name')]
+
+    def test_unknown_attr_error_on_update(self):
+        "it should raise relation_errors.UnknownAttributeError"
+        with self.assertRaises(relation_errors.UnknownAttributeError):
+            halftest.Person(last_name='Lagaffe').ho_update('lost_name')
+        with self.assertRaises(relation_errors.UnknownAttributeError):
+            halftest.Person(last_name='Lagaffe').ho_update(lost_name="M'enfin")
+
+    def test_unknown_attr_error_on_delete(self):
+        "it should raise relation_errors.UnknownAttributeError"
+        with self.assertRaises(relation_errors.UnknownAttributeError):
+            halftest.Person(last_name='Lagaffe').ho_delete('lost_name')
+
     def test_is_frozen_error(self):
         "it should raise relation_errors.IsFrozenError"
         with self.assertRaises(relation_errors.IsFrozenError):

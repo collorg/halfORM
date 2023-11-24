@@ -159,14 +159,17 @@ def __init__(self, **kwargs):
     self.__select_params = {}
     self.__id_cast = None
     self.__cursor = self._model._connection.cursor(cursor_factory=RealDictCursor)
-    self.__cons_fields = []
     self.__mogrify = False
-    kwk_ = set(kwargs.keys())
-    if kwk_.intersection(self._ho_fields.keys()) != kwk_:
-        raise relation_errors.UnknownAttributeError(str(kwk_.difference(self._ho_fields.keys())))
+    self.__check_columns(*kwargs.keys())
     _ = {self.__dict__[field_name]._set(value)
          for field_name, value in kwargs.items() if value is not None}
     self.__isfrozen = True
+
+def __check_columns(self, *args):
+    "Check that the args are actual columns of the relation"
+    columns = set([elt.replace('"', '') for elt in args])
+    if columns.intersection(self._ho_fields.keys()) != columns:
+        raise relation_errors.UnknownAttributeError(str(columns.difference(self._ho_fields.keys())))
 
 #@utils.trace
 def ho_insert(self, *args) -> '[dict]':
@@ -183,6 +186,7 @@ def ho_insert(self, *args) -> '[dict]':
     Note:
         It is not possible to insert more than one row with the insert method
     """
+    _ = args and args != ('*',) and self.__check_columns(*args)
     query_template = "insert into {} ({}) values ({})"
     self.__query_type = 'insert'
     fields_names, values, fk_fields, fk_query, fk_values = self.__what()
@@ -216,6 +220,7 @@ def ho_select(self, *args):
         >>>     print(person)
         {'id': 1772}
     """
+    self.__check_columns(*args)
     query, values = self.ho_prep_select(*args)
     self.__execute(query, values)
     for elt in self.__cursor:
@@ -249,6 +254,7 @@ def ho_get(self, *args: List[str]) -> Relation:
         >>> gaston.id.value
         1772
     """
+    self.__check_columns(*args)
     _count = len(self)
     if _count != 1:
         raise relation_errors.ExpectedOneError(self, _count)
@@ -282,6 +288,8 @@ def ho_update(self, *args, update_all=False, **kwargs):
             f'Attempt to update all rows of {self.__class__.__name__}'
             ' without update_all being set to True!')
 
+    _ = args and args != ('*',) and self.__check_columns(*args)
+    self.__check_columns(*(kwargs.keys()))
     update_args = dict(kwargs)
     for key, value in kwargs.items():
         # None values are first removed
@@ -307,6 +315,7 @@ def ho_delete(self, *args, delete_all=False):
     """Removes a set of tuples from the relation.
     To empty the relation, delete_all must be set to True.
     """
+    _ = args and args != ('*',) and self.__check_columns(*args)
     if not (self.ho_is_set() or delete_all):
         raise RuntimeError(
             f'Attempt to delete all rows from {self.__class__.__name__}'
@@ -1044,6 +1053,7 @@ COMMON_INTERFACE = {
     '__init__': __init__,
     '__setattr__': __setattr__,
     '__execute': __execute,
+    '__check_columns': __check_columns,
     '__set_fields': __set_fields,
     '__set_fkeys': __set_fkeys,
     '__call__': __call__,
