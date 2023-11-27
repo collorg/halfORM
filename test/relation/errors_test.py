@@ -42,8 +42,11 @@ class Test(TestCase):
 
     def test_unknown_attr_error_on_select(self):
         "it should raise relation_errors.UnknownAttributeError"
-        with self.assertRaises(relation_errors.UnknownAttributeError):
-            _ = [elt for elt in halftest.Person().ho_select('lost_name')]
+        with self.assertRaises(relation_errors.UnknownAttributeError) as cm:
+            list(halftest.Person().ho_select('lost_name', 'last_name', 'fist_name'))
+        self.assertEqual(
+            cm.exception.args[0],
+            "ERROR! Unknown attribute: lost_name, fist_name.")
 
     def test_unknown_attr_error_on_update(self):
         "it should raise relation_errors.UnknownAttributeError"

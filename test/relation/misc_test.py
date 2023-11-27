@@ -96,4 +96,4 @@ class Test(TestCase):
         "it should raise an error if the set attributes are not known in the new relation"
         with self.assertRaises(relation_errors.UnknownAttributeError) as exc:
             halftest.Post(title='coucou').ho_cast('actor.person')
-        self.assertEqual(str(exc.exception), "ERROR! Unknown attribute: {'title'}.")
+        self.assertEqual(str(exc.exception), "ERROR! Unknown attribute: title.")

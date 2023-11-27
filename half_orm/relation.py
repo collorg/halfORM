@@ -169,7 +169,8 @@ def __check_columns(self, *args):
     "Check that the args are actual columns of the relation"
     columns = set([elt.replace('"', '') for elt in args])
     if columns.intersection(self._ho_fields.keys()) != columns:
-        raise relation_errors.UnknownAttributeError(str(columns.difference(self._ho_fields.keys())))
+        diff = columns.difference(self._ho_fields.keys())
+        raise relation_errors.UnknownAttributeError(', '.join([elt for elt in args if elt in diff]))
 
 #@utils.trace
 def ho_insert(self, *args) -> '[dict]':
