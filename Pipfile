@@ -11,7 +11,7 @@ psycopg2-binary = ">=2, <3"
 pyyaml = "*"
 gitpython = "*"
 click = "*"
-pydash = "5"
+pydash = "*"
 twine = "*"
 urllib3 = "*"
 
