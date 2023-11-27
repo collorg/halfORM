@@ -1,3 +1,9 @@
+# 0.9.6 -- hop 0.1.0a6 (2023-11-27)
+
+* [error] Check error message on UnknownAttributeError. (43cc05a)
+* [deps] Bump pydash to 7. (156d843)
+* [relation] Check that args match column names before generating any sql. (b5e4028)
+
 # 0.9.5 -- hop 0.1.0a6 (2023-11-21)
 
 * [relation] @singleton decorator sets the attributes __is_signleton and __orig_args on the decorated function. (ff80877)
