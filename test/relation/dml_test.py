@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
+import contextlib
+import io
+import re
+
 import sys
 from unittest import TestCase
 from time import sleep
@@ -60,12 +64,28 @@ class Test(HoTestCase):
         def update(pers, fct):
             for elt in pers:
                 pers = self.pers.__class__(**elt)
-                pers.ho_update(last_name=fct(pers.last_name.value))
+                pers.ho_update(last_name=fct(pers.last_name.value), first_name=None)
             
         update(pers, str.upper)
         pers = self.pers(last_name=('like', 'A%'))
         self.assertEqual(len(pers), 10)
         update(pers, str.lower)
+
+    def test_update_none_values_are_removed(self):
+        "it should remove None values before update"
+        self.post.ho_mogrify()
+        f1 = io.StringIO()
+        value1 = ''
+        with contextlib.redirect_stdout(f1):
+            self.pers(last_name='Un test').ho_update()
+            value1 = re.sub(r'\s+', ' ', f1.getvalue().replace('\n', ' ').replace('  ', ' '))
+
+        f2 = io.StringIO()
+        value2 = ''
+        with contextlib.redirect_stdout(f2):
+            self.pers(last_name='Un test', first_name=None).ho_update()
+            value2 = re.sub(r'\s+', ' ', f2.getvalue().replace('\n', ' ').replace('  ', ' '))
+        self.assertEqual(value1, value2)
 
     def test_update_with_none_values(self):
         "it should return None (do nothing) if no update values are provided."

@@ -12,9 +12,7 @@ Example:
     >>> model = Model('halftest')
     >>> class Person(model.get_relation_class('actor.person')):
     >>>     # your code goes here
-"""
 
-"""
 Main methods provided by the class Relation:
 - ho_insert: inserts a tuple into the pg table.
 - ho_select: returns a generator of the elements of the set defined by
@@ -42,10 +40,9 @@ import inspect
 from functools import wraps
 from collections import OrderedDict
 from uuid import UUID
-from typing import Generator, List
+from typing import List
 from datetime import date, datetime, time, timedelta
 import json
-import sys
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -270,10 +267,7 @@ def __fkey_where(self, where, values):
     if fk_fields:
         fk_where = " and ".join([f"({a}) in ({b})" for a, b in zip(fk_fields, fk_query)])
         if fk_where:
-            if where:
-                where = f"{where} and {fk_where}"
-            else:
-                where = fk_where
+            where = f"{where} and {fk_where}"
         values += fk_values
     return where, values
 
@@ -294,7 +288,7 @@ def ho_update(self, *args, update_all=False, **kwargs):
     update_args = dict(kwargs)
     for key, value in kwargs.items():
         # None values are first removed
-        if value is None: # pragma: no cover
+        if value is None:
             update_args.pop(key)
     if not update_args:
         return None # no new value update. Should we raise an error here?
@@ -637,9 +631,9 @@ def __get_from(self, orig_rel=None, deja_vu=None):
         fk_rel.__query_type = orig_rel.__query_type
         if fk_rel.ho_id not in deja_vu:
             deja_vu[fk_rel.ho_id] = []
-        elif (fk_rel, fkey) in deja_vu[fk_rel.ho_id] or fk_rel is orig_rel:
-            #sys.stderr.write(f"déjà vu in from! {fk_rel._fqrn}\n")
-            continue
+        # elif (fk_rel, fkey) in deja_vu[fk_rel.ho_id] or fk_rel is orig_rel:
+        #     #sys.stderr.write(f"déjà vu in from! {fk_rel._fqrn}\n")
+        #     continue
         fk_rel.__get_from(orig_rel, deja_vu)
         deja_vu[fk_rel.ho_id].append((fk_rel, fkey))
         _, where, values = fk_rel.__where_args()

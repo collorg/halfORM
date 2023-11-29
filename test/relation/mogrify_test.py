@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+#-*- coding:  utf-8 -*-
+
+import contextlib
+import io
+import re
+from half_orm.hotest import HoTestCase
+
+
+from ..init import halftest
+
+expected = re.compile(r"""select r\d+\.\* from "blog"\."post" as r\d+ where \(1 = 1\)""")
+
+class Test(HoTestCase):
+    def setUp(self):
+        self.pers = halftest.Person()
+        self.post = halftest.Post()
+
+    def test_mogrify(self):
+        "it should print the SQL query"
+        self.post.ho_mogrify()
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            list(self.post.ho_select())
+            value = re.sub(r'\s+', ' ', f.getvalue().replace('\n', ' ').replace('  ', ' '))
+            self.assertTrue(re.match(expected, value) is not None)
