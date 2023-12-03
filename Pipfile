@@ -25,3 +25,4 @@ flake8 = "*"
 half-orm = {editable = true, path = "."}
 pylint = "*"
 pytest-cov = "*"
+pylance = "*"
