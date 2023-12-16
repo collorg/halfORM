@@ -18,3 +18,7 @@ docs
 half_orm/packager/test/hop_test
 __pycache__
 .coverage
+bin/
+lib/
+lib64
+pyvenv.cfg
