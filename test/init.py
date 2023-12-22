@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
+import asyncio
 import os
 import sys
 from datetime import date
-from half_orm.model import Model
+from half_orm.model import load_model
 from half_orm.relation import singleton
 
 path = os.path.dirname(__file__)
@@ -20,9 +21,8 @@ This command will create:
 To drop halftest database and user when you're done with the tests:
 - dropdb halftest; dropuser halftest
 """
-
-model = Model('halftest', scope="halftest")
-model2 = Model('hop_test')
+model = asyncio.run(load_model('halftest', scope="halftest"))
+model2 = asyncio.run(load_model('hop_test'))
 
 HALFTEST_STR = '''r "actor"."person"
 r "blog"."comment"
@@ -82,7 +82,7 @@ class HalfTest:
         self.relation = model._import_class
 
         @self._person.ho_transaction
-        def init_pers(pers):
+        async def init_pers(pers):
             sys.stderr.write('Initializing actor.person\n')
             self.Person().ho_delete(delete_all=True)
             self.Post().ho_delete(delete_all=True)
@@ -91,12 +91,16 @@ class HalfTest:
                     last_name = name(letter, i)
                     first_name = name(letter, i)
                     birth_date = self.today
-                    pers(
+                    await pers(
                         last_name=last_name,
                         first_name=first_name,
                         birth_date=birth_date).ho_insert()
 
-        if len(self.Person()) != 60:
+    def check(self):
+        person = self.Person()
+        if len(person) != 60:
             init_pers(self.Person())
-
+    
 halftest = HalfTest()
+asyncio.run(halftest.check())
+

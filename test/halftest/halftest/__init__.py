@@ -1,6 +1,7 @@
 """This module provides the model of the database for the package halftest.
 """
 
-from half_orm.model import Model
+import asyncio
+from half_orm.model import load_model
 
-MODEL = Model('halftest', scope=__name__)
+MODEL = asyncio.run(load_model('halftest', scope=__name__))

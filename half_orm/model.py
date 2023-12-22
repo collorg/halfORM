@@ -27,18 +27,13 @@ from configparser import ConfigParser
 from os import environ
 from typing import List
 
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import asyncpg
 
 from half_orm import model_errors
 from half_orm import pg_meta
 from half_orm.relation_factory import factory
 
 CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
-
-
-psycopg2.extras.register_uuid()
-
 
 class Model:
     """
@@ -74,7 +69,9 @@ class Model:
         self.__load_config(config_file)
         self._scope = scope and scope.split('.')[0]
         self.__conn = None
-        self.__connect()
+
+    async def __async_init(self):
+        await self.__connect()
 
     def __load_config(self, config_file):
         """Load the config file
@@ -102,13 +99,13 @@ class Model:
             raise RuntimeError(
                 f"Can't reconnect to another database: {dbname} != {self.__dbname}")
 
-        self.__dbinfo['dbname'] = dbname
+        self.__dbinfo['database'] = dbname
         self.__dbinfo['user'] = database.get('user')
         self.__dbinfo['password'] = database.get('password')
         self.__dbinfo['host'] = database.get('host')
         self.__dbinfo['port'] = database.get('port')
 
-    def __connect(self, config_file: str=None, reload: bool=False):
+    async def __connect(self, config_file: str=None, reload: bool=False):
         """Setup a new connection to the database.
 
         The reconnect method is an alias to the ``__connect`` method.
@@ -124,9 +121,8 @@ class Model:
         if config_file:
             self.__load_config(config_file)
 
-        self.__conn = psycopg2.connect(**self.__dbinfo, cursor_factory=RealDictCursor)
-        self.__conn.autocommit = True
-        self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
+        self.__conn = await asyncpg.connect(**self.__dbinfo)
+        self.__pg_meta = await pg_meta.load_metadata(self.__dbinfo['database'], self.__conn, reload)
         self.__deja_vu[self.__dbname] = self
 
     reconnect = __connect
@@ -183,9 +179,9 @@ class Model:
 
     @property
     def __dbname(self):
-        return self.__dbinfo['dbname']
+        return self.__dbinfo['database']
 
-    def ping(self):
+    async def ping(self):
         """Checks if the connection is still established.
         Attempts a new connection otherwise.
 
@@ -193,15 +189,15 @@ class Model:
             bool: True if the connection is established, False otherwise.
         """
         try:
-            self.execute_query("select 1")
+            await self.execute_query("select 1")
             return True
-        except (psycopg2.OperationalError, psycopg2.InterfaceError):
+        except (asyncpg.PostgresError):
             try:
                 self.__connect()
-                self.execute_query("select 1")
-            except (psycopg2.OperationalError, psycopg2.InterfaceError) as exc: #pragma: no cover
+                await self.execute_query("select 1")
+            except (asyncpg.PostgresError) as exc: #pragma: no cover
                 # log reconnection attempt failure
-                sys.stderr.write(f'{exc.exception}\n')
+                sys.stderr.write(f'{exc}\n')
                 sys.stderr.flush()
             return False
 
@@ -253,7 +249,7 @@ class Model:
         "Proxy to PgMeta._pkey_constraint"
         return self.__pg_meta._pkey_constraint(self.__dbname, fqrn)
 
-    def execute_query(self, query, values=()):
+    async def execute_query(self, query, values=()):
         """Executes a raw SQL query.
         
         Warning:
@@ -263,9 +259,7 @@ class Model:
             Please read the psycopg2 documentation on
             `passing parameters to SQL queries <https://www.psycopg.org/docs/usage.html#query-parameters>`_.
         """
-        cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute(query, values)
-        return cursor
+        return await self.__conn.cursor(query, values)
 
     def execute_function(self, fct_name, *args, **kwargs) -> List[tuple]:
         """`Executes a PostgreSQL function <https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html>`_.
@@ -393,3 +387,9 @@ class Model:
             except ModuleNotFoundError as err:
                 raise err
             yield getattr(module, class_name), relation[0]
+
+
+async def load_model(config_file: str, scope: str=None):
+    model = Model(config_file, scope)
+    await model._Model__async_init()
+    return model

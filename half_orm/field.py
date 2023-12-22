@@ -3,8 +3,6 @@
 
 """This module provides the Field class. It is used by the `relation <#module-half_orm.relation>`_ module."""
 
-import psycopg2
-
 from half_orm.null import NULL
 
 class Field():
@@ -166,5 +164,5 @@ class Field():
             err_msg = f"{err_msg}\nDo not use '{self.__name}' as a method name."
         raise TypeError(err_msg)
 
-psycopg2.extensions.register_adapter(Field, Field._psycopg_adapter)
-psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
+# psycopg2.extensions.register_adapter(Field, Field._psycopg_adapter)
+# psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
