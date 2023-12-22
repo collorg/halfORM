@@ -10,9 +10,6 @@ class Test(TestCase):
     def setUp(self):
         self.pers = halftest.Person()
 
-    def tearDown(self):
-        subprocess.run(["sudo", "service", "postgresql", "restart"], check=True)
-
     def test_automatic_reconnection(self):
         "it should reconnect after postgresql has been restarted"
         subprocess.run(["sudo", "service", "postgresql", "restart"], check=True)
