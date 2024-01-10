@@ -1,3 +1,14 @@
+# 0.9.7 -- hop 0.1.0a6 (2024-01-10)
+
+* Bump gitpython from 3.1.40 to 3.1.41 (746196d)
+* [test] Remove unnecessary postgresql restart. (a99f336)
+* [pipenv] Bump to Python 3.10. (bb31fb9)
+* [make] Set LC_MESSAGES to C. (35931d4)
+* [git] Ignore venv directories and files. (87b046d)
+* [pipenv] Add pylance in dev mode. (4bce8e3)
+* [test] Relation ho_description and ho_mogrify. Remove duplicate tests. (fd76802)
+* Bump cryptography from 41.0.5 to 41.0.6 (a9fa76d)
+
 # 0.9.6 -- hop 0.1.0a6 (2023-11-27)
 
 * [error] Check error message on UnknownAttributeError. (43cc05a)
