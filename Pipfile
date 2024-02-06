@@ -8,12 +8,12 @@ python_version = "3.10"
 
 [packages]
 psycopg2-binary = ">=2, <3"
-pyyaml = "*"
-gitpython = "*"
-click = "*"
-pydash = "*"
-twine = "*"
-urllib3 = "*"
+pyyaml = "==6.0.1"
+click = "==8.1.7"
+pydash = "==7.0.7"
+twine = "==4.0.2"
+urllib3 = "==2.2.0"
+gitpython = "==3.1.41"
 
 [dev-packages]
 coverage = "*"

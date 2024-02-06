@@ -3,7 +3,7 @@
 import os
 import sys
 import subprocess
-from git import Repo
+import git
 from git.exc import GitCommandError
 
 from half_orm import utils
@@ -15,14 +15,14 @@ class HGit:
         self.__origin = None
         self.__repo = repo
         self.__base_dir = None
-        self.__git_repo: Repo = None
+        self.__git_repo: git.Repo = None
         if repo:
             self.__origin = repo.git_origin
             self.__base_dir = repo.base_dir
             self.__post_init()
 
     def __post_init(self):
-        self.__git_repo = Repo(self.__base_dir)
+        self.__git_repo = git.Repo(self.__base_dir)
         origin = None
         try:
             origin = self.__git_repo.git.remote('get-url', 'origin')
@@ -54,8 +54,8 @@ class HGit:
         cur_dir = os.path.abspath(os.path.curdir)
         self.__base_dir = base_dir
         try:
-            subprocess.run(['git', 'init', base_dir], check=True)
-            self.__git_repo = Repo(base_dir)
+            git.Repo.init(base_dir)
+            self.__git_repo = git.Repo(base_dir)
             os.chdir(base_dir)
             self.__git_repo.git.add('.')
             self.__git_repo.git.commit(m=f'[{release}] hop new {os.path.basename(base_dir)}')
