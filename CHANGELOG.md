@@ -1,3 +1,7 @@
+# 0.9.8 -- hop 0.1.0a7 (2024-02-06)
+
+* [hop] Remove subprocess.run(['git', 'init' ... (870d5ae)
+
 # 0.9.7 -- hop 0.1.0a6 (2024-01-10)
 
 * Bump gitpython from 3.1.40 to 3.1.41 (746196d)
