@@ -1,3 +1,7 @@
+# 0.9.9 -- hop 0.1.0a7 (2024-02-22)
+
+* Bump cryptography from 42.0.2 to 42.0.4 (c02152e)
+
 # 0.9.8 -- hop 0.1.0a7 (2024-02-06)
 
 * [hop] Remove subprocess.run(['git', 'init' ... (870d5ae)
