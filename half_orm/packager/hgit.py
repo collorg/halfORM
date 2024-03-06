@@ -182,3 +182,6 @@ class HGit:
         "Proxy to git.commit method"
         return self.__git_repo.git.rebase(*args, **kwargs)
 
+    def checkout_to_hop_main(self):
+        "Checkout to hop_main branch"
+        self.__git_repo.git.checkout('hop_main')

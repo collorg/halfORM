@@ -31,7 +31,7 @@ cd hop_test
 
 hop sync-package
 set +e
-# prepare is only available in devel mode
+# it should FAIL: prepare is only available in devel mode
 hop prepare
 if [ $? = 0 ]; then exit 1; fi
 set -e
@@ -46,11 +46,17 @@ cd hop_test
 tree .
 
 rm -rf /tmp/hop_test.git
+
+# We need a central repo to release and simulate a production environment
 git init --bare /tmp/hop_test.git
 
+# 0.0.1
 hop prepare -m "First patch release" << EOF
 patch
 EOF
+
+if [ `git branch --show-current` != 'hop_0.0.1' ] ; then echo "It should be on branch hop_0.0.1" ; exit 1 ; fi
+
 echo 'create table first ( a text primary key )' > Patches/0/0/1/a.sql
 hop apply
 git add .
@@ -58,18 +64,23 @@ git commit -m "First table"
 set +e
 which pytest
 if [ $? = 0 ]; then pip uninstall -y pytest ; fi
-# pytest must be install to commit release
+
+# It should FAIL: pytest must be install to commit release
 hop release
 if [ $? = 0 ]; then exit 1; fi
 set -e
 pip install pytest
 hop release
 
+# 0.0.2
 hop prepare -l patch -m "Second patch release"
+if [ `git branch --show-current` != 'hop_0.0.2' ] ; then echo "It should be on branch hop_0.0.2" ; exit 1 ; fi
 
 echo 'create table a ( a text primary key )' > Patches/0/0/2/a.sql
 echo 'print("I am a script without x permission...")' > Patches/0/0/2/a.py
 
+# It should be able to apply multiple times
+sync; sync
 hop apply
 
 tree .
@@ -84,9 +95,10 @@ git add .
 git commit -m "(wip) First"
 git status
 
+# Change of the model
 echo 'create table a ( a text primary key, bla text )' > Patches/0/0/2/a.sql
 
-hop undo
+# hop undo
 
 hop apply
 git diff hop_test/public/a.py
@@ -115,7 +127,7 @@ git add .
 git commit -m "(bad)"
 set +e
 # test must pass
-hop release
+hop release # 0.0.2
 if [ $? = 0 ]; then exit 1; fi
 set -e
 git reset HEAD~ --hard
@@ -128,13 +140,16 @@ set -e
 
 git remote add origin /tmp/hop_test.git
 git status
-hop release --push
+
+sync; sync
+hop release --push # 0.0.2
 
 git status
 
 hop
 
-hop prepare -l minor -m "First minor patch"
+hop prepare -l minor -m "First minor patch" # 0.1.0
+if [ `git branch --show-current` != 'hop_0.1.0' ] ; then echo "It should be on branch hop_0.1.0" ; exit 1 ; fi
 
 echo 'create table b ( b text primary key, a text references a )' > Patches/0/1/0/b.sql
 
@@ -222,19 +237,43 @@ git add .
 git commit -m "Add API"
 
 hop release
+if [ `git branch --show-current` != 'hop_main' ] ; then echo "It should be on branch hop_main" ; exit 1 ; fi
 
 git status
 git push
 git tag
 
-hop prepare -l major -m major
-git checkout hop_main
-hop prepare -l minor -m minor
-git checkout hop_main
+# It should be able to prepare a major, a minor and a patch simultaneously.
+hop prepare -l major -m major # 1.0.0
+if [ `git branch --show-current` != 'hop_1.0.0' ] ; then echo "It should be on branch hop_1.0.0" ; exit 1 ; fi
+
+hop prepare -l minor -m minor # 0.2.0
+if [ `git branch --show-current` != 'hop_0.2.0' ] ; then echo "It should be on branch hop_0.2.0" ; exit 1 ; fi
+
+touch Patches/0/2/0/coucou
+git add .
+git commit -m "[WIP] 0.2.0 test"
+hop apply
+
+touch toto
+git status
+set +e
+# It should FAIL: the git repo is not clean
 hop prepare -l patch -m patch
-git checkout hop_main
+if [ $? = 0 ]; then echo "It should FAIL: the git repo is not clean"; exit 1; fi
+set -e
+
+git add toto
+git commit -m "toto"
+
+# hop undo
+# git checkout hop_main
+#  (hop prepare should undo the changes and switch to hop_main branch)
+hop prepare -l patch -m patch # 0.1.1
+git branch
 
 set +e
+# It should FAIL: there is already on minor version in preparation.
 hop prepare -l minor -m coucou
 if [ $? = 0 ]; then exit 1; fi
 set -e
@@ -243,6 +282,7 @@ hop
 
 git checkout hop_0.2.0
 set +e
+# It should FAIL: the patch in preparation must be released first.
 hop release
 if [ $? = 0 ]; then exit 1; fi
 set -e
@@ -262,14 +302,11 @@ git add TODO
 git commit -m "Add todo to check rebase on apply"
 
 git checkout hop_0.2.0
-hop apply
-touch Patches/0/2/0/coucou
-git add .
-git commit -m "[WIP] 0.2.0 test"
+# It should rebase hop_0.2.0 on hop_main (hop_0.1.1 has been released)
 hop apply
 hop release
 
-hop prepare -l patch -m "0.2.1..."
+hop prepare -l patch -m "0.2.1..." # 0.2.1
 hop apply
 touch Patches/0/2/1/coucou
 git add .
@@ -291,5 +328,6 @@ perl -spi -e 's=False=True=' $CI_PROJECT_DIR/.config/hop_test
 hop
 hop restore 0.0.1
 hop
+# It should upgrade to the latest version released (1.0.0)
 hop upgrade
 perl -spi -e 's=True=False=' $CI_PROJECT_DIR/.config/hop_test

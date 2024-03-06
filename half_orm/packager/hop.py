@@ -37,14 +37,12 @@ class Hop:
         else:
             if not self.__repo.devel:
                 Hop.__available_cmds = ['sync-package']
+            elif not self.__repo.production:
+                Hop.__available_cmds = ['prepare']
+                if self.__repo.hgit.is_hop_patch_branch:
+                    Hop.__available_cmds += ['apply', 'undo', 'release']
             else:
-                if not self.__repo.production and self.__repo:
-                    if self.__repo.hgit.branch == 'hop_main':
-                        Hop.__available_cmds = ['prepare']
-                    elif self.__repo.hgit.is_hop_patch_branch:
-                        Hop.__available_cmds = ['apply', 'undo', 'release']
-                elif self:
-                    Hop.__available_cmds = ['upgrade', 'restore']
+                Hop.__available_cmds = ['upgrade', 'restore']
 
     @property
     def repo_checked(self):

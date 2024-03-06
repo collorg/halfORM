@@ -73,10 +73,18 @@ class Patch:
     def prep_release(self, release_level, message=None):
         """Returns the next (major, minor, patch) tuple according to the release_level
 
+        The repo must be clean. 
+
         Args:
             release_level (str): one of ['patch', 'minor', 'major']
         """
-        self.__assert_main_branch()
+        if not self.__repo.hgit.repos_is_clean():
+            utils.error('There are uncommited changes. Please commit your changes before using `hop prepare`\n', exit_code=1)
+        try:
+            self.__restore_db(self.__changelog.last_release)
+        except FileNotFoundError as exc:
+            print('XXX ERROR', exc)
+        self.__repo.hgit.checkout_to_hop_main()
         next_releases = self.__next_releases
         if release_level is None:
             next_levels = '\n'.join(
@@ -151,19 +159,23 @@ class Patch:
         if os.path.isfile(svg_file):
             utils.error(
                 f"Oops! there is already a dump for the {release} release.\n")
-            utils.error("Please remove it if you really want to proceed.\n", exit_code=1)
+            utils.warning("Please remove it if you really want to proceed.\n")
+
         self.__repo.database.execute_pg_command(
             'pg_dump', '-f', svg_file, stderr=subprocess.PIPE)
 
     def __restore_db(self, release):
         """Restore the database to the release_s version.
         """
+        backup_file = self.__backup_file('Backups', release)
+        if not os.path.exists(backup_file):
+            raise FileNotFoundError(backup_file)
         print(f'{utils.Color.green("Restoring the database to")} {utils.Color.bold(release)}')
         self.__repo.model.disconnect()
         self.__repo.database.execute_pg_command('dropdb')
         self.__repo.database.execute_pg_command('createdb')
         self.__repo.database.execute_pg_command(
-            'psql', '-f', self.__backup_file('Backups', release), stdout=subprocess.DEVNULL)
+            'psql', '-f', backup_file, stdout=subprocess.DEVNULL)
         self.__repo.model.ping()
 
     def __restore_previous_release(self):
@@ -195,7 +207,10 @@ class Patch:
             self.__restore_previous_release()
 
     def apply(self, release, force=False, save_db=True):
-        "Apply the release in 'path'"
+        """Apply the release in 'path'
+
+        The history is first rebased on hop_main
+        """
         if self.__repo.hgit.repos_is_clean():
             self.__repo.hgit.rebase('hop_main')
         db_release = self.__repo.database.last_release_s

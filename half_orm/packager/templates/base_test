@@ -11,11 +11,16 @@ from half_orm.relation import Relation
 {END_CODE}
 
 class BaseTest(TestCase):
+    {BEGIN_CODE}
+
+    {END_CODE}
 
     def setUp(self) -> None:
         self.Relation = Relation
+        {BEGIN_CODE}
+
+        {END_CODE}
 
     def tearDown(self) -> None:
         pass
-
-    {BEGIN_CODE}
+        {BEGIN_CODE}
