@@ -80,10 +80,11 @@ class Patch:
         """
         if not self.__repo.hgit.repos_is_clean():
             utils.error('There are uncommited changes. Please commit your changes before using `hop prepare`\n', exit_code=1)
-        try:
-            self.__restore_db(self.__changelog.last_release)
-        except FileNotFoundError as exc:
-            print('XXX ERROR', exc)
+        if self.__repo.database.last_release_s != self.__changelog.last_release:
+            try:
+                self.__restore_db(self.__changelog.last_release)
+            except FileNotFoundError as exc:
+                utils.error(f'No backup file for release {self.__changelog.last_release}\n{exc}\n', exit_code=1)
         self.__repo.hgit.checkout_to_hop_main()
         next_releases = self.__next_releases
         if release_level is None:
