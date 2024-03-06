@@ -1,3 +1,10 @@
+# 0.9.10 -- hop 0.1.0a8 (2024-03-06)
+
+* [pipenv] Bump cryptography to 42.0.5 (586ce19)
+* [hop] prepare command (devel mode) now fails if the git repo is not clean. (39ebbaf)
+* [github][CI] Remove misplaced matrix.postgresql-version (415b62e)
+* [github][CI] Update actions to use Node.js 20 (github) (a4525c4)
+
 # 0.9.9 -- hop 0.1.0a7 (2024-02-22)
 
 * Bump cryptography from 42.0.2 to 42.0.4 (c02152e)
