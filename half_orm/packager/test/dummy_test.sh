@@ -11,10 +11,11 @@ fi
 cd -- "$( dirname -- "${BASH_SOURCE[0]}" )"
 HALFORM_DIR=$PWD/../../..
 CI_PROJECT_DIR=$HALFORM_DIR
-HALFORM_CONF_DIR=$HALFORM_DIR/.config
+HALFORM_CONF_DIR=$PWD/.config
 
-cat $CI_PROJECT_DIR/.config/hop_test
-perl -spi -e 's=True=False=' $CI_PROJECT_DIR/.config/hop_test
+cat $HALFORM_CONF_DIR/hop_test
+# switch to development mode
+perl -spi -e 's=True=False=' $HALFORM_CONF_DIR/hop_test
 
 clean_db() {
     rm -rf hop_test
@@ -324,10 +325,10 @@ hop release
 git push
 
 echo 'APPLY PATCH IN PRODUCTION'
-perl -spi -e 's=False=True=' $CI_PROJECT_DIR/.config/hop_test
+perl -spi -e 's=False=True=' $HALFORM_CONF_DIR/hop_test
 hop
 hop restore 0.0.1
 hop
 # It should upgrade to the latest version released (1.0.0)
 hop upgrade
-perl -spi -e 's=True=False=' $CI_PROJECT_DIR/.config/hop_test
+perl -spi -e 's=True=False=' $HALFORM_CONF_DIR/hop_test
