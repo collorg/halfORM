@@ -1,3 +1,9 @@
+# 0.9.11 -- hop 0.1.0a9 (2024-03-11)
+
+* [hop] Check that all hop_X.Y.Z in development can be rebased onto hop_main. (a8a2ea8)
+* [hop][test] Move hop_test config directory. (1aaf9d9)
+* [hop][prepare] Only restore database if database release is not the last release (AKA release in prod). (4561b5b)
+
 # 0.9.10 -- hop 0.1.0a8 (2024-03-06)
 
 * [pipenv] Bump cryptography to 42.0.5 (586ce19)
