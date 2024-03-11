@@ -207,6 +207,28 @@ class Patch:
             utils.error(f'Problem with script {file_}\n{err}\n')
             self.__restore_previous_release()
 
+    def __apply(self, path):
+        if not os.path.exists(path):
+            utils.warning(f"{path} does not exist. Skipping.\n")
+            sys.stderr.flush()
+            return
+        files = []
+        for file_ in os.scandir(path):
+            files.append({'name': file_.name, 'file': file_})
+        for elt in pydash.order_by(files, ['name']):
+            file_ = elt['file']
+            extension = file_.name.split('.').pop()
+            if file_.name == 'MANIFEST.py':
+                changelog_msg = json.loads(utils.read(file_))['changelog_msg']
+            if (not file_.is_file() or not (extension in ['sql', 'py'])):
+                continue
+            print(f'+ {file_.name}')
+
+            if extension == 'sql':
+                self.__execute_sql(file_)
+            elif extension == 'py':
+                self.__execute_script(file_)
+
     def apply(self, release, force=False, save_db=True):
         """Apply the release in 'path'
 
@@ -225,25 +247,13 @@ class Patch:
                     sys.exit()
             self.__restore_db(self.previous(db_release, 1))
         app_upg = utils.Color.green('Upgrading to') if self.__repo.production else utils.Color.bold('Applying')
-        print(f'{app_upg} {utils.Color.bold(release)}')
-        files = []
         major, minor, patch = release.split('.')
-        path = os.path.join(self.__patches_base_dir, major, minor, patch)
-        for file_ in os.scandir(path):
-            files.append({'name': file_.name, 'file': file_})
-        for elt in pydash.order_by(files, ['name']):
-            file_ = elt['file']
-            extension = file_.name.split('.').pop()
-            if file_.name == 'MANIFEST.py':
-                changelog_msg = json.loads(utils.read(file_))['changelog_msg']
-            if (not file_.is_file() or not (extension in ['sql', 'py'])):
-                continue
-            print(f'+ {file_.name}')
-
-            if extension == 'sql':
-                self.__execute_sql(file_)
-            elif extension == 'py':
-                self.__execute_script(file_)
+        print(utils.Color.green("Pre patch:"))
+        self.__apply(os.path.join(self.__patches_base_dir, 'pre'))
+        print(f'{app_upg} {utils.Color.green(release)}:')
+        self.__apply(os.path.join(self.__patches_base_dir, major, minor, patch))
+        print(utils.Color.green("Post patch:"))
+        self.__apply(os.path.join(self.__patches_base_dir, 'post'))
         if not self.__repo.production:
             modules.generate(self.__repo)
         self.__repo.database.register_release(major, minor, patch, changelog_msg)

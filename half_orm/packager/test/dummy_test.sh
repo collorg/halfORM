@@ -131,6 +131,7 @@ set +e
 hop release # 0.0.2
 if [ $? = 0 ]; then exit 1; fi
 set -e
+git branch
 git reset HEAD~ --hard
 
 set +e
@@ -256,7 +257,7 @@ git add .
 git commit -m "[WIP] 0.2.0 test"
 hop apply
 
-touch toto
+echo toto > toto
 git status
 set +e
 # It should FAIL: the git repo is not clean
@@ -264,8 +265,26 @@ hop prepare -l patch -m patch
 if [ $? = 0 ]; then echo "It should FAIL: the git repo is not clean"; exit 1; fi
 set -e
 
+
 git add toto
 git commit -m "toto"
+
+# Check rebase fails
+
+git checkout hop_main
+echo tata > toto
+git add .
+git commit -m "toto on hop_main"
+
+set +e
+# It should FAIL: hop_0.2.0 can't be rebased on hop_main
+hop
+if [ $? = 0 ]; then exit 1; fi
+set -e
+git branch
+git reset HEAD~ --hard
+
+git checkout hop_0.2.0
 
 # hop undo
 # git checkout hop_main

@@ -125,7 +125,12 @@ class Repo:
                 self.database = Database(self)
                 if self.devel:
                     self.hgit = HGit(self)
+                    current_branch = self.hgit.branch
                     self.changelog = Changelog(self)
+                    # only check if the branch is clean
+                    if self.hgit.repos_is_clean():
+                        for dev_release in self.changelog.releases_in_dev:
+                            self.hgit.check_rebase_hop_main(dev_release, current_branch)
                 self.__checked = True
             par_dir = os.path.split(base_dir)[0]
             if par_dir == base_dir:

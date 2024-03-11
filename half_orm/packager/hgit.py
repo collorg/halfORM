@@ -27,7 +27,7 @@ class HGit:
         try:
             origin = self.__git_repo.git.remote('get-url', 'origin')
         except Exception as err:
-            utils.warning('No origin\n')
+            utils.warning(utils.Color.red("No origin\n"))
         if self.__origin == '' and origin:
             self.__repo.git_origin = origin
             self.add(os.path.join('.hop', 'config'))
@@ -138,6 +138,24 @@ class HGit:
             if release != release_s:
                 self.__git_repo.git.checkout(f'hop_{release}')
                 self.__git_repo.git.rebase('hop_main')
+
+    def check_rebase_hop_main(self, release, current_branch):
+        git = self.__git_repo.git
+        try:
+            git.branch("-D", "hop_temp")
+        except GitCommandError:
+            pass
+        for release in self.__repo.changelog.releases_in_dev:
+            git.checkout(f'hop_{release}')
+            git.checkout("HEAD", b="hop_temp")
+            try:
+                git.rebase('hop_main')
+            except GitCommandError as exc:
+                git.rebase('--abort')
+                git.checkout(current_branch)
+                utils.error(f"Can't rebase {release} on hop_main.\n{exc}\n", exit_code=1)
+            git.checkout(current_branch)
+            git.branch("-D", "hop_temp")
 
     def rebase_to_hop_main(self, push=False):
         "Rebase a hop_X.Y.Z branch to hop_main"

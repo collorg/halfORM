@@ -55,4 +55,4 @@ Inside a `hop` repository, and in production mode, two commands are available:
 
 ## Documentation
 
-Check the `hop` in action with the [dummy test script](https://github.com/collorg/halfORM/blob/main/half_orm/packager/test/dummy_test.sh).
+**[WIP]** Check the `hop` command in action with the [dummy test script](https://github.com/collorg/halfORM/blob/main/half_orm/packager/test/dummy_test.sh).
