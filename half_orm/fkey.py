@@ -125,6 +125,16 @@ class FKey:
         return (self.__fields, self.__fk_to.ho_prep_select(*self.fk_names)) if self.__is_set else None
 
     @property
+    def name(self):
+        "Returns the internal name of the foreign key"
+        return self.__name
+
+    @property
+    def remote(self):
+        "Returns the fqtn of the foreign table and if the link is reverse"
+        return {'fqtn': self()._t_fqrn[1:], 'reverse': self.__name.find('_reverse_fkey_') == 0}
+
+    @property
     def fk_names(self):
         """Returns the names of the fields composing the foreign key in the foreign table."""
         return self.__fk_names
