@@ -252,10 +252,10 @@ class Patch:
         self.__apply(os.path.join(self.__patches_base_dir, 'pre'))
         print(f'{app_upg} {utils.Color.green(release)}:')
         self.__apply(os.path.join(self.__patches_base_dir, major, minor, patch))
-        print(utils.Color.green("Post patch:"))
-        self.__apply(os.path.join(self.__patches_base_dir, 'post'))
         if not self.__repo.production:
             modules.generate(self.__repo)
+        print(utils.Color.green("Post patch:"))
+        self.__apply(os.path.join(self.__patches_base_dir, 'post'))
         self.__repo.database.register_release(major, minor, patch, changelog_msg)
 
     @property
