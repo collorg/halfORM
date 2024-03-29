@@ -1,4 +1,4 @@
-# A simple PostgreSQL to Python mapper [0.9.11] and its [packager](https://github.com/collorg/halfORM/blob/main/doc/hop.md) [0.1.0a9]
+# A simple PostgreSQL to Python mapper [0.9.12] and its [packager](https://github.com/collorg/halfORM/blob/main/doc/hop.md) [0.1.0a10]
 
 ![PyPI version](https://img.shields.io/pypi/v/half_orm)
 ![Python versions](https://img.shields.io/badge/Python-%20&ge;%203.7-blue)

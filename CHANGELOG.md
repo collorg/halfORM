@@ -1,3 +1,8 @@
+# 0.9.12 -- hop 0.1.0a10 (2024-03-29)
+
+* [hop] Apply post patches after the modules generation. (41134a7)
+* [fkeys] Add properties name and remote. (24ded98)
+
 # 0.9.11 -- hop 0.1.0a9 (2024-03-11)
 
 * [hop] Check that all hop_X.Y.Z in development can be rebased onto hop_main. (a8a2ea8)
