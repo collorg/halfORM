@@ -205,21 +205,10 @@ class Test(TestCase):
         c = self.set_3
         self.assertTrue(a & (b | c) == (a & b) | (a & c))
 
-    def test_identity_laws_1(self):
-        a = self.set_1
-        empty = self.empty_set
-        self.assertTrue(a | empty == a)
-
     def test_identity_laws_2(self):
         a = self.set_1
         universe = self.universe
         self.assertTrue(a & universe == a)
-
-    def test_complement_laws_1(self):
-        a = self.set_1
-        comp_a = self.comp_set_1
-        universe = self.universe
-        self.assertTrue(a | comp_a == universe)
 
     def test_complement_laws_2(self):
         a = self.set_1
@@ -240,15 +229,6 @@ class Test(TestCase):
     def test_idempotent_laws_1(self):
         a = self.set_1
         self.assertTrue(a | a == a)
-
-    def test_idempotent_laws_2(self):
-        a = self.set_1
-        self.assertTrue(a & a == a)
-
-    def test_domination_laws_1(self):
-        a = self.set_1
-        universe = self.universe
-        self.assertTrue(a | universe == universe)
 
     def test_domination_laws_2(self):
         a = self.set_1
@@ -371,20 +351,10 @@ class Test(TestCase):
         c = self.set_3
         self.assertTrue((b - a) | c == (b | c) - (a - c))
 
-    def test_relative_complement_7(self):
-        a = self.set_1
-        empty = self.empty_set
-        self.assertTrue(a - a == empty)
-
     def test_relative_complement_8(self):
         a = self.set_1
         empty = self.empty_set
         self.assertTrue(empty - a == empty)
-
-    def test_relative_complement_9(self):
-        a = self.set_1
-        empty = self.empty_set
-        self.assertTrue(a - empty == a)
 
     def test_relative_complement_10(self):
         a = self.set_1
