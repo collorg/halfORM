@@ -104,15 +104,16 @@ class Field():
         elif comp is None:
             comp = '='
         comp = comp.lower()
-        if value is NULL:
-            if not comp in {'is', 'is not'}:
-                raise ValueError("comp should be 'is' or 'is not' with NULL value!")
+        if value is NULL and comp not in {'is', 'is not'}:
+            raise ValueError("comp should be 'is' or 'is not' with NULL value!")
         self.__is_set = True
         self.__value = value
         self.__comp = comp
 
     def _set(self, *args):
-        sys.stderr.write("WARNING! Field._set method is deprecated. Use Field.set instead.\nIt will be remove in 1.0 version.\n")
+        sys.stderr.write(
+            "WARNING! Field._set method is deprecated. Use Field.set instead.\n"
+            "It will be remove in 1.0 version.\n")
         return self.set(*args)
 
     def _unset(self):

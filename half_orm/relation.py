@@ -124,6 +124,10 @@ class Relation:
             [...]UnknownAttributeError: ERROR! Unknown attribute: {'lost_name'}.
     """
 
+    def __call__(self):
+        "To indicate this class is indeed callable (Sonarcloud)"
+        pass
+
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
 
