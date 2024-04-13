@@ -25,7 +25,7 @@ class Test(HoTestCase):
         "ho_description should return description of the relation"
         self.assertEqual(
             self.post.ho_description(),
-            'The table blog.post contains all the post\nmade by a person in the blogging system.')
+            'The table blog.post contains all the post made by a person in the blogging system.')
 
     def test_no_description(self):
         "ho_description should return 'No description available'"

@@ -17,8 +17,7 @@ SCHEMA: blog
 TABLE: post
 
 DESCRIPTION:
-The table blog.post contains all the post
-made by a person in the blogging system.
+The table blog.post contains all the post made by a person in the blogging system.
 FIELDS:
 - id:                (int4) NOT NULL
 - title:             (text)
@@ -51,9 +50,7 @@ SCHEMA: actor
 TABLE: person
 
 DESCRIPTION:
-The table actor.person contains the persons of the blogging system.
-The id attribute is a serial. Just pass first_name, last_name and birth_date
-to insert a new person.
+The table actor.person contains the persons of the blogging system. The id attribute is a serial. Just pass first_name, last_name and birth_date to insert a new person.
 FIELDS:
 - id:         (int4) NOT NULL
 - first_name: (text) NOT NULL (first_name = Gaston)
@@ -87,8 +84,7 @@ SCHEMA: blog
 TABLE: post
 
 DESCRIPTION:
-The table blog.post contains all the post
-made by a person in the blogging system.
+The table blog.post contains all the post made by a person in the blogging system.
 FIELDS:
 - id:                (int4) NOT NULL
 - title:             (text)  (title = Easy)
@@ -112,9 +108,7 @@ FOREIGN KEYS:
      TABLE: person
      
      DESCRIPTION:
-     The table actor.person contains the persons of the blogging system.
-     The id attribute is a serial. Just pass first_name, last_name and birth_date
-     to insert a new person.
+     The table actor.person contains the persons of the blogging system. The id attribute is a serial. Just pass first_name, last_name and birth_date to insert a new person.
      FIELDS:
      - id:         (int4) NOT NULL
      - first_name: (text) NOT NULL (first_name = Gaston)
