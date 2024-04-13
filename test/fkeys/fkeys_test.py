@@ -20,9 +20,6 @@ class Test(TestCase):
         aa = self.pers(last_name='aa')
         assert(len(aa) == 1)
 
-    def tearDown(self):
-        pass
-
     def test_post_fkeys_names(self):
         self.assertEqual(
             list(self.post._ho_fkeys.keys()),
@@ -33,15 +30,15 @@ class Test(TestCase):
 
     def test_post_author_fkey_type(self):
         author = self.post.author_fk()
-        self.assertTrue(isinstance(author, halftest.Person))
+        self.assertIsInstance(author, halftest.Person)
 
     def test_comment_author_fkey_type(self):
         author = self.comment.author_fk()
-        self.assertTrue(isinstance(author, halftest.Person))
+        self.assertIsInstance(author, halftest.Person)
 
     def test_comment_post_fkey_type(self):
         post = self.comment._ho_fkeys['post']()
-        self.assertTrue(isinstance(post, halftest.Post))
+        self.assertIsInstance(post, halftest.Post)
 
     def test_is_set(self):
         post = self.post()

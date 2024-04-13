@@ -20,7 +20,6 @@ class Test(TestCase):
         halftest.model.reconnect(reload=True)
 
     def test_not_set_field(self):
-        pers = self.pers()
         fields_set = {elt.is_set() for elt in self.pers._ho_fields.values()}
         self.assertTrue(fields_set, {False})
 
@@ -30,7 +29,7 @@ class Test(TestCase):
 
     def test_idem(self):
         pers = self.pers(first_name='jojo')
-        self.assertEqual(isinstance(pers.first_name, Field), True)
+        self.assertTrue(isinstance(pers.first_name, Field))
 
     def test_fields_names(self):
         field_names = set(self.pers._ho_fields.keys())
@@ -44,7 +43,7 @@ class Test(TestCase):
 
     def test_unset_field_with_none(self):
         pers = self.pers(first_name='jojo')
-        pers.first_name = None
+        pers.first_name.set(None)
         self.assertFalse(pers.first_name.is_set())
 
     def test_is_not_null(self):

@@ -15,9 +15,6 @@ class Test(TestCase):
         self.aa = self.pers(last_name='aa')
         assert(len(self.aa) == 1)
 
-    def tearDown(self):
-        pass
-
     def test_fkey_insert(self):
         "should insert blog.post with fkey reference on author"
         self.post._ho_fkeys['author'].set(self.aa)

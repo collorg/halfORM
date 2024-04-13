@@ -94,11 +94,10 @@ class Patch:
             print(f'Next releases:\n{next_levels}')
             next_possible_releases = [elt for elt in self.__levels if not next_releases[elt]['in_dev']]
             release_level = input(f"Release level {next_possible_releases}? ")
-            if not release_level in next_possible_releases:
+            if release_level not in next_possible_releases:
                 utils.error(f"Wrong release level ({release_level}).\n", exit_code=1)
-        else:
-            if next_releases[release_level]['in_dev']:
-                utils.error(f'{release_level} is alredy in development!\n', 1)
+        elif next_releases[release_level]['in_dev']:
+            utils.error(f'{release_level} is alredy in development!\n', 1)
         next_release = dict(self.__repo.database.last_release)
         next_release[release_level] = next_release[release_level] + 1
         if release_level == 'major':
@@ -193,7 +192,7 @@ class Patch:
             return
         try:
             self.__repo.model.execute_query(query)
-        except (psycopg2.Error, psycopg2.OperationalError, psycopg2.InterfaceError) as err:
+        except psycopg2.Error as err:
             utils.error(f'Problem with query in {file_.name}\n{err}\n')
             self.__restore_previous_release()
 
@@ -218,9 +217,7 @@ class Patch:
         for elt in pydash.order_by(files, ['name']):
             file_ = elt['file']
             extension = file_.name.split('.').pop()
-            if file_.name == 'MANIFEST.py':
-                changelog_msg = json.loads(utils.read(file_))['changelog_msg']
-            if (not file_.is_file() or not (extension in ['sql', 'py'])):
+            if not (file_.is_file() and extension in ['sql', 'py']):
                 continue
             print(f'+ {file_.name}')
 
@@ -261,21 +258,20 @@ class Patch:
     @property
     def state(self):
         "The state of a patch"
-        if self.__repo.devel:
-            if not self.__repo.production:
-                resp = ['[Releases in development]']
-                if len(self.__changelog.releases_in_dev) == 0:
-                    resp.append("No release in development.\nUse `hop prepare`.")
-                for release in self.__changelog.releases_in_dev:
-                    resp.append(f'- {release} (branch hop_{release})')
-            else:
-                resp = ['[Releases to apply]']
-                if len(self.__changelog.releases_to_apply_in_prod) == 0:
-                    resp.append("No new release to apply.")
-                for release in self.__changelog.releases_to_apply_in_prod:
-                    resp.append(f'- {release}')
+        if not self.__repo.devel:
+            return 'This repo is not in developement mode.'
+        if not self.__repo.production:
+            resp = ['[Releases in development]']
+            if len(self.__changelog.releases_in_dev) == 0:
+                resp.append("No release in development.\nUse `hop prepare`.")
+            for release in self.__changelog.releases_in_dev:
+                resp.append(f'- {release} (branch hop_{release})')
         else:
-            resp = ['This repo is not in developement mode.']
+            resp = ['[Releases to apply]']
+            if len(self.__changelog.releases_to_apply_in_prod) == 0:
+                resp.append("No new release to apply.")
+            for release in self.__changelog.releases_to_apply_in_prod:
+                resp.append(f'- {release}')
         return '\n'.join(resp)
 
 

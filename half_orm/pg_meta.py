@@ -215,7 +215,7 @@ class PgMeta:
         Returns:
             dict: The metadata of the specified database.
         """
-        return self.meta[dbname].__metadata
+        return self.meta[dbname]
 
     def relations_list(self, dbname):
         """Retrieves a list of relations for the specified database.
@@ -274,7 +274,7 @@ class PgMeta:
                 tableid = dct['tableid']
                 table_key = byid[tableid]['sfqrn']
                 fkeyname = dct['fkeyname']
-                if fkeyname and not fkeyname in byname[table_key]['fkeys']:
+                if fkeyname and fkeyname not in byname[table_key]['fkeys']:
                     fkeytableid = dct['fkeytableid']
                     ftable_key = byid[fkeytableid]['sfqrn']
                     fields = [byid[tableid]['fields'][num] for num in dct['lfkeynum']]
@@ -288,8 +288,7 @@ class PgMeta:
                     byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields, confupdtype, confdeltype)
 
         metadata['relations_list'].sort()
-        self.__metadata = metadata
-        PgMeta.meta.register(self.__dbname, self)
+        PgMeta.meta.register(self.__dbname, metadata)
 
     def has_relation(self, dbname, schema, relation):
         """Checks whether the specified relation exists in the specified database.
@@ -302,7 +301,7 @@ class PgMeta:
         Returns:
             bool: True if the relation exists, False otherwise.
         """
-        return (dbname, schema, relation) in self.meta[dbname].__metadata['byname']
+        return (dbname, schema, relation) in self.meta[dbname]['byname']
 
 
     def desc(self, dbname):

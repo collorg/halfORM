@@ -391,7 +391,7 @@ def ho_only(self, value):
     """Set the value of self.__only. Restrict the values of a query to
     the elements of the relation (no inherited values).
     """
-    if not value in {True, False}:
+    if value not in {True, False}:
         raise ValueError(f'{value} is not a bool!')
     self.__only = value
 
@@ -889,7 +889,7 @@ def ho_join(self, *f_rels):
         f_relation_fk_names = []
         fkey_found = False
         for fkey_12 in ref._ho_fkeys:
-            if type(ref._ho_fkeys[fkey_12]) != FKey: #pragma: no cover
+            if not isinstance(ref._ho_fkeys[fkey_12], FKey): #pragma: no cover
                 raise RuntimeError("This is not an Fkey")
             remote_fk = ref._ho_fkeys[fkey_12]
             remote = remote_fk()

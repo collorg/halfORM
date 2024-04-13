@@ -51,6 +51,7 @@ MODULE_FORMAT = (
     "{bc_}{user_s_code}")
 AP_EPILOG = """"""
 DO_NOT_REMOVE = ['__init__.py', 'base_test.py']
+TEST_EXT = '_test.py'
 
 MODEL = None
 
@@ -73,14 +74,14 @@ def __update_init_files(package_dir, files_list, warning):
                 continue
             path_ = os.path.join(root, file_)
             if path_ not in files_list and file_ not in DO_NOT_REMOVE:
-                if path_.find('__pycache__') == -1 and path_.find('_test.py') == -1:
+                if path_.find('__pycache__') == -1 and path_.find(TEST_EXT) == -1:
                     print(f"REMOVING: {path_}")
                 os.remove(path_)
                 continue
             if (re.findall('.py$', file_) and
                     file_ != '__init__.py' and
                     file_ != '__pycache__' and
-                    file_.find('_test.py') == -1):
+                    file_.find(TEST_EXT) == -1):
                 all_.append(file_.replace('.py', ''))
         all_.sort()
         with open(os.path.join(root, '__init__.py'), 'w', encoding='utf-8') as init_file:
@@ -174,8 +175,8 @@ def __update_this_module(
                 class_name=camel_case(path[-1]),
                 fqtn=fqtn,
                 warning=WARNING_TEMPLATE.format(package_name=package_name)))
-    if not os.path.exists(module_path.replace('.py', '_test.py')):
-        with open(module_path.replace('.py', '_test.py'), 'w', encoding='utf-8') as file_:
+    if not os.path.exists(module_path.replace('.py', TEST_EXT)):
+        with open(module_path.replace('.py', TEST_EXT), 'w', encoding='utf-8') as file_:
             file_.write(TEST.format(
                 BEGIN_CODE=utils.BEGIN_CODE,
                 END_CODE=utils.END_CODE,
@@ -210,7 +211,7 @@ def generate(repo):
         if module_path:
             files_list.append(module_path)
             if module_path.find('__init__.py') == -1:
-                test_file_path = module_path.replace('.py', '_test.py')
+                test_file_path = module_path.replace('.py', TEST_EXT)
                 files_list.append(test_file_path)
 
     __update_init_files(package_dir, files_list, warning)

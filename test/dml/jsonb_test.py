@@ -11,9 +11,6 @@ class Test(TestCase):
     def setUp(self):
         self.post = halftest.Post()
 
-    def tearDown(self):
-        pass
-
     def test_jsonb(self):
         "should insert, update, delete jsonb in blog.post"
         title = 'title test_jsonb'

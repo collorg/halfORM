@@ -12,7 +12,7 @@ def package_files(*directories):
     paths = set()
     for directory in directories:
         for (path, dirs, filenames) in os.walk(directory):
-            dirs[:] = [dir for dir in dirs if not dir in {'hop_test', '.git', '__pycache__'}]
+            dirs[:] = [dir for dir in dirs if dir not in {'hop_test', '.git', '__pycache__'}]
             for filename in filenames:
                 paths.add(os.path.join('..', path, filename))
     return list(paths)

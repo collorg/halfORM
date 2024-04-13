@@ -4,6 +4,7 @@
 import os
 import sys
 from configparser import ConfigParser
+from typing import Optional
 import half_orm
 from half_orm import utils
 from half_orm.packager.database import Database
@@ -15,7 +16,7 @@ from half_orm.packager.changelog import Changelog
 class Config:
     """
     """
-    __name: str = None
+    __name: Optional[str] = None
     __git_origin: str = ''
     __devel: bool = False
     __hop_version: str = None
@@ -87,10 +88,10 @@ class Repo:
     """
     __new = False
     __checked: bool = False
-    __base_dir: str = None
-    __config: Config = None
-    database: Database = NotImplementedError()
-    hgit: HGit = None
+    __base_dir: Optional[str] = None
+    __config: Optional[Config] = None
+    database: Optional[Database] = None
+    hgit: Optional[HGit] = None
     def __init__(self):
         self.__check()
 

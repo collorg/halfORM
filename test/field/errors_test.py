@@ -18,11 +18,10 @@ class Test(TestCase):
 
     def test_conflict_name(self):
         msg = None
-        with self.assertRaises(TypeError) as err:
+        with self.assertRaises(TypeError):
             try:
                 self.pc.last_name()
             except TypeError as terr:
-                the_err = terr
                 msg = str(terr)
                 raise terr
         self.assertEqual(conflict_msg, msg)
