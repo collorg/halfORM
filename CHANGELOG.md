@@ -1,3 +1,48 @@
+# 0.10.0 -- hop 0.1.0a10 (2024-04-13)
+
+* Remove dependency to pydash. (69e7fa2)
+* [test] Adjust to one liners comments. (7f096fe)
+* Cleanup. (a9365ac)
+* Cleanup. (5922928)
+* [relation][BREAKING CHANGE] Remove methods ho_group_by and ho_json. (a346236)
+* Cleanup. (e8645e6)
+* [test] Add test for relation defined by fkey. (997bca3)
+* Cleanup. (044f640)
+* [test] Remove duplicates in algebra test. (98c99e5)
+* Cleanup. (41ea4e9)
+* [hop] Do not check rebase twice. (56dfd11)
+* Fix broken hop_test. (31df016)
+* [WIP][model] Cleanup. (6ed901b)
+* [WIP] Cleanup. (dc16ba1)
+* Revert "[cleanup][hotest] Readability."" (848e7bd)
+* Revert "[field] Clean-up." (60b2394)
+* [cleanup][hotest] Readability." (a92bbda)
+* [field] Clean-up. (7d141e2)
+* [field] Mark _set method as deprecated. (ebaea77)
+* [field][cleanup] Merge if statements. (a966ff9)
+* [field][BREAKING CHANGE] Use of the set method is now mandatory to set the value of a field. (47c6c17)
+* [Cleanup] Remove commented out code. (temp) (3f965d8)
+* Bump idna from 3.6 to 3.7 (8a0f2b2)
+
+## BREAKING CHANGES
+
+Relation.ho_group_by and Relation.ho_json have been removed.
+
+With version 0.10, it's no longer possible to set a field value directly.
+You must use the `set` method to do so. Stay with version 0.9 until you have adapted your code.
+
+### Before:
+
+```py
+Relation.field = value
+```
+
+### After
+
+```py
+Relation.field.set(value)
+```
+
 # 0.9.12 -- hop 0.1.0a10 (2024-03-29)
 
 * [hop] Apply post patches after the modules generation. (41134a7)
