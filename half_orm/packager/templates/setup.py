@@ -40,11 +40,11 @@ setup(
     description='Package for {dbname} PG',
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
-    # url='',
+    url='',
 
-    # author='',
-    # author_email='',
-    license='MIT',
+    author='',
+    author_email='',
+    license='',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[

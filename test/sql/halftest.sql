@@ -200,9 +200,7 @@ CREATE TABLE actor.person (
 -- Name: TABLE person; Type: COMMENT; Schema: actor; Owner: -
 --
 
-COMMENT ON TABLE actor.person IS 'The table actor.person contains the persons of the blogging system.
-The id attribute is a serial. Just pass first_name, last_name and birth_date
-to insert a new person.';
+COMMENT ON TABLE actor.person IS 'The table actor.person contains the persons of the blogging system. The id attribute is a serial. Just pass first_name, last_name and birth_date to insert a new person.';
 
 
 --
@@ -234,8 +232,7 @@ CREATE TABLE blog.comment (
 -- Name: TABLE comment; Type: COMMENT; Schema: blog; Owner: -
 --
 
-COMMENT ON TABLE blog.comment IS 'The table blog.comment contains all the comments
-made by a person on a post.';
+COMMENT ON TABLE blog.comment IS 'The table blog.comment contains all the comments made by a person on a post.';
 
 
 --
@@ -269,8 +266,7 @@ CREATE TABLE blog.post (
 -- Name: TABLE post; Type: COMMENT; Schema: blog; Owner: -
 --
 
-COMMENT ON TABLE blog.post IS 'The table blog.post contains all the post
-made by a person in the blogging system.';
+COMMENT ON TABLE blog.post IS 'The table blog.post contains all the post made by a person in the blogging system.';
 
 
 --
@@ -290,9 +286,7 @@ INHERITS (blog.post);
 -- Name: TABLE event; Type: COMMENT; Schema: blog; Owner: -
 --
 
-COMMENT ON TABLE blog.event IS 'The table blog.event contains all the events
-of the blogging system. It inherits blog.post.
-It''s just here to illustrate the inheriance in half_orm';
+COMMENT ON TABLE blog.event IS 'The table blog.event contains all the events of the blogging system. It inherits blog.post. It''s just here to illustrate the inheriance in half_orm';
 
 
 --
@@ -320,11 +314,7 @@ CREATE VIEW "blog.view".post_comment AS
 -- Name: VIEW post_comment; Type: COMMENT; Schema: blog.view; Owner: -
 --
 
-COMMENT ON VIEW "blog.view".post_comment IS 'This view joins:
-- comment,
-- author of the comment,
-- post,
-- author of the post.';
+COMMENT ON VIEW "blog.view".post_comment IS 'This view joins: - comment, - author of the comment, - post, - author of the post.';
 
 
 --
@@ -342,10 +332,7 @@ CREATE TABLE half_orm_meta.database (
 -- Name: TABLE database; Type: COMMENT; Schema: half_orm_meta; Owner: -
 --
 
-COMMENT ON TABLE half_orm_meta.database IS '
-id identifies the database in the cluster. It uses the key
-in hop_key.
-';
+COMMENT ON TABLE half_orm_meta.database IS 'id identifies the database in the cluster. It uses the key in hop_key.';
 
 
 --

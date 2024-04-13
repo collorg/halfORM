@@ -17,7 +17,4 @@ class BaseTest(TestCase):
     def setUp(self) -> None:
         self.Relation = Relation
 
-    def tearDown(self) -> None:
-        pass
-
     #>>> PLACE YOUR CODE BELLOW THIS LINE. DO NOT REMOVE THIS LINE!

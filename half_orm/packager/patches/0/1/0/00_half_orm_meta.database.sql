@@ -31,7 +31,4 @@ $$ language plpgsql;
 
 insert into half_orm_meta.database (id, name) values ((select half_orm_meta.check_database()), (select current_database()));
 
-comment on table half_orm_meta.database is '
-id identifies the database in the cluster. It uses the key
-in hop_key.
-';
+comment on table half_orm_meta.database is 'id identifies the database in the cluster. It uses the key in hop_key.';
