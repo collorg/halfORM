@@ -3,6 +3,7 @@
 
 from half_orm.hotest import HoTestCase
 from unittest import skip
+from uuid import uuid4
 
 from ..init import halftest
 
@@ -10,21 +11,30 @@ class Test(HoTestCase):
     def setUp(self):
         self.pers = halftest.Person()
         self.post = halftest.Post()
+        self.user = self.pers(**self.pers(last_name='xxx', first_name='yyy', birth_date='1970-01-01').ho_insert())
+        self.user2 = self.pers(**self.pers(last_name='xxxxx', first_name='yyyyy', birth_date='1970-01-01').ho_insert())
+    def tearDown(self):
+        self.user.ho_delete()
+        self.user2.ho_delete()
+
+    def add_post_for_user(self, user, title):
+        return self.post(**user.post_rfk(title=title, content='re coucou').ho_insert())
 
     def test_just_fkey_set(self):
         "it should pass"
-        gaston = halftest.Person(last_name='Lagaffe')
-        posts = gaston.post_rfk()
-        posts.ho_limit = 1
-        # posts.ho_mogrify()
-        list(posts.ho_select())
+        self.assertEqual(len(self.user.post_rfk()), 0)
+        title = str(uuid4())
+        self.add_post_for_user(self.user, title)
+        self.assertEqual(len(self.user.post_rfk()), 1)
+        self.assertEqual(next(self.post(title=title).author_fk())['last_name'], 'xxx')
 
-    @skip
     def test_just_fkey_set_delete(self):
         "it should pass"
-        gaston = halftest.Person(last_name='Lagaffe')
-        posts = gaston.post_rfk()
-        posts.ho_mogrify()
-        print('XXX ICI')
-        posts.ho_delete()
+        self.add_post_for_user(self.user, 'machin')
+        self.add_post_for_user(self.user2, 'truc')
+        self.assertEqual(len(self.user.post_rfk()), 1)
+        self.assertEqual(len(self.user2.post_rfk()), 1)
+        self.user.post_rfk().ho_delete()
+        self.assertEqual(len(self.user.post_rfk()), 0)
+        self.assertEqual(len(self.user2.post_rfk()), 1)
     
