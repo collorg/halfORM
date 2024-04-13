@@ -21,8 +21,8 @@ class Test(TestCase):
     def test_fkey_update(self):
         "should insert blog.post with fkey reference on author"
         self.post._ho_fkeys['author'].set(self.aa)
-        self.post.title = 'title test_direct_fkey_insert'
-        self.post.content = 'content test_direct_fkey_insert'
+        self.post.title.set('title test_direct_fkey_insert')
+        self.post.content.set('content test_direct_fkey_insert')
         self.post.ho_insert()
         post = halftest.Post(title='title test_direct_fkey_insert')
         self.assertEqual(len(post), 1)

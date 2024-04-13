@@ -158,7 +158,7 @@ def __init__(self, **kwargs):
     self.__cursor = self._model._connection.cursor(cursor_factory=RealDictCursor)
     self.__mogrify = False
     self.__check_columns(*kwargs.keys())
-    _ = {self.__dict__[field_name]._set(value)
+    _ = {self.__dict__[field_name].set(value)
          for field_name, value in kwargs.items() if value is not None}
     self.__isfrozen = True
 
@@ -301,7 +301,7 @@ def ho_update(self, *args, update_all=False, **kwargs):
         query = self.__add_returning(query, *args)
     self.__execute(query, tuple(values))
     for field_name, value in update_args.items():
-        self._ho_fields[field_name]._set(value)
+        self._ho_fields[field_name].set(value)
     if args:
         return [dict(elt) for elt in self.__cursor.fetchall()]
 
@@ -357,7 +357,7 @@ def __setattr__(self, key, value):
     if self.__isfrozen and not hasattr(self, key):
         raise relation_errors.IsFrozenError(self.__class__, key)
     if self.__dict__.get(key) and isinstance(self.__dict__[key], Field):
-        self.__dict__[key]._set(value)
+        self.__dict__[key].set(value)
         return
     object.__setattr__(self, key, value)
 
@@ -892,7 +892,7 @@ def ho_join(self, *f_rels):
             if remote.__class__ == f_relation.__class__:
                 for field in f_relation._ho_fields.keys():
                     if f_relation.__dict__[field].is_set():
-                        remote.__dict__[field]._set(f_relation.__dict__[field])
+                        remote.__dict__[field].set(f_relation.__dict__[field])
                 fkey_found = True
                 f_relation_fk_names = remote_fk.fk_names
                 break

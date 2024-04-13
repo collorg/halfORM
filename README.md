@@ -250,7 +250,7 @@ gaston.lost_name = 'Lagaffe'
 from half_orm.null import NULL
 
 nobody = Person()
-nobody.last_name = NULL
+nobody.last_name.set(NULL)
 assert len(nobody) == 0 # last_name is part of the PK
 ```
 
@@ -479,7 +479,7 @@ Again, we insure the atomicity of the transaction using the `Relation.ho_transac
 ```
 >>> a_pers = Person(last_name=('ilike', '_a%'))
 >>> print([elt.last_name for elt in list(a_pers.ho_select())])
->>> a_pers = Person(last_name = ('ilike', '_a%'))
+>>> a_pers = Person(last_name=('ilike', '_a%'))
 >>> print([elt['last_name'] for elt in a_pers.ho_select('last_name')])
 ['Lagaffe', 'Maltese', 'Talon']
 >>> a_pers.upper_last_name()

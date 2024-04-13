@@ -85,11 +85,7 @@ class Field():
         "Returns the value of the field object"
         return self.__value
 
-    def _set(self, *args):
-        "Sets the value of the field object"
-        self.__set__(self.__relation, *args)
-
-    def __set__(self, obj, *args):
+    def set(self, *args):
         """Sets the value (and the comparator) associated with the field."""
         self.__relation._ho_is_singleton = False
         value = args[0]
@@ -97,7 +93,6 @@ class Field():
             self._unset()
             return
         comp = None
-        self.__relation = obj
         if isinstance(value, tuple):
             if len(value) != 2:
                 raise ValueError(f"Can't match {value} with (comp, value)!")
@@ -115,6 +110,10 @@ class Field():
         self.__is_set = True
         self.__value = value
         self.__comp = comp
+
+    def _set(self, *args):
+        raise Exception
+        return self.set(*args)
 
     def _unset(self):
         "Unset a field"
