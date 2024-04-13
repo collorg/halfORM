@@ -223,7 +223,6 @@ class Repo:
         utils.write(os.path.join(self.__base_dir, 'Pipfile'), pipfile)
 
         os.mkdir(os.path.join(self.__base_dir, '.hop'))
-        # self.__config = Config(self.__base_dir)
         self.__config.write()
         modules.generate(self)
 

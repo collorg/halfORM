@@ -173,9 +173,6 @@ class HGit:
                 self.__repo.database.last_release_s,
                 self.__repo.hgit.last_commit(),
                 hop_main_last_commit)
-            # version_file = os.path.join(self.__base_dir, self.__repo.name, 'version.txt')
-            # utils.write(version_file, release)
-            # self.__git_repo.git.add(version_file)
             patch_dir = os.path.join(self.__base_dir, 'Patches', *release.split('.'))
             manifest = Manifest(patch_dir)
             message = f'[{release}] {manifest.changelog_msg}'

@@ -411,8 +411,6 @@ def __set_fkeys(self):
     for fkeyname, f_metadata in _fkeys_metadata.items():
         self._ho_fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
     if hasattr(self.__class__, 'Fkeys') and not self.__fkeys_properties:
-        # if not hasattr(self.__class__.__base__, 'Fkeys'):
-        #     setattr(self.__class__.__base__, 'Fkeys', self.__class__.Fkeys)
         for key, value in self.Fkeys.items():
             try:
                 if key != '': # we skip empty keys

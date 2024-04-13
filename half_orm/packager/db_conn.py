@@ -131,7 +131,6 @@ class DbConn:
         try:
             subprocess.run(
                 cmd_list, env=env, shell=False, check=True,
-                # stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 **kwargs)
         except subprocess.CalledProcessError as err:
             utils.error(f'{err.stderr} with user: {self.__user}, host: {self.__host}, port: {self.__port}\n', exit_code=err.returncode)

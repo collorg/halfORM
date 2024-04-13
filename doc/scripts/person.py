@@ -40,9 +40,6 @@ class Person(halftest.get_relation_class('actor.person')):
 if __name__ == '__main__':
     people = Person()
 
-    # print(people)
-    # sys.exit()
-
     people.ho_delete(delete_all=True)
     Person(**{'last_name':'Jourdan', 'first_name':'Gil', 'birth_date':'1956-09-20'}).ho_insert()
     try:

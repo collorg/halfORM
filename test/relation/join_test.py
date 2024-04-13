@@ -124,8 +124,6 @@ class Test(HoTestCase):
         self.assertEqual(comments[0]['content'], self.comment_ab_post_1)
 
         comments_by_posts = self.post().ho_join((self.comment(), 'comments'))
-        # print('comments_by_posts')
-        # PrettyPrinter().pprint(comments_by_posts)
         count = {'essai': 2, 'essai ab': 3}
         if comments_by_posts[0]['content'] == 'essai':
             self.assertEqual(len(comments_by_posts[0]['comments']), count['essai'])
@@ -135,16 +133,12 @@ class Test(HoTestCase):
             self.assertEqual(len(comments_by_posts[1]['comments']), count['essai'])
 
         comments_by_post = self.post().ho_join((self.comment(content=self.comment_post), 'comments'))
-        # print('comments_by_post')
-        # PrettyPrinter().pprint(comments_by_post)
         self.assertEqual(len(comments_by_post), 1)
         self.assertEqual(comments_by_post[0]['title'], 'post')
         self.assertEqual(len(comments_by_post[0]['comments']), 1)
         self.assertEqual(comments_by_post[0]['comments'][0]['content'], self.comment_post)
 
         comments_by_post_1 = self.post().ho_join((self.comment(content=self.comment_ab_post_1), 'comments'))
-        # print('comments_by_post_1')
-        # PrettyPrinter().pprint(comments_by_post_1)
         self.assertEqual(len(comments_by_post_1), 1)
         self.assertEqual(comments_by_post_1[0]['title'], 'post 1')
         self.assertEqual(len(comments_by_post_1[0]['comments']), 1)
@@ -157,8 +151,6 @@ class Test(HoTestCase):
         post_by_comment = self.comment(content=self.comment_post).ho_join(
             (self.comment(content=self.comment_post).post_fk(), 'post')
         )
-        # print('post_by_comment')
-        # PrettyPrinter().pprint(post_by_comment)
         self.assertEqual(len(post_by_comment), 1)
         self.assertEqual(post_by_comment[0]['content'], self.comment_post)
         self.assertEqual(len(post_by_comment[0]['post']), 1)
@@ -167,8 +159,6 @@ class Test(HoTestCase):
         post_by_comment_ab_post_1 = self.comment(content=self.comment_ab_post_1).ho_join(
             (self.comment(content=self.comment_ab_post_1).post_fk(), 'post')
         )
-        # print('post_by_comment_ab_post_1')
-        # PrettyPrinter().pprint(post_by_comment_ab_post_1)
         self.assertEqual(len(post_by_comment_ab_post_1), 1)
         self.assertEqual(post_by_comment_ab_post_1[0]['content'], self.comment_ab_post_1)
         self.assertEqual(len(post_by_comment_ab_post_1[0]['post']), 1)

@@ -45,7 +45,6 @@ class FKey:
         Uses the __cast__ if it is set.
         """
         f_cast = None
-        # get_rel = model._import_class if model._scope is not None else model.get_relation_class
         if self.__name.find('_reverse_fkey_') == 0 and __cast__:
             self.__relation = self.__get_rel(__cast__)(**self.__relation.ho_dict())
         else:
@@ -76,11 +75,6 @@ class FKey:
             raise RuntimeError(f"Can't set Fkey {self.__name} on the same object")
         self.__to_relation = __to
         from_ = self.__relation
-        # to_classes = set(type.mro(__to.__class__))
-        # to_classes.add(__to.__class__)
-        # print('XXX', to_classes, self.__expected_to_relation)
-        # if not self.__expected_to_relation in to_classes:
-        #     raise RuntimeError(f"Type mismatch:\n{self.__fk_fqrn} != {__to._fqrn}")
         self.__fk_from = from_
         self.__fk_to = __to
         self.__is_set = __to.ho_is_set()

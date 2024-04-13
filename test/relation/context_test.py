@@ -7,7 +7,6 @@ from random import randint
 from datetime import date
 
 import psycopg2
-# from psycopg2.errors import UniqueViolation
 from half_orm.transaction import Transaction
 
 from ..init import halftest, GASTON

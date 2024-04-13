@@ -187,13 +187,6 @@ class _Meta(dict):
     def __getitem__(self, key):
         return _Meta.__d_meta.__getitem__(key)
 
-    # def __setitem__(self, key, val):
-    #     _Meta.__d_meta.__setitem__(key, val)
-
-    # def __repr__(self):
-    #     dictrepr = dict.__repr__(self.__d_meta)
-    #     return f'{type(self).__name__}({dictrepr})'
-
 class PgMeta:
     """A utility class for loading and storing metadata of a PostgreSQL database.
 
