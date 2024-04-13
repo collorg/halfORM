@@ -30,7 +30,7 @@ class Changelog:
                 self.__file,
                 f'{utils.hop_version()}\t{self.__repo.database.last_release_s}\tInitial\t\n')
             self.__repo.hgit.add(self.__file)
-            self.__repo.hgit.commit('-m', f'[hop] Initial CHANGELOG')
+            self.__repo.hgit.commit('-m', '[hop] Initial CHANGELOG')
         self.__seq()
 
     def __seq(self):

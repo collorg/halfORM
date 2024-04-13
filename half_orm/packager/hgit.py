@@ -27,7 +27,7 @@ class HGit:
         try:
             origin = self.__git_repo.git.remote('get-url', 'origin')
         except Exception as err:
-            utils.warning(utils.Color.red("No origin\n"))
+            utils.warning(utils.Color.red(f"No origin\n{err}\n"))
         if self.__origin == '' and origin:
             self.__repo.git_origin = origin
             self.add(os.path.join('.hop', 'config'))
