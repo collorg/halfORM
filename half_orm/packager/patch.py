@@ -5,7 +5,6 @@ import os
 import subprocess
 import sys
 
-import pydash
 import psycopg2
 
 from half_orm import utils
@@ -210,11 +209,11 @@ class Patch:
             utils.warning(f"{path} does not exist. Skipping.\n")
             sys.stderr.flush()
             return
-        files = []
-        for file_ in os.scandir(path):
-            files.append({'name': file_.name, 'file': file_})
-        for elt in pydash.order_by(files, ['name']):
-            file_ = elt['file']
+        files_d = {elt.name: elt for elt in os.scandir(path)}
+        file_names = list(files_d.keys())
+        file_names.sort()
+        for file_name in file_names:
+            file_ = files_d[file_name]
             extension = file_.name.split('.').pop()
             if not (file_.is_file() and extension in ['sql', 'py']):
                 continue

@@ -77,7 +77,7 @@ hop release
 hop prepare -l patch -m "Second patch release"
 if [ `git branch --show-current` != 'hop_0.0.2' ] ; then echo "It should be on branch hop_0.0.2" ; exit 1 ; fi
 
-echo 'create table a ( a text primary key )' > Patches/0/0/2/a.sql
+echo 'create table a ( a text primary key )' > Patches/0/0/2/00_a.sql
 echo 'print("I am a script without x permission...")' > Patches/0/0/2/a.py
 
 # It should be able to apply multiple times
@@ -96,8 +96,11 @@ git add .
 git commit -m "(wip) First"
 git status
 
-# Change of the model
-echo 'create table a ( a text primary key, bla text )' > Patches/0/0/2/a.sql
+# Change of the model + the patches must be executed in order
+echo 'create table a ( a text primary key, bla text )' > Patches/0/0/2/00_a.sql
+echo 'alter table a add column b text' > Patches/0/0/2/01_a.sql
+echo 'alter table a alter column b set not null' > Patches/0/0/2/02_a.sql
+echo 'alter table a add constraint b_uniq unique(b)' > Patches/0/0/2/03_a.sql
 
 # hop undo
 

@@ -32,7 +32,6 @@ setup(
     packages=['half_orm', 'half_orm/packager'],
     install_requires=[
         'psycopg2-binary',
-        'pydash',
         'click',
         'GitPython'],
     package_data={'half_orm': ['version.txt', 'packager/version.txt'], '': extra_files},
