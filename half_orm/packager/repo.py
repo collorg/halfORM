@@ -19,7 +19,7 @@ class Config:
     __name: Optional[str] = None
     __git_origin: str = ''
     __devel: bool = False
-    __hop_version: str = None
+    __hop_version: Optional[str] = None
     def __init__(self, base_dir, **kwargs):
         Config.__file = os.path.join(base_dir, '.hop', 'config')
         self.__name = kwargs.get('name')

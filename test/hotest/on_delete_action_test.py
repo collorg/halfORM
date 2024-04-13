@@ -5,6 +5,9 @@ from half_orm.hotest import HoTestCase
 
 from ..init import halftest
 
+B_A_FKEY_CONST = 'b_a_fkey'
+DROP_CONST_B_A_FKEY = f'alter table tmp.b drop constraint {B_A_FKEY_CONST}'
+
 class Test(HoTestCase):
     def setUp(self):
         halftest.model.execute_query('create schema if not exists tmp');
@@ -22,25 +25,25 @@ class Test(HoTestCase):
         self.hotAssertOnDeleteNoAction(self.RelA, '_reverse_fkey_halftest_tmp_b_a')
 
     def test_restrict(self):
-        halftest.model.execute_query('alter table tmp.b drop constraint b_a_fkey')
+        halftest.model.execute_query(DROP_CONST_B_A_FKEY)
         halftest.model.execute_query('alter table tmp.b add constraint b_a_fkey foreign key(a) references tmp.a on delete restrict')
         halftest.model.reconnect(reload=True)
-        self.hotAssertOnDeleteRestict(self.RelB, 'b_a_fkey')
+        self.hotAssertOnDeleteRestict(self.RelB, B_A_FKEY_CONST)
 
     def test_cascade(self):
-        halftest.model.execute_query('alter table tmp.b drop constraint b_a_fkey')
+        halftest.model.execute_query(DROP_CONST_B_A_FKEY)
         halftest.model.execute_query('alter table tmp.b add constraint b_a_fkey foreign key(a) references tmp.a on delete cascade')
         halftest.model.reconnect(reload=True)
-        self.hotAssertOnDeleteCascade(self.RelB, 'b_a_fkey')
+        self.hotAssertOnDeleteCascade(self.RelB, B_A_FKEY_CONST)
 
     def test_set_null(self):
-        halftest.model.execute_query('alter table tmp.b drop constraint b_a_fkey')
+        halftest.model.execute_query(DROP_CONST_B_A_FKEY)
         halftest.model.execute_query('alter table tmp.b add constraint b_a_fkey foreign key(a) references tmp.a on delete set null')
         halftest.model.reconnect(reload=True)
-        self.hotAssertOnDeleteSetNull(self.RelB, 'b_a_fkey')
+        self.hotAssertOnDeleteSetNull(self.RelB, B_A_FKEY_CONST)
 
     def test_set_default(self):
-        halftest.model.execute_query('alter table tmp.b drop constraint b_a_fkey')
+        halftest.model.execute_query(DROP_CONST_B_A_FKEY)
         halftest.model.execute_query('alter table tmp.b add constraint b_a_fkey foreign key(a) references tmp.a on delete set default')
         halftest.model.reconnect(reload=True)
-        self.hotAssertOnDeleteSetDefault(self.RelB, 'b_a_fkey')
+        self.hotAssertOnDeleteSetDefault(self.RelB, B_A_FKEY_CONST)

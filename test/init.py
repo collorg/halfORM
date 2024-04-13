@@ -73,6 +73,7 @@ class HalfTest:
         self.BlogView = model._import_class("blog.view.post_comment")
         class PC(self.Person):
             def last_name(self):
+                # a method with the name of a field.
                 pass
 
         self.PublicA = model2.get_relation_class('public.a')

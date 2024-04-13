@@ -2,13 +2,8 @@ from unittest import TestCase
 from ..init import halftest, model, HALFTEST_STR, HALFTEST_REL_LISTS
 from half_orm import model_errors
 
+PERSON = 'actor.person'
 class Test(TestCase):
-    def reset(self):
-        pass
-
-    def setUp(self):
-        pass
-
     def test_str(self):
         self.assertEqual(str(halftest.model), HALFTEST_STR)
 
@@ -23,25 +18,25 @@ class Test(TestCase):
     def test_get_relation_class(self):
         "it should return the same class"
         self.assertEqual(
-            id(model.get_relation_class('actor.person')),
-            id(model.get_relation_class('actor.person')))
+            id(model.get_relation_class(PERSON)),
+            id(model.get_relation_class(PERSON)))
 
     def test_get_relation_class_with_different_writings_of_qrn(self):
         "it should return the same class with different writings of qrn"
         self.assertEqual(
-            id(model.get_relation_class('actor.person')),
+            id(model.get_relation_class(PERSON)),
             id(model.get_relation_class('"actor"."person"')))
 
     def test__import_class(self):
         "it should return the same class"
         self.assertEqual(
-            id(model._import_class('actor.person')),
-            id(model._import_class('actor.person')))
+            id(model._import_class(PERSON)),
+            id(model._import_class(PERSON)))
 
     def test__import_class_with_different_writings_of_qrn(self):
         "it should return the same class with different writings of qrn"
         self.assertEqual(
-            id(model._import_class('actor.person')),
+            id(model._import_class(PERSON)),
             id(model._import_class('"actor"."person"')))
 
     def test_classes(self):

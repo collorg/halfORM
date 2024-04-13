@@ -29,7 +29,7 @@ class Test(TestCase):
 
     def test_idem(self):
         pers = self.pers(first_name='jojo')
-        self.assertTrue(isinstance(pers.first_name, Field))
+        self.assertIsInstance(pers.first_name, Field)
 
     def test_fields_names(self):
         field_names = set(self.pers._ho_fields.keys())

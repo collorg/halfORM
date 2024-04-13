@@ -43,9 +43,6 @@ def main():
     gaston.ho_delete()
 
 class Test(TestCase):
-    def reset(self):
-        pass
-
     def setUp(self):
         self.gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
 

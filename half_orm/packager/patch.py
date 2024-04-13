@@ -300,7 +300,7 @@ class Patch:
             utils.error(
                 f'Please `git commit` your changes before releasing {next_release}.\n', exit_code=1)
         # The patch must be applied and the last to apply
-        if not self.__repo.database.last_release_s == next_release:
+        if self.__repo.database.last_release_s != next_release:
             utils.error(f'Please `hop test` before releasing {next_release}.\n', exit_code=1)
         # If we undo the patch (db only) and re-apply it the repo must still be clear.
         self.undo(database_only=True)

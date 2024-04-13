@@ -9,6 +9,8 @@ from psycopg2.errors import UndefinedTable
 
 from ..init import halftest, model, model2
 
+TEST = 'public.test'
+
 class Test(TestCase):
     def setUp(self):
         self.pers = halftest.Person()
@@ -18,7 +20,7 @@ class Test(TestCase):
             model.ping()
             model.execute_query('drop table test')
             model.disconnect()
-        except UndefinedTable as exc:
+        except UndefinedTable:
             pass
 
     def reset(self):
@@ -51,14 +53,14 @@ class Test(TestCase):
 
     def test_reload_and_has_relation(self):
         "it should _reload the model"
-        self.assertFalse(model.has_relation('public.test'))
+        self.assertFalse(model.has_relation(TEST))
         model.execute_query('create table test (a text)')
         model.execute_query('select * from test')
         model._reload()
-        self.assertTrue(model.has_relation('public.test'))
+        self.assertTrue(model.has_relation(TEST))
         model.execute_query('drop table test')
         model.reconnect(reload=True)
-        self.assertFalse(model.has_relation('public.test'))
+        self.assertFalse(model.has_relation(TEST))
 
     def test_model2(self):
         "it should have load model2"

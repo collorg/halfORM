@@ -87,7 +87,7 @@ class Test(TestCase):
 
     def test_expecting_a_relation_error(self):
         "it should raise an exception if we set with anything but a Relation object"
-        with self.assertRaises(RuntimeError) as exc:
+        with self.assertRaises(RuntimeError):
             self.pers().post_rfk.set('coucou')
 
     def test_remote_property(self):
@@ -98,9 +98,3 @@ class Test(TestCase):
         "it should return the name of the foreign key"
         self.assertEqual(self.pers().post_rfk.name, '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date')
         self.assertEqual(self.post().author_fk.name, 'author')
-
-    # def test_type_mismatch_error(self):
-    #     "it should raise an exception if we set with a Relation "
-    #     print(halftest.model)
-    #     with self.assertRaises(RuntimeError) as exc:
-    #         self.pers().post_rfk.set(self.view)
