@@ -208,9 +208,8 @@ class Model:
     def disconnect(self):
         """Closes the connection to the database.
         """
-        if self.__conn is not None:
-            if not self.__conn.closed:
-                self.__conn.close()
+        if self.__conn is not None and not self.__conn.closed:
+            self.__conn.close()
 
     def _reload(self, config_file=None):
         """Reload metadata
@@ -315,7 +314,7 @@ class Model:
             params = ', '.join([f'{key} => %s' for key in kwargs])
             values = tuple(kwargs.values())
         else:
-            params = ', '.join(['%s' for elt in range(len(args))])
+            params = ', '.join(['%s' for _ in range(len(args))])
             values = args
         query = f'call {proc_name}({params})'
         cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
