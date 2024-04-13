@@ -50,7 +50,9 @@ MODULE_FORMAT = (
     "{rt3}\n        " +
     "{bc_}{user_s_code}")
 AP_EPILOG = """"""
-DO_NOT_REMOVE = ['__init__.py', 'base_test.py']
+INIT_PY = '__init__.py'
+BASE_TEST_PY = 'base_test.py'
+DO_NOT_REMOVE = [INIT_PY, BASE_TEST_PY]
 TEST_EXT = '_test.py'
 
 MODEL = None
@@ -79,12 +81,12 @@ def __update_init_files(package_dir, files_list, warning):
                 os.remove(path_)
                 continue
             if (re.findall('.py$', file_) and
-                    file_ != '__init__.py' and
+                    file_ != INIT_PY and
                     file_ != '__pycache__' and
                     file_.find(TEST_EXT) == -1):
                 all_.append(file_.replace('.py', ''))
         all_.sort()
-        with open(os.path.join(root, '__init__.py'), 'w', encoding='utf-8') as init_file:
+        with open(os.path.join(root, INIT_PY), 'w', encoding='utf-8') as init_file:
             init_file.write(f'"""{warning}"""\n\n')
 
             all_ = ",\n    ".join([f"'{elt}'" for elt in all_])
@@ -195,11 +197,11 @@ def generate(repo):
     repo.database.model._reload()
     if not os.path.exists(package_dir):
         os.mkdir(package_dir)
-    with open(os.path.join(package_dir, '__init__.py'), 'w', encoding='utf-8') as file_:
+    with open(os.path.join(package_dir, INIT_PY), 'w', encoding='utf-8') as file_:
         file_.write(INIT_MODULE_TEMPLATE.format(package_name=package_name))
 
-    if not os.path.exists(os.path.join(package_dir, 'base_test.py')):
-        with open(os.path.join(package_dir, 'base_test.py'), 'w', encoding='utf-8') as file_:
+    if not os.path.exists(os.path.join(package_dir, BASE_TEST_PY)):
+        with open(os.path.join(package_dir, BASE_TEST_PY), 'w', encoding='utf-8') as file_:
             file_.write(BASE_TEST.format(
                 BEGIN_CODE=utils.BEGIN_CODE,
                 END_CODE=utils.END_CODE,
@@ -210,7 +212,7 @@ def generate(repo):
         module_path = __update_this_module(repo, relation, package_dir, package_name)
         if module_path:
             files_list.append(module_path)
-            if module_path.find('__init__.py') == -1:
+            if module_path.find(INIT_PY) == -1:
                 test_file_path = module_path.replace('.py', TEST_EXT)
                 files_list.append(test_file_path)
 

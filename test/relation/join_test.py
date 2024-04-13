@@ -197,9 +197,9 @@ class Test(HoTestCase):
     def test_join_error_with_itself(self):
         halftest.model.execute_query("create table tree (id text primary key, parent text references tree(id))")
         halftest.model.reconnect(reload=True)
-        Tree = halftest.model.get_relation_class('public.tree')
+        tree_cls = halftest.model.get_relation_class('public.tree')
         with self.assertRaises(RuntimeError) as exc:
-            tree = Tree()
+            tree = tree_cls()
             tree._ho_fkeys['tree_parent_fkey'].set(tree)
             list(tree)
         self.assertEqual(str(exc.exception), "Can't set Fkey tree_parent_fkey on the same object")

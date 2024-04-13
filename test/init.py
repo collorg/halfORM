@@ -76,7 +76,7 @@ class HalfTest:
                 # a method with the name of a field.
                 pass
 
-        self.PublicA = model2.get_relation_class('public.a')
+        self.public_a_cls = model2.get_relation_class('public.a')
         self._person = self.person_cls()
         self.gaston = self.person_cls(**GASTON)
         self.pc = PC()

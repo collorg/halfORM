@@ -180,7 +180,6 @@ class Patch:
 
     def __restore_previous_release(self):
         db_release = self.__repo.database.last_release_s
-        previous_release = self.previous(db_release, 1)
         self.__restore_db(db_release)
         os.remove(self.__backup_file('Backups', db_release))
         sys.exit(1)
@@ -313,7 +312,7 @@ class Patch:
         if PYTEST_OK:
             try:
                 subprocess.run(['pytest', self.__repo.name], check=True)
-            except subprocess.CalledProcessError as err:
+            except subprocess.CalledProcessError:
                 utils.error('Tests must pass in order to release.\n', exit_code=1)
             # So far, so good
             svg_file = self.__backup_file('Releases', next_release)

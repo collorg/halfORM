@@ -387,8 +387,5 @@ class Model:
             if module_name.find('half_orm_meta') == 0:
                 continue
             class_name = pg_meta.camel_case(relation[1][-1])
-            try:
-                module = importlib.import_module(f".{module_name}", package_name)
-            except ModuleNotFoundError as err:
-                raise err
+            module = importlib.import_module(f".{module_name}", package_name)
             yield getattr(module, class_name), relation[0]
