@@ -139,7 +139,7 @@ class HGit:
                 self.__git_repo.git.checkout(f'hop_{release}')
                 self.__git_repo.git.rebase('hop_main')
 
-    def check_rebase_hop_main(self, release, current_branch):
+    def check_rebase_hop_main(self, current_branch):
         git = self.__git_repo.git
         try:
             git.branch("-D", "hop_temp")
