@@ -7,7 +7,7 @@ from ..init import halftest
 
 class Test(HoTestCase):
     def setUp(self):
-        self.pers = halftest.Person()
+        self.pers = halftest.person_cls()
 
     def test_unique(self):
         "it should pass"

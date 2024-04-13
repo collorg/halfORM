@@ -18,8 +18,8 @@ Rolling back!
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
         self.today = halftest.today
         self.f = io.StringIO()
 

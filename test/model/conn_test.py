@@ -13,7 +13,7 @@ TEST = 'public.test'
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.Person()
+        self.pers = halftest.person_cls()
 
     def tearDown(self):
         try:

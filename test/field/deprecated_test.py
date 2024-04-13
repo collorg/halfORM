@@ -9,7 +9,7 @@ It will be remove in 1.0 version.
 
 def test_deprecated(capsys):
     "_set is deprecated"
-    pers = halftest.Person()
+    pers = halftest.person_cls()
     pers.last_name._set('aabc')
     _, err = capsys.readouterr()
     TestCase().assertEqual(err, ERR_MSG)

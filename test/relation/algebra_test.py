@@ -16,8 +16,8 @@ def name(letter, integer):
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
         self.today = halftest.today
 
         hexchars = 'abcdef'
@@ -383,4 +383,4 @@ class Test(TestCase):
 
     def test_ne(self):
         a = self.set_1
-        self.assertTrue(-a != a)
+        self.assertNotEqual(-a, a)

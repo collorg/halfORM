@@ -7,8 +7,8 @@ from ..init import halftest
 
 class Test(HoTestCase):
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
 
     def test_not_null(self):
         "it should pass"

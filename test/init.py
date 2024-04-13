@@ -65,28 +65,28 @@ class HalfTest:
         assert model._scope == "halftest"
         self.dbname = model._dbname
         self.today = date.today()
-        self.Person = model._import_class("actor.person")
-        self.Person().ho_delete(delete_all=True)
-        self.Post = model._import_class("blog.post")
-        self.Comment = model._import_class("blog.comment")
-        self.Event = model._import_class("blog.event")
-        self.BlogView = model._import_class("blog.view.post_comment")
-        class PC(self.Person):
+        self.person_cls = model._import_class("actor.person")
+        self.person_cls().ho_delete(delete_all=True)
+        self.post_cls = model._import_class("blog.post")
+        self.comment_cls = model._import_class("blog.comment")
+        self.event_cls = model._import_class("blog.event")
+        self.blog_view_cls = model._import_class("blog.view.post_comment")
+        class PC(self.person_cls):
             def last_name(self):
                 # a method with the name of a field.
                 pass
 
         self.PublicA = model2.get_relation_class('public.a')
-        self._person = self.Person()
-        self.gaston = self.Person(**GASTON)
+        self._person = self.person_cls()
+        self.gaston = self.person_cls(**GASTON)
         self.pc = PC()
         self.relation = model._import_class
 
         @self._person.ho_transaction
         def init_pers(pers):
             sys.stderr.write('Initializing actor.person\n')
-            self.Person().ho_delete(delete_all=True)
-            self.Post().ho_delete(delete_all=True)
+            self.person_cls().ho_delete(delete_all=True)
+            self.post_cls().ho_delete(delete_all=True)
             for letter in 'abcdef':
                 for i in range(10):
                     last_name = name(letter, i)
@@ -97,7 +97,7 @@ class HalfTest:
                         first_name=first_name,
                         birth_date=birth_date).ho_insert()
 
-        if len(self.Person()) != 60:
-            init_pers(self.Person())
+        if len(self.person_cls()) != 60:
+            init_pers(self.person_cls())
 
 halftest = HalfTest()

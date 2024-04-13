@@ -17,8 +17,8 @@ def name(letter, integer):
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
         self.today = halftest.today
 
     def test_singleton_ok(self):

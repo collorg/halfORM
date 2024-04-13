@@ -19,10 +19,10 @@ from ..init import halftest
 
 class Test(HoTestCase):
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
         self.today = halftest.today
-        self.blog_view = halftest.BlogView()
+        self.blog_view = halftest.blog_view_cls()
 
     def test_count(self):
         self.assertEqual(len(self.pers()), 60)
@@ -91,4 +91,4 @@ class Test(HoTestCase):
         "it should return None (do nothing) if no update values are provided."
         pers = self.pers(last_name=None, first_name=None, birth_date=None)
         res = pers.ho_update(update_all=True)
-        self.assertEqual(res, None)
+        self.assertIsNone(res)

@@ -11,8 +11,8 @@ from ..init import halftest
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
         self.today = halftest.today
 
     def tearDown(self):
@@ -47,18 +47,18 @@ class Test(TestCase):
         self.assertFalse(pers.first_name.is_set())
 
     def test_is_not_null(self):
-        post = halftest.Post()
+        post = halftest.post_cls()
         self.assertFalse(post.content.is_not_null())
         halftest.model.execute_query('alter table blog.post alter column content set not null')
         halftest.model.reconnect(reload=True)
-        post = halftest.Post()
+        post = halftest.post_cls()
         self.assertTrue(post.content.is_not_null())
         halftest.model.execute_query('alter table blog.post alter column content drop not null')
         halftest.model.reconnect(reload=True)
 
     def test_relation(self):
-        post = halftest.Post()
-        self.assertEqual(post.content._relation, halftest.Post())
+        post = halftest.post_cls()
+        self.assertEqual(post.content._relation, halftest.post_cls())
 
     def test_str_value(self):
         self.post.content = 10

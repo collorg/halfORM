@@ -20,7 +20,7 @@ class Test(TestCase):
         pass
 
     def setUp(self):
-        self.pers = halftest.Person()
+        self.pers = halftest.person_cls()
 
     def test_unknown_field(self):
         "it should raise AttributeError"
@@ -33,17 +33,17 @@ class Test(TestCase):
     def test_unknown_attr_error(self):
         "it should raise relation_errors.UnknownAttributeError"
         with self.assertRaises(relation_errors.UnknownAttributeError):
-            halftest.Person(lost_name='Lagaffe')
+            halftest.person_cls(lost_name='Lagaffe')
 
     def test_unknown_attr_error_on_insert(self):
         "it should raise relation_errors.UnknownAttributeError"
         with self.assertRaises(relation_errors.UnknownAttributeError):
-            halftest.Person(last_name='Lagaffe').ho_insert('lost_name')
+            halftest.person_cls(last_name='Lagaffe').ho_insert('lost_name')
 
     def test_unknown_attr_error_on_select(self):
         "it should raise relation_errors.UnknownAttributeError"
         with self.assertRaises(relation_errors.UnknownAttributeError) as cm:
-            list(halftest.Person().ho_select('lost_name', 'last_name', 'fist_name'))
+            list(halftest.person_cls().ho_select('lost_name', 'last_name', 'fist_name'))
         self.assertEqual(
             cm.exception.args[0],
             "ERROR! Unknown attribute: lost_name, fist_name.")
@@ -51,14 +51,14 @@ class Test(TestCase):
     def test_unknown_attr_error_on_update(self):
         "it should raise relation_errors.UnknownAttributeError"
         with self.assertRaises(relation_errors.UnknownAttributeError):
-            halftest.Person(last_name='Lagaffe').ho_update('lost_name')
+            halftest.person_cls(last_name='Lagaffe').ho_update('lost_name')
         with self.assertRaises(relation_errors.UnknownAttributeError):
-            halftest.Person(last_name='Lagaffe').ho_update(lost_name="M'enfin")
+            halftest.person_cls(last_name='Lagaffe').ho_update(lost_name="M'enfin")
 
     def test_unknown_attr_error_on_delete(self):
         "it should raise relation_errors.UnknownAttributeError"
         with self.assertRaises(relation_errors.UnknownAttributeError):
-            halftest.Person(last_name='Lagaffe').ho_delete('lost_name')
+            halftest.person_cls(last_name='Lagaffe').ho_delete('lost_name')
 
     def test_is_frozen_error(self):
         "it should raise relation_errors.IsFrozenError"

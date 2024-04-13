@@ -9,8 +9,8 @@ from ..init import halftest
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.Person()()
-        self.post = halftest.Post()()
+        self.pers = halftest.person_cls()()
+        self.post = halftest.post_cls()()
         self.relation = halftest.relation
 
     def test_isinstance(self):
@@ -18,12 +18,12 @@ class Test(TestCase):
         self.assertTrue(isinstance(pers, self.pers.__class__))
 
     def test_schemaname(self):
-        "_schemaname should be 'actor' for the halftest.Person() class"
-        self.assertEqual(halftest.Person()._schemaname, "actor")
+        "_schemaname should be 'actor' for the halftest.person_cls() class"
+        self.assertEqual(halftest.person_cls()._schemaname, "actor")
 
     def test_tablename(self):
-        "_relationname should be 'person' for the halftest.Person() class"
-        self.assertEqual(halftest.Person()._relationname, "person")
+        "_relationname should be 'person' for the halftest.person_cls() class"
+        self.assertEqual(halftest.person_cls()._relationname, "person")
 
     def test_add_returning(self):
         "it should return a returning clause"
@@ -33,13 +33,13 @@ class Test(TestCase):
 
     def testho_is_frozen(self):
         frozen = self.pers.__dict__['__isfrozen']
-        self.assertEqual(True, frozen)
+        self.assertTrue(frozen)
         self.pers.ho_unfreeze()
         frozen = self.pers.__dict__['__isfrozen']
-        self.assertEqual(False, frozen)
+        self.assertFalse(frozen)
         self.pers.ho_freeze()
         frozen = self.pers.__dict__['__isfrozen']
-        self.assertEqual(True, frozen)
+        self.assertTrue(frozen)
 
     def testho_unaccent(self):
         self.assertFalse(self.pers.first_name.unaccent)

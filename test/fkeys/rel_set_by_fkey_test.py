@@ -9,8 +9,8 @@ from ..init import halftest
 
 class Test(HoTestCase):
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
         self.user = self.pers(**self.pers(last_name='xxx', first_name='yyy', birth_date='1970-01-01').ho_insert())
         self.user2 = self.pers(**self.pers(last_name='xxxxx', first_name='yyyyy', birth_date='1970-01-01').ho_insert())
     def tearDown(self):

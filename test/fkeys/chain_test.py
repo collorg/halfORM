@@ -9,9 +9,9 @@ from ..init import halftest
 class Test(TestCase):
     "Fkeys chaining tests"
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
-        self.comment = halftest.Comment()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
+        self.comment = halftest.comment_cls()
         self.authors = []
         self.posts = []
         self.comments = []
@@ -24,13 +24,13 @@ class Test(TestCase):
         for author_idx in range(3):
             name = f'fkeys chain tester {author_idx}'
             self.authors.append(
-                halftest.Person(last_name=name, first_name=name, birth_date='1970-01-01')
+                halftest.person_cls(last_name=name, first_name=name, birth_date='1970-01-01')
                 .ho_insert())
         for post_idx in range(5):
             author_id = self.authors[random.randint(0, len(self.authors) - 1)]['id']
             title = f"test chaining post {post_idx} by {author_id}"
             self.posts.append(
-                halftest.Person(id=author_id).post_rfk(title=title, content=title)
+                halftest.person_cls(id=author_id).post_rfk(title=title, content=title)
                 .ho_insert())
             post_id = self.posts[-1]['id']
             if not post_id in self.authors_by_post:
@@ -45,7 +45,7 @@ class Test(TestCase):
                 author_id = self.authors[random.randint(0, len(self.authors) - 1)]['id']
                 content = f"test chaining comment {comment_idx} by {author_id} on {post['title']}"
                 self.comments.append(
-                    halftest.Post(id=post_id).comment_rfk(content=content, author_id=author_id)
+                    halftest.post_cls(id=post_id).comment_rfk(content=content, author_id=author_id)
                     .ho_insert())
                 comment_id = self.comments[-1]['id']
                 self.author_of_comment[comment_id] = author_id
@@ -64,11 +64,11 @@ class Test(TestCase):
         # print(self.comments_by_author)
 
     def tearDown(self):
-        halftest.Person(last_name=('like', 'fkeys chain tester%')).ho_delete()
+        halftest.person_cls(last_name=('like', 'fkeys chain tester%')).ho_delete()
 
     def test_chain_person_post_comment(self):
         "it should be possible to chain from person to comment via post"
-        self.assertTrue(isinstance(self.pers.post_rfk().comment_rfk(), halftest.Comment))
+        self.assertTrue(isinstance(self.pers.post_rfk().comment_rfk(), halftest.comment_cls))
 
     def test_author_comments_on_his_own_post(self):
         "it should retreive the comments made on posts by the same author"
@@ -76,7 +76,7 @@ class Test(TestCase):
         for person in self.authors:
             person_id = person['id']
             person_first_name = person['first_name']
-            comments = list(halftest.Person()
+            comments = list(halftest.person_cls()
                 .post_rfk(author_first_name=person_first_name)
                 .comment_rfk(author_id=person_id))
             nb_comments += len(comments)
@@ -87,8 +87,8 @@ class Test(TestCase):
 
     def test_chain_post_comment_author(self):
         "it should be possible to chain from post to author via comment"
-        self.assertTrue(isinstance(self.post.comment_rfk().author_fk(), halftest.Person))
+        self.assertTrue(isinstance(self.post.comment_rfk().author_fk(), halftest.person_cls))
 
     def test_chain_comment_post_author(self):
         "it should be possible to chain from comment to author via post"
-        self.assertTrue(isinstance(self.comment().post_fk().author_fk(), halftest.Person))
+        self.assertTrue(isinstance(self.comment().post_fk().author_fk(), halftest.person_cls))

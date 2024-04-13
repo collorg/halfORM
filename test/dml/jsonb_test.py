@@ -9,7 +9,7 @@ from half_orm import relation_errors, model
 
 class Test(TestCase):
     def setUp(self):
-        self.post = halftest.Post()
+        self.post = halftest.post_cls()
 
     def test_jsonb(self):
         "should insert, update, delete jsonb in blog.post"
@@ -21,10 +21,10 @@ class Test(TestCase):
         self.post.ho_insert()
         self.assertEqual(len(self.post), 1)
         self.assertEqual(next(self.post.ho_select('data'))['data'], data)
-        self.post = halftest.Post(title=title)
+        self.post = halftest.post_cls(title=title)
         ndata = {'a': 'c'}
         self.post.ho_update(data=ndata)
-        self.post = halftest.Post(title=title, data=ndata)
+        self.post = halftest.post_cls(title=title, data=ndata)
         self.assertEqual(len(self.post), 1)
         self.post.ho_delete()
         self.assertEqual(len(self.post), 0)

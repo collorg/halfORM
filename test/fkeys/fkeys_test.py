@@ -14,9 +14,9 @@ ERR_MSG = """self.comment_rfk is not a FKey (got a Comment object instead).
 
 class Test(TestCase):
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
-        self.comment = halftest.Comment()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
+        self.comment = halftest.comment_cls()
         aa = self.pers(last_name='aa')
         assert(len(aa) == 1)
 
@@ -30,15 +30,15 @@ class Test(TestCase):
 
     def test_post_author_fkey_type(self):
         author = self.post.author_fk()
-        self.assertIsInstance(author, halftest.Person)
+        self.assertIsInstance(author, halftest.person_cls)
 
     def test_comment_author_fkey_type(self):
         author = self.comment.author_fk()
-        self.assertIsInstance(author, halftest.Person)
+        self.assertIsInstance(author, halftest.person_cls)
 
     def test_comment_post_fkey_type(self):
         post = self.comment._ho_fkeys['post']()
-        self.assertIsInstance(post, halftest.Post)
+        self.assertIsInstance(post, halftest.post_cls)
 
     def test_is_set(self):
         post = self.post()

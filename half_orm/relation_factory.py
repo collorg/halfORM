@@ -59,13 +59,13 @@ def factory(dct):
 
     tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], dct['fqrn'])))
     model = dct['model']
-    ModelCls = model.__class__
-    ModelCls._classes_.setdefault(tbl_attr['_dbname'], {})
+    model_cls = model.__class__
+    model_cls._classes_.setdefault(tbl_attr['_dbname'], {})
     tbl_attr['_model'] = dct['model']
     dbname, schema, relation = dct['fqrn']
     rel_class = None
-    if ModelCls._classes_.get(dbname):
-        rel_class = ModelCls._classes_[dbname].get((dbname, schema, relation))
+    if model_cls._classes_.get(dbname):
+        rel_class = model_cls._classes_[dbname].get((dbname, schema, relation))
 
     if rel_class:
         return rel_class
@@ -92,5 +92,5 @@ def factory(dct):
             tbl_attr[dep_fct_name] = __deprecated(tbl_attr[fct_name])
     class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
     rel_class = type(class_name, tuple(bases), tbl_attr)
-    ModelCls._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
+    model_cls._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
     return rel_class

@@ -156,8 +156,8 @@ Fkeys = {
 
 class Test(HoTestCase):
     def setUp(self):
-        self.Post = halftest.Post
-        self.pers = halftest.Person()
+        self.Post = halftest.post_cls
+        self.pers = halftest.person_cls()
         self.pers.last_name = 'Lagaffe'
         self.pers.first_name = 'Gaston'
         self.pers.birth_date = ('<=', '1970-01-01')
@@ -174,5 +174,5 @@ class Test(HoTestCase):
         self.maxDiff = None
         posts = self.pers.post_rfk(title='Easy')
         res = ''.join(repr(posts))
-        res = re.sub('_reverse_[0-9]{15}', '_reverse_...............', res, 2)
+        res = re.sub(r'_reverse_\d{15}', '_reverse_...............', res, 2)
         self.assertEqual(res, PERS_POSTS)

@@ -13,12 +13,14 @@ import psycopg2
 from ..init import halftest
 from half_orm import relation_errors, model
 
+POST1 = 'post 1'
+
 class Test(HoTestCase):
     def setUp(self):
-        self.pers = halftest.Person()
-        self.post = halftest.Post()
-        self.comment = halftest.Comment()
-        self.blog_view = halftest.BlogView()
+        self.pers = halftest.person_cls()
+        self.post = halftest.post_cls()
+        self.comment = halftest.comment_cls()
+        self.blog_view = halftest.blog_view_cls()
         self.today = halftest.today
         self.post().ho_delete(delete_all=True)
         self.comment().ho_delete(delete_all=True)
@@ -82,8 +84,8 @@ class Test(HoTestCase):
         "should join the objects with all fields"
         comments = self.res['comments']
         posts = self.res['posts']
-        self.assertTrue(isinstance(comments, list))
-        self.assertTrue(isinstance(posts, list))
+        self.assertIsInstance(comments, list)
+        self.assertIsInstance(posts, list)
         self.assertEqual(posts[0]['id'], self.post0['id'])
         self.assertEqual(len(comments), 2)
         self.assertEqual(set(list(comments[0].keys())), set(list(self.comment()._ho_fields)))
@@ -94,7 +96,7 @@ class Test(HoTestCase):
     def test_join_with_string(self):
         "ho_join should return a list of values if fields is a string"
         self.assertIsInstance(self.res1['post'][0], str)
-        self.assertEqual(self.res1['post'][0], 'post 1')
+        self.assertEqual(self.res1['post'][0], POST1)
 
     def test_join_with_list(self):
         "ho_join should return a list of dict if fields is a string"
@@ -124,13 +126,15 @@ class Test(HoTestCase):
         self.assertEqual(comments[0]['content'], self.comment_ab_post_1)
 
         comments_by_posts = self.post().ho_join((self.comment(), 'comments'))
-        count = {'essai': 2, 'essai ab': 3}
-        if comments_by_posts[0]['content'] == 'essai':
-            self.assertEqual(len(comments_by_posts[0]['comments']), count['essai'])
-            self.assertEqual(len(comments_by_posts[1]['comments']), count['essai ab'])
+        ESSAI = 'essai'
+        ESSAI_AB = 'essai ab'
+        count = {ESSAI: 2, ESSAI_AB: 3}
+        if comments_by_posts[0]['content'] == ESSAI:
+            self.assertEqual(len(comments_by_posts[0]['comments']), count[ESSAI])
+            self.assertEqual(len(comments_by_posts[1]['comments']), count[ESSAI_AB])
         else:
-            self.assertEqual(len(comments_by_posts[0]['comments']), count['essai ab'])
-            self.assertEqual(len(comments_by_posts[1]['comments']), count['essai'])
+            self.assertEqual(len(comments_by_posts[0]['comments']), count[ESSAI_AB])
+            self.assertEqual(len(comments_by_posts[1]['comments']), count[ESSAI])
 
         comments_by_post = self.post().ho_join((self.comment(content=self.comment_post), 'comments'))
         self.assertEqual(len(comments_by_post), 1)
@@ -140,7 +144,7 @@ class Test(HoTestCase):
 
         comments_by_post_1 = self.post().ho_join((self.comment(content=self.comment_ab_post_1), 'comments'))
         self.assertEqual(len(comments_by_post_1), 1)
-        self.assertEqual(comments_by_post_1[0]['title'], 'post 1')
+        self.assertEqual(comments_by_post_1[0]['title'], POST1)
         self.assertEqual(len(comments_by_post_1[0]['comments']), 1)
         self.assertEqual(comments_by_post_1[0]['comments'][0]['content'], self.comment_ab_post_1)
 
@@ -162,7 +166,7 @@ class Test(HoTestCase):
         self.assertEqual(len(post_by_comment_ab_post_1), 1)
         self.assertEqual(post_by_comment_ab_post_1[0]['content'], self.comment_ab_post_1)
         self.assertEqual(len(post_by_comment_ab_post_1[0]['post']), 1)
-        self.assertEqual(post_by_comment_ab_post_1[0]['post'][0]['title'], 'post 1')
+        self.assertEqual(post_by_comment_ab_post_1[0]['post'][0]['title'], POST1)
 
     def test_join_error_1(self):
         "f_rels should be tuples"
@@ -183,15 +187,6 @@ class Test(HoTestCase):
         self.assertEqual(str(exc.exception), 'f_rel must have 2 or 3 arguments. Got 1.')
 
     def test_join_error_3(self):
-        "f_rels should have 2 or 3 arguments"
-        with self.assertRaises(RuntimeError) as exc:
-            self.comment().ho_join(
-                (self.personne(), ),
-                (self.post(), 'post', 'title')
-            )
-        self.assertEqual(str(exc.exception), 'f_rel must have 2 or 3 arguments. Got 1.')
-
-    def test_join_error_4(self):
         with self.assertRaises(RuntimeError) as exc:
             self.comment().ho_join(
                 (self.blog_view(), 'post'),
