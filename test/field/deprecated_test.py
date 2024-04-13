@@ -4,7 +4,7 @@ from unittest import TestCase
 from ..init import halftest
 
 ERR_MSG = """WARNING! Field._set method is deprecated. Use Field.set instead.
-It will be remove in 1.0 version.
+It will be remove in half_orm 1.0.
 """
 
 def test_deprecated(capsys):
