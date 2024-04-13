@@ -42,12 +42,8 @@ from collections import OrderedDict
 from uuid import UUID
 from typing import List
 from datetime import date, datetime, time, timedelta
-import json
 import psycopg2
 from psycopg2.extras import RealDictCursor
-
-
-import yaml
 
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
@@ -423,104 +419,6 @@ def __set_fkeys(self):
             except KeyError as exp:
                 raise relation_errors.WrongFkeyError(self, value) from exp
     self.__fkeys_properties = True
-
-def ho_group_by(self, yml_directive): #pragma: no cover
-    """Returns an aggregation of the data according to the yml directive
-    description.
-    """
-    utils.error("Use at your own risk. This method is not tested.\n")
-    def inner_group_by(data, directive, grouped_data, gdata=None):
-        """recursive fonction to actually group the data in grouped_data."""
-        deja_vu_key = set()
-        if gdata is None:
-            gdata = grouped_data
-        if isinstance(directive, list):
-            directive = directive[0]
-        keys = set(directive)
-        for elt in data:
-            res_elt = {}
-            for key in keys.intersection(self._ho_fields.keys()):
-                deja_vu_key.add(directive[key])
-                try:
-                    res_elt.update({directive[key]:elt[key]})
-                except KeyError as exc:
-                    raise relation_errors.UnknownAttributeError(key) from exc
-            if isinstance(gdata, list):
-                different = None
-                for selt in gdata:
-                    different = True
-                    for key in deja_vu_key:
-                        different = selt[key] != res_elt[key]
-                        if different:
-                            break
-                    if not different:
-                        break
-                if not gdata or different:
-                    gdata.append(res_elt)
-            else:
-                gdata.update(res_elt)
-            for group_name in keys.difference(
-                    keys.intersection(self._ho_fields.keys())):
-                type_directive = type(directive[group_name])
-                suite = None
-                if not gdata:
-                    gdata[group_name] = type_directive()
-                    suite = gdata[group_name]
-                elif isinstance(gdata, list):
-                    suite = None
-                    for selt in gdata:
-                        different = True
-                        for skey in deja_vu_key:
-                            different = selt[skey] != res_elt[skey]
-                            if different:
-                                break
-                        if not different:
-                            if selt.get(group_name) is None:
-                                selt[group_name] = type_directive()
-                            suite = selt[group_name]
-                            break
-                    if suite is None:
-                        gdata.append(res_elt)
-                elif gdata.get(group_name) is None:
-                    #TODO: Raise ExpectedOneError if necessary
-                    gdata[group_name] = type_directive()
-                    suite = gdata[group_name]
-                else:
-                    suite = gdata[group_name]
-                inner_group_by(
-                    [elt], directive[group_name], suite, None)
-
-    grouped_data = {}
-    data = list(self)
-    directive = yaml.safe_load(yml_directive)
-    inner_group_by(data, directive, grouped_data)
-    return grouped_data
-
-def ho_json(self, yml_directive=None, res_field_name='elements', **kwargs): #pragma: no cover
-    """Returns a JSON representation of the set returned by the select query.
-    if kwargs, returns {res_field_name: [list of elements]}.update(kwargs)
-    """
-    utils.error("Use at your own risk. This method is not tested.\n")
-
-    def handler(obj):
-        """Replacement of default handler for json.dumps."""
-        if hasattr(obj, 'isoformat'):
-            return str(obj.isoformat())
-        if isinstance(obj, UUID):
-            return str(obj)
-        if isinstance(obj, timedelta):
-            return obj.total_seconds()
-        raise TypeError(
-            f'Object of type {type(obj)} with value of {repr(obj)} is not JSON serializable')
-
-    if yml_directive:
-        res = self.ho_group_by(yml_directive)
-    else:
-        res = list(self)
-    if kwargs:
-        res = {res_field_name: res}
-        res.update(kwargs)
-    return json.dumps(res, default=handler)
 
 def ho_dict(self):
     """Returns a dictionary containing only the values of the fields
@@ -1104,8 +1002,6 @@ COMMON_INTERFACE = {
     'ho_cast': ho_cast,
     'ho_only': ho_only,
     'ho_is_empty': ho_is_empty,
-    'ho_group_by': ho_group_by,
-    'ho_json': ho_json,
     'ho_dict': ho_dict,
     'ho_is_set': ho_is_set,
     'ho_get': ho_get,
