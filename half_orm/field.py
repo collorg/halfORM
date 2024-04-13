@@ -4,6 +4,7 @@
 """This module provides the Field class. It is used by the `relation <#module-half_orm.relation>`_ module."""
 
 import psycopg2
+import sys
 
 from half_orm.null import NULL
 
@@ -111,7 +112,7 @@ class Field():
         self.__comp = comp
 
     def _set(self, *args):
-        raise Exception
+        sys.stderr.write("WARNING! Field._set method is deprecated. Use Field.set instead.\nIt will be remove in 1.0 version.\n")
         return self.set(*args)
 
     def _unset(self):
