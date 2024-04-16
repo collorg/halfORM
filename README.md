@@ -215,8 +215,10 @@ It provides you with information extracted from the database metadata:
 When you instantiate an object with no arguments, its intent corresponds to all the data present in the corresponding relation.
 `Person()` represents the set of persons contained in the `actor.person` table (i.e., there is no constraint on the set). You can get the number of elements in a relation with the `len` function, as in `len(Person())`.
 
-To define a subset, you must specify conditions on the values of the fields (columns) with tuples of the form: `(comp, value)`.
-The `comp` value ('`=`' if ommited) is either a SQL 
+To define a subset, you need to specify constraints on the values of the fields/columns:
+* with a single value for an exact match,
+* with a tuple of the form `(comp, value)` otherwise.
+The `comp` value is either a SQL
 [comparison operator](https://www.postgresql.org/docs/current/static/functions-comparison.html) or a [pattern matching operator (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html).
 
 You can constrain a relation object at instanciation:
@@ -227,18 +229,18 @@ Person(last_name=('ilike', '_a%'))
 Person(birth_date='1957-02-28')
 ```
 
-You can also constrain an instanciated object:
+You can also constrain an instanciated object using the `Field.set` method:
 
 ```py
 gaston = Person()
-gaston.last_name = ('ilike', 'l%')
-gaston.first_name = 'Gaston'
+gaston.last_name.set(('ilike', 'l%'))
+gaston.first_name.set('Gaston')
 ```
 
 `half_orm` prevents you from making typos:
 
 ```py
-gaston.lost_name = 'Lagaffe'
+gaston(lost_name='Lagaffe')
 # raises a half_orm.relation_errors.IsFrozenError Exception
 ```
 
@@ -252,6 +254,15 @@ from half_orm.null import NULL
 nobody = Person()
 nobody.last_name.set(NULL)
 assert len(nobody) == 0 # last_name is part of the PK
+[...]
+```
+
+The `None` value, unsets a constraint on a field:
+
+```py
+[...]
+nobody.last_name.set(None)
+assert len(nobody) == len(Person())
 ```
 
 ## Set operators
