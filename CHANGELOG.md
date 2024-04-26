@@ -1,3 +1,7 @@
+# 0.10.1 -- hop 0.1.0a10 (2024-04-26)
+
+* [hop] Fix. hop new was broken with devel option on an existing database. (02466c8)
+
 # 0.10.0 -- hop 0.1.0a10 (2024-04-13)
 
 * Remove dependency to pydash. (69e7fa2)
