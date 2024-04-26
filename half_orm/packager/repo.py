@@ -199,7 +199,7 @@ class Repo:
         cur_dir = os.path.abspath(os.path.curdir)
         self.__base_dir = os.path.join(cur_dir, package_name)
         self.__config = Config(self.__base_dir, name=package_name, devel=devel)
-        self.database = Database(self).init(self.__config.name)
+        self.database = Database(self, get_release=False).init(self.__config.name)
         print(f"Installing new hop repo in {self.__base_dir}.")
 
         if not os.path.exists(self.__base_dir):

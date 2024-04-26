@@ -26,6 +26,9 @@ clean_db() {
 
 pwd
 clean_db
+createdb hop_test
+yes | hop new hop_test --devel
+clean_db
 # it should be able to create a repo not in devel mode
 yes | hop new hop_test
 cd hop_test

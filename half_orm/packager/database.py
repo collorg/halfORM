@@ -16,7 +16,7 @@ class Database:
     """Reads and writes the halfORM connection file
     """
 
-    def __init__(self, repo):
+    def __init__(self, repo, get_release=True):
         self.__repo = repo
         self.__model = None
         self.__last_release = None
@@ -24,7 +24,7 @@ class Database:
         if self.__repo.name:
             try:
                 self.__model = Model(self.__repo.name)
-                self.__init(self.__repo.name)
+                self.__init(self.__repo.name, get_release)
             except OperationalError as err:
                 if not self.__repo.new:
                     utils.error(err, 1)
