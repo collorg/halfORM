@@ -1,3 +1,7 @@
+# 0.10.3 -- hop 0.1.0a12 (2024-04-30)
+
+* [hop] Remove last reference to half-orm-packager in Pipfile template. (11b79a0)
+
 # 0.10.2 -- hop 0.1.0a11 (2024-04-30)
 
 * [hop] Remove references to obsolete half_orm_packager. (5b2a234)
