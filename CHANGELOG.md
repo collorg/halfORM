@@ -1,3 +1,7 @@
+# 0.10.2 -- hop 0.1.0a11 (2024-04-30)
+
+* [hop] Remove references to obsolete half_orm_packager. (5b2a234)
+
 # 0.10.1 -- hop 0.1.0a10 (2024-04-26)
 
 * [hop] Fix. hop new was broken with devel option on an existing database. (02466c8)
