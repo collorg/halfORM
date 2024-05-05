@@ -1,3 +1,7 @@
+# 0.10.4 -- hop 0.1.0a12 (2024-04-30)
+
+* [relation] Check that the value is valid for ho_limit an ho_offset methods. (cdc6e9b)
+
 # 0.10.3 -- hop 0.1.0a12 (2024-04-30)
 
 * [hop] Remove last reference to half-orm-packager in Pipfile template. (11b79a0)
