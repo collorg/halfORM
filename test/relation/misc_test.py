@@ -79,12 +79,24 @@ class Test(TestCase):
         posts.ho_limit(0)
         self.assertEqual(len(list(posts)), len(halftest.post_cls()))
 
+    def test_ho_limit_error(self):
+        "it should raise an error"
+        posts = halftest.post_cls()
+        with self.assertRaises(ValueError) as err:
+            posts.ho_limit("a")
+
     def testho_offset(self):
         "it should set the offset"
         posts = halftest.post_cls()
         offset = randint(0, len(halftest.post_cls()))
         posts.ho_offset(offset)
         self.assertEqual(len(list(posts)), len(halftest.post_cls()) - offset)
+
+    def test_ho_offset_error(self):
+        "it should raise an error"
+        posts = halftest.post_cls()
+        with self.assertRaises(ValueError) as err:
+            posts.ho_offset("a")
 
     def test_cast(self):
         "it should cast to the new relation"

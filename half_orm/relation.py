@@ -635,14 +635,14 @@ def ho_order_by(self, _order_):
 def ho_limit(self, _limit_):
     """Set limit for the next SQL select request."""
     if _limit_:
-        self.__select_params['limit'] = _limit_
+        self.__select_params['limit'] = int(_limit_)
     elif 'limit' in self.__select_params:
         self.__select_params.pop('limit')
     return self
 
 def ho_offset(self, _offset_):
     """Set the offset for the next SQL select request."""
-    self.__select_params['offset'] = _offset_
+    self.__select_params['offset'] = int(_offset_)
     return self
 
 def ho_mogrify(self):
