@@ -22,10 +22,13 @@ history with the last release applied.
 import re
 import os
 import sys
+import importlib
 from keyword import iskeyword
+from typing import Any
 
 from half_orm.pg_meta import camel_case
 from half_orm.model_errors import UnknownRelation
+from half_orm.packager.sql_adapter import SQL_ADAPTER
 
 from half_orm import utils
 
@@ -34,6 +37,9 @@ def read_template(file_name):
     with open(os.path.join(utils.TEMPLATE_DIRS, file_name), encoding='utf-8') as file_:
         return file_.read()
 
+NO_APAPTER = {}
+HO_DATACLASSES = []
+HO_DATACLASSES_IMPORTS = set()
 INIT_MODULE_TEMPLATE = read_template('init_module_template')
 MODULE_TEMPLATE_1 = read_template('module_template_1')
 MODULE_TEMPLATE_2 = read_template('module_template_2')
@@ -56,6 +62,36 @@ DO_NOT_REMOVE = [INIT_PY, BASE_TEST_PY]
 TEST_EXT = '_test.py'
 
 MODEL = None
+
+def __gen_dataclass(relation):
+    schemaname = ''.join([elt.capitalize() for elt in relation._schemaname.split('.')])
+    relationname = ''.join([elt.capitalize() for elt in relation._relationname.split('_')])
+    full_class_name = f'{schemaname}{relationname}'
+
+    rel = relation()
+    dc_name = f'DC_{full_class_name}'
+    fields = []
+    for field_name, field in rel._ho_fields.items():
+        sql_type = field._metadata['fieldtype']
+        field_desc = SQL_ADAPTER.get(sql_type)
+        if field_desc is None:
+            field_desc = Any
+            if not NO_APAPTER.get(sql_type):
+                NO_APAPTER[sql_type] = 0
+            NO_APAPTER[sql_type] += 1
+        if field_desc.__module__ != 'builtins':
+            HO_DATACLASSES_IMPORTS.add(field_desc.__module__)
+            field_desc = f'{field_desc.__module__}.{field_desc.__name__}'
+        else:
+            field_desc = field_desc.__name__
+        value = 'None'
+        if field._metadata['fieldtype'][0] == '_':
+            value = 'field(default_factory=list)'
+        field_desc = f'{field_desc} = {value}'
+        fields.append(f"\t{field_name}: {field_desc} #{sql_type}")
+    datacls = [f'@dataclass\nclass {dc_name}:']
+    datacls = datacls + fields
+    return '\n'.join(datacls)
 
 def __update_init_files(package_dir, files_list, warning):
     """Update __all__ lists in __init__ files.
@@ -164,6 +200,7 @@ def __update_this_module(
     module_template = __assemble_module_template(module_path)
     inheritance_import, inherited_classes = __get_inheritance_info(
         rel, package_name)
+    HO_DATACLASSES.append(__gen_dataclass(rel))
     with open(module_path, 'w', encoding='utf-8') as file_:
         documentation = "\n".join([line and f"    {line}" or "" for line in str(rel).split("\n")])
         file_.write(
@@ -194,6 +231,13 @@ def generate(repo):
     package_name = repo.name
     package_dir = os.path.join(repo.base_dir, package_name)
     files_list = []
+    try:
+        sql_adapter_module = importlib.import_module('sql_adapter', package_dir)
+        SQL_ADAPTER.update(sql_adapter_module.SQL_ADAPTER)
+    except ModuleNotFoundError as exc:
+        sys.stderr.write(f"{exc}\n")
+    except AttributeError as exc:
+        sys.stderr.write(f"{exc}\n")
     repo.database.model._reload()
     if not os.path.exists(package_dir):
         os.mkdir(package_dir)
@@ -206,7 +250,6 @@ def generate(repo):
                 BEGIN_CODE=utils.BEGIN_CODE,
                 END_CODE=utils.END_CODE,
                 package_name=package_name))
-
     warning = WARNING_TEMPLATE.format(package_name=package_name)
     for relation in repo.database.model._relations():
         module_path = __update_this_module(repo, relation, package_dir, package_name)
@@ -216,4 +259,16 @@ def generate(repo):
                 test_file_path = module_path.replace('.py', TEST_EXT)
                 files_list.append(test_file_path)
 
+    with open(os.path.join(package_dir, "ho_dataclasses.py"), "w", encoding='utf-8') as file_:
+        file_.write(f"# dataclasses for {package_name}\n\n")
+        for to_import in HO_DATACLASSES_IMPORTS:
+            file_.write(f"import {to_import}\n")
+        file_.write("\n")
+        for dc in HO_DATACLASSES:
+            file_.write(f"\n{dc}\n")
+
+    if len(NO_APAPTER):
+        print("MISSING ADAPTER FOR SQL TYPE")
+        for key, value in NO_APAPTER.items():
+            print(f"- {key}: {value}")
     __update_init_files(package_dir, files_list, warning)
