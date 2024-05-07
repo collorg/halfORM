@@ -1,3 +1,7 @@
+# 0.10.5 -- hop 0.1.0a13 (2024-05-07)
+
+* [hop]  now generates the ho_dataclasses module containing a dataclass for each relation/view in the model. (57b0e84)
+
 # 0.10.4 -- hop 0.1.0a12 (2024-04-30)
 
 * [relation] Check that the value is valid for ho_limit an ho_offset methods. (cdc6e9b)
