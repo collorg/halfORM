@@ -664,23 +664,11 @@ list(gaston
 **Note**: the `blog.post` table declares a foreign key on `actor.person(first_name, last_name, birth_date)` 
 while the `blog.comment` table declares a foreign key on `actor.person(id)`.
 
-## The *`ho_join`* method
+## The *`ho_join`* method [deprecated]
 
-The *`ho_join`* method allows you to integrate the data associated with a Relation object into the result obtained by the *`select`* method by using foreign keys of the object or by referencing the object.
+The *`ho_join`* method has been deprecated. It was too messy and can easily be replaced by the use of foreign keys.
 
-Unlike the *`select`* method (which is a generator), the *`ho_join`* method returns a list.
-
-It takes a list of tuples each with two or three elements:
-
-* a remote Relation object that must be accessible by a foreign key (direct or "reverse");
-* the name of the key under which the associated data would be stored;
-* an optional list of columns (`str[]`) or the name of a column (`str`) to be retreived from the
-  remote object.
-
-  If the third argument is omitted, all columns are retreived.
-
-For example, the following code would return the list of people named `Lagaffe` with two
-additional attributes (`comments` and `posts`):
+For example, the old code:
 
 ```#python
 lagaffe = Person(last_name='Lagaffe')
@@ -690,8 +678,18 @@ res = lagaffe.ho_join(
 )
 ```
 
-* The data associated with `comments` is a list of dictionaries whose keys are 'id' and 'post_id'.
-* The data associated  with  `posts` is a simple list of values corresponding to the 'id' column.
+becomes:
+
+```#python
+res = []
+lagaffe = Person(last_name='Lagaffe')
+for idx, pers in enumerate(lagaffe):
+    res.append(pers)
+    res[idx] = {}
+    posts = Person(**pers).post_rfk()
+    res[idx]['posts'] = list(posts.ho_select('id'))
+    res[idx]['comments'] = list(posts.comment_rfk().ho_select('id', 'post_id'))
+```
 
 # PostgreSQL functions and stored procedures
 

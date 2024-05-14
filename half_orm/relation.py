@@ -731,104 +731,6 @@ def ho_cast(self, qrn):
     new.__set_operators = self.__set_operators
     return new
 
-def ho_join(self, *f_rels):
-    """Joins data to self.ho_select() result. Returns a dict
-    f_rels is a list of [(obj: Relation(), name: str, fields: Optional(<str|str[]>)), ...].
-
-    Each obj in f_rels must have a direct or reverse fkey to self.
-    If res is the result, res[name] contains the data associated to the element
-    through the fkey or reversed fkey.
-    If fields is a str, the data associated with res[name] is returned in a list (only one column).
-    Otherwise (str[]), res[name] is a list of dict.
-    If the fields argument is ommited, all the fields of obj are returned in a list of dict.
-
-    Raises:
-        RuntimeError: if self.__class__ and foreign.__class__ don't have fkeys to each other.
-
-    Returns:
-        dict: all values are converted to string.
-    """
-    from half_orm.fkey import FKey
-
-    def to_str(value):
-        """Returns value in string format if the type of value is
-        in TO_PROCESS
-
-        Args:
-            value (any): the value to return in string format.
-        """
-
-        TO_PROCESS = {UUID, date, datetime, time, timedelta}
-        if value.__class__ in TO_PROCESS:
-            return str(value)
-        return value
-
-    res = list(
-        {key: to_str(value) for key, value in elt.items()}
-        for elt in self.ho_distinct()
-    )
-    result_as_list = False
-    ref = self()
-    for f_rel in f_rels:
-        if not isinstance(f_rel, tuple):
-            raise RuntimeError("f_rels must be a list of tuples.")
-        if len(f_rel) == 3:
-            f_relation, name, fields = f_rel
-        elif len(f_rel) == 2:
-            f_relation, name = f_rel
-            fields = list(f_relation._ho_fields.keys())
-        else:
-            raise RuntimeError(f"f_rel must have 2 or 3 arguments. Got {len(f_rel)}.")
-        if isinstance(fields, str):
-            fields = [fields]
-            result_as_list = True
-        res_remote = {}
-
-        f_relation_fk_names = []
-        fkey_found = False
-        for fkey_12 in ref._ho_fkeys:
-            if not isinstance(ref._ho_fkeys[fkey_12], FKey): #pragma: no cover
-                raise RuntimeError("This is not an Fkey")
-            remote_fk = ref._ho_fkeys[fkey_12]
-            remote = remote_fk()
-            if remote.__class__ == f_relation.__class__:
-                for field in f_relation._ho_fields.keys():
-                    if f_relation.__dict__[field].is_set():
-                        remote.__dict__[field].set(f_relation.__dict__[field])
-                fkey_found = True
-                f_relation_fk_names = remote_fk.fk_names
-                break
-
-        if not fkey_found:
-            raise RuntimeError(f"No foreign key between {self._fqrn} and {f_relation._fqrn}!")
-        inter = [{key: to_str(val) for key, val in elt.items()}
-            for elt in remote.ho_distinct().ho_select(
-                *([f'"{field}"' for field in fields] + f_relation_fk_names))]
-        for elt in inter:
-            key = tuple(elt[subelt] for subelt in f_relation_fk_names)
-            if key not in res_remote:
-                res_remote[key] = []
-            if result_as_list:
-                res_remote[key].append(to_str(elt[fields[0]]))
-            else:
-                res_remote[key].append({key: to_str(elt[key]) for key in fields})
-
-        if f_relation_fk_names:
-            d_res = {
-                tuple(elt[selt] for selt in remote_fk.names): elt
-                for elt in res
-                }
-            to_remove = set()
-            for elt in d_res:
-                remote = res_remote.get(elt)
-                if remote:
-                    d_res[elt][name] = remote
-                else:
-                    to_remove.add(elt)
-            res = [elt for elt in res if tuple(elt[selt]
-                    for selt in remote_fk.names) not in to_remove]
-    return res
-
 def __set__op__(self, operator=None, right=None):
     """Si l'opérateur du self est déjà défini, il faut aller modifier
     l'opérateur du right ???
@@ -1005,7 +907,6 @@ COMMON_INTERFACE = {
     'ho_dict': ho_dict,
     'ho_is_set': ho_is_set,
     'ho_get': ho_get,
-    'ho_join': ho_join,
     'ho_insert': ho_insert,
     'ho_select': ho_select,
     'ho_update': ho_update,
