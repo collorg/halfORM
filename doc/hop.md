@@ -1,58 +1,64 @@
-# The half_orm packager [alpha][WIP]
+# The `hop` command - The GitOps package manager for half_orm
 
-**This work is in progress and subject to major changes.**
+## [WIP][alpha] This work is in progress and subject to major changes.
 
-`half_orm` comes with a command line interface tool. The `hop` script allows you to initialise, develop and maintain a half_orm package in sync with a PostgreSQL model. The `half_orm packager` takes a GitOps approach by providing a Git-based workflow for development and deployment.
+`hop` is a command-line tool provided with the `half_orm` library. It allows you to manage the full lifecycle of your PostgreSQL/Python projects, following a GitOps approach.
 
-`hop` distinguishes between two environment modes: development and production. To get some help on a particular command, type: `hop <command> --help`.
+## Overview
 
-### Create a `hop` repository
+The `hop` tool distinguishes between two environment modes: development and production. It offers a Git-based workflow for the development and deployment of your `half_orm` projects.
 
-| Command | Description |
-| -- | -- |
-| new | creates a Python package from a PostgreSQL database |
+<img title="hop workflow" alt="hop workflow" src="https://github.com/collorg/halfORM/blob/main/doc/hop_workflow.png" style="width: 70%">
 
-**IMPORTANT WARNING!** The `--devel` option of the `new` command adds the following tables and views to the database model:
+## Initializing a `hop` project
 
-* half_orm_meta.hop_release,
-* half_orm_meta.hop_release_issue,
-* "half_orm_meta.view".hop_last_release,
-* "half_orm_meta.view".hop_penultimate_release.
+To create a new `hop` project from an existing PostgreSQL database, use the `new` command:
 
-## Development mode
+```bash
+hop new <database_name> [--devel]
+```
 
-### Inside a hop repository created **with** the option `--devel`
+The `--devel` option is important. It allows adding specific tables and views to the database model, which are necessary for version tracking with `hop`.
 
-| Command | Description |
-| -- | -- |
-| prepare | prepares a new release |
-| apply | applies the patches of the release being prepared |
-| undo | reverts the model back to the previous release |
-| release | commits the release in preparation |
+## Development
 
-#### Workflow
+Once the project is initialized, you can start working on your data model and Python code in a `hop` directory.
 
-The green arrows represent the typical workflow for patching a model:
+### Version management
 
-<img title="hop workflow" alt="Alt text" src="https://github.com/collorg/halfORM/blob/main/doc/hop_workflow.png" style="width: 70%">
+Version management with `hop` is done incrementally by preparing successive "releases":
 
-### Inside a hop repository created **without** the option `--devel`
+- `hop prepare [-l <level>] [-m <message>]`: Prepares a new release (level: `patch`, `minor`, or `major`)
+- `hop apply`: Applies the changes for the release in preparation
+- `hop release [--push]`: Validates and pushes the release in preparation
 
-| Command | Description |
-| -- | -- |
-| sync-package | synchronizes the package with the model |
+You can also:
 
+- `hop undo`: Cancel the changes for the release being prepared
 
-## Production mode
+### Workflow example
 
-Inside a `hop` repository, and in production mode, two commands are available:
+1. `hop prepare -l patch -m "Bug fixes"`
+2. Modify the SQL files in `Patches/<version>/...`
+3. Modify your Python code
+4. `hop apply` to apply the changes
+5. `git add/commit ...`
+6. `hop release --push` to validate and push the release
 
-| Command | Description |
-| -- | -- |
-| upgrade | upgrades the database to the latest release |
-| restore | restores the database to a previous release |
+## Production
 
+In a production environment, `hop` allows you to deploy and manage different versions of your project.
 
-## Documentation
+- `hop upgrade`: Updates the database to the latest published release
+- `hop restore <version>`: Restores the database to a specific release version
 
-**[WIP]** Check the `hop` command in action with the [dummy test script](https://github.com/collorg/halfORM/blob/main/half_orm/packager/test/dummy_test.sh).
+## Automated testing
+
+Before validating a new release with `hop release`, the tool automatically runs the tests defined in your project (using pytest by default). This ensures the integrity of your code and data model at each step.
+
+## Additional resources
+
+- [Test examples](https://github.com/collorg/halfORM/blob/main/half_orm/packager/test/dummy_test.sh) for the `hop` command
+- [TODO] [Complete documentation](https://github.com/collorg/halfORM/blob/main/doc/hop_full_doc.md) for the `hop` tool
+
+With `hop`, you benefit from a powerful tool to manage the full lifecycle of your `half_orm` projects, following modern development best practices such as continuous integration, automated testing, and continuous deployment.

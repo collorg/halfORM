@@ -8,9 +8,7 @@
 ![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)
 ![Contributors](https://img.shields.io/github/contributors/collorg/halform)
 
-You have a PostgreSQL database at hand and you want to interact with it in Python (&ge; 3.7). `Half_orm` maps your tables and views to Python classes that you can easily use to manipulate your data. If you want to build or patch a model, you might be interested in the [`half_orm packager`](#next-hop-the-gitops-half_orm-packager-wipalpha).
-
-The 'half' part of `half_orm` name indicates that it only deals with the data manipulation language ([DML](https://www.postgresql.org/docs/current/dml.html)) part of SQL. Basically the [`INSERT`](https://www.postgresql.org/docs/current/sql-insert.html), [`SELECT`](https://www.postgresql.org/docs/current/sql-select.html), [`UPDATE`](https://www.postgresql.org/docs/current/sql-update.html) and [`DELETE`](https://www.postgresql.org/docs/current/sql-delete.html) commands. This is what makes `half_orm` so easy to learn an use.
+Nowadays, most applications require interacting with a relational database. While full-fledged ORMs like SQLAlchemy are very powerful, their complexity, steep learning curve, and some of their limitations can be a hindrance. This is the context in which half_orm was born, a minimalist ORM specifically designed for PostgreSQL&ge;9.6. The main motivation is to allow modeling the database directly in SQL, taking full advantage of the capabilities offered by the PostgreSQL engine (triggers, views, functions, stored procedures, inheritance handling...), while avoiding the "impedance mismatch" issues, loss of control over generated SQL, and rigidity encountered with full-fledged ORMs that model the schema at the object level. Half_orm intentionally excludes the DDL aspects (schema creation) of the SQL language. The goal is to provide a lightweight abstraction layer over standard SQL queries while maintaining transparent access to the underlying database engine. With half_orm, writing INSERT, SELECT, UPDATE, and DELETE queries becomes as simple as with SQL, but in the comfort of Python&ge;3.7. Its operation aims to be intuitive thanks to a lean API that emphasizes productivity and code readability.
 
 Here is what coding with `half_orm` looks like :
 
@@ -55,6 +53,7 @@ def main():
     gaston.ho_delete()
 ```
 
+If you want to build or patch a model, see the [`half_orm packager`](#next-hop-the-gitops-half_orm-packager-wipalpha).
 
 # Tutorial: Learn `half_orm` in half an hour
 
