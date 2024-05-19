@@ -8,7 +8,7 @@
 ![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)
 ![Contributors](https://img.shields.io/github/contributors/collorg/halform)
 
-Nowadays, most applications require interacting with a relational database. While full-fledged ORMs like SQLAlchemy are very powerful, their complexity, steep learning curve, and some of their limitations can be a hindrance. This is the context in which half_orm was born, a minimalist ORM specifically designed for PostgreSQL&ge;9.6. The main motivation is to allow modeling the database directly in SQL, taking full advantage of the capabilities offered by the PostgreSQL engine (triggers, views, functions, stored procedures, inheritance handling...), while avoiding the "impedance mismatch" issues, loss of control over generated SQL, and rigidity encountered with full-fledged ORMs that model the schema at the object level. Half_orm intentionally excludes the DDL aspects (schema creation) of the SQL language. The goal is to provide a lightweight abstraction layer over standard SQL queries while maintaining transparent access to the underlying database engine. With half_orm, writing INSERT, SELECT, UPDATE, and DELETE queries becomes as simple as with SQL, but in the comfort of Python&ge;3.6. Its operation aims to be intuitive thanks to a lean API that emphasizes productivity and code readability.
+Nowadays, most applications require interacting with a relational database. While full-fledged ORMs like SQLAlchemy are very powerful, their complexity, steep learning curve, and some of their limitations can be a hindrance. This is the context in which half_orm was born, a minimalist ORM specifically designed for PostgreSQL. The main motivation is to allow modeling the database directly in SQL, taking full advantage of the capabilities offered by the PostgreSQL engine (triggers, views, functions, stored procedures, inheritance handling...), while avoiding the "impedance mismatch" issues, loss of control over generated SQL, and rigidity encountered with full-fledged ORMs that model the schema at the object level. Half_orm intentionally excludes the DDL aspects (schema creation) of the SQL language. The goal is to provide a lightweight abstraction layer over standard SQL queries while maintaining transparent access to the underlying database engine. With half_orm, writing INSERT, SELECT, UPDATE, and DELETE queries becomes as simple as with SQL, but in the comfort of Python. Its operation aims to be intuitive thanks to a lean API that emphasizes productivity and code readability.
 
 Here is what coding with `half_orm` looks like :
 
@@ -425,7 +425,7 @@ gaston = Person(first_name='Gaston')
 gaston.full_name # now returns 'Gaston Lagaffe'
 ```
 
-If more than one person in the `actor.person` table had *Gaston* as their first name, a `NotASingletonError` exception would be raised:
+If zero or more than one person in the `actor.person` table had *Gaston* as their first name, a `NotASingletonError` exception would be raised:
 
 ```
 half_orm.relation_errors.NotASingletonError: Not a singleton. Got X tuples
@@ -433,7 +433,7 @@ half_orm.relation_errors.NotASingletonError: Not a singleton. Got X tuples
 
 ### Forcing  `_ho_is_singleton` attribute. (*advanced*)
 
-By forcing the attribute `_ho_is_singleton` of a Relation object to True, you can avoid some unnecessary `get()` that a `@singleton` decorator would have triggered. Here is an example:
+By forcing the attribute `_ho_is_singleton` of a Relation object to True, you can avoid some unnecessary `ho_get()` that a `@singleton` decorator would have triggered. Here is an example:
 
 ```py
 class Person(halftest.get_relation_class('actor.person')):
