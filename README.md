@@ -1,10 +1,11 @@
 # A simple PostgreSQL to Python mapper and its [packager](https://github.com/collorg/halfORM/blob/main/doc/hop.md)
 
-![PyPI version](https://img.shields.io/pypi/v/half_orm)
+[![PyPI version](https://img.shields.io/pypi/v/half_orm)](https://pypi.org/project/half-orm/)
 ![Python versions](https://img.shields.io/badge/Python-%20&ge;%203.6-blue)
 ![PostgreSQL versions](https://img.shields.io/badge/PostgreSQL-%20&ge;%209.6-blue)
-![CI badge](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg)
-![Coveralls](https://img.shields.io/coverallsCoverage/github/collorg/halfORM)
+[![Test on different versions of Python](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg)](https://github.com/collorg/halfORM/actions/workflows/python-package.yml)
+[![Test on different versions of PostgreSQL](https://github.com/collorg/halfORM/actions/workflows/postgresql-releases.yml/badge.svg)](https://github.com/collorg/halfORM/actions/workflows/postgresql-releases.yml)
+[![Coverage Status](https://coveralls.io/repos/github/collorg/halfORM/badge.svg?branch=main)](https://coveralls.io/github/collorg/halfORM?branch=main)
 ![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)
 ![Contributors](https://img.shields.io/github/contributors/collorg/halform)
 
