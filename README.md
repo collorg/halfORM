@@ -1,13 +1,13 @@
-# A simple PostgreSQL to Python mapper and its [packager](https://github.com/collorg/halfORM/blob/main/doc/hop.md)
+# `half_orm`: A simple PostgreSQL to Python mapper
 
 [![PyPI version](https://img.shields.io/pypi/v/half_orm)](https://pypi.org/project/half-orm/)
-![Python versions](https://img.shields.io/badge/Python-%20&ge;%203.6-blue)
-![PostgreSQL versions](https://img.shields.io/badge/PostgreSQL-%20&ge;%209.6-blue)
+[![Python versions](https://img.shields.io/badge/Python-%20&ge;%203.6-blue)](https://www.python.org)
+[![PostgreSQL versions](https://img.shields.io/badge/PostgreSQL-%20&ge;%209.6-blue)](https://www.postgresql.org)
 [![Test on different versions of Python](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg)](https://github.com/collorg/halfORM/actions/workflows/python-package.yml)
 [![Test on different versions of PostgreSQL](https://github.com/collorg/halfORM/actions/workflows/postgresql-releases.yml/badge.svg)](https://github.com/collorg/halfORM/actions/workflows/postgresql-releases.yml)
 [![Coverage Status](https://coveralls.io/repos/github/collorg/halfORM/badge.svg?branch=main)](https://coveralls.io/github/collorg/halfORM?branch=main)
-![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)
-![Contributors](https://img.shields.io/github/contributors/collorg/halform)
+[![PyPI downloads](https://img.shields.io/pypi/dm/half_orm)](https://pypistats.org/packages/half-orm)
+[![Contributors](https://img.shields.io/github/contributors/collorg/halform)](https://github.com/collorg/halfORM/graphs/contributors)
 
 Nowadays, most applications require interacting with a relational database. While full-fledged ORMs like SQLAlchemy are very powerful, their complexity, steep learning curve, and some of their limitations can be a hindrance. This is the context in which half_orm was born, a minimalist ORM specifically designed for PostgreSQL. The main motivation is to allow modeling the database directly in SQL, taking full advantage of the capabilities offered by the PostgreSQL engine (triggers, views, functions, stored procedures, inheritance handling...), while avoiding the "impedance mismatch" issues, loss of control over generated SQL, and rigidity encountered with full-fledged ORMs that model the schema at the object level. Half_orm intentionally excludes the DDL aspects (schema creation) of the SQL language. The goal is to provide a lightweight abstraction layer over standard SQL queries while maintaining transparent access to the underlying database engine. With half_orm, writing INSERT, SELECT, UPDATE, and DELETE queries becomes as simple as with SQL, but in the comfort of Python. Its operation aims to be intuitive thanks to a lean API that emphasizes productivity and code readability.
 
