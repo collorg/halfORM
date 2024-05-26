@@ -1,3 +1,42 @@
+# 0.11 (2024-05-26)
+
+## BREAKING CHANGE
+
+The `ho_join` methode has been removed. Use foreign keys instead. The old code (see README):
+
+```#python
+lagaffe = Person(last_name='Lagaffe')
+res = lagaffe.ho_join(
+    (Comment(), 'comments', ['id', 'post_id']),
+    (Post(), 'posts', 'id')
+)
+```
+
+becomes:
+
+```#python
+res = []
+lagaffe = Person(last_name='Lagaffe')
+for idx, pers in enumerate(lagaffe):
+    res.append(pers)
+    res[idx] = {}
+    posts = Person(**pers).post_rfk()
+    res[idx]['posts'] = list(posts.ho_select('id'))
+    res[idx]['comments'] = list(posts.comment_rfk().ho_select('id', 'post_id'))
+```
+
+
+* [README] Use of pepy.tech for download badge. (2764dc2)
+* [README] ... (6188323)
+* [README] Update links on badges. (e7a0ba2)
+* --- updated-dependencies: - dependency-name: requests   dependency-type: indirect ... (ef93b05)
+* Update README.md (219f194)
+* Python 3.6 is not supported by github actions/setup-python@v5. Stop testing on github. Python 3.6 is tested on Gitlab. (3552ec3)
+* [info] Python 3.6 is supported. (53a3d79)
+* Update license. (c2b28e6)
+* [doc] Why half_orm. (d4fb6b2)
+* [relation][BREAKING CHANGE] Remove ho_join. See README.md. (76d44b1)
+
 # 0.10.5 -- hop 0.1.0a13 (2024-05-07)
 
 * [hop]  now generates the ho_dataclasses module containing a dataclass for each relation/view in the model. (57b0e84)
