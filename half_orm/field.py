@@ -5,8 +5,10 @@
 
 import psycopg2
 import sys
+from numbers import Number
 
 from half_orm.null import NULL
+from half_orm.sql_adapter import SQL_ADAPTER
 
 class Field():
     """The class Field is for Relation internal usage. It is called by
@@ -19,8 +21,10 @@ class Field():
         self.__metadata = metadata
         self.__sql_type = self.__metadata['fieldtype']
         self.__value = None
+        self.__value_is_field = False
         self.__unaccent = False
         self.__comp = '='
+        self.__neg = ''
 
     @property
     def _relation(self): # pragma: no cover
@@ -33,6 +37,21 @@ class Field():
     def is_set(self):
         "Returns if the field is set or not."
         return self.__is_set
+
+    def value_is_field(self):
+        return self.__value_is_field
+
+    def __neg__(self):
+        python_type = SQL_ADAPTER.get(self.__sql_type)
+        new = Field(self.__name, self.__relation, self.__metadata)
+        print('XXX', python_type)
+        if not(python_type and isinstance(python_type(), Number)):
+            raise ValueError('Not a number!')
+        if self.__neg:
+            new.__neg = ''
+        else:
+            new.__neg = '-'
+        return new
 
     def _is_part_of_pk(self):
         "Returns True if the field is part of the PK"
@@ -59,8 +78,8 @@ class Field():
         """
         ho_id = f'r{ho_id}'
         if query == 'select':
-            return f'{ho_id}."{self.__name}"'
-        return f'"{self.__name}"'
+            return f'{self.__neg}{ho_id}."{self.__name}"'
+        return f'"{self.__neg}{self.__name}"'
 
     def _where_repr(self, query, ho_id):
         """Returns the SQL representation of the field for the where clause
@@ -74,10 +93,12 @@ class Field():
             comp_str = 'any(%s)'
             if comp == '@@':
                 comp_str = 'any(websearch_to_tsquery(%s))'
+        if isinstance(self.__value, Field):
+            comp_str = self.__value.__praf(query, ho_id)
         if not self.unaccent:
-            where_repr = f"{self.__praf(query, ho_id)} {comp} {comp_str}"
+            where_repr = f"{self.__praf(query, ho_id)} {comp} {self.__neg}{comp_str}"
         else:
-            where_repr = f"unaccent({self.__praf(query, ho_id)}) {comp} unaccent({comp_str})"
+            where_repr = f"unaccent({self.__praf(query, ho_id)}) {comp} unaccent({self.__neg}{comp_str})"
         return where_repr
 
     @property
@@ -107,6 +128,8 @@ class Field():
         if value is NULL and comp not in {'is', 'is not'}:
             raise ValueError("comp should be 'is' or 'is not' with NULL value!")
         self.__is_set = True
+        if isinstance(value, Field):
+            self.__value_is_field = True
         self.__value = value
         self.__comp = comp
 
@@ -120,6 +143,7 @@ class Field():
         "Unset a field"
         self.__is_set = False
         self.__value = None
+        self.__value_is_field = False
         self.__comp = '='
 
     @property

@@ -28,7 +28,7 @@ from typing import Any
 
 from half_orm.pg_meta import camel_case
 from half_orm.model_errors import UnknownRelation
-from half_orm.packager.sql_adapter import SQL_ADAPTER
+from half_orm.sql_adapter import SQL_ADAPTER
 
 from half_orm import utils
 

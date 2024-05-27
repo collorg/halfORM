@@ -513,7 +513,7 @@ def __walk_op(self, rel_id_, out=None, _fields_=None):
             out.append(")")
     else:
         out.append(self.__where_repr(rel_id_))
-        _fields_ += self.__get_set_fields()
+        _fields_ += [field for field in self.__get_set_fields() if not field.value_is_field()]
     return out, _fields_
 
 def __sql_id(self):
