@@ -77,7 +77,7 @@ class Test(TestCase):
 
     def test_null_value(self):
         self.post.content = NULL
-        self.assertEqual(self.post.content._comp(), 'is')
+        self.assertEqual(self.post.content._comp, 'is')
         list(self.post)
 
     def test_comp_is_none_error(self):
@@ -92,7 +92,7 @@ class Test(TestCase):
 
     def test_comp_pct(self):
         self.post.content = ('%', 'what ever')
-        self.assertEqual('%%', str(self.post.content._comp()))
+        self.assertEqual('%%', str(self.post.content._comp))
 
     def test_unaccent(self):
         self.assertFalse(self.post.content.unaccent)
@@ -104,7 +104,6 @@ class Test(TestCase):
         self.assertEqual("unaccent value must be True or False!", str(exc.exception))
 
     def test_name_property(self):
-        self.assertEqual(self.post.content._name, self.post.content._Field__name)
         self.assertEqual(self.post.content._name, 'content')
         self.assertEqual(self.pers.last_name._name, 'last_name')
 

@@ -17,7 +17,7 @@ class HoTestCase(unittest.TestCase):
             return # OK it's the primary key
         for field_name in fields_names:
             field = relation()._ho_fields[field_name]
-            if not field._Field__metadata['uniq']:
+            if not field._metadata['uniq']:
                 raise self.fail(f"'{fields_names}' is not unique.")
 
     def hotAssertIsNotNull(self, relation: Relation, field_name: str):

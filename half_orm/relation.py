@@ -48,7 +48,10 @@ from psycopg2.extras import RealDictCursor
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
 from half_orm.field import Field
+from half_orm.numeric_field import NumericField
+from half_orm.text_field import TextField
 from half_orm import utils
+from half_orm.sql_adapter import NUMERIC_TYPES, TEXT_TYPES
 
 class _SetOperators:
     """_SetOperators class stores the set operations made on the Relation class objects
@@ -356,7 +359,7 @@ def __setattr__(self, key, value):
         object.__setattr__(self, '__isfrozen', False)
     if self.__isfrozen and not hasattr(self, key):
         raise relation_errors.IsFrozenError(self.__class__, key)
-    if self.__dict__.get(key) and isinstance(self.__dict__[key], Field):
+    if self.__dict__.get(key) and (isinstance(self.__dict__[key], Field) or issubclass(self.__dict__[key].__class__, Field)):
         self.__dict__[key].set(value)
         return
     object.__setattr__(self, key, value)
@@ -396,7 +399,12 @@ def __set_fields(self):
     _fields_metadata = self._model._fields_metadata(self._t_fqrn)
 
     for field_name, f_metadata in _fields_metadata.items():
-        field = Field(field_name, self, f_metadata)
+        if f_metadata['fieldtype'] in NUMERIC_TYPES:
+            field = NumericField(field_name, self, f_metadata)
+        elif f_metadata['fieldtype'] in TEXT_TYPES:
+            field = TextField(field_name, self, f_metadata)
+        else:
+            field = Field(field_name, self, f_metadata)
         self._ho_fields[field_name] = field
         setattr(self, field_name, field)
         if field._is_part_of_pk():
@@ -428,7 +436,7 @@ def ho_dict(self):
 def __to_dict_val_comp(self):
     """Returns a dictionary containing the values and comparators of the fields
     that are set."""
-    return {key:(field._comp(), field.value) for key, field in
+    return {key:(field._comp, field.value) for key, field in
             self._ho_fields.items() if field.is_set()}
 
 def __repr__(self):

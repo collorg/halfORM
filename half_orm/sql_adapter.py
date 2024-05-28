@@ -56,3 +56,35 @@ SQL_ADAPTER = {
   'uuid': uuid.UUID,
   'xml': typing.Any,
 }
+
+NUMERIC_TYPES = {
+  'bigint',
+  'int8',
+  'bigserial',
+  'serial8',
+  'double precision',
+  'float8',
+  'integer',
+  'int',
+  'int4',
+  'numeric',
+  'decimal',
+  'real',
+  'float4',
+  'smallint',
+  'int2',
+  'smallserial',
+  'serial2',
+  'serial',
+  'serial4',
+}
+
+TEXT_TYPES = {
+  'string': str,
+  'character': str,
+  'char': str,
+  'character varying': str,
+  'varchar': str,
+  'path': str,
+  'text': str,
+}
