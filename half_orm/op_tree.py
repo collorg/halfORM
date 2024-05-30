@@ -10,28 +10,16 @@ class OpTree:
     def operator(self):
         """Property returning the __operator value."""
         return self.__operator
-    @operator.setter
-    def operator(self, operator):
-        """Set operator setter."""
-        self.__operator = operator
 
     @property
     def left(self):
         """Returns the left object of the set operation."""
         return self.__left
-    @left.setter
-    def left(self, left):
-        """left operand setter."""
-        self.__left = left
 
     @property
     def right(self):
         """Property returning the right operand."""
         return self.__right
-    @right.setter
-    def right(self, right):
-        """right operand setter."""
-        self.__right = right
 
     def set(self, left, operator=None, right=None):
         """
