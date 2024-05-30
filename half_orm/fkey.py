@@ -133,11 +133,6 @@ class FKey:
         """Returns the names of the fields composing the foreign key in the foreign table."""
         return self.__fk_names
 
-    @property
-    def names(self):
-        "Returns the names of the fields composing the foreign key in the table"
-        return self.__fields_names
-
     def __repr__(self):
         """Representation of a foreign key
         """
