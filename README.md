@@ -346,6 +346,8 @@ The data is returned in a list of `dict`s.
 >>> people = Person()
 >>> print(list(people.ho_select()))
 [{'id': 6753, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1957, 2, 28)}, {'id': 6754, 'first_name': 'Bibi', 'last_name': 'Fricotin', 'birth_date': datetime.date(1924, 10, 5)}, {'id': 6755, 'first_name': 'Corto', 'last_name': 'Maltese', 'birth_date': datetime.date(1975, 1, 7)}, {'id': 6756, 'first_name': 'Achile', 'last_name': 'Talon', 'birth_date': datetime.date(1963, 11, 7)}, {'id': 6757, 'first_name': 'Gil', 'last_name': 'Jourdan', 'birth_date': datetime.date(1956, 9, 20)}]
+>>> print(list(people.ho_select('id', 'last_name')))
+[{'id': 6753, 'last_name': 'Lagaffe'}, {'id': 6754, 'last_name': 'Fricotin'}, {'id': 6755, 'last_name': 'Maltese'}, {'id': 6756, 'last_name': 'Talon'}, {'id': 6757, 'last_name': 'Jourdan'}]
 >>>
 ```
 
@@ -606,7 +608,7 @@ It has two foreign keys named `_reverse_fkey_halftest_blog_comment_post_id` and 
 * `author` is the foreign key that refrences an `actor.person` from the table `blog.post`.
 * `_reverse_fkey_halftest_blog_comment_post_id` is the foreign key that references a `blog.post` from the table `blog.comment`. The foreign key is traversed in opposite direction (from `blog.post` to `blog.comment`).
 
-We redefine our class to add the aliases for our foreign keys:
+We add the aliases of our foreign keys by defining the class attribute `Fkeys` :
 
 ```
 class Post(halftest.get_relation_class('blog.post')):
@@ -721,6 +723,15 @@ halftest.execute_query('select 1')
 ```
 
 By the way, this is the code used in the `Model.ping` method that makes sure the connection is established and attempts a reconnection if it is not.
+
+**WARING: SQL INJECTION RISK!**
+This method calls the psycopg2 function
+[cursor.execute](https://www.psycopg.org/docs/cursor.html?highlight=execute#cursor.execute).
+Make sure you read the psycopg2 documentation on
+[passing parameters to SQL queries](https://www.psycopg.org/docs/usage.html#query-parameters)
+if you need to use `execute_query`.
+
+
 
 That's it! You've learn pretty much everything there is to know about `half_orm`.
 
