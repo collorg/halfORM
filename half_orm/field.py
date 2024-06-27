@@ -137,12 +137,6 @@ class Field():
             raise RuntimeError('unaccent value must be True or False!')
         self._unaccent = value
 
-    def _comp(self):
-        "Returns the comparator associated to the value."
-        if self._comp == '%':
-            return '%%'
-        return self._comp
-
     def _psycopg_adapter(self):
         """Return the SQL representation of self._value"""
         return psycopg2.extensions.adapt(self._value)
