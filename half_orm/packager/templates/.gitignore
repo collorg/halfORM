@@ -11,3 +11,4 @@ dist/
 .noseids
 .pdbrc
 Backups/
+__pycache__/

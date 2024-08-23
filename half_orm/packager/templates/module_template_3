@@ -1,2 +1,5 @@
     def __init__(self, **kwargs):
+        # The declarations bellow are here to allow automatic completion in your IDE.
+        {fields}
         super().__init__(**kwargs)
+{fkeys}

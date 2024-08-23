@@ -148,6 +148,20 @@ def __get_inheritance_info(rel, package_name):
         inherited_classes = f"{inherited_classes}, "
     return inheritance_import, inherited_classes
 
+def __get_fkeys_aliases(repo, class_name, module_path):
+    try:
+        mod_path = module_path.replace(repo.base_dir, '').replace(os.path.sep, '.')[1:-3]
+        mod = importlib.import_module(mod_path)
+        fkeys = mod.__dict__[class_name].__dict__.get('Fkeys')
+        if fkeys:
+            fkeys_aliases = [f"self.{key}: Fkey = self._ho_fkeys['{value}']" for key, value in fkeys.items()]
+            fkeys_aliases.insert(0, '        self.ho_unfreeze()')
+            fkeys_aliases.append('self.ho_freeze()')
+            return '\n        '.join(fkeys_aliases)
+    except ModuleNotFoundError:
+        pass
+    return ''
+
 def __assemble_module_template(module_path):
     """Construct the module after slicing it if it already exists.
     """
@@ -188,12 +202,15 @@ def __update_this_module(
         sys.stderr.write(f"{err}\n{fqtn}\n")
         sys.stderr.flush()
         return None
-
+    fields = '\n        '.join([f'self.{key}: Field = None' for key in rel._ho_fields])
+    fkeys = ''
     path[0] = package_dir
     path[1] = path[1].replace('.', os.sep)
 
     path = [iskeyword(elt) and f'{elt}_' or elt for elt in path]
+    class_name = camel_case(path[-1])
     module_path = f"{os.path.join(*path)}.py"
+    fkeys = __get_fkeys_aliases(repo, class_name, module_path)
     path_1 = os.path.join(*path[:-1])
     if not os.path.exists(path_1):
         os.makedirs(path_1)
@@ -211,9 +228,11 @@ def __update_this_module(
                 documentation=documentation,
                 inheritance_import=inheritance_import,
                 inherited_classes=inherited_classes,
-                class_name=camel_case(path[-1]),
+                class_name=class_name,
                 fqtn=fqtn,
-                warning=WARNING_TEMPLATE.format(package_name=package_name)))
+                warning=WARNING_TEMPLATE.format(package_name=package_name),
+                fields=fields,
+                fkeys=fkeys))
     if not os.path.exists(module_path.replace('.py', TEST_EXT)):
         with open(module_path.replace('.py', TEST_EXT), 'w', encoding='utf-8') as file_:
             file_.write(TEST.format(

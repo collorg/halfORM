@@ -7,5 +7,7 @@ WARNING!
 {warning}
 """
 
+from half_orm.field import Field
+from half_orm.fkey import FKey
 from {package_name} import MODEL
 {inheritance_import}

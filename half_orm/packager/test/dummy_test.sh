@@ -192,6 +192,8 @@ MAKE SURE YOUR CODE GOES BETWEEN THESE LINES OR AT THE END OF THE FILE.
 hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 """
 
+from half_orm.field import Field
+from half_orm.fkey import FKey
 from hop_test import MODEL
 
 #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
@@ -228,7 +230,13 @@ class B(MODEL.get_relation_class('public.b')):
     }
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
     def __init__(self, **kwargs):
+        # The declarations bellow are here to allow automatic completion in your IDE.
+        self.b: Field = None
+        self.a: Field = None
         super().__init__(**kwargs)
+        self.ho_unfreeze()
+        self.a_fk: Fkey = self._ho_fkeys['b_a_fkey']
+        self.ho_freeze()
 
         #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 EOF
@@ -312,7 +320,8 @@ set +e
 hop release
 if [ $? = 0 ]; then exit 1; fi
 set -e
-
+if [ ! -f Backups/hop_test-0.1.0.sql ]; then exit 1; fi
+rm Backups/hop_test-0.1.0.sql
 git checkout hop_0.1.1
 hop apply
 touch Patches/0/1/1/coucou

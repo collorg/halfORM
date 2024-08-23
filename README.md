@@ -725,7 +725,7 @@ halftest.execute_query('select 1')
 By the way, this is the code used in the `Model.ping` method that makes sure the connection is established and attempts a reconnection if it is not.
 
 **WARING: SQL INJECTION RISK!**
-This method calls the psycopg2 function
+This method calls the psycopg2 method
 [cursor.execute](https://www.psycopg.org/docs/cursor.html?highlight=execute#cursor.execute).
 Make sure you read the psycopg2 documentation on
 [passing parameters to SQL queries](https://www.psycopg.org/docs/usage.html#query-parameters)

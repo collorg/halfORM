@@ -159,6 +159,7 @@ class Patch:
             utils.error(
                 f"Oops! there is already a dump for the {release} release.\n")
             utils.warning("Please remove it if you really want to proceed.\n")
+            sys.exit(1)
 
         self.__repo.database.execute_pg_command(
             'pg_dump', '-f', svg_file, stderr=subprocess.PIPE)
