@@ -1,3 +1,10 @@
+# 0.11.1 -- hop 0.1.0 alpha 14 (2024-08-23)
+
+* [hop] Add field and foreign key declarations to allow autocompletion in IDEs. (cb5738c)
+* Bump zipp from 3.18.1 to 3.19.1 (012d4ce)
+* Bump certifi from 2024.2.2 to 2024.7.4 (5222b58)
+* [readme] Add sql injection warning for the Model.execute_query method. (d729ead)
+
 # 0.11 (2024-05-26)
 
 ## BREAKING CHANGE
