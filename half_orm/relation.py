@@ -138,6 +138,7 @@ def __init__(self, **kwargs):
         err += f'''\tUse the "{utils.Color.bold(self.__class__.__name__ + '.Fkeys')}"''' + \
             ''' class attribute instead.\n'''
         raise DeprecationWarning(err)
+    self.__ho_fk_loop = set()
     self._ho_fields = {}
     self._ho_pkey = {}
     self._ho_fkeys = OrderedDict()
@@ -479,8 +480,14 @@ def ho_is_set(self):
     result of a combination of Relations (using set operators).
     """
     joined_to = False
+    deja_vu = set()
     for _, jt_ in self._ho_join_to.items():
+        jt_id = id(jt_)
+        if jt_id in self.__ho_fk_loop:
+            raise RuntimeError(f"Can't set Fkey on the same object")
+        self.__ho_fk_loop.add(jt_id)
         joined_to |= jt_.ho_is_set()
+    self.__ho_fk_loop = set()
     return (joined_to or bool(self.__set_operators.operator) or bool(self.__neg) or
             bool({field for field in self._ho_fields.values() if field.is_set()}))
 

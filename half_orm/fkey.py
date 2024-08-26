@@ -35,10 +35,7 @@ class FKey:
         """Returns the relation class referenced by fqtn.
         First try model._import_class fallback to model.get_relation_class on ImportError.
         """
-        try:
-            return self.__relation._model._import_class(fqtn)
-        except ImportError:
-            return self.__relation._model.get_relation_class(fqtn)
+        return self.__relation._model._import_class(fqtn)
 
     def __call__(self, __cast__=None, **kwargs):
         """Returns the relation referenced by the fkey.
@@ -71,12 +68,12 @@ class FKey:
 
         if not issubclass(__to.__class__, Relation):
             raise RuntimeError("Fkey.set excepts an argument of type Relation")
-        if id(self.__relation) == id(__to):
-            raise RuntimeError(f"Can't set Fkey {self.__name} on the same object")
         self.__to_relation = __to
         from_ = self.__relation
         self.__fk_from = from_
         self.__fk_to = __to
+        if id(self.__fk_from) == id(self.__fk_to):
+            raise RuntimeError(f"Can't set Fkey on the same object")
         self.__is_set = __to.ho_is_set()
         from_._ho_join_to[self] = __to
 

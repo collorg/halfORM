@@ -87,8 +87,21 @@ class Test(TestCase):
 
     def test_expecting_a_relation_error(self):
         "it should raise an exception if we set with anything but a Relation object"
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as exc:
             self.pers().post_rfk.set('coucou')
+        self.assertEqual(
+            exc.exception.args[0],
+            "Fkey.set excepts an argument of type Relation")
+
+    def test_can_t_reference_same_relation_error(self):
+        "it should raise an exception if we set with the same Relation object"
+        fkey_rel = self.pers().post_rfk
+        fkey_rel.set(fkey_rel())
+        with self.assertRaises(RuntimeError) as exc:
+            fkey_rel()
+        self.assertEqual(
+            exc.exception.args[0],
+            "Can't set Fkey on the same object")
 
     def test_remote_property(self):
         self.assertEqual(self.pers().post_rfk.remote, {'fqtn': ('blog', 'post'), 'reverse': True})

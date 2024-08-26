@@ -668,7 +668,7 @@ while the `blog.comment` table declares a foreign key on `actor.person(id)`.
 
 ## The *`ho_join`* method [deprecated]
 
-From version 0.11 onward, the *`ho_join`* method has been deprecated. It was too messy and can easily be replaced by the use of foreign keys.
+From version 0.11 onward, the *`ho_join`* method has been deprecated. It was too messy and can easily be replaced using the foreign keys.
 
 For example, the old code:
 
