@@ -10,9 +10,6 @@ conflict_msg = """'Field' object is not callable.
 Do not use 'last_name' as a method name."""
 
 class Test(TestCase):
-    def reset(self):
-        pass
-
     def setUp(self):
         self.pc = halftest.pc
 

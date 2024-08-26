@@ -72,8 +72,6 @@ class FKey:
         from_ = self.__relation
         self.__fk_from = from_
         self.__fk_to = __to
-        if id(self.__fk_from) == id(self.__fk_to):
-            raise RuntimeError(f"Can't set Fkey on the same object")
         self.__is_set = __to.ho_is_set()
         from_._ho_join_to[self] = __to
 

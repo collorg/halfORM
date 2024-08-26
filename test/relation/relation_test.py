@@ -96,6 +96,6 @@ class Test(TestCase):
         self.assertEqual("coucou is not a Field!", str(exc.exception))
 
     def test_repr(self):
-        Person = halftest.model.get_relation_class('actor.person')
-        print(Person())
-        self.assertEqual(Person().__repr__(), PERS_REPR)
+        person_cls = halftest.model.get_relation_class('actor.person')
+        print(person_cls())
+        self.assertEqual(person_cls().__repr__(), PERS_REPR)

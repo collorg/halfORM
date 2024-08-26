@@ -40,10 +40,10 @@ setup(
     description='Package for halftest PG',
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
-    # url='',
+    url='',
 
-    # author='',
-    # author_email='',
+    author='',
+    author_email='',
     license='MIT',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers

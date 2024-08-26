@@ -16,9 +16,6 @@ UPDATE_ALL_ERR_MSG = "Attempt to update all rows of Person without update_all be
 DELETE_ALL_ERR_MSG = "Attempt to delete all rows from Person without delete_all being set to True!"
 
 class Test(TestCase):
-    def reset(self):
-        pass
-
     def setUp(self):
         self.pers = halftest.person_cls()
 

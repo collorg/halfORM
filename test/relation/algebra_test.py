@@ -42,21 +42,21 @@ class Test(TestCase):
         b = self.set_2
         c = a & b
         a &= b
-        self.assertTrue(a, c)
+        self.assertEqual(a, c)
 
     def test_ior(self):
         a = self.set_1
         b = self.set_2
         c = a | b
         a |= b
-        self.assertTrue(a, c)
+        self.assertEqual(a, c)
 
     def test_isub(self):
         a = self.set_1
         b = self.set_2
         c = a - b
         a -= b
-        self.assertTrue(a, c)
+        self.assertEqual(a, c)
 
     def test_xor(self):
         a = self.set_1
@@ -68,314 +68,314 @@ class Test(TestCase):
         b = self.set_2
         c = a ^ b
         a ^= b
-        self.assertTrue(a, c)
+        self.assertEqual(a, c)
 
     def test_and_1(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(a & b == a - ( a - b))
+        self.assertEqual(a & b, a - ( a - b))
 
     def test_and_2(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(a & b == ((a | b) - (a - b) - ( b - a)))
+        self.assertEqual(a & b, ((a | b) - (a - b) - ( b - a)))
 
     def test_and_3(self):
         a = self.set_1
-        self.assertTrue(a & a == a)
+        self.assertEqual(a & a, a)
 
     def test_and_4(self):
         a = self.set_1
         ab = self.subset_1_2
-        self.assertTrue(a & ab == ab)
+        self.assertEqual(a & ab, ab)
 
     def test_and_5(self):
         b = self.set_2
         ab = self.subset_1_2
-        self.assertTrue(b & ab == ab)
+        self.assertEqual(b & ab, ab)
 
     def test_and_6(self):
         a = self.set_1
         b = self.set_2
         ab = self.subset_1_2
-        self.assertTrue(a & b == ab)
+        self.assertEqual(a & b, ab)
 
     def test_and_absorbing_elt(self):
         a = self.set_1
         empty = self.empty_set
-        self.assertTrue(a & empty == empty)
+        self.assertEqual(a & empty, empty)
         self.assertTrue(empty.ho_is_empty())
 
     def test_and_neutral_elt(self):
         a = self.set_1
         universe = self.universe
-        self.assertTrue(universe & a == a)
+        self.assertEqual(universe & a, a)
 
     def test_or_1(self):
         a = self.set_1
         ab = self.subset_1_2
-        self.assertTrue(a | ab == a)
+        self.assertEqual(a | ab, a)
 
     def test_or_2(self):
         b = self.set_2
         ab = self.subset_1_2
-        self.assertTrue(b | ab == b)
+        self.assertEqual(b | ab, b)
 
     def test_or_neutral_elt(self):
         a = self.set_1
         empty = self.empty_set
-        self.assertTrue(a | empty == a)
+        self.assertEqual(a | empty, a)
 
     def test_or_absorbing_elt_1(self):
         a = self.set_1
         universe = self.universe
-        self.assertTrue(universe | a == universe)
+        self.assertEqual(universe | a, universe)
 
     def test_or_absorbing_elt_2(self):
         a = self.set_1
         universe = self.universe
-        self.assertTrue(a | universe == universe)
+        self.assertEqual(a | universe, universe)
 
     def test_or_absorbing_elt_3(self):
         empty = self.empty_set
-        self.assertTrue(empty | empty == empty)
+        self.assertEqual(empty | empty, empty)
 
     def test_not(self):
         a = self.set_1
         empty = self.empty_set
-        self.assertTrue(a - empty == a)
+        self.assertEqual(a - empty, a)
 
     def test_empty(self):
         a = self.set_1
         empty = self.empty_set
-        self.assertTrue(a - a == empty)
+        self.assertEqual(a - a, empty)
 
     def test_complementary_0(self):
         a = self.set_1
         comp_a = self.comp_set_1
-        self.assertTrue(-a == comp_a)
+        self.assertEqual(-a, comp_a)
 
     def test_complementary_1(self):
         a = self.set_1
         comp_a = self.comp_set_1
         universe = self.universe
-        self.assertTrue(a | comp_a == universe)
+        self.assertEqual(a | comp_a, universe)
 
     def test_complementary_2(self):
         a = self.set_1
         comp_a = self.comp_set_1
-        self.assertTrue(a - comp_a == a)
+        self.assertEqual(a - comp_a, a)
 
     def test_symetric_difference(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue((a - b) | (b - a) == (a | b) - (a & b))
+        self.assertEqual((a - b) | (b - a), (a | b) - (a & b))
 
     def test_commutative_laws_1(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(a & b == b & a)
+        self.assertEqual(a & b, b & a)
 
     def test_commutative_laws_2(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(a | b == b | a)
+        self.assertEqual(a | b, b | a)
 
     def test_associative_laws_1(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue(a | (b | c) == (a | b) | c)
+        self.assertEqual(a | (b | c), (a | b) | c)
 
     def test_associative_laws_2(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue(a & (b & c) == (a & b) & c)
+        self.assertEqual(a & (b & c), (a & b) & c)
 
     def test_distributive_laws_1(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue(a | (b & c) == (a | b) & (a | c))
+        self.assertEqual(a | (b & c), (a | b) & (a | c))
 
     def test_distributive_laws_2(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue(a & (b | c) == (a & b) | (a & c))
+        self.assertEqual(a & (b | c), (a & b) | (a & c))
 
     def test_identity_laws_2(self):
         a = self.set_1
         universe = self.universe
-        self.assertTrue(a & universe == a)
+        self.assertEqual(a & universe, a)
 
     def test_complement_laws_2(self):
         a = self.set_1
         comp_a = self.comp_set_1
         empty = self.empty_set
-        self.assertTrue(a & comp_a == empty)
+        self.assertEqual(a & comp_a, empty)
 
     def test_complement_laws_3(self):
         a = self.set_1
         universe = self.universe
-        self.assertTrue(a | (-a) == universe)
+        self.assertEqual(a | (-a), universe)
 
     def test_complement_laws_4(self):
         a = self.set_1
         empty = self.empty_set
-        self.assertTrue(a & (-a) == empty)
+        self.assertEqual(a & (-a), empty)
 
     def test_idempotent_laws_1(self):
         a = self.set_1
-        self.assertTrue(a | a == a)
+        self.assertEqual(a | a, a)
 
     def test_domination_laws_2(self):
         a = self.set_1
         empty = self.empty_set
-        self.assertTrue(a & empty == empty)
+        self.assertEqual(a & empty, empty)
 
     def test_absorption_laws_1(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(a | (a & b) == a)
+        self.assertEqual(a | (a & b), a)
 
     def test_absorption_laws_2(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(a & (a | b) == a)
+        self.assertEqual(a & (a | b), a)
 
     def test_de_morgan_s_laws_1(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue((-a) | (-b) == -(a & b))
+        self.assertEqual((-a) | (-b), -(a & b))
 
     def test_de_morgan_s_laws_2(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(-(a | b) == (-a) & (-b))
+        self.assertEqual(-(a | b), (-a) & (-b))
 
     def test_double_complement_law(self):
         a = self.set_1
-        self.assertTrue(-(-a) == a)
+        self.assertEqual(-(-a), a)
 
     def test_empty_universe_complement(self):
         universe = self.universe
         empty = self.empty_set
-        self.assertTrue(-empty == universe)
+        self.assertEqual(-empty, universe)
 
     def test_inclusion_1_0(self):
         a = self.set_1
-        self.assertTrue(a in a)
+        self.assertIn(a, a)
 
     def test_inclusion_1_1(self):
         a = self.set_1
         ab = self.subset_1_2
-        self.assertTrue(ab in a)
+        self.assertIn(ab, a)
 
     def test_inclusion_1_2(self):
         b = self.set_2
         ab = self.subset_1_2
-        self.assertTrue(ab in b)
+        self.assertIn(ab, b)
 
     def test_ab_equal_a_inter_b(self):
         a = self.set_1
         b = self.set_2
         ab = self.subset_1_2
-        self.assertTrue(ab == a & b)
+        self.assertEqual(ab, a & b)
 
     def test_inclusion_2(self):
         a = self.set_1
         empty = self.empty_set
-        self.assertTrue(empty in a)
+        self.assertIn(empty, a)
 
     def test_inclusion_3(self):
         a = self.set_1
         universe = self.universe
-        self.assertTrue(a in universe)
+        self.assertIn(a, universe)
 
     def test_inclusion_4_1(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(a in a | b)
+        self.assertIn(a, a | b)
 
     def test_inclusion_4_2(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(b in a | b)
+        self.assertIn(b, a | b)
 
     def test_inclusion_5(self):
         a = self.set_1
         ab = self.subset_1_2
         empty = self.empty_set
-        self.assertTrue(ab - a == empty)
+        self.assertEqual(ab - a, empty)
 
     def test_inclusion_6(self):
         a = self.set_1
         ab = self.subset_1_2
-        self.assertTrue(-a in -ab)
+        self.assertIn(-a, -ab)
 
     def test_relative_complement_1(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue(c - (a & b) == (c - a) | (c - b))
+        self.assertEqual(c - (a & b), (c - a) | (c - b))
 
     def test_relative_complement_2(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue(c - (a | b) == (c - a) & (c - b))
+        self.assertEqual(c - (a | b), (c - a) & (c - b))
 
     def test_relative_complement_3(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue(c - (b - a) == (a & c) | (c - b))
+        self.assertEqual(c - (b - a), (a & c) | (c - b))
 
     def test_relative_complement_4(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue((b - a) & c == (b & c) - a)
+        self.assertEqual((b - a) & c, (b & c) - a)
 
     def test_relative_complement_5(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue((b - a) & c == b & (c - a))
+        self.assertEqual((b - a) & c, b & (c - a))
 
     def test_relative_complement_6(self):
         a = self.set_1
         b = self.set_2
         c = self.set_3
-        self.assertTrue((b - a) | c == (b | c) - (a - c))
+        self.assertEqual((b - a) | c, (b | c) - (a - c))
 
     def test_relative_complement_8(self):
         a = self.set_1
         empty = self.empty_set
-        self.assertTrue(empty - a == empty)
+        self.assertEqual(empty - a, empty)
 
     def test_relative_complement_10(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(b - a == -a & b)
+        self.assertEqual(b - a, -a & b)
 
     def test_relative_complement_11(self):
         a = self.set_1
         b = self.set_2
-        self.assertTrue(-(b - a) == a | (-b))
+        self.assertEqual(-(b - a), a | (-b))
 
     def test_relative_complement_12(self):
         a = self.set_1
         universe = self.universe
-        self.assertTrue(universe - a == -a)
+        self.assertEqual(universe - a, -a)
 
     def test_relative_complement_13(self):
         a = self.set_1
         empty = self.empty_set
         universe = self.universe
-        self.assertTrue(a - universe == empty)
+        self.assertEqual(a - universe, empty)
 
     def test_inequality_0(self):
         a = self.set_1

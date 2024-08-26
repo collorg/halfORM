@@ -480,11 +480,10 @@ def ho_is_set(self):
     result of a combination of Relations (using set operators).
     """
     joined_to = False
-    deja_vu = set()
     for _, jt_ in self._ho_join_to.items():
         jt_id = id(jt_)
         if jt_id in self.__ho_fk_loop:
-            raise RuntimeError(f"Can't set Fkey on the same object")
+            raise RuntimeError("Can't set Fkey on the same object")
         self.__ho_fk_loop.add(jt_id)
         joined_to |= jt_.ho_is_set()
     self.__ho_fk_loop = set()

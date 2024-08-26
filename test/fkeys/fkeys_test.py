@@ -62,7 +62,6 @@ class Test(TestCase):
 
     def test_is_not_set_reverse(self):
         post = self.post()
-        author = post.author_fk
         self.assertFalse(post.author_fk.is_set())
         self.assertFalse(post.author_fk().ho_is_set())
 

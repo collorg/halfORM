@@ -57,18 +57,13 @@ class Test(TestCase):
                 if author_id in self.authors_by_post[post_id]:
                     self.author_comments_on_his_own_post.add(comment_id)
                 self.comments_by_post[post_id].append(comment_id)
-        # print(self.authors_by_post)
-        # print(self.posts_by_author)
-        # print(self.author_of_comment)
-        # print(self.comments_by_post)
-        # print(self.comments_by_author)
 
     def tearDown(self):
         halftest.person_cls(last_name=('like', 'fkeys chain tester%')).ho_delete()
 
     def test_chain_person_post_comment(self):
         "it should be possible to chain from person to comment via post"
-        self.assertTrue(isinstance(self.pers.post_rfk().comment_rfk(), halftest.comment_cls))
+        self.assertIsInstance(self.pers.post_rfk().comment_rfk(), halftest.comment_cls)
 
     def test_author_comments_on_his_own_post(self):
         "it should retreive the comments made on posts by the same author"
@@ -87,8 +82,8 @@ class Test(TestCase):
 
     def test_chain_post_comment_author(self):
         "it should be possible to chain from post to author via comment"
-        self.assertTrue(isinstance(self.post.comment_rfk().author_fk(), halftest.person_cls))
+        self.assertIsInstance(self.post.comment_rfk().author_fk(), halftest.person_cls)
 
     def test_chain_comment_post_author(self):
         "it should be possible to chain from comment to author via post"
-        self.assertTrue(isinstance(self.comment().post_fk().author_fk(), halftest.person_cls))
+        self.assertIsInstance(self.comment().post_fk().author_fk(), halftest.person_cls)

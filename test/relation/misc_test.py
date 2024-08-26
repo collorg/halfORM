@@ -82,10 +82,10 @@ class Test(TestCase):
     def test_ho_limit_error(self):
         "it should raise an error"
         posts = halftest.post_cls()
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             posts.ho_limit("a")
 
-    def testho_offset(self):
+    def test_ho_offset(self):
         "it should set the offset"
         posts = halftest.post_cls()
         offset = randint(0, len(halftest.post_cls()))
@@ -95,7 +95,7 @@ class Test(TestCase):
     def test_ho_offset_error(self):
         "it should raise an error"
         posts = halftest.post_cls()
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(ValueError):
             posts.ho_offset("a")
 
     def test_cast(self):

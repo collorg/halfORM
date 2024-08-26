@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
+from psycopg2.errors import UndefinedTable
 from half_orm.hotest import HoTestCase
 
 from ..init import halftest
@@ -11,7 +12,7 @@ class Test(HoTestCase):
         self.post = halftest.post_cls()
         try:
             halftest.model.execute_query('drop table a_table_without_description')
-        except:
+        except UndefinedTable:
             pass
         halftest.model.execute_query('create table a_table_without_description (a text)')
         halftest.model._reload()

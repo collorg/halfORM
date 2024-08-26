@@ -23,9 +23,6 @@ class Test(TestCase):
         except UndefinedTable:
             pass
 
-    def reset(self):
-        pass
-
     def test_connection(self):
         self.assertEqual(halftest.dbname, 'halftest')
 
