@@ -1,8 +1,10 @@
 from unittest import TestCase
 from ..init import halftest, model, HALFTEST_STR, HALFTEST_REL_LISTS
+from half_orm.model import Model
 from half_orm import model_errors
 
 PERSON = 'actor.person'
+
 class Test(TestCase):
     def test_str(self):
         self.assertEqual(str(halftest.model), HALFTEST_STR)
@@ -43,4 +45,11 @@ class Test(TestCase):
         "it should return all the classes in the model"
         self.assertEqual("\n".join(
             [f"{cls[1]} {cls[0]._qrn}" for cls in model.classes()]), HALFTEST_STR)
-    
+
+    def test_deja_vu(self):
+        "It should return an instance of the model if it's already been loaded."
+        self.assertIsInstance(model._deja_vu('halftest'), Model)
+
+    def test_not_deja_vu(self):
+        "It should return None if the model has not been seen."
+        self.assertIsNone(model._deja_vu('coucou'))
