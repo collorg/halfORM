@@ -32,7 +32,7 @@ UNIQUE CONSTRAINT (title, content)
 FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_comment_post_id: ("id")
  ↳ "halftest":"blog"."comment"(post_id)
-- author: ("author_birth_date", "author_first_name", "author_last_name")
+- author: ("author_first_name", "author_last_name", "author_birth_date")
  ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)
 
 To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
@@ -63,9 +63,9 @@ UNIQUE CONSTRAINT (first_name)
 FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_comment_author_id: ("id")
  ↳ "halftest":"blog"."comment"(author_id)
-- _reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
+- _reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date: ("first_name", "last_name", "birth_date")
  ↳ "halftest":"blog"."event"(author_first_name, author_last_name, author_birth_date)
-- _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
+- _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("first_name", "last_name", "birth_date")
  ↳ "halftest":"blog"."post"(author_first_name, author_last_name, author_birth_date)
 
 To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
@@ -99,9 +99,9 @@ UNIQUE CONSTRAINT (title, content)
 FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_comment_post_id: ("id")
  ↳ "halftest":"blog"."comment"(post_id)
-- author: ("author_birth_date", "author_first_name", "author_last_name")
+- author: ("author_first_name", "author_last_name", "author_birth_date")
  ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)
-- _reverse_...............: ("author_birth_date", "author_first_name", "author_last_name")
+- _reverse_...............: ("author_first_name", "author_last_name", "author_birth_date")
  ↳ "halftest":"blog"."post"("first_name", "last_name", "birth_date")
      DATABASE: halftest
      SCHEMA: actor
@@ -121,9 +121,9 @@ FOREIGN KEYS:
      FOREIGN KEYS:
      - _reverse_fkey_halftest_blog_comment_author_id: ("id")
       ↳ "halftest":"blog"."comment"(author_id)
-     - _reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
+     - _reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date: ("first_name", "last_name", "birth_date")
       ↳ "halftest":"blog"."event"(author_first_name, author_last_name, author_birth_date)
-     - _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("birth_date", "first_name", "last_name")
+     - _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("first_name", "last_name", "birth_date")
       ↳ "halftest":"blog"."post"(author_first_name, author_last_name, author_birth_date)
      
      To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into

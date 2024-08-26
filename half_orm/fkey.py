@@ -139,7 +139,6 @@ class FKey:
         """Representation of a foreign key
         """
         fields = list(self.__fields)
-        fields.sort()
         fields = f"({', '.join(fields)})"
         repr_ = f"- {self.__name}: {fields}\n ↳ {normalize_fqrn(self.__fk_fqrn)}({', '.join(self.fk_names)})"
         if self.__is_set:
