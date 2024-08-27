@@ -215,17 +215,6 @@ It provides you with information extracted from the database metadata:
 When you instantiate an object with no arguments, its intent corresponds to all the data present in the corresponding relation.
 `Person()` represents the set of persons contained in the `actor.person` table (i.e., there is no constraint on the set).
 
-### Cardinality of a set
-
-**[BREAKING CHANGE]** From version 0.12 onward, the *`__len__`* method has been deprecated. It has been replaced by the `ho_count` method. The code `len(Person())` must be replaced by `Person().ho_count()`.
-
-> The problem was that the Python `list` builtin function triggers the `__len__` method if it exists. So the
-> code `list(Person())` was triggering two requests on the database : frist a SQL `select count` (which can be [slow
-> on PostgreSQL](https://wiki.postgresql.org/wiki/Slow_Counting)) and then the SQL `select`.
-
-You can get the number of elements in a relation with the `ho_count` method, as in `Person().ho_count()`.
-
-
 To define a subset, you need to specify constraints on the values of the fields/columns:
 * with a single value for an exact match,
 * with a tuple of the form `(comp, value)` otherwise.
@@ -254,6 +243,18 @@ gaston.first_name.set('Gaston')
 gaston(lost_name='Lagaffe')
 # raises a half_orm.relation_errors.IsFrozenError Exception
 ```
+
+## Cardinality of a set
+
+**[BREAKING CHANGE]** From version 0.12 onward, the *`__len__`* method has been deprecated. It has been replaced by the `ho_count` method.
+
+*The code `len(Person())` must be replaced by `Person().ho_count()`*.
+
+> The problem was that the Python `list` builtin function triggers the `__len__` method if it exists. So the
+> code `list(Person())` was triggering two requests on the database : frist a SQL `select count` (which can be [slow
+> on PostgreSQL](https://wiki.postgresql.org/wiki/Slow_Counting)) and then the SQL `select`.
+
+You can get the number of elements in a relation with the `ho_count` method, as in `Person().ho_count()`.
 
 ### The `NULL` value
 

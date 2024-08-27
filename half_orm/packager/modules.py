@@ -47,6 +47,7 @@ MODULE_TEMPLATE_3 = read_template('module_template_3')
 WARNING_TEMPLATE = read_template('warning')
 BASE_TEST = read_template('base_test')
 TEST = read_template('relation_test')
+SKIP = re.compile('[A-Z]')
 
 MODULE_FORMAT = (
     "{rt1}" +
@@ -93,36 +94,36 @@ def __gen_dataclass(relation):
     datacls = datacls + fields
     return '\n'.join(datacls)
 
+def __get_modules_list(dir, files_list, files):
+    all_ = []
+    for file_ in files:
+        if re.findall(SKIP, file_):
+            continue
+        path_ = os.path.join(dir, file_)
+        if path_ not in files_list and file_ not in DO_NOT_REMOVE:
+            if path_.find('__pycache__') == -1 and path_.find(TEST_EXT) == -1:
+                print(f"REMOVING: {path_}")
+            os.remove(path_)
+            continue
+        if (re.findall('.py$', file_) and
+                file_ != INIT_PY and
+                file_ != '__pycache__' and
+                file_.find(TEST_EXT) == -1):
+            all_.append(file_.replace('.py', ''))
+    all_.sort()
+    return all_
+
 def __update_init_files(package_dir, files_list, warning):
     """Update __all__ lists in __init__ files.
     """
-    skip = re.compile('[A-Z]')
-    for root, dirs, files in os.walk(package_dir):
-        if root == package_dir:
+    for dir, _, files in os.walk(package_dir):
+        if dir == package_dir:
             continue
-        all_ = []
-        reldir = root.replace(package_dir, '')
-        if re.findall(skip, reldir):
+        reldir = dir.replace(package_dir, '')
+        if re.findall(SKIP, reldir):
             continue
-        for dir_ in dirs:
-            if re.findall(skip, dir_):
-                continue
-        for file_ in files:
-            if re.findall(skip, file_):
-                continue
-            path_ = os.path.join(root, file_)
-            if path_ not in files_list and file_ not in DO_NOT_REMOVE:
-                if path_.find('__pycache__') == -1 and path_.find(TEST_EXT) == -1:
-                    print(f"REMOVING: {path_}")
-                os.remove(path_)
-                continue
-            if (re.findall('.py$', file_) and
-                    file_ != INIT_PY and
-                    file_ != '__pycache__' and
-                    file_.find(TEST_EXT) == -1):
-                all_.append(file_.replace('.py', ''))
-        all_.sort()
-        with open(os.path.join(root, INIT_PY), 'w', encoding='utf-8') as init_file:
+        all_ = __get_modules_list(dir, files_list, files)
+        with open(os.path.join(dir, INIT_PY), 'w', encoding='utf-8') as init_file:
             init_file.write(f'"""{warning}"""\n\n')
 
             all_ = ",\n    ".join([f"'{elt}'" for elt in all_])

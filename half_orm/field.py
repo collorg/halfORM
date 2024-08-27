@@ -3,8 +3,8 @@
 
 """This module provides the Field class. It is used by the `relation <#module-half_orm.relation>`_ module."""
 
-import psycopg2
 import sys
+import psycopg2
 
 from half_orm.null import NULL
 

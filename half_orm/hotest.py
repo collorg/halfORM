@@ -13,7 +13,7 @@ class HoTestCase(unittest.TestCase):
 
     def hotAssertIsUnique(self, relation: Relation, fields_names: List[str]):
         "Checks if a list of fields is unique for the relation."
-        if (set(fields_names) == set(relation._ho_pkey.keys())):
+        if set(fields_names) == set(relation._ho_pkey.keys()):
             return # OK it's the primary key
         for field_name in fields_names:
             field = relation()._ho_fields[field_name]
@@ -23,7 +23,7 @@ class HoTestCase(unittest.TestCase):
     def hotAssertIsNotNull(self, relation: Relation, field_name: str):
         if not relation()._ho_fields[field_name].is_not_null():
             raise self.fail(f"'{field_name}' is not 'not null'.")
-        
+
     def hotAssertReferences(self, relation: Relation, fk_name: str, f_relation: Relation):
         referenced = relation()._ho_fkeys[fk_name]()
         if referenced._qrn != f_relation._qrn:

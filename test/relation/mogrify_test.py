@@ -4,7 +4,9 @@
 import contextlib
 import io
 import re
+import sys
 from half_orm.hotest import HoTestCase
+from half_orm.utils import TraceDepth
 
 
 from ..init import halftest
@@ -23,4 +25,7 @@ class Test(HoTestCase):
         with contextlib.redirect_stdout(f):
             list(self.post.ho_select())
             value = re.sub(r'\s+', ' ', f.getvalue().replace('\n', ' ').replace('  ', ' '))
+            sys.stderr.write(f'XXX expected: {expected}\n')
+            sys.stderr.write(f'XXX got: {value}\n')
+            sys.stderr.write(f'XXX trace is {TraceDepth.on}\n')
             self.assertTrue(re.match(expected, value) is not None)

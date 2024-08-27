@@ -39,9 +39,7 @@ The following methods can be chained on the object before a select.
 import inspect
 from functools import wraps
 from collections import OrderedDict
-from uuid import UUID
 from typing import List
-from datetime import date, datetime, time, timedelta
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -122,7 +120,6 @@ class Relation:
 
     def __call__(self):
         "To indicate this class is indeed callable (Sonarcloud)"
-        pass
 
 #### THE following METHODS are included in Relation class according to
 #### relation type (Table or View). See TABLE_INTERFACE and VIEW_INTERFACE.
@@ -132,9 +129,10 @@ def __init__(self, **kwargs):
     """The names of the arguments must correspond to the names of the columns in the relation.
     """
     module = __import__(self.__module__, globals(), locals(), ['FKEYS_PROPERTIES', 'FKEYS'], 0)
-    #XXX: remove in release 1.0.0
+    #TODO: remove in release 1.0.0
     if hasattr(module, 'FKEYS_PROPERTIES') or hasattr(module, 'FKEYS'):
-        err = f'''{utils.Color.bold(module.__name__ + '.FKEYS')} variable is no longer supported!\n'''
+        mod_fkeys = utils.Color.bold(module.__name__ + '.FKEYS')
+        err = f'''{mod_fkeys} variable is no longer supported!\n'''
         err += f'''\tUse the "{utils.Color.bold(self.__class__.__name__ + '.Fkeys')}"''' + \
             ''' class attribute instead.\n'''
         raise DeprecationWarning(err)
@@ -165,7 +163,7 @@ def __init__(self, **kwargs):
 
 def __check_columns(self, *args):
     "Check that the args are actual columns of the relation"
-    columns = set([elt.replace('"', '') for elt in args])
+    columns = {elt.replace('"', '') for elt in args}
     if columns.intersection(self._ho_fields.keys()) != columns:
         diff = columns.difference(self._ho_fields.keys())
         raise relation_errors.UnknownAttributeError(', '.join([elt for elt in args if elt in diff]))
@@ -178,9 +176,9 @@ def ho_insert(self, *args) -> '[dict]':
         [dict]: A singleton containing the data inserted.
 
     Example:
-        >>> gaston = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1970-01-01').ho_insert()
+        >>> gaston = Person(last_name='La', first_name='Ga', birth_date='1970-01-01').ho_insert()
         >>> print(gaston)
-        {'id': 1772, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1970, 1, 1)}
+        {'id': 1772, 'first_name': 'Ga', 'last_name': 'La', 'birth_date': datetime.date(1970, 1, 1)}
 
     Note:
         It is not possible to insert more than one row with the insert method
@@ -220,7 +218,7 @@ def ho_select(self, *args):
         {'id': 1772}
     """
     self.__check_columns(*args)
-    query, values = self.ho_prep_select(*args)
+    query, values = self._ho_prep_select(*args)
     self.__execute(query, values)
     for elt in self.__cursor:
         yield dict(elt)
@@ -306,6 +304,7 @@ def ho_update(self, *args, update_all=False, **kwargs):
         self._ho_fields[field_name].set(value)
     if args:
         return [dict(elt) for elt in self.__cursor.fetchall()]
+    return None
 
 #@utils.trace
 def ho_delete(self, *args, delete_all=False):
@@ -330,6 +329,7 @@ def ho_delete(self, *args, delete_all=False):
     self.__execute(query, tuple(values))
     if args:
         return [dict(elt) for elt in self.__cursor.fetchall()]
+    return None
 
 @staticmethod
 def __add_returning(query, *args) -> str:
@@ -435,7 +435,8 @@ def __to_dict_val_comp(self):
 
 def __repr__(self):
 
-    fkeys_usage = """To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
+    fkeys_usage = """\
+To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
 your code as a class attribute and replace the empty string key(s) with the alias(es) you
 want to use. The aliases must be unique and different from any of the column names. Empty
 string keys are ignored.
@@ -453,8 +454,7 @@ Fkeys = {"""
     ret.append('FIELDS:')
     mx_fld_n_len = 0
     for field_name in self._ho_fields.keys():
-        if len(field_name) > mx_fld_n_len:
-            mx_fld_n_len = len(field_name)
+        mx_fld_n_len = max(mx_fld_n_len, len(field_name))
     for field_name, field in self._ho_fields.items():
         ret.append(f"- {field_name}:{' ' * (mx_fld_n_len + 1 - len(field_name))}{repr(field)}")
     ret.append('')
@@ -605,8 +605,9 @@ def __prep_query(self, query_template, *args):
         values)
 
 #@utils.trace
-def ho_prep_select(self, *args):
-    query_template = f"select\n {self.__select_params.get('distinct', '')} {{}}\nfrom\n  {{}} {{}}\n  {{}}"
+def _ho_prep_select(self, *args):
+    distinct = self.__select_params.get('distinct', '')
+    query_template = f"select\n {distinct} {{}}\nfrom\n  {{}} {{}}\n  {{}}"
     query, values = self.__prep_query(query_template, *args)
     values = tuple(self.__sql_values + values)
     if 'order_by' in self.__select_params:
@@ -681,7 +682,7 @@ def ho_is_empty(self):
     query, values = self.__prep_query(query_template)
     vars_ = tuple(self.__sql_values + values)
     self.__execute(query, vars_)
-    return self.__cursor.fetchone()['count'] != 1
+    return self.__cursor.fetchone()['count'] == 0
 
 #@utils.trace
 def __update_args(self, **kwargs):
@@ -826,7 +827,11 @@ def __exit__(self, *__):
     return False
 
 def __iter__(self):
-    return self.ho_select()
+    query, values = self._ho_prep_select()
+    self.__execute(query, values)
+    liste = []
+    for elt in self.__cursor:
+        yield dict(elt)
 
 def __next__(self):
     return next(self.ho_select())
@@ -898,7 +903,7 @@ COMMON_INTERFACE = {
     # protected methods
     'ho_freeze': ho_freeze,
     'ho_unfreeze': ho_unfreeze,
-    'ho_prep_select': ho_prep_select,
+    '_ho_prep_select': _ho_prep_select,
     'ho_mogrify': ho_mogrify,
 
     # public methods
