@@ -40,7 +40,7 @@ class Test(TestCase):
         with contextlib.redirect_stderr(self.f):
             self.assertRaises(UniqueViolation, error)
             self.assertEqual(DUP_ERR_MSG, self.f.getvalue())
-        self.assertEqual(60, len(self.pers))
+        self.assertEqual(60, self.pers.ho_count())
 
     def test_transaction_rollback_to_level_0(self):
         "Should rollback to level 0 if nested transcation"

@@ -25,7 +25,7 @@ class Test(HoTestCase):
         self.blog_view = halftest.blog_view_cls()
 
     def test_count(self):
-        self.assertEqual(len(self.pers()), 60)
+        self.assertEqual(self.pers().ho_count(), 60)
 
     def test_expected_one_error_0(self):
         pers = self.pers(last_name="this name doesn't exist")
@@ -39,7 +39,7 @@ class Test(HoTestCase):
 
     def test_insert_error(self):
         pers = self.pers(last_name='ba')
-        self.assertEqual(len(pers), 1)
+        self.assertEqual(pers.ho_count(), 1)
         pers = pers.ho_get()
         self.assertRaises(psycopg2.IntegrityError, pers.ho_insert)
 
@@ -59,16 +59,16 @@ class Test(HoTestCase):
 
     def test_update(self):
         pers = self.pers(last_name=('like', 'a%'))
-        self.assertEqual(len(pers), 10)
+        self.assertEqual(pers.ho_count(), 10)
         @pers.ho_transaction
         def update(pers, fct):
             for elt in pers:
                 pers = self.pers.__class__(**elt)
                 pers.ho_update(last_name=fct(pers.last_name.value), first_name=None)
-            
+
         update(pers, str.upper)
         pers = self.pers(last_name=('like', 'A%'))
-        self.assertEqual(len(pers), 10)
+        self.assertEqual(pers.ho_count(), 10)
         update(pers, str.lower)
 
     def test_update_none_values_are_removed(self):

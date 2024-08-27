@@ -25,7 +25,7 @@ class Test(TestCase):
     def test_or_on_fkeys(self):
         posts = self.gaston.post_rfk(title=('ilike', '%easy%')) | self.gaston.post_rfk(title=('ilike', '%super%'))
         list(posts)
-        self.assertEqual(len(posts), 3)
+        self.assertEqual(posts.ho_count(), 3)
         posts = self.gaston.post_rfk(title=('ilike', '%easy%')) & self.gaston.post_rfk(title=('ilike', '%super%'))
         list(posts)
-        self.assertEqual(len(posts), 1)
+        self.assertEqual(posts.ho_count(), 1)

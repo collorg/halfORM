@@ -68,7 +68,7 @@ run `pip install half_orm` in a virtual environment.
 
 Create a directory to store your connection files and set the shell variable `HALFORM_CONF_DIR`
 (by default, `half_orm` looks in the /etc/half_orm directory):
- 
+
 ```sh
 % mkdir ~/.half_orm
 % export HALFORM_CONF_DIR=~/.half_orm
@@ -117,7 +117,7 @@ database. Each row has the form:
 <relation type> <"schema name"."relation name">
 ```
 
-Where `relation type` is one of `r`, `p`, `v`, `m`, `f`: 
+Where `relation type` is one of `r`, `p`, `v`, `m`, `f`:
 
 * `r` for a relation,
 * `p` for a partitioned table,
@@ -213,7 +213,18 @@ It provides you with information extracted from the database metadata:
 ## Constraining a relation
 
 When you instantiate an object with no arguments, its intent corresponds to all the data present in the corresponding relation.
-`Person()` represents the set of persons contained in the `actor.person` table (i.e., there is no constraint on the set). You can get the number of elements in a relation with the `len` function, as in `len(Person())`.
+`Person()` represents the set of persons contained in the `actor.person` table (i.e., there is no constraint on the set).
+
+### Cardinality of a set
+
+**[BREAKING CHANGE]** From version 0.12 onward, the *`__len__`* method has been deprecated. It has been replaced by the `ho_count` method. The code `len(Person())` must be replaced by `Person().ho_count()`.
+
+> The problem was that the Python `list` builtin function triggers the `__len__` method if it exists. So the
+> code `list(Person())` was triggering two requests on the database : frist a SQL `select count` (which can be [slow
+> on PostgreSQL](https://wiki.postgresql.org/wiki/Slow_Counting)) and then the SQL `select`.
+
+You can get the number of elements in a relation with the `ho_count` method, as in `Person().ho_count()`.
+
 
 To define a subset, you need to specify constraints on the values of the fields/columns:
 * with a single value for an exact match,
@@ -253,7 +264,7 @@ from half_orm.null import NULL
 
 nobody = Person()
 nobody.last_name.set(NULL)
-assert len(nobody) == 0 # last_name is part of the PK
+assert nobody.ho_count() == 0 # last_name is part of the PK
 [...]
 ```
 
@@ -262,7 +273,7 @@ The `None` value, unsets a constraint on a field:
 ```py
 [...]
 nobody.last_name.set(None)
-assert len(nobody) == len(Person())
+assert nobody.ho_count() == Person().ho_count()
 ```
 
 ## Set operators
@@ -281,8 +292,8 @@ my_selection = Person(last_name=('ilike', '_a%')) | Person(first_name=('like', '
 
 # DML. The `ho_insert`, `ho_select`, `ho_update`, `ho_delete` methods.
 
-These methods trigger their corresponding SQL querie on the database. 
-For debugging purposes, you can print the SQL query built 
+These methods trigger their corresponding SQL querie on the database.
+For debugging purposes, you can print the SQL query built
 by half_orm when the DML method is invoked using the ho_mogrify() method.
 
 ```py
@@ -381,7 +392,7 @@ is equivalent to
 
 ```py
 lagaffe = Person(last_name='Lagaffe')
-if lagaffe.ho_is_empty() or len(lagaffe) > 1:
+if lagaffe.ho_is_empty() or lagaffe.ho_count() > 1:
     raise ExcpetedOneError
 gaston = Person(**next(lagaffe.ho_select()))
 gaston._ho_is_singleton = True
@@ -396,7 +407,7 @@ gaston_id = Person(last_name='Lagaffe').ho_get('id').id.value
 ### Is it a set? Is it an element of the set?
 
 Let's go back to our definition of the class `Person`. We would like to write a property that
-returns the full name of **a** person. 
+returns the full name of **a** person.
 
 ```py
 class Person(halftest.get_relation_class('actor.person')):
@@ -453,7 +464,7 @@ class Person(halftest.get_relation_class('actor.person')):
             pers.do_something_else() # Warning! do_something_else won't check that pers is indeed a singleton
 ```
 
-**Warning!** By setting `_ho_is_singleton` value to `True`, you disable the check that `@singleton` would have made before executing `do_something_else`. 
+**Warning!** By setting `_ho_is_singleton` value to `True`, you disable the check that `@singleton` would have made before executing `do_something_else`.
 This example works for two reasons:
 
 1. `ho_select` is called without argument ensuring that all columns are retreived from the database.
@@ -663,7 +674,7 @@ list(gaston
     .comment_rfk(author_id=gaston_id))
 ```
 
-**Note**: the `blog.post` table declares a foreign key on `actor.person(first_name, last_name, birth_date)` 
+**Note**: the `blog.post` table declares a foreign key on `actor.person(first_name, last_name, birth_date)`
 while the `blog.comment` table declares a foreign key on `actor.person(id)`.
 
 ## The *`ho_join`* method [deprecated]

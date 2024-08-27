@@ -97,7 +97,7 @@ class HalfTest:
                         first_name=first_name,
                         birth_date=birth_date).ho_insert()
 
-        if len(self.person_cls()) != 60:
+        if self.person_cls().ho_count() != 60:
             init_pers(self.person_cls())
 
 halftest = HalfTest()

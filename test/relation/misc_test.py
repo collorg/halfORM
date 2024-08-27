@@ -26,16 +26,16 @@ class Test(TestCase):
     def testho_only(self):
         posts1 = self.gaston.post_rfk(title=('ilike', '%easy%'))
         posts1.ho_only = False
-        self.assertEqual(len(posts1), 2)
+        self.assertEqual(posts1.ho_count(), 2)
         posts2 = self.gaston.post_rfk(title=('ilike', '%super%'))
         posts = posts1 | posts2
         list(posts)
-        self.assertEqual(len(posts), 3)
+        self.assertEqual(posts.ho_count(), 3)
         posts1.ho_only = True
-        self.assertEqual(len(posts1), 1)
+        self.assertEqual(posts1.ho_count(), 1)
         posts = self.gaston.post_rfk(title=('ilike', '%easy%')) & self.gaston.post_rfk(title=('ilike', '%super%'))
         list(posts)
-        self.assertEqual(len(posts), 1)
+        self.assertEqual(posts.ho_count(), 1)
 
     def testho_only_accepts_only_bool_values(self):
         "ho_only should only accept boolean values"
@@ -67,7 +67,7 @@ class Test(TestCase):
 
     def testho_limit(self):
         "it should return the set limited to limit"
-        limit = randint(1, len(halftest.post_cls()))
+        limit = randint(1, halftest.post_cls().ho_count())
         posts = halftest.post_cls().ho_order_by('content, title').ho_limit(limit)
         self.assertEqual(len(list(posts)), limit)
 
@@ -77,7 +77,7 @@ class Test(TestCase):
         posts.ho_limit(1)
         self.assertEqual(len(list(posts)), 1)
         posts.ho_limit(0)
-        self.assertEqual(len(list(posts)), len(halftest.post_cls()))
+        self.assertEqual(len(list(posts)), halftest.post_cls().ho_count())
 
     def test_ho_limit_error(self):
         "it should raise an error"
@@ -88,9 +88,9 @@ class Test(TestCase):
     def test_ho_offset(self):
         "it should set the offset"
         posts = halftest.post_cls()
-        offset = randint(0, len(halftest.post_cls()))
+        offset = randint(0, halftest.post_cls().ho_count())
         posts.ho_offset(offset)
-        self.assertEqual(len(list(posts)), len(halftest.post_cls()) - offset)
+        self.assertEqual(len(list(posts)), halftest.post_cls().ho_count() - offset)
 
     def test_ho_offset_error(self):
         "it should raise an error"
@@ -101,7 +101,7 @@ class Test(TestCase):
     def test_cast(self):
         "it should cast to the new relation"
         events = halftest.post_cls().ho_cast('blog.event')
-        self.assertEqual(len(events), 1)
+        self.assertEqual(events.ho_count(), 1)
 
     def test_cast_error(self):
         "it should raise an error if the set attributes are not known in the new relation"

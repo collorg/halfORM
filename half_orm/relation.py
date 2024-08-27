@@ -254,7 +254,8 @@ def ho_get(self, *args: List[str]) -> Relation:
         1772
     """
     self.__check_columns(*args)
-    _count = len(self)
+    self.ho_limit(2)
+    _count = self.ho_count()
     if _count != 1:
         raise relation_errors.ExpectedOneError(self, _count)
     self._ho_is_singleton = True
@@ -656,7 +657,8 @@ def ho_mogrify(self):
     self.__mogrify = True
     return self
 
-def __len__(self):
+# @utils.trace
+def ho_count(self):
     """Returns the number of tuples matching the intention in the relation.
 
     See select for arguments.
@@ -791,7 +793,7 @@ def __ixor__(self, right):
     return self
 
 def __contains__(self, right):
-    return len(right - self) == 0
+    return (right - self).ho_count() == 0
 
 def __eq__(self, right):
     if id(self) == id(right):
@@ -867,7 +869,7 @@ COMMON_INTERFACE = {
     '__fkey_where': __fkey_where,
     '__where_repr': __where_repr,
     '__where_args': __where_args,
-    '__len__': __len__,
+    'ho_count': ho_count,
 
     '__set__op__': __set__op__,
     '__and__': __and__,

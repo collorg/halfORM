@@ -13,7 +13,7 @@ class Test(TestCase):
         self.post = halftest.post_cls()
         self.comment = halftest.comment_cls()
         self.aa = self.pers(last_name='aa')
-        assert(len(self.aa) == 1)
+        assert(self.aa.ho_count() == 1)
 
     def tearDown(self):
         halftest.post_cls().ho_delete(delete_all=True)
@@ -25,7 +25,7 @@ class Test(TestCase):
         self.post.content = ''
         d_res = self.post.ho_insert('id')
         self.assertEqual(list(d_res.keys()), ['id'])
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
 
     def test_ho_insert_returning_id_and_title(self):
         "should return columns id and title"
@@ -34,7 +34,7 @@ class Test(TestCase):
         self.post.content = ''
         d_res = self.post.ho_insert('id', 'title')
         self.assertEqual(list(d_res.keys()), ['id', 'title'])
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
 
     def test_ho_insert_returning_all(self):
         "should return all columns"
@@ -43,7 +43,7 @@ class Test(TestCase):
         self.post.content = ''
         d_res = self.post.ho_insert()
         self.assertEqual(set(d_res.keys()), set(halftest.post_cls()._ho_fields.keys()))
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
 
     def test_ho_delete_returns_none(self):
         "ho_delete() should return None"
@@ -51,9 +51,9 @@ class Test(TestCase):
         self.post.title = 'test delete without returning values'
         self.post.content = ''
         d_res = self.post.ho_insert('id')
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
         self.assertEqual(halftest.post_cls(**d_res).ho_delete(), None)
-        self.assertEqual(len(halftest.post_cls(**d_res)), 0)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 0)
 
     def test_ho_delete_returning_id(self):
         "ho_delete('id') should return a list of ids"
@@ -61,9 +61,9 @@ class Test(TestCase):
         self.post.title = 'test delete returning only id'
         self.post.content = ''
         d_res = self.post.ho_insert('id')
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
         self.assertEqual(halftest.post_cls(**d_res).ho_delete('id'), [d_res])
-        self.assertEqual(len(halftest.post_cls(**d_res)), 0)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 0)
 
     def test_ho_delete_returning_id_and_title(self):
         "ho_delete('id') should return a list dicts {id, title}"
@@ -71,9 +71,9 @@ class Test(TestCase):
         self.post.title = 'test delete returning id and title'
         self.post.content = ''
         d_res = self.post.ho_insert('id', 'title')
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
         self.assertEqual(halftest.post_cls(**d_res).ho_delete('id', 'title'), [d_res])
-        self.assertEqual(len(halftest.post_cls(**d_res)), 0)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 0)
 
     def test_ho_delete_returning_all(self):
         "ho_delete('id') should return a list of all values"
@@ -81,9 +81,9 @@ class Test(TestCase):
         self.post.title = 'test delete returning all'
         self.post.content = ''
         d_res = self.post.ho_insert('*')
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
         self.assertEqual(halftest.post_cls(**d_res).ho_delete('*'), [d_res])
-        self.assertEqual(len(halftest.post_cls(**d_res)), 0)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 0)
 
     def test_ho_update_returns_none(self):
         "ho_update() should return None"
@@ -91,10 +91,10 @@ class Test(TestCase):
         self.post.title = 'test update without returning values'
         self.post.content = ''
         d_res = self.post.ho_insert('id', 'title')
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
         n_title = 'test update returning all after'
         self.assertEqual(halftest.post_cls(**d_res).ho_update(title=n_title), None)
-        self.assertEqual(len(halftest.post_cls(**d_res)), 0)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 0)
 
     def test_ho_update_returning_id(self):
         "ho_update('id') should return a list of ids"
@@ -102,11 +102,11 @@ class Test(TestCase):
         self.post.title = 'test update with returning only id'
         self.post.content = ''
         d_res = self.post.ho_insert('id')
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
         n_title = 'test update returning id after'
         self.assertEqual(halftest.post_cls(**d_res).ho_update('id', title=n_title), [d_res])
         d_res['title'] = n_title
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
 
     def test_ho_update_returning_id_and_title(self):
         "ho_update('id') should return a list dicts {id, title}"
@@ -114,12 +114,12 @@ class Test(TestCase):
         self.post.title = 'test update with returning id and title'
         self.post.content = ''
         d_res = self.post.ho_insert('id', 'title')
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
         n_title = 'test update returning id and title after'
         n_d_res = dict(d_res)
         n_d_res['title'] = n_title
         self.assertEqual(halftest.post_cls(**d_res).ho_update('id', 'title', title=n_title), [n_d_res])
-        self.assertEqual(len(halftest.post_cls(**d_res)), 0)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 0)
 
     def test_ho_update_returning_all(self):
         "ho_update('id') should return a list of all values"
@@ -127,9 +127,9 @@ class Test(TestCase):
         self.post.title = 'test update with returning all'
         self.post.content = ''
         d_res = self.post.ho_insert('*')
-        self.assertEqual(len(halftest.post_cls(**d_res)), 1)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 1)
         n_title = 'test update returning all after'
         n_d_res = dict(d_res)
         n_d_res['title'] = n_title
         self.assertEqual(halftest.post_cls(**d_res).ho_update('*', title=n_title), [n_d_res])
-        self.assertEqual(len(halftest.post_cls(**d_res)), 0)
+        self.assertEqual(halftest.post_cls(**d_res).ho_count(), 0)

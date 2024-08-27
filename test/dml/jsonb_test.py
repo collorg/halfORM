@@ -19,12 +19,12 @@ class Test(TestCase):
         data = {'a': 'b'}
         self.post.data = data
         self.post.ho_insert()
-        self.assertEqual(len(self.post), 1)
+        self.assertEqual(self.post.ho_count(), 1)
         self.assertEqual(next(self.post.ho_select('data'))['data'], data)
         self.post = halftest.post_cls(title=title)
         ndata = {'a': 'c'}
         self.post.ho_update(data=ndata)
         self.post = halftest.post_cls(title=title, data=ndata)
-        self.assertEqual(len(self.post), 1)
+        self.assertEqual(self.post.ho_count(), 1)
         self.post.ho_delete()
-        self.assertEqual(len(self.post), 0)
+        self.assertEqual(self.post.ho_count(), 0)

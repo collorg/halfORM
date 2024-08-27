@@ -30,5 +30,5 @@ class Test(TestCase):
                 self.ab.ho_insert()
                 self.assertTrue(self.gaston.ho_transaction.is_set())
                 gaston.ho_insert()
-        self.assertEqual(len(self.ab), 0)
+        self.assertEqual(self.ab.ho_count(), 0)
         self.assertFalse(self.gaston.ho_transaction.is_set())

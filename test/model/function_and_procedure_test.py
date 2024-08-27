@@ -32,10 +32,10 @@ class Test(TestCase):
     def test_procedure_with_args(self):
         self.tbl.ho_delete(delete_all=True)
         halftest.model.call_procedure('insert_data', 10, 18)
-        self.assertEqual(len(self.tbl()), 2)
+        self.assertEqual(self.tbl().ho_count(), 2)
         self.tbl.ho_delete(delete_all=True)
         halftest.model.call_procedure('insert_data', a=11, b=19)
-        self.assertEqual(len(self.tbl()), 2)
+        self.assertEqual(self.tbl().ho_count(), 2)
 
     def test_procedure_call_error_with_mixed_arguments(self):
         with self.assertRaises(RuntimeError) as exc:

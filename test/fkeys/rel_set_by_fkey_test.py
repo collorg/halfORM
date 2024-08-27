@@ -22,19 +22,18 @@ class Test(HoTestCase):
 
     def test_just_fkey_set(self):
         "it should pass"
-        self.assertEqual(len(self.user.post_rfk()), 0)
+        self.assertEqual(self.user.post_rfk().ho_count(), 0)
         title = str(uuid4())
         self.add_post_for_user(self.user, title)
-        self.assertEqual(len(self.user.post_rfk()), 1)
+        self.assertEqual(self.user.post_rfk().ho_count(), 1)
         self.assertEqual(next(self.post(title=title).author_fk())['last_name'], 'xxx')
 
     def test_just_fkey_set_delete(self):
         "it should pass"
         self.add_post_for_user(self.user, 'machin')
         self.add_post_for_user(self.user2, 'truc')
-        self.assertEqual(len(self.user.post_rfk()), 1)
-        self.assertEqual(len(self.user2.post_rfk()), 1)
+        self.assertEqual(self.user.post_rfk().ho_count(), 1)
+        self.assertEqual(self.user2.post_rfk().ho_count(), 1)
         self.user.post_rfk().ho_delete()
-        self.assertEqual(len(self.user.post_rfk()), 0)
-        self.assertEqual(len(self.user2.post_rfk()), 1)
-    
+        self.assertEqual(self.user.post_rfk().ho_count(), 0)
+        self.assertEqual(self.user2.post_rfk().ho_count(), 1)

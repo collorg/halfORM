@@ -18,7 +18,7 @@ class Test(TestCase):
         self.post = halftest.post_cls()
         self.comment = halftest.comment_cls()
         aa = self.pers(last_name='aa')
-        assert(len(aa) == 1)
+        assert(aa.ho_count() == 1)
 
     def test_post_fkeys_names(self):
         self.assertEqual(

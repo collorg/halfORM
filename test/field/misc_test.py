@@ -44,7 +44,7 @@ class Test(TestCase):
     def test_unset_field_with_none(self):
         pers = self.pers(first_name='jojo')
         pers.first_name.set(None)
-        self.assertEqual(len(pers), len(self.pers))
+        self.assertEqual(pers.ho_count(), self.pers.ho_count())
         self.assertFalse(pers.first_name.is_set())
 
     def test_is_not_null(self):

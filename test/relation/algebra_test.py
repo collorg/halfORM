@@ -35,7 +35,7 @@ class Test(TestCase):
         self.set_3 = self.pers(last_name=('like', f'__{self.c3}%'))
 
     def test_universe(self):
-        self.assertGreaterEqual(len(self.universe), 60)
+        self.assertGreaterEqual(self.universe.ho_count(), 60)
 
     def test_iand(self):
         a = self.set_1
