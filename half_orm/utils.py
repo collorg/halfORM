@@ -1,5 +1,6 @@
 "Various utilities"
 
+import inspect
 import os
 import sys
 from functools import wraps
@@ -62,16 +63,63 @@ def warning(msg: str):
     "Write warning message on stderr"
     sys.stderr.write(Color.bold(f'HOP WARNING: {msg}'))
 
-trace_depth = 0
+class TraceDepth:
+    "Trace dept class"
+    __depth = 0
+    on = False
+
+    @classmethod
+    def increase(cls):
+        "Add 1 to the depth"
+        cls.__depth += 1
+    @classmethod
+    def decrease(cls):
+        "Remove 1 from the depth"
+        cls.__depth -= 1
+    @classmethod
+    def depth(cls):
+        "Returns the depth"
+        return cls.__depth
+
 def trace(fct):
+    """Property used to trace the construction of the SQL requests
+    """
     @wraps(fct)
     def wrapper(self, *args, **kwargs):
-        global trace_depth
-        name = fct.__name__
-        print(f'{" " * trace_depth}>>[{trace_depth}]>> {name}')
-        trace_depth += 1
+        # if not TraceDepth.on:
+        #     return fct(self, *args, **kwargs)
+        # print(f'{" " * TraceDepth.depth()}>>[{TraceDepth.depth()}]>> {fct.__name__}')
+        callerframerecord = inspect.stack()[1]
+        frame = callerframerecord[0]
+        info = inspect.getframeinfo(frame)
+        context = ''
+        if info.code_context:
+            context = info.code_context[0]
+            warn_msg = f'\n{info.filename}:{info.lineno}, in {info.function}\n{context}\n'
+        sys.stderr.write(warn_msg)
+        TraceDepth.increase()
         res = fct(self, *args, **kwargs)
-        trace_depth -= 1
+        TraceDepth.decrease()
         return res
     return wrapper
 
+
+def deprecated(fct):
+    @wraps(fct)
+    def wrapper(self, *args, **kwargs):
+        name = fct.__name__
+        dep_name = name.replace('ho_', '')
+        callerframerecord = inspect.stack()[1]
+        frame = callerframerecord[0]
+        info = inspect.getframeinfo(frame)
+        context = ''
+        warn_msg = (f'HalfORM WARNING! "{Color.bold(dep_name)}" is deprecated. '
+            'It will be removed in half_orm 1.0.\n'
+            f'Use "{Color.bold(name)}" instead.\n')
+        if info.code_context:
+            context = info.code_context[0]
+            warn_msg += (f'{info.filename}:{info.lineno}, in {info.function}\n'
+                f'{context}\n')
+        sys.stderr.write(warn_msg)
+        return fct(self, *args, **kwargs)
+    return wrapper

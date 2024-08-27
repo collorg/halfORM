@@ -1,33 +1,12 @@
 "This module provides the factory function"
 
 import sys
-import inspect
 from functools import wraps
 
 from half_orm import pg_meta
 from half_orm import model_errors
 from half_orm import utils
 from half_orm.relation import Relation, REL_INTERFACES, REL_CLASS_NAMES
-
-def __deprecated(fct):
-    @wraps(fct)
-    def wrapper(self, *args, **kwargs):
-        name = fct.__name__
-        dep_name = name.replace('ho_', '')
-        callerframerecord = inspect.stack()[1]
-        frame = callerframerecord[0]
-        info = inspect.getframeinfo(frame)
-        context = ''
-        warn_msg = (f'HalfORM WARNING! "{utils.Color.bold(dep_name)}" is deprecated. '
-            'It will be removed in half_orm 1.0.\n'
-            f'Use "{utils.Color.bold(name)}" instead.\n')
-        if info.code_context:
-            context = info.code_context[0]
-            warn_msg += (f'{info.filename}:{info.lineno}, in {info.function}\n'
-                f'{context}\n')
-        sys.stderr.write(warn_msg)
-        return fct(self, *args, **kwargs)
-    return wrapper
 
 def factory(dct):
     """Factory function that generates a `Relation` subclass corresponding to a PostgreSQL relation.
@@ -89,7 +68,7 @@ def factory(dct):
         if fct_name.find('ho_') == 0:
             dep_fct_name = fct_name.replace('ho_', '', 1)
         if dep_fct_name:
-            tbl_attr[dep_fct_name] = __deprecated(tbl_attr[fct_name])
+            tbl_attr[dep_fct_name] = utils.deprecated(tbl_attr[fct_name])
     class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
     rel_class = type(class_name, tuple(bases), tbl_attr)
     model_cls._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
