@@ -1,3 +1,26 @@
+# 0.12.0 -- hop 0.1.0 alpha 14 (2024-08-28)
+
+**[BREAKING CHANGE]** From version 0.12 onward, the *`__len__`* method has been deprecated. It has been replaced by the `ho_count` method.
+
+*The code `len(Person())` must be replaced by `Person().ho_count()`*.
+
+> The problem was that the Python `list` builtin function triggers the `__len__` method if it exists. So the
+> code `list(Person())` was triggering two requests on the database : frist a SQL `select count` (which can be [slow
+> in PostgreSQL](https://wiki.postgresql.org/wiki/Slow_Counting)) and then the SQL `select`.
+
+
+* [hop] Remove git diff from dummy_test.sh (c8e3bd8)
+* Add requirements-dev.txt (1047292)
+* Code cleanup. (89fc6da)
+* [relation_factory] deprecated decorator has been moved to utils module. (37f25ef)
+* [relation][BREAKING CHANGE] ho_count replaces __len__. (a7742af)
+* [test] Remove duplicate test. (9440c19)
+* Code clean-up (13f4be6)
+* Remove examples directory. (a4bf44b)
+* [relation] Fix wrong order of foreign key fields in relation representation. (c8abf92)
+* [test] Coverage. (7b055b2)
+* [fkeys] Detect loops in foreign key settings. (50068fa)
+
 # 0.11.1 -- hop 0.1.0 alpha 14 (2024-08-23)
 
 * [hop] Add field and foreign key declarations to allow autocompletion in IDEs. (cb5738c)
@@ -346,7 +369,7 @@ The hop command is a work in progress. It will replace the half_orm_packager pac
   Before:
   ```py
   row_dict = MyTable(a='Something').insert()[0]
-  ```  
+  ```
   Now:
   ```py
   row_dict = MyTable(a='Something').insert()
@@ -355,9 +378,9 @@ The hop command is a work in progress. It will replace the half_orm_packager pac
 # 0.7.4 (2022-10-10)
 
 * [relation] Add returning values to insert, update and delete. (816ae18)
-* [relation] Return dict instead of RealDictRow. (fcbcbe0) 
-* [relation] Relation objects are now iterators. (143f0b0) 
-* Add half_orm.__version__. (60521cf) 
+* [relation] Return dict instead of RealDictRow. (fcbcbe0)
+* [relation] Relation objects are now iterators. (143f0b0)
+* Add half_orm.__version__. (60521cf)
 
 # 0.7.3 (2022-09-21)
 
@@ -441,7 +464,7 @@ This release fixes some problems with half_orm_packager (pre-alpha).
 
 ## Breaking change
 
-There is a bug in the previous versions of the Transaction class. 
+There is a bug in the previous versions of the Transaction class.
 If you use the Transaction class, **please upgrade to this release**.
 
 # 0.5.14 (2022-05-04)
@@ -450,7 +473,7 @@ If you use the Transaction class, **please upgrade to this release**.
 
 ## Breaking change
 
-There is a bug in the previous versions of the Transaction class. 
+There is a bug in the previous versions of the Transaction class.
 If you use the Transaction class, **please upgrade to this release**.
 
 # 0.6.0 (2022-04-28)
@@ -631,7 +654,7 @@ lagaffe.join((Post(), 'posts', 'id'))
 - allow weird column names: `a = 1` is a regular column name in PostgreSQL.
   Of course, you can't use the doted notation to handle such column with
   half_orm. Instead, use `rel.__dict__['a = 1']`.
-- reverse fkeys 
+- reverse fkeys
 
 ## Breaking Changes
 
