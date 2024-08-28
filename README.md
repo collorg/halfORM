@@ -252,7 +252,7 @@ gaston(lost_name='Lagaffe')
 
 > The problem was that the Python `list` builtin function triggers the `__len__` method if it exists. So the
 > code `list(Person())` was triggering two requests on the database : frist a SQL `select count` (which can be [slow
-> on PostgreSQL](https://wiki.postgresql.org/wiki/Slow_Counting)) and then the SQL `select`.
+> in PostgreSQL](https://wiki.postgresql.org/wiki/Slow_Counting)) and then the SQL `select`.
 
 You can get the number of elements in a relation with the `ho_count` method, as in `Person().ho_count()`.
 

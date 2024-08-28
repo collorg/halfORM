@@ -108,7 +108,7 @@ echo 'alter table a add constraint b_uniq unique(b)' > Patches/0/0/2/03_a.sql
 # hop undo
 
 hop apply
-git diff hop_test/public/a.py
+# git diff hop_test/public/a.py
 
 git status
 

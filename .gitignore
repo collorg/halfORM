@@ -22,3 +22,4 @@ bin/
 lib/
 lib64
 pyvenv.cfg
+.auto_venv
