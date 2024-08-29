@@ -1,12 +1,15 @@
-# 0.12.0 -- hop 0.1.0 alpha 14 (2024-08-28)
+# 0.12.0 (2024-08-28)
 
-**[BREAKING CHANGE]** From version 0.12 onward, the *`__len__`* method has been deprecated. It has been replaced by the `ho_count` method.
+## BREAKING CHANGE
+
+ From version 0.12 onward, the *`Relation.__len__`* method has been deprecated.
+ It is replaced by the `Relation.ho_count` method.
 
 *The code `len(Person())` must be replaced by `Person().ho_count()`*.
 
-> The problem was that the Python `list` builtin function triggers the `__len__` method if it exists. So the
-> code `list(Person())` was triggering two requests on the database : frist a SQL `select count` (which can be [slow
-> in PostgreSQL](https://wiki.postgresql.org/wiki/Slow_Counting)) and then the SQL `select`.
+> The problem was that the Python builtin function `list` triggers the `__len__` method if it exists. So the
+> code `list(Person())` was triggering two requests on the database : frist a SQL `select count`
+> and then the SQL `select`.
 
 
 * [hop] Remove git diff from dummy_test.sh (c8e3bd8)
@@ -28,7 +31,7 @@
 * Bump certifi from 2024.2.2 to 2024.7.4 (5222b58)
 * [readme] Add sql injection warning for the Model.execute_query method. (d729ead)
 
-# 0.11 (2024-05-26)
+# 0.11.0 (2024-05-26)
 
 ## BREAKING CHANGE
 

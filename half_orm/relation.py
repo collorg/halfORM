@@ -671,6 +671,10 @@ def ho_count(self):
     self.__execute(query, vars_)
     return self.__cursor.fetchone()['count']
 
+def __len__(self):
+    utils.deprectated('the usage of len', 'the Relation.ho_count method', '0.13.0', r'\s*list\(')
+    return self.ho_count()
+
 def ho_is_empty(self):
     """Returns True if the relation is empty, False otherwise.
 
@@ -875,6 +879,7 @@ COMMON_INTERFACE = {
     '__where_repr': __where_repr,
     '__where_args': __where_args,
     'ho_count': ho_count,
+    '__len__': __len__,
 
     '__set__op__': __set__op__,
     '__and__': __and__,

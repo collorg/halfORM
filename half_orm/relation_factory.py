@@ -68,7 +68,7 @@ def factory(dct):
         if fct_name.find('ho_') == 0:
             dep_fct_name = fct_name.replace('ho_', '', 1)
         if dep_fct_name:
-            tbl_attr[dep_fct_name] = utils.deprecated(tbl_attr[fct_name])
+            tbl_attr[dep_fct_name] = utils._ho_deprecated(tbl_attr[fct_name])
     class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
     rel_class = type(class_name, tuple(bases), tbl_attr)
     model_cls._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class

@@ -118,6 +118,9 @@ class Field():
 
     def _unset(self):
         "Unset a field"
+        sys.stderr.write(
+            "WARNING! Field._unset method is deprecated. Set the value of the field to None instead.\n"
+            "It will be remove in 1.0 version.\n")
         self.__is_set = False
         self.__value = None
         self.__comp = '='

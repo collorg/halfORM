@@ -2,6 +2,7 @@
 
 import inspect
 import os
+import re
 import sys
 from functools import wraps
 
@@ -61,7 +62,7 @@ def error(msg: str, exit_code: int=None):
 
 def warning(msg: str):
     "Write warning message on stderr"
-    sys.stderr.write(Color.bold(f'HOP WARNING: {msg}'))
+    sys.stderr.write(f'{Color.bold("HOP WARNING")}: {msg}')
 
 class TraceDepth:
     "Trace dept class"
@@ -104,7 +105,7 @@ def trace(fct):
     return wrapper
 
 
-def deprecated(fct):
+def _ho_deprecated(fct):
     @wraps(fct)
     def wrapper(self, *args, **kwargs):
         name = fct.__name__
@@ -123,3 +124,20 @@ def deprecated(fct):
         sys.stderr.write(warn_msg)
         return fct(self, *args, **kwargs)
     return wrapper
+
+def deprectated(old, new, release, skip_re=None):
+    callerframerecord = inspect.stack()[2]
+    frame = callerframerecord[0]
+    info = inspect.getframeinfo(frame)
+    warn_msg = (f'{old} is deprecated. '
+        f'It will be removed in half_orm {release}.\n'
+        f'Use {new} instead.\n\n')
+    skip = False
+    if info.code_context:
+        context = info.code_context[0]
+        if skip_re:
+            skip = re.findall(skip_re, context)
+        warn_msg += (f'{info.filename}:{info.lineno}, in {info.function}\n'
+            f'{context}\n')
+    if not skip:
+        warning(warn_msg)
