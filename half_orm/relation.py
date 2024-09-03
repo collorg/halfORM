@@ -39,6 +39,7 @@ The following methods can be chained on the object before a select.
 import inspect
 from functools import wraps
 from collections import OrderedDict
+from keyword import iskeyword
 from typing import List
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -456,7 +457,12 @@ Fkeys = {"""
     for field_name in self._ho_fields.keys():
         mx_fld_n_len = max(mx_fld_n_len, len(field_name))
     for field_name, field in self._ho_fields.items():
-        ret.append(f"- {field_name}:{' ' * (mx_fld_n_len + 1 - len(field_name))}{repr(field)}")
+        field_desc = f"- {field_name}:{' ' * (mx_fld_n_len + 1 - len(field_name))}{repr(field)}"
+        if not field_name.isidentifier():
+            field_desc = f'{field_desc} --- FIX ME! "{field_name}" is not a valid identifier!'
+        if iskeyword(field_name):
+            field_desc = f'{field_desc} --- FIX ME! "{field_name}" is a reserved keyword'
+        ret.append(field_desc)
     ret.append('')
     pkey = self._model._pkey_constraint(self._t_fqrn)
     if pkey:

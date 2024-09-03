@@ -89,7 +89,14 @@ def __gen_dataclass(relation):
         if field._metadata['fieldtype'][0] == '_':
             value = 'field(default_factory=list)'
         field_desc = f'{field_desc} = {value}'
-        fields.append(f"\t{field_name}: {field_desc} #{sql_type}")
+        field_desc = f"\t{field_name}: {field_desc} #{sql_type}"
+        if not field_name.isidentifier():
+            utils.error(f'FIX ME! In {rel._fqrn}, "{utils.Color.bold(field_name)}" is not a valid identifier in Python.\n')
+            field_desc = f'# {field_desc} FIX ME! "{field_name}": not a valid identifier!'
+        if iskeyword(field_name):
+            utils.error(f'FIX ME! In {rel._fqrn}, "{utils.Color.bold(field_name)}" is a reserved word in Python.\n')
+            field_desc = f'# {field_desc} FIX ME! "{field_name}": reserved keyword!'
+        fields.append(field_desc)
     datacls = [f'@dataclass\nclass {dc_name}:']
     datacls = datacls + fields
     return '\n'.join(datacls)
@@ -203,7 +210,7 @@ def __update_this_module(
         sys.stderr.write(f"{err}\n{fqtn}\n")
         sys.stderr.flush()
         return None
-    fields = '\n        '.join([f'self.{key}: Field = None' for key in rel._ho_fields])
+    fields = '\n        '.join([f'self.{key}: Field = None' for key in rel._ho_fields if not iskeyword(key) and key.isidentifier()])
     fkeys = ''
     path[0] = package_dir
     path[1] = path[1].replace('.', os.sep)
