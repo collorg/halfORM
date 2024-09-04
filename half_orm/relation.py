@@ -155,7 +155,6 @@ def __init__(self, **kwargs):
     self.__set_operators = _SetOperators(self)
     self.__select_params = {}
     self.__id_cast = None
-    self.__cursor = self._model._connection.cursor(cursor_factory=RealDictCursor)
     self.__mogrify = False
     self.__check_columns(*kwargs.keys())
     _ = {self.__dict__[field_name].set(value)
@@ -197,8 +196,8 @@ def ho_insert(self, *args) -> '[dict]':
     returning = args or ['*']
     if returning:
         query = self.__add_returning(query, *returning)
-    self.__execute(query, tuple(values))
-    res = [dict(elt) for elt in self.__cursor.fetchall()] or [{}]
+    cursor = self.__execute(query, tuple(values))
+    res = [dict(elt) for elt in cursor.fetchall()] or [{}]
     return res[0]
 
 #@utils.trace
@@ -220,8 +219,8 @@ def ho_select(self, *args):
     """
     self.__check_columns(*args)
     query, values = self._ho_prep_select(*args)
-    self.__execute(query, values)
-    for elt in self.__cursor:
+    cursor = self.__execute(query, values)
+    for elt in cursor:
         yield dict(elt)
 
 #@utils.trace
@@ -300,11 +299,11 @@ def ho_update(self, *args, update_all=False, **kwargs):
     query = query_template.format(self._qrn, what, where)
     if args:
         query = self.__add_returning(query, *args)
-    self.__execute(query, tuple(values))
+    cursor = self.__execute(query, tuple(values))
     for field_name, value in update_args.items():
         self._ho_fields[field_name].set(value)
     if args:
-        return [dict(elt) for elt in self.__cursor.fetchall()]
+        return [dict(elt) for elt in cursor.fetchall()]
     return None
 
 #@utils.trace
@@ -327,9 +326,9 @@ def ho_delete(self, *args, delete_all=False):
     query = f"delete from {self._qrn} {where}"
     if args:
         query = self.__add_returning(query, *args)
-    self.__execute(query, tuple(values))
+    cursor = self.__execute(query, tuple(values))
     if args:
-        return [dict(elt) for elt in self.__cursor.fetchall()]
+        return [dict(elt) for elt in cursor.fetchall()]
     return None
 
 @staticmethod
@@ -366,14 +365,15 @@ def __setattr__(self, key, value):
 
 #@utils.trace
 def __execute(self, query, values):
-    try:
-        if self.__mogrify:
-            print(self.__cursor.mogrify(query, values).decode('utf-8'))
-        return self.__cursor.execute(query, values)
-    except (psycopg2.OperationalError, psycopg2.InterfaceError):
-        self._model.ping()
-        self.__cursor = self._model._connection.cursor(cursor_factory=RealDictCursor)
-        return self.__cursor.execute(query, values)
+    return self._model.execute_query(query, values, self.__mogrify)
+    # try:
+    #     if self.__mogrify:
+    #         print(self.__cursor.mogrify(query, values).decode('utf-8'))
+    #     return self.__cursor.execute(query, values)
+    # except (psycopg2.OperationalError, psycopg2.InterfaceError):
+    #     self._model.ping()
+    #     self.__cursor = self._model._connection.cursor(cursor_factory=RealDictCursor)
+    #     return self.__cursor.execute(query, values)
 
 @property
 def ho_id(self):
@@ -674,8 +674,8 @@ def ho_count(self):
     query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {}"
     query, values = self.__prep_query(query_template)
     vars_ = tuple(self.__sql_values + values)
-    self.__execute(query, vars_)
-    return self.__cursor.fetchone()['count']
+    cursor = self.__execute(query, vars_)
+    return cursor.fetchone()['count']
 
 def __len__(self):
     utils.deprectated('the usage of len', 'the Relation.ho_count method', '0.13.0', r'\s*list\(')
@@ -691,8 +691,8 @@ def ho_is_empty(self):
     query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {} limit 1"
     query, values = self.__prep_query(query_template)
     vars_ = tuple(self.__sql_values + values)
-    self.__execute(query, vars_)
-    return self.__cursor.fetchone()['count'] == 0
+    cursor = self.__execute(query, vars_)
+    return cursor.fetchone()['count'] == 0
 
 #@utils.trace
 def __update_args(self, **kwargs):
@@ -838,9 +838,9 @@ def __exit__(self, *__):
 
 def __iter__(self):
     query, values = self._ho_prep_select()
-    self.__execute(query, values)
+    cursor = self.__execute(query, values)
     liste = []
-    for elt in self.__cursor:
+    for elt in cursor:
         yield dict(elt)
 
 def __next__(self):

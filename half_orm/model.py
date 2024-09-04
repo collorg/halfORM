@@ -4,7 +4,7 @@
 """This module provides the class Model.
 
 The class Model is responsible for the connection to the PostgreSQL database.
-    
+
 Once connected, you can use the
 `get_relation_class <#half_orm.model.Model.get_relation_class>`_
 method to generate a class to access any relation (table/view) in your database.
@@ -81,7 +81,7 @@ class Model:
 
         Raises:
             MissingConfigFile: If the **config_file** is not found in *HALFORM_CONF_DIR*.
-            MalformedConfigFile: if the *name* is missing in the **config_file**. 
+            MalformedConfigFile: if the *name* is missing in the **config_file**.
             RuntimeError: If the reconnection is attempted on another database.
         """
         self.__config_file = config_file
@@ -252,9 +252,9 @@ class Model:
         "Proxy to PgMeta._pkey_constraint"
         return self.__pg_meta._pkey_constraint(self.__dbname, fqrn)
 
-    def execute_query(self, query, values=()):
+    def execute_query(self, query, values=(), mogrify=False):
         """Executes a raw SQL query.
-        
+
         Warning:
             This method calls the psycopg2
             `cursor.execute <https://www.psycopg.org/docs/cursor.html?highlight=execute#cursor.execute>`_
@@ -263,7 +263,14 @@ class Model:
             `passing parameters to SQL queries <https://www.psycopg.org/docs/usage.html#query-parameters>`_.
         """
         cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute(query, values)
+        try:
+            if mogrify:
+                print(cursor.mogrify(query, values).decode('utf-8'))
+            cursor.execute(query, values)
+        except (psycopg2.OperationalError, psycopg2.InterfaceError):
+            self.ping()
+            cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute(query, values)
         return cursor
 
     def execute_function(self, fct_name, *args, **kwargs) -> List[tuple]:
@@ -275,7 +282,7 @@ class Model:
 
         Returns:
             List[tuple]: a list of tuples.
-        
+
         Raises:
             RuntimeError: If you mix ***args** and ****kwargs**.
 
@@ -301,7 +308,7 @@ class Model:
 
         Returns:
             None | List[tuple]: None or a list of tuples.
-        
+
         Raises:
             RuntimeError: If you mix ***args** and ****kwargs**.
 
