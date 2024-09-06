@@ -1,3 +1,11 @@
+# 0.12.1 -- hop 0.1.0 alpha 15 (2024-09-06)
+
+* e215d1a 2024-09-06 | [field][BREAKING CHANGE] list and set values are cast to tuples. (HEAD -> main, origin/model_transaction, origin/main, origin/HEAD, model_transaction) [Joël Maizi]
+* 1d205bb 2024-09-04 | [relation] Remove __cursor attribute. [Joël Maizi]
+* fee3fb6 2024-09-04 | Bump cryptography from 42.0.5 to 43.0.1 [dependabot[bot]]
+* cfff9ef 2024-09-03 | [hop][relation] Emmit a warning if a column is a Python keyword or not a valid attribute name. (gite/main) [Joël Maizi]
+* 00e093c 2024-08-29 | [relation] __len__ will be removed in the release 0.13. Warning message with location issued when used. [Joël Maizi]
+
 # 0.12.0 (2024-08-28)
 
 ## BREAKING CHANGE
