@@ -68,12 +68,6 @@ class Field():
         where_repr = ''
         comp_str = '%s'
         comp = self._comp()
-        if comp == '@@':
-            comp_str = 'websearch_to_tsquery(%s)'
-        if isinstance(self.__value, (list, tuple)) and self.__sql_type[0] != '_': # not an array type
-            comp_str = 'any(%s)'
-            if comp == '@@':
-                comp_str = 'any(websearch_to_tsquery(%s))'
         if not self.unaccent:
             where_repr = f"{self.__praf(query, ho_id)} {comp} {comp_str}"
         else:
@@ -103,6 +97,8 @@ class Field():
             comp = 'is'
         elif comp is None:
             comp = '='
+        if isinstance(value, (list, set)):
+            value = tuple(value)
         comp = comp.lower()
         if value is NULL and comp not in {'is', 'is not'}:
             raise ValueError("comp should be 'is' or 'is not' with NULL value!")

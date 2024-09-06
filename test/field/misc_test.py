@@ -116,11 +116,10 @@ class Test(TestCase):
         self.assertEqual(repr(self.pers.birth_date), f'(date) NOT NULL (birth_date = {date.today()})')
 
     def test_comps(self):
-        self.post.content = ('@@', 'bonjour')
-        self.assertEqual(self.post.content._where_repr('', id(self.post)), '"content" @@ websearch_to_tsquery(%s)')
-        self.post.content = ('=', ('bonjour', 'au revoir'))
-        self.assertEqual(self.post.content._where_repr('', id(self.post)), '"content" = any(%s)')
-        self.post.content = ('@@', ('bonjour', 'au revoir'))
-        self.assertEqual(self.post.content._where_repr('', id(self.post)), '"content" @@ any(websearch_to_tsquery(%s))')
+        exprected_res = ('bonjour', 'au revoir')
+        self.post.content.set(['bonjour', 'au revoir'])
+        self.assertIsInstance(self.post.content.value, tuple)
+        self.post.content.set({'bonjour', 'au revoir'})
+        self.assertIsInstance(self.post.content.value, tuple)
         self.post.content.unaccent = True
-        self.assertEqual(self.post.content._where_repr('', id(self.post)), 'unaccent("content") @@ unaccent(any(websearch_to_tsquery(%s)))')
+        self.assertEqual(self.post.content._where_repr('', id(self.post)), 'unaccent("content") = unaccent(%s)')
