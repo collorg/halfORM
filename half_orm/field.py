@@ -84,7 +84,9 @@ class Field():
         self.__relation._ho_is_singleton = False
         value = args[0]
         if value is None:
-            self._unset()
+            self.__is_set = False
+            self.__value = None
+            self.__comp = '='
             return
         comp = None
         if isinstance(value, tuple):
