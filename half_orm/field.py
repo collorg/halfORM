@@ -114,7 +114,7 @@ class Field():
             "It will be remove in 1.0 version.\n")
         return self.set(*args)
 
-    def _unset(self):
+    def _unset(self): #pragma: no cover
         "Unset a field"
         sys.stderr.write(
             "WARNING! Field._unset method is deprecated. Set the value of the field to None instead.\n"
