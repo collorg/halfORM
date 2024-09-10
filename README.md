@@ -497,15 +497,17 @@ class Person(halftest.get_relation_class('actor.person')):
 
     def upper_last_name(self):
         "tranform last name to upper case."
-        @self.ho_transaction
+
         def update(self):
             for d_pers in self.ho_select('id', 'last_name'):
                 pers = Person(**d_pers)
                 pers.ho_update(last_name=d_pers['last_name'].upper())
-        update(self)
+        with Transaction(halftest):
+            update(self)
 ```
 
-Again, we insure the atomicity of the transaction using the `Relation.ho_transaction` decorator.
+Again, we insure the atomicity of the transaction using the `Transaction(halftest)`
+context manager.
 
 ```
 >>> a_pers = Person(last_name=('ilike', '_a%'))
