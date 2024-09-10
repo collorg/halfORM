@@ -38,38 +38,37 @@ def factory(dct):
 
     tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], dct['fqrn'])))
     model = dct['model']
-    model_cls = model.__class__
-    model_cls._classes_.setdefault(tbl_attr['_dbname'], {})
-    tbl_attr['_model'] = dct['model']
+    model._classes_.setdefault(tbl_attr['_dbname'], {})
+    tbl_attr['_model'] = model
     dbname, schema, relation = dct['fqrn']
     rel_class = None
-    if model_cls._classes_.get(dbname):
-        rel_class = model_cls._classes_[dbname].get((dbname, schema, relation))
-
-    if rel_class:
-        return rel_class
-
-    try:
-        metadata = model._relation_metadata(dct['fqrn'])
-    except KeyError as exc:
-        raise model_errors.UnknownRelation(dct['fqrn']) from exc
-    if metadata['inherits']:
-        metadata['inherits'].sort()
-        bases = []
-    for parent_fqrn in metadata['inherits']:
-        bases.append(factory({'fqrn': parent_fqrn, 'model': model}))
-    tbl_attr['__metadata'] = metadata
-    tbl_attr['_t_fqrn'] = dct['fqrn']
-    tbl_attr['_fqrn'] = pg_meta.normalize_fqrn(dct['fqrn'])
-    tbl_attr['__kind'] = REL_CLASS_NAMES[metadata['tablekind']]
-    for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
-        tbl_attr[fct_name] = fct
-        dep_fct_name = None
-        if fct_name.find('ho_') == 0:
-            dep_fct_name = fct_name.replace('ho_', '', 1)
-        if dep_fct_name:
-            tbl_attr[dep_fct_name] = utils._ho_deprecated(tbl_attr[fct_name])
-    class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
-    rel_class = type(class_name, tuple(bases), tbl_attr)
-    model_cls._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
+    if model._classes_.get(dbname):
+        rel_class = model._classes_[dbname].get((dbname, schema, relation))
+        if rel_class:
+            print('XXX deja vu', id(model), id(rel_class._model))
+    if not rel_class:
+        try:
+            metadata = model._relation_metadata(dct['fqrn'])
+        except KeyError as exc:
+            raise model_errors.UnknownRelation(dct['fqrn']) from exc
+        if metadata['inherits']:
+            metadata['inherits'].sort()
+            bases = []
+        for parent_fqrn in metadata['inherits']:
+            bases.append(factory({'fqrn': parent_fqrn, 'model': model}))
+        tbl_attr['__metadata'] = metadata
+        tbl_attr['_t_fqrn'] = dct['fqrn']
+        tbl_attr['_fqrn'] = pg_meta.normalize_fqrn(dct['fqrn'])
+        tbl_attr['__kind'] = REL_CLASS_NAMES[metadata['tablekind']]
+        for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
+            tbl_attr[fct_name] = fct
+            dep_fct_name = None
+            if fct_name.find('ho_') == 0:
+                dep_fct_name = fct_name.replace('ho_', '', 1)
+            if dep_fct_name:
+                tbl_attr[dep_fct_name] = utils._ho_deprecated(tbl_attr[fct_name])
+        class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
+        rel_class = type(class_name, tuple(bases), tbl_attr)
+        model._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
+    print('XXX', id(model), id(rel_class._model))
     return rel_class

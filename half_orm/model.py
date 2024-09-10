@@ -127,7 +127,8 @@ class Model:
         self.__conn = psycopg2.connect(**self.__dbinfo, cursor_factory=RealDictCursor)
         self.__conn.autocommit = True
         self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
-        self.__deja_vu[self.__dbname] = self
+        if not self.__dbname in self.__class__.__deja_vu:
+            self.__deja_vu[self.__dbname] = self
 
     reconnect = __connect
 
@@ -169,7 +170,8 @@ class Model:
             schema, table = relation_name.replace('"', '').rsplit('.', 1)
         except ValueError as err:
             raise model_errors.MissingSchemaInName(relation_name) from err
-        return factory({'fqrn': (self.__dbname, schema, table), 'model': self})
+        print('XXX appel de factory avec model', id(self))
+        return factory({'fqrn': (self.__dbname, schema, table), 'model': self.__deja_vu[self.__dbname]})
 
 
     @staticmethod

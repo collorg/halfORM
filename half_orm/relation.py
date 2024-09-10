@@ -602,7 +602,6 @@ def __prep_query(self, query_template, *args):
                 f'- use: self.{fkey_name}.set({fkey_cls.__name__}(...))\n'
                 f'- not: self.{fkey_name} = {fkey_cls.__name__}(...)'
                 )
-    # print('XXX __prep_query', what, self.__sql_query, where, values)
     return (
         query_template.format(
             what,

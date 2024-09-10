@@ -2,7 +2,7 @@ hop_test:
 	export PYTHONPATH=$$PWD HALFORM_CONF_DIR=$$PWD/.config && $$PWD/half_orm/packager/test/dummy_test.sh
 
 py_test:
-	export LC_MESSAGES=C PYTHONPATH=$$PWD HALFORM_CONF_DIR=$$PWD/.config && pytest -xs --cov-config=.coveragerc --cov=half_orm --cov-report html test
+	export LC_MESSAGES=C PYTHONPATH=$$PWD HALFORM_CONF_DIR=$$PWD/.config && pytest -x --cov-config=.coveragerc --cov=half_orm --cov-report html test
 
 test: clean_coverage py_test hop_test
 

@@ -1,9 +1,11 @@
 from unittest import TestCase
+import pytest
 from ..init import halftest, model, HALFTEST_STR, HALFTEST_REL_LISTS
 from half_orm.model import Model
 from half_orm import model_errors
 
 PERSON = 'actor.person'
+ID_MODEL = id(model)
 
 class Test(TestCase):
     def test_str(self):
@@ -16,6 +18,12 @@ class Test(TestCase):
         "it should raise an error for unknown relations"
         with self.assertRaises(model_errors.UnknownRelation):
             model.get_relation_class("blog.unknown")
+
+    def test_model_id_is_relation_model_id(self):
+        "it should be the same model object"
+        self.assertEqual(
+            ID_MODEL,
+            id(model.get_relation_class(PERSON)._model))
 
     def test_get_relation_class(self):
         "it should return the same class"
@@ -49,6 +57,7 @@ class Test(TestCase):
     def test_deja_vu(self):
         "It should return an instance of the model if it's already been loaded."
         self.assertIsInstance(model._deja_vu('halftest'), Model)
+        self.assertEqual(id(model._deja_vu('halftest')), ID_MODEL)
 
     def test_not_deja_vu(self):
         "It should return None if the model has not been seen."
