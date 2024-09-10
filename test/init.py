@@ -5,6 +5,7 @@ import sys
 from datetime import date
 from half_orm.model import Model
 from half_orm.relation import singleton
+from half_orm.transaction import Transaction
 
 path = os.path.dirname(__file__)
 sys.path.insert(0, f'{path}/halftest')
@@ -82,7 +83,6 @@ class HalfTest:
         self.pc = PC()
         self.relation = model._import_class
 
-        @self._person.ho_transaction
         def init_pers(pers):
             sys.stderr.write('Initializing actor.person\n')
             self.person_cls().ho_delete(delete_all=True)
@@ -98,6 +98,7 @@ class HalfTest:
                         birth_date=birth_date).ho_insert()
 
         if self.person_cls().ho_count() != 60:
-            init_pers(self.person_cls())
+            with Transaction(model):
+                init_pers(self.person_cls())
 
 halftest = HalfTest()

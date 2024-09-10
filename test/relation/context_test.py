@@ -9,7 +9,7 @@ from datetime import date
 import psycopg2
 from half_orm.transaction import Transaction
 
-from ..init import halftest, GASTON
+from ..init import model, halftest, GASTON
 
 class Test(TestCase):
     def setUp(self):
@@ -24,11 +24,11 @@ class Test(TestCase):
 
     def test_context(self):
         "context shout put the model in transaction mode"
-        self.assertFalse(self.gaston.ho_transaction.is_set())
+        self.assertFalse(Transaction(halftest.model).is_set())
         with self.assertRaises(psycopg2.errors.UniqueViolation):
-            with self.gaston as gaston:
+            with Transaction(halftest.model) as tx:
                 self.ab.ho_insert()
-                self.assertTrue(self.gaston.ho_transaction.is_set())
-                gaston.ho_insert()
+                self.assertTrue(Transaction(halftest.model).is_set())
+                self.gaston.ho_insert()
         self.assertEqual(self.ab.ho_count(), 0)
-        self.assertFalse(self.gaston.ho_transaction.is_set())
+        self.assertFalse(Transaction(halftest.model).is_set())

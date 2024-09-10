@@ -14,6 +14,7 @@ import psycopg2
 
 from half_orm.hotest import HoTestCase
 from half_orm import relation_errors, model
+from half_orm.transaction import Transaction
 
 from ..init import halftest
 
@@ -60,7 +61,6 @@ class Test(HoTestCase):
     def test_update(self):
         pers = self.pers(last_name=('like', 'a%'))
         self.assertEqual(pers.ho_count(), 10)
-        @pers.ho_transaction
         def update(pers, fct):
             for elt in pers:
                 pers = self.pers.__class__(**elt)
@@ -69,7 +69,8 @@ class Test(HoTestCase):
         update(pers, str.upper)
         pers = self.pers(last_name=('like', 'A%'))
         self.assertEqual(pers.ho_count(), 10)
-        update(pers, str.lower)
+        with Transaction(halftest.model) as tx:
+            update(pers, str.lower)
 
     def test_update_none_values_are_removed(self):
         "it should remove None values before update"

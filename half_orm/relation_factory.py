@@ -44,8 +44,6 @@ def factory(dct):
     rel_class = None
     if model._classes_.get(dbname):
         rel_class = model._classes_[dbname].get((dbname, schema, relation))
-        if rel_class:
-            print('XXX deja vu', id(model), id(rel_class._model))
     if not rel_class:
         try:
             metadata = model._relation_metadata(dct['fqrn'])
@@ -70,5 +68,4 @@ def factory(dct):
         class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
         rel_class = type(class_name, tuple(bases), tbl_attr)
         model._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
-    print('XXX', id(model), id(rel_class._model))
     return rel_class

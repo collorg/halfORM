@@ -170,7 +170,6 @@ class Model:
             schema, table = relation_name.replace('"', '').rsplit('.', 1)
         except ValueError as err:
             raise model_errors.MissingSchemaInName(relation_name) from err
-        print('XXX appel de factory avec model', id(self))
         return factory({'fqrn': (self.__dbname, schema, table), 'model': self.__deja_vu[self.__dbname]})
 
 

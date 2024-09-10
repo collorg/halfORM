@@ -6,84 +6,45 @@
 import sys
 
 class Transaction:
-    """The Transaction class is intended to be used as a class attribute of
-    relation.Relation class:
-
-    Relation.Transaction = Transaction
-
-    The Relation.transaction can be used as a decorator of any method of a
-    sub class of Relation class or any function receiving a Relation object
-    as its first argument.
-
-    Example of use:
-
-    ```python
-    gaston = halftest.relation("actor.person", first_name="Gaston")
-    @gaston.Transaction
-    def do_something(person):
-        #... code to be done
-    do_somethin(gaston)
-    ```
-    Every SQL commands executed in the do_something function will be put in a
-    transaction and commited or rolled back at the end of the function.
-
-    Functions decorated by a transaction can be nested:
-
-    ```python
-    @gaston.Transaction
-    def second(gaston):
-        # ... do something else
-    @gaston.Transaction
-    def first(gaston):
-        # ... do something
-        second(gaston)
-    first(gaston)
-    ```
-    Here second is called by first and both function are played in the same
-    transaction.
+    """
     """
 
-    __level = 0
-    def __init__(self, func):
-        self.__func = func
+    __transactions = {}
+    def __call__(self, model):
+        self.__dbname = model._dbname
+        self.__id = id(model)
+        self.__transaction = None
+        if not self.__id in self.__class__.__transactions:
+            self.__class__.__transactions[self.__id] = {}
+            self.__transaction = self.__class__.__transactions[self.__id]
+            self.__transaction['level'] = 0
+            self.__transaction['model'] = model
+        else:
+            self.__transaction = self.__transactions[self.__id]
 
-    def __call__(self, relation, *args, **kwargs):
-        """Each time a transaction is hit, the level is increased.
-        The transaction is commited when the level is back to 0 after
-        the return of the function.
-        """
-        res = None
-        try:
-            Transaction.__level += 1
-            if relation._model._connection.autocommit:
-                relation._model._connection.autocommit = False
-            res = self.__func(relation, *args, **kwargs)
-            Transaction.__level -= 1
-            if Transaction.__level == 0:
-                relation._model._connection.commit()
-                relation._model._connection.autocommit = True
-        except Exception as err:
-            sys.stderr.write(f"Transaction error: {err}\nRolling back!\n")
-            Transaction.__level = 0
-            relation._model._connection.rollback()
-            relation._model._connection.autocommit = True
-            raise err
-        return res
+    __init__ = __call__
 
-    @classmethod
-    def _enter(cls, model):
-        "context manager entry"
-        model._connection.autocommit = False
-        Transaction.__level += 1
+    def __enter__(self):
+        if self.__transaction['model']._connection.autocommit:
+            self.__transaction['model']._connection.autocommit = False
+        self.__transaction['level'] += 1
 
-    @classmethod
-    def _exit(cls, model):
-        "context manager exit"
-        Transaction.__level -= 1
-        if Transaction.__level == 0:
-            model._connection.commit()
-            model._connection.autocommit = True
+    def __exit__(self, *_):
+        self.__transaction['level'] -= 1
+        if self.__transaction['level'] == 0:
+            try:
+                self.__transaction['model']._connection.commit()
+                self.__transaction['model']._connection.autocommit = True
+            except Exception as exc:
+                self.__transaction['model']._connection.rollback()
+                raise exc
 
-    @classmethod
-    def is_set(cls):
-        return Transaction.__level > 0
+    @property
+    def level(self):
+        return self.__transaction.get('level')
+
+    def is_set(self):
+        return self.__transaction.get('level', 0) > 0
+
+    def __repr__(self):
+        return f"model: {self.__transaction['model']._dbname}({self.__id}), level: {self.__transaction.get('level')}"

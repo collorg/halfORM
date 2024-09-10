@@ -315,19 +315,25 @@ lagaffe = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-2
 lagaffe_id = lagaffe.ho_insert()['id']
 ```
 
-You can trigger a transaction for any combination of insert, modify or delete operations using the `Relation.ho_transaction` decorator.
+As of version 0.13, the `Relation.ho_transaction` decorator is deprecated and replaced by
+the `Transaction(<model>)` context manager, as shown in the following example:
 
 ```py
+from half_orm.transaction import Transaction
+# [...]
+
 class Person(halftest.get_relation_class('actor.person')):
     # [...]
 
     def insert_many(self, *data):
         """Insert serveral people in a single transaction."""
-        @self.ho_transaction
+
         def insert(self, *data):
             for d_pers in data:
                 self(**d_pers).ho_insert()
-        insert(self, *data)
+
+        with Transaction(halftest):
+            insert(self, *data)
 
 ```
 
