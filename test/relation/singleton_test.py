@@ -54,6 +54,5 @@ class Test(TestCase):
     def test_orig_args_attribute(self):
         "Test that a function decorated by @singleton has the attribute __orig_args and that it is a FullArgSpec object"
         self.assertTrue(hasattr(self.pers.name, '__orig_args'))
-        print(getattr(self.pers.name, '__orig_args'))
         expected = "FullArgSpec(args=['self', 'last_name'], varargs=None, varkw=None, defaults=(None,), kwonlyargs=[], kwonlydefaults=None, annotations={'last_name': <class 'str'>})"
         self.assertEqual(str(getattr(self.pers.name, '__orig_args')), expected)

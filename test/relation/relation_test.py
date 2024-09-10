@@ -97,5 +97,4 @@ class Test(TestCase):
 
     def test_repr(self):
         person_cls = halftest.model.get_relation_class('actor.person')
-        print(person_cls())
         self.assertEqual(person_cls().__repr__(), PERS_REPR)

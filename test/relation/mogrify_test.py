@@ -25,7 +25,4 @@ class Test(HoTestCase):
         with contextlib.redirect_stdout(f):
             list(self.post.ho_select())
             value = re.sub(r'\s+', ' ', f.getvalue().replace('\n', ' ').replace('  ', ' '))
-            sys.stderr.write(f'XXX expected: {expected}\n')
-            sys.stderr.write(f'XXX got: {value}\n')
-            sys.stderr.write(f'XXX trace is {TraceDepth.on}\n')
             self.assertTrue(re.match(expected, value) is not None)
