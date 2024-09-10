@@ -1,10 +1,24 @@
+# 0.13.0 (2024-09-10)
+
+## BREAKING CHANGE
+
+As of version 0.13, the `Relation.ho_transaction` decorator is deprecated and replaced by
+the `Transaction(<model>)` context manager (see the [readme](https://github.com/collorg/halfORM?tab=readme-ov-file#dml-the-ho_insert-ho_select-ho_update-ho_delete-methods)).
+
+* [readme] remove deprecated ho_transaction example. (ac423af)
+* [field] Marks the deprecated _unset method as not to be tested. (1f5a278)
+* [transaction][BREAKING CHANGE] Transactions are now managed by a context manager. (628ceb2)
+* [relation] The Relation._model object must be the one used to generate the relation class. (2bdcdb7)
+* [test] Add -s option to pytest. (a7c3be0)
+* [field] Do not use deprecated _unset method to clear field. (6cc2dce)
+
 # 0.12.1 -- hop 0.1.0 alpha 15 (2024-09-06)
 
-* e215d1a 2024-09-06 | [field][BREAKING CHANGE] list and set values are cast to tuples. (HEAD -> main, origin/model_transaction, origin/main, origin/HEAD, model_transaction) [Joël Maizi]
-* 1d205bb 2024-09-04 | [relation] Remove __cursor attribute. [Joël Maizi]
-* fee3fb6 2024-09-04 | Bump cryptography from 42.0.5 to 43.0.1 [dependabot[bot]]
-* cfff9ef 2024-09-03 | [hop][relation] Emmit a warning if a column is a Python keyword or not a valid attribute name. (gite/main) [Joël Maizi]
-* 00e093c 2024-08-29 | [relation] __len__ will be removed in the release 0.13. Warning message with location issued when used. [Joël Maizi]
+* [field][BREAKING CHANGE] list and set values are cast to tuples. (e215d1a)
+* [relation] Remove __cursor attribute. (1d205bb)
+* Bump cryptography from 42.0.5 to 43.0.1 (fee3fb6)
+* [hop][relation] Emmit a warning if a column is a Python keyword or not a valid attribute name. (cfff9ef)
+* [relation] __len__ will be removed in the release 0.13. Warning message with location issued when used. (00e093c)
 
 # 0.12.0 (2024-08-28)
 
