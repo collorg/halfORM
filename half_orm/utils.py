@@ -5,6 +5,7 @@ import os
 import re
 import sys
 from functools import wraps
+from keyword import iskeyword
 
 class Color:
     "Colors for the console"
@@ -141,3 +142,13 @@ def deprectated(old, new, release, skip_re=None):
             f'{context}\n')
     if not skip:
         warning(warn_msg)
+
+def check_attribute_name(string: str):
+    err = None
+    if not string.isidentifier():
+        error(f'FIX ME! In {rel._fqrn}, "{utils.Color.bold(string)}" is not a valid identifier in Python.\n')
+        err = f'"{string}": not a valid identifier!'
+    if iskeyword(string):
+        utils.error(f'FIX ME! In {rel._fqrn}, "{utils.Color.bold(string)}" is a reserved word in Python.\n')
+        err = f'"{string}": reserved keyword!'
+    return err

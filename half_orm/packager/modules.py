@@ -90,12 +90,9 @@ def __gen_dataclass(relation):
             value = 'field(default_factory=list)'
         field_desc = f'{field_desc} = {value}'
         field_desc = f"\t{field_name}: {field_desc} #{sql_type}"
-        if not field_name.isidentifier():
-            utils.error(f'FIX ME! In {rel._fqrn}, "{utils.Color.bold(field_name)}" is not a valid identifier in Python.\n')
-            field_desc = f'# {field_desc} FIX ME! "{field_name}": not a valid identifier!'
-        if iskeyword(field_name):
-            utils.error(f'FIX ME! In {rel._fqrn}, "{utils.Color.bold(field_name)}" is a reserved word in Python.\n')
-            field_desc = f'# {field_desc} FIX ME! "{field_name}": reserved keyword!'
+        error = utils.check_attribute_name(field_name)
+        if error:
+            field_desc = f'# {field_desc} FIX ME! {error}'
         fields.append(field_desc)
     datacls = [f'@dataclass\nclass {dc_name}:']
     datacls = datacls + fields
@@ -162,7 +159,7 @@ def __get_fkeys_aliases(repo, class_name, module_path):
         mod = importlib.import_module(mod_path)
         fkeys = mod.__dict__[class_name].__dict__.get('Fkeys')
         if fkeys:
-            fkeys_aliases = [f"self.{key}: Fkey = self._ho_fkeys['{value}']" for key, value in fkeys.items()]
+            fkeys_aliases = [f"self.{key}: Fkey = self._ho_fkeys['{value}']" for key, value in fkeys.items() if key != '']
             fkeys_aliases.insert(0, '        self.ho_unfreeze()')
             fkeys_aliases.append('self.ho_freeze()')
             return '\n        '.join(fkeys_aliases)
@@ -210,7 +207,12 @@ def __update_this_module(
         sys.stderr.write(f"{err}\n{fqtn}\n")
         sys.stderr.flush()
         return None
-    fields = '\n        '.join([f'self.{key}: Field = None' for key in rel._ho_fields if not iskeyword(key) and key.isidentifier()])
+    fields = []
+    for key in rel._ho_fields:
+        error = utils.check_attribute_name(key)
+        if not error:
+            fields.append(f"self.{key}: Field = None")
+    fields = "\n        ".join(fields)
     fkeys = ''
     path[0] = package_dir
     path[1] = path[1].replace('.', os.sep)
