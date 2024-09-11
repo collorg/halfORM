@@ -146,9 +146,9 @@ def deprectated(old, new, release, skip_re=None):
 def check_attribute_name(string: str):
     err = None
     if not string.isidentifier():
-        error(f'FIX ME! In {rel._fqrn}, "{utils.Color.bold(string)}" is not a valid identifier in Python.\n')
-        err = f'"{string}": not a valid identifier!'
+        error(f'"{Color.bold(string)}" is not a valid identifier in Python.\n')
+        err = f'"{string}": not a valid identifier in Python!'
     if iskeyword(string):
-        utils.error(f'FIX ME! In {rel._fqrn}, "{utils.Color.bold(string)}" is a reserved word in Python.\n')
-        err = f'"{string}": reserved keyword!'
+        error(f'"{Color.bold(string)}" is a reserved keyword in Python.\n')
+        err = f'"{string}": reserved keyword in Python!'
     return err
