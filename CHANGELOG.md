@@ -1,3 +1,8 @@
+# 0.13.1 -- hop 0.1.0 alpha 16 (2024-09-11)
+
+* [test] Test utils.check_attribute_name. (521c922)
+* [hop] Fix: empty keys in Fkeys were taken into account when generating relation class attributes. (dba5b22)
+
 # 0.13.0 (2024-09-10)
 
 ## BREAKING CHANGE
