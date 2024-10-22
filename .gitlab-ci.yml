@@ -41,7 +41,7 @@ test:
   <<: *test
   parallel:
     matrix:
-      - PYVERSION: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+      - PYVERSION: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
   script:
     - "$CI_PROJECT_DIR/half_orm/packager/test/dummy_test.sh"
     - pytest
