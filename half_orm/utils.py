@@ -65,7 +65,7 @@ def warning(msg: str):
     "Write warning message on stderr"
     sys.stderr.write(f'{Color.bold("HOP WARNING")}: {msg}')
 
-class TraceDepth:
+class TraceDepth: #pragma: no coverage
     "Trace dept class"
     __depth = 0
     on = False
@@ -83,7 +83,7 @@ class TraceDepth:
         "Returns the depth"
         return cls.__depth
 
-def trace(fct):
+def trace(fct): #pragma: no coverage
     """Property used to trace the construction of the SQL requests
     """
     @wraps(fct)

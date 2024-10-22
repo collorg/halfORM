@@ -1,7 +1,27 @@
+import os
+import sys
 from unittest import TestCase, skip
 from half_orm import utils
 
+
+cur_dir = os.path.abspath(os.path.dirname(__file__))
+rwd_test_file = os.path.join(cur_dir, 'rwd_test_file')
+
+data = """coucou
+c'est un test
+"""
+
+datalines = ['coucou\n', "c'est un test\n"]
+
 class Test(TestCase):
+    def setUp(self):
+        if os.path.exists(rwd_test_file):
+            os.remove(rwd_test_file)
+
+    def tearDown(self):
+        if os.path.exists(rwd_test_file):
+            os.remove(rwd_test_file)
+
     def test_check_attribute_name(self):
         "it return errors"
         self.assertEqual(
@@ -10,3 +30,21 @@ class Test(TestCase):
             utils.check_attribute_name(
                 "not a valid variable"),
                 '"not a valid variable": not a valid identifier in Python!')
+
+    def test_file_utils(self):
+        self.assertFalse(os.path.exists(rwd_test_file))
+        utils.write(rwd_test_file, data)
+        self.assertTrue(os.path.exists(rwd_test_file))
+        self.assertEqual(utils.read(rwd_test_file), data)
+        self.assertEqual(utils.readlines(rwd_test_file), datalines)
+        utils.write(rwd_test_file, data, "a+")
+        self.assertEqual(utils.read(rwd_test_file), data + data)
+
+    def test_hop_version(self):
+        self.assertRegex(utils.hop_version(), r'^\d+\.\d+\.\d+(?:(a|b|rc)(\d+))?$')
+
+    def test_green(self):
+        self.assertEqual(utils.Color.green('coucou'), '\x1b[1;32mcoucou\x1b[0m')
+
+    def test_blue(self):
+        self.assertEqual(utils.Color.blue('coucou'), '\x1b[1;34mcoucou\x1b[0m')

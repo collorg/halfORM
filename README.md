@@ -13,7 +13,7 @@ Nowadays, most applications require interacting with a relational database. Whil
 
 Here is what coding with `half_orm` looks like :
 
-```python
+```py
 from half_orm.model import Model
 from half_orm.relation import singleton
 
@@ -148,7 +148,7 @@ True
 
 To work with a table of your database, you must instanciate the corresponding class:
 
-```python
+```py
 class Person(halftest.get_relation_class('actor.person')):
     pass
 class PostComment(halftest.get_relation_class('blog.view.post_comment')):
@@ -162,7 +162,7 @@ The argument passed to `get_relation_class` is as string of the form:
 
 To get a full description of the corresponding relation, print an instance of the class:
 
-```python
+```py
 >>> print(Person())
 ```
 ```
@@ -223,7 +223,7 @@ The `comp` value is either a SQL
 
 You can constrain a relation object at instanciation:
 
-```python
+```py
 Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
 Person(last_name=('ilike', '_a%'))
 Person(birth_date='1957-02-28')
@@ -284,7 +284,7 @@ You can use the set operators to set more complex constraints on your relations:
 Take a look at [the algebra test file](https://github.com/collorg/halfORM/blob/main/test/relation/algebra_test.py).
 - you can also use the `==`, `!=` and `in` operators to compare two sets.
 
-```python
+```py
 my_selection = Person(last_name=('ilike', '_a%')) | Person(first_name=('like', 'A%'))
 ```
 
@@ -304,13 +304,13 @@ people.ho_select()
 
 ## ho_insert
 To insert a tuple in the relation, use the `ho_insert` method as shown below:
-```python
+```py
 Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28').ho_insert()
 ```
 
 By default, `ho_insert` returns the inserted row as a dict:
 
-```python
+```py
 lagaffe = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-28')
 lagaffe_id = lagaffe.ho_insert()['id']
 ```
@@ -337,7 +337,7 @@ class Person(halftest.get_relation_class('actor.person')):
 
 ```
 
-```python
+```py
 people = Person()
 people.insert_many(*[
     {'last_name':'Lagaffe', 'first_name':'Gaston', 'birth_date':'1957-02-28'},
@@ -360,7 +360,7 @@ you want to get by passing their names as argurments to `ho_insert`.
 The `ho_select` method is a generator. It returns all the data of the relation that matches the constraint defined on the Relation object.
 The data is returned in a list of `dict`s.
 
-```python
+```py
 >>> people = Person()
 >>> print(list(people.ho_select()))
 [{'id': 6753, 'first_name': 'Gaston', 'last_name': 'Lagaffe', 'birth_date': datetime.date(1957, 2, 28)}, {'id': 6754, 'first_name': 'Bibi', 'last_name': 'Fricotin', 'birth_date': datetime.date(1924, 10, 5)}, {'id': 6755, 'first_name': 'Corto', 'last_name': 'Maltese', 'birth_date': datetime.date(1975, 1, 7)}, {'id': 6756, 'first_name': 'Achile', 'last_name': 'Talon', 'birth_date': datetime.date(1963, 11, 7)}, {'id': 6757, 'first_name': 'Gil', 'last_name': 'Jourdan', 'birth_date': datetime.date(1956, 9, 20)}]
@@ -370,7 +370,7 @@ The data is returned in a list of `dict`s.
 ```
 
 You can set a limit or an offset:
-```python
+```py
 >>> people.ho_offset(1).ho_limit(2)
 >>> print(list(people)) # Relation objects are iterators. so ho_select is optional
 [{'id': 6754, 'first_name': 'Bibi', 'last_name': 'Fricotin', 'birth_date': datetime.date(1924, 10, 5)}, {'id': 6755, 'first_name': 'Corto', 'last_name': 'Maltese', 'birth_date': datetime.date(1975, 1, 7)}]
@@ -378,7 +378,7 @@ You can set a limit or an offset:
 
 You can also get a subset of the attributes by passing a list of columns names to `ho_select`:
 
-```python
+```py
 >>> print(list(people.ho_select('last_name')))
 [{'last_name': 'Lagaffe'}, {'last_name': 'Fricotin'}]
 ```
@@ -491,7 +491,7 @@ gaston.ho_update(birth_date='1970-01-01')
 
 Let's look at how we could turn the last name into capital letters for a subset of people:
 
-```python
+```py
 class Person(halftest.get_relation_class('actor.person')):
     # [...]
 
@@ -524,7 +524,7 @@ context manager.
 
 To return the updated values, you can add to `ho_update` the column names you want to get, or `*` if you want to get all the columns.
 
-```python
+```py
 >>> gaston.ho_update('*', birth_date='1970-01-01')
 ```
 
@@ -547,7 +547,7 @@ gaston.ho_delete()
 
 To remove every tuples from a table, you must set the argument `delete_all` to `True`. A `RuntimeError` is raised otherwise.
 
-```python
+```py
 Person().ho_delete(delete_all=True)
 if not Person().ho_is_empty():
     print('Weird! You should check your "on delete cascade".')
@@ -558,7 +558,7 @@ Well, there is not much left after this in the `actor.person` table.
 
 As for `ho_update`, to return the deleted values, you can add to `ho_delete` the column names you want to get, or `*` if you want to get all the columns.
 
-```python
+```py
 >>> gaston.ho_delete('first_name', 'last_name', 'birth_date')
 ```
 
@@ -583,7 +583,7 @@ Fkeys = {
 
 Let's see an example with the `blog.post` relation:
 
-```python
+```py
 >>> class Post(halftest.get_relation_class('blog.post')):
 ...     pass
 ...
@@ -630,7 +630,7 @@ It has two foreign keys named `_reverse_fkey_halftest_blog_comment_post_id` and 
 
 We add the aliases of our foreign keys by defining the class attribute `Fkeys` :
 
-```
+```py
 class Post(halftest.get_relation_class('blog.post')):
     Fkeys = {
         'comments_rfk': '_reverse_fkey_halftest_blog_comment_post_id',
@@ -661,7 +661,7 @@ comments_on_a_post_containing_simple = a_post.comment_rfk(content=('ilike', '%si
 The Fkey class has the `set` method which allows you to constrain a foreign key with a Relation object.
 To get the comments made by Gaston, we simply constraint the `author_fk` Fkey to reference the entry corresponding to Gaston in the actor.person table. To do so, we use the `Fkey.set()` method:
 
-```python
+```py
 gaston = Person(first_name='Gaston')
 gaston_comments = Comment()
 gaston_comments.author_fk.set(gaston)
@@ -692,7 +692,7 @@ From version 0.11 onward, the *`ho_join`* method has been deprecated. It was too
 
 For example, the old code:
 
-```#python
+```py
 lagaffe = Person(last_name='Lagaffe')
 res = lagaffe.ho_join(
     (Comment(), 'comments', ['id', 'post_id']),
@@ -702,7 +702,7 @@ res = lagaffe.ho_join(
 
 becomes:
 
-```#python
+```py
 res = []
 lagaffe = Person(last_name='Lagaffe')
 for idx, pers in enumerate(lagaffe):
