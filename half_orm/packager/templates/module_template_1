@@ -9,5 +9,5 @@ WARNING!
 
 from half_orm.field import Field
 from half_orm.fkey import FKey
-from {package_name} import MODEL
+from {package_name} import MODEL, ho_dataclasses
 {inheritance_import}

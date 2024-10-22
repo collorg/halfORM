@@ -38,7 +38,9 @@ def read_template(file_name):
         return file_.read()
 
 NO_APAPTER = {}
-HO_DATACLASSES = []
+HO_DATACLASSES = [
+    'from dataclasses import dataclass, field',
+    'from half_orm.field import Field']
 HO_DATACLASSES_IMPORTS = set()
 INIT_MODULE_TEMPLATE = read_template('init_module_template')
 MODULE_TEMPLATE_1 = read_template('module_template_1')
@@ -64,14 +66,16 @@ TEST_EXT = '_test.py'
 
 MODEL = None
 
-def __gen_dataclass(relation):
+def __get_full_class_name(relation):
     schemaname = ''.join([elt.capitalize() for elt in relation._schemaname.split('.')])
     relationname = ''.join([elt.capitalize() for elt in relation._relationname.split('_')])
-    full_class_name = f'{schemaname}{relationname}'
+    return f'{schemaname}{relationname}'
 
+def __gen_dataclass(relation):
     rel = relation()
-    dc_name = f'DC_{full_class_name}'
+    dc_name = f'DC_{__get_full_class_name(relation)}'
     fields = []
+    post_init = ['    def __post_init__(self):']
     for field_name, field in rel._ho_fields.items():
         sql_type = field._metadata['fieldtype']
         field_desc = SQL_ADAPTER.get(sql_type)
@@ -85,17 +89,18 @@ def __gen_dataclass(relation):
             field_desc = f'{field_desc.__module__}.{field_desc.__name__}'
         else:
             field_desc = field_desc.__name__
-        value = 'None'
+        value = 'field(default=None)'
         if field._metadata['fieldtype'][0] == '_':
             value = 'field(default_factory=list)'
         field_desc = f'{field_desc} = {value}'
-        field_desc = f"\t{field_name}: {field_desc} #{sql_type}"
+        field_desc = f"    {field_name}: {field_desc} #{sql_type}"
         error = utils.check_attribute_name(field_name)
         if error:
             field_desc = f'# {field_desc} FIX ME! {error}'
         fields.append(field_desc)
+        post_init.append(f'        self.{field_name} = Field(self.{field_name})')
     datacls = [f'@dataclass\nclass {dc_name}:']
-    datacls = datacls + fields
+    datacls = datacls + fields + post_init
     return '\n'.join(datacls)
 
 def __get_modules_list(dir, files_list, files):
@@ -239,6 +244,7 @@ def __update_this_module(
                 inheritance_import=inheritance_import,
                 inherited_classes=inherited_classes,
                 class_name=class_name,
+                dc_name=f'DC_{__get_full_class_name(rel)}',
                 fqtn=fqtn,
                 warning=WARNING_TEMPLATE.format(package_name=package_name),
                 fields=fields,

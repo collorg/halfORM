@@ -194,13 +194,13 @@ hop ONLY PRESERVES THE CODE BETWEEN THESE MARKS WHEN IT IS RUN.
 
 from half_orm.field import Field
 from half_orm.fkey import FKey
-from hop_test import MODEL
+from hop_test import MODEL, ho_dataclasses
 
 #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 import datetime
 #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
 
-class B(MODEL.get_relation_class('public.b')):
+class B(MODEL.get_relation_class('public.b'), ho_dataclasses.DC_PublicB):
     """
     DATABASE: hop_test
     SCHEMA: public
@@ -230,13 +230,7 @@ class B(MODEL.get_relation_class('public.b')):
     }
     #<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!
     def __init__(self, **kwargs):
-        # The declarations bellow are here to allow automatic completion in your IDE.
-        self.b: Field = None
-        self.a: Field = None
         super().__init__(**kwargs)
-        self.ho_unfreeze()
-        self.a_fk: Fkey = self._ho_fkeys['b_a_fkey']
-        self.ho_freeze()
 
         #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 EOF
