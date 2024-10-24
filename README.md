@@ -1,7 +1,7 @@
 # `half_orm`: A simple PostgreSQL to Python mapper
 
 [![PyPI version](https://img.shields.io/pypi/v/half_orm)](https://pypi.org/project/half-orm/)
-[![Python versions](https://img.shields.io/badge/Python-%20&ge;%203.6-blue)](https://www.python.org)
+[![Python versions](https://img.shields.io/badge/Python-%20&ge;%203.7-blue)](https://www.python.org)
 [![PostgreSQL versions](https://img.shields.io/badge/PostgreSQL-%20&ge;%209.6-blue)](https://www.postgresql.org)
 [![Test on different versions of Python](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg)](https://github.com/collorg/halfORM/actions/workflows/python-package.yml)
 [![Test on different versions of PostgreSQL](https://github.com/collorg/halfORM/actions/workflows/postgresql-releases.yml/badge.svg)](https://github.com/collorg/halfORM/actions/workflows/postgresql-releases.yml)
