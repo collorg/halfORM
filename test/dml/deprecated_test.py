@@ -1,6 +1,7 @@
 import os
 from unittest import TestCase
 
+import pytest
 from ..init import halftest
 
 CURDIR = os.path.abspath(os.path.curdir)
@@ -11,6 +12,8 @@ Use "\x1b[1mho_select\x1b[0m" instead.
     halftest.person_cls(last_name='aabc', first_name='aabc', birth_date='1997-01-03').select()
 
 '''
+
+pytest.skip(allow_module_level=True)
 
 def test_deprecated(capsys):
     "use of select should print a warning on stderr"

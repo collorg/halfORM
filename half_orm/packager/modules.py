@@ -40,6 +40,7 @@ def read_template(file_name):
 NO_APAPTER = {}
 HO_DATACLASSES = [
     'from dataclasses import dataclass, field',
+    'from half_orm.relation import DC_Relation',
     'from half_orm.field import Field']
 HO_DATACLASSES_IMPORTS = set()
 INIT_MODULE_TEMPLATE = read_template('init_module_template')
@@ -99,7 +100,7 @@ def __gen_dataclass(relation):
             field_desc = f'# {field_desc} FIX ME! {error}'
         fields.append(field_desc)
         post_init.append(f'        self.{field_name} = Field(self.{field_name})')
-    datacls = [f'@dataclass\nclass {dc_name}:']
+    datacls = [f'@dataclass\nclass {dc_name}(DC_Relation):']
     datacls = datacls + fields + post_init
     return '\n'.join(datacls)
 

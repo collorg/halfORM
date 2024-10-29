@@ -49,7 +49,7 @@ class Test(TestCase):
         self.relation = halftest.relation
 
     def test_relation_is_callable(self):
-        self.assertIsInstance(Relation(), Relation)
+        self.assertIsInstance(self.pers, Relation)
 
     def test_isinstance(self):
         pers = self.pers()
@@ -65,18 +65,18 @@ class Test(TestCase):
 
     def test_add_returning(self):
         "it should return a returning clause"
-        add_returning = self.pers.__class__.__bases__[0].__dict__['__add_returning'].__get__(object)
-        self.assertEqual(add_returning('query', 'a', 'b'), 'query returning a, b')
-        self.assertEqual(add_returning('query'), 'query')
+        add_returning = self.pers.__class__._ho_add_returning
+        self.assertEqual(add_returning(self.pers, 'query', 'a', 'b'), 'query returning a, b')
+        self.assertEqual(add_returning(self.pers, 'query'), 'query')
 
     def testho_is_frozen(self):
-        frozen = self.pers.__dict__['__isfrozen']
+        frozen = self.pers.__dict__['_ho_isfrozen']
         self.assertTrue(frozen)
         self.pers.ho_unfreeze()
-        frozen = self.pers.__dict__['__isfrozen']
+        frozen = self.pers.__dict__['_ho_isfrozen']
         self.assertFalse(frozen)
         self.pers.ho_freeze()
-        frozen = self.pers.__dict__['__isfrozen']
+        frozen = self.pers.__dict__['_ho_isfrozen']
         self.assertTrue(frozen)
 
     def testho_unaccent(self):
@@ -96,5 +96,6 @@ class Test(TestCase):
         self.assertEqual("coucou is not a Field!", str(exc.exception))
 
     def test_repr(self):
+        self.maxDiff = None
         person_cls = halftest.model.get_relation_class('actor.person')
         self.assertEqual(person_cls().__repr__(), PERS_REPR)

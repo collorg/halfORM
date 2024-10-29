@@ -6,7 +6,7 @@ from functools import wraps
 from half_orm import pg_meta
 from half_orm import model_errors
 from half_orm import utils
-from half_orm.relation import Relation, REL_INTERFACES, REL_CLASS_NAMES
+from half_orm.relation import Relation, REL_CLASS_NAMES
 
 def factory(dct):
     """Factory function that generates a `Relation` subclass corresponding to a PostgreSQL relation.
@@ -33,7 +33,7 @@ def factory(dct):
 
     bases = [Relation,]
     tbl_attr = {}
-    tbl_attr['__fkeys_properties'] = False
+    tbl_attr['_ho_fkeys_properties'] = False
     tbl_attr['_qrn'] = pg_meta.normalize_qrn(dct['fqrn'])
 
     tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], dct['fqrn'])))
@@ -54,17 +54,10 @@ def factory(dct):
             bases = []
         for parent_fqrn in metadata['inherits']:
             bases.append(factory({'fqrn': parent_fqrn, 'model': model}))
-        tbl_attr['__metadata'] = metadata
+        tbl_attr['_ho_metadata'] = metadata
         tbl_attr['_t_fqrn'] = dct['fqrn']
         tbl_attr['_fqrn'] = pg_meta.normalize_fqrn(dct['fqrn'])
-        tbl_attr['__kind'] = REL_CLASS_NAMES[metadata['tablekind']]
-        for fct_name, fct in REL_INTERFACES[metadata['tablekind']].items():
-            tbl_attr[fct_name] = fct
-            dep_fct_name = None
-            if fct_name.find('ho_') == 0:
-                dep_fct_name = fct_name.replace('ho_', '', 1)
-            if dep_fct_name:
-                tbl_attr[dep_fct_name] = utils._ho_deprecated(tbl_attr[fct_name])
+        tbl_attr['_ho_kind'] = REL_CLASS_NAMES[metadata['tablekind']]
         class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
         rel_class = type(class_name, tuple(bases), tbl_attr)
         model._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
