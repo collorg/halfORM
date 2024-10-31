@@ -19,10 +19,11 @@ the remote origin, synchronizes with devel branch if needed and tags your git
 history with the last release applied.
 """
 
-import re
-import os
-import sys
 import importlib
+import os
+import re
+import sys
+import time
 from keyword import iskeyword
 from typing import Any
 
@@ -67,14 +68,14 @@ TEST_EXT = '_test.py'
 
 MODEL = None
 
-def __get_full_class_name(relation):
-    schemaname = ''.join([elt.capitalize() for elt in relation._schemaname.split('.')])
-    relationname = ''.join([elt.capitalize() for elt in relation._relationname.split('_')])
+def __get_full_class_name(schemaname, relationname):
+    schemaname = ''.join([elt.capitalize() for elt in schemaname.split('.')])
+    relationname = ''.join([elt.capitalize() for elt in relationname.split('_')])
     return f'{schemaname}{relationname}'
 
-def __gen_dataclass(relation):
+def __gen_dataclass(repo, class_name, module_path, relation, fkeys):
     rel = relation()
-    dc_name = f'DC_{__get_full_class_name(relation)}'
+    dc_name = f'DC_{__get_full_class_name(relation._schemaname, relation._relationname)}'
     fields = []
     post_init = ['    def __post_init__(self):']
     for field_name, field in rel._ho_fields.items():
@@ -100,9 +101,14 @@ def __gen_dataclass(relation):
             field_desc = f'# {field_desc} FIX ME! {error}'
         fields.append(field_desc)
         post_init.append(f'        self.{field_name} = Field(self.{field_name})')
-    datacls = [f'@dataclass\nclass {dc_name}(DC_Relation):']
-    datacls = datacls + fields + post_init
-    return '\n'.join(datacls)
+
+    fkeys = {value:key for key, value in fkeys.items() if key != ''}
+    for key, value in rel()._ho_fkeys.items():
+        if key in fkeys:
+            fkey_alias = fkeys[key]
+            fdc_name = f'DC_{__get_full_class_name(*(value._FKey__fk_fqrn[1:]))}'
+            post_init.append(f"        self.{fkey_alias} = {fdc_name}")
+    return '\n'.join([f'@dataclass\nclass {dc_name}(DC_Relation):'] + fields + post_init)
 
 def __get_modules_list(dir, files_list, files):
     all_ = []
@@ -159,19 +165,17 @@ def __get_inheritance_info(rel, package_name):
         inherited_classes = f"{inherited_classes}, "
     return inheritance_import, inherited_classes
 
-def __get_fkeys_aliases(repo, class_name, module_path):
+def __get_fkeys(repo, class_name, module_path):
     try:
         mod_path = module_path.replace(repo.base_dir, '').replace(os.path.sep, '.')[1:-3]
         mod = importlib.import_module(mod_path)
-        fkeys = mod.__dict__[class_name].__dict__.get('Fkeys')
-        if fkeys:
-            fkeys_aliases = [f"self.{key}: Fkey = self._ho_fkeys['{value}']" for key, value in fkeys.items() if key != '']
-            fkeys_aliases.insert(0, '        self.ho_unfreeze()')
-            fkeys_aliases.append('self.ho_freeze()')
-            return '\n        '.join(fkeys_aliases)
+        importlib.reload(mod)
+        cls = mod.__dict__[class_name]
+        fkeys = cls.__dict__.get('Fkeys', {})
+        return fkeys
     except ModuleNotFoundError:
         pass
-    return ''
+    return {}
 
 def __assemble_module_template(module_path):
     """Construct the module after slicing it if it already exists.
@@ -226,14 +230,12 @@ def __update_this_module(
     path = [iskeyword(elt) and f'{elt}_' or elt for elt in path]
     class_name = camel_case(path[-1])
     module_path = f"{os.path.join(*path)}.py"
-    fkeys = __get_fkeys_aliases(repo, class_name, module_path)
     path_1 = os.path.join(*path[:-1])
     if not os.path.exists(path_1):
         os.makedirs(path_1)
     module_template = __assemble_module_template(module_path)
     inheritance_import, inherited_classes = __get_inheritance_info(
         rel, package_name)
-    HO_DATACLASSES.append(__gen_dataclass(rel))
     with open(module_path, 'w', encoding='utf-8') as file_:
         documentation = "\n".join([line and f"    {line}" or "" for line in str(rel).split("\n")])
         file_.write(
@@ -245,11 +247,9 @@ def __update_this_module(
                 inheritance_import=inheritance_import,
                 inherited_classes=inherited_classes,
                 class_name=class_name,
-                dc_name=f'DC_{__get_full_class_name(rel)}',
+                dc_name=f'DC_{__get_full_class_name(rel._schemaname, rel._relationname)}',
                 fqtn=fqtn,
-                warning=WARNING_TEMPLATE.format(package_name=package_name),
-                fields=fields,
-                fkeys=fkeys))
+                warning=WARNING_TEMPLATE.format(package_name=package_name)))
     if not os.path.exists(module_path.replace('.py', TEST_EXT)):
         with open(module_path.replace('.py', TEST_EXT), 'w', encoding='utf-8') as file_:
             file_.write(TEST.format(
@@ -259,7 +259,26 @@ def __update_this_module(
                 module=f"{package_name}.{fqtn}",
                 class_name=camel_case(path[-1]))
             )
+    HO_DATACLASSES.append(__gen_dataclass(
+        repo, class_name, module_path, rel, __get_fkeys(repo, class_name, module_path)))
     return module_path
+
+def __reset_dataclasses(repo, package_dir, package_name):
+    with open(os.path.join(package_dir, "ho_dataclasses.py"), "w", encoding='utf-8') as file_:
+        for relation in repo.database.model._relations():
+            t_qrn = relation[1][1:]
+            if t_qrn[0].find('half_orm') == 0:
+                continue
+            file_.write(f'class DC_{__get_full_class_name(*t_qrn)}: ...\n')
+
+def __gen_dataclasses(package_dir, package_name):
+    with open(os.path.join(package_dir, "ho_dataclasses.py"), "w", encoding='utf-8') as file_:
+        file_.write(f"# dataclasses for {package_name}\n\n")
+        for to_import in HO_DATACLASSES_IMPORTS:
+            file_.write(f"import {to_import}\n")
+        file_.write("\n")
+        for dc in HO_DATACLASSES:
+            file_.write(f"\n{dc}\n")
 
 def generate(repo):
     """Synchronize the modules with the structure of the relation in PG.
@@ -277,6 +296,9 @@ def generate(repo):
     repo.database.model._reload()
     if not os.path.exists(package_dir):
         os.mkdir(package_dir)
+
+    __reset_dataclasses(repo, package_dir, package_name)
+
     with open(os.path.join(package_dir, INIT_PY), 'w', encoding='utf-8') as file_:
         file_.write(INIT_MODULE_TEMPLATE.format(package_name=package_name))
 
@@ -295,13 +317,7 @@ def generate(repo):
                 test_file_path = module_path.replace('.py', TEST_EXT)
                 files_list.append(test_file_path)
 
-    with open(os.path.join(package_dir, "ho_dataclasses.py"), "w", encoding='utf-8') as file_:
-        file_.write(f"# dataclasses for {package_name}\n\n")
-        for to_import in HO_DATACLASSES_IMPORTS:
-            file_.write(f"import {to_import}\n")
-        file_.write("\n")
-        for dc in HO_DATACLASSES:
-            file_.write(f"\n{dc}\n")
+    __gen_dataclasses(package_dir, package_name)
 
     if len(NO_APAPTER):
         print("MISSING ADAPTER FOR SQL TYPE")

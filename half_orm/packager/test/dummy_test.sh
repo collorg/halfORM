@@ -235,6 +235,8 @@ class B(MODEL.get_relation_class('public.b'), ho_dataclasses.DC_PublicB):
         #>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!
 EOF
 
+hop apply
+
 git add .
 git commit -m "(b) with Fkeys"
 

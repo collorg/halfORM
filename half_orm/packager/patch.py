@@ -72,7 +72,7 @@ class Patch:
     def prep_release(self, release_level, message=None):
         """Returns the next (major, minor, patch) tuple according to the release_level
 
-        The repo must be clean. 
+        The repo must be clean.
 
         Args:
             release_level (str): one of ['patch', 'minor', 'major']
