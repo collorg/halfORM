@@ -274,7 +274,9 @@ def __reset_dataclasses(repo, package_dir, package_name):
 def __gen_dataclasses(package_dir, package_name):
     with open(os.path.join(package_dir, "ho_dataclasses.py"), "w", encoding='utf-8') as file_:
         file_.write(f"# dataclasses for {package_name}\n\n")
-        for to_import in HO_DATACLASSES_IMPORTS:
+        hd_imports = list(HO_DATACLASSES_IMPORTS)
+        hd_imports.sort()
+        for to_import in hd_imports:
             file_.write(f"import {to_import}\n")
         file_.write("\n")
         for dc in HO_DATACLASSES:
