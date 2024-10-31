@@ -1,3 +1,21 @@
+# 0.13.2 -- hop 0.1.0 alpha 17 (2024-10-31)
+
+## BREAKING CHANGE
+
+Relation methods select, insert, upgrade, delete deprecated in 0.8.0 have now been removed. Use ho_select, ho_insert, ho_upgrade and ho_delete instead.
+
+* [hop] sort imports in ho_dataclasses.py (HEAD -> main) (801385b)
+* [hop] Add Fkeys to dataclasses. (10ba318)
+* [hop][relation] Refactor. Add DC_Relation to improve developper experience. (a9e2dda)
+* [CI] Keep psycopg2 2.9.9 to preserve Python 3.7 compatibility. (f9c0380)
+* [CI] Bump to psycopg 2.9.10 for Python 3.13 compatibility. (e092e3b)
+* [CI/Github] Fails with Python 3.13. (2a2d897)
+* [CI/Github] Add PostgreSQL 17 (1699e1a)
+* [CI] Add Python 3.13 (7687c5e)
+* [BREAKING CHANGE] Python 3.6 is no longer supported (89f49c1)
+* [hop] Use of dataclasses to improve developer experience. (a61beb0)
+* [test] coverage utils. (66b64bb)
+
 # 0.13.1 -- hop 0.1.0 alpha 16 (2024-09-11)
 
 * [test] Test utils.check_attribute_name. (521c922)
