@@ -321,9 +321,9 @@ class Relation:
         returning = args or ['*']
         if returning:
             query = self._ho_add_returning(query, *returning)
-        cursor = self.__execute(query, tuple(values))
-        res = [dict(elt) for elt in cursor.fetchall()] or [{}]
-        return res[0]
+        with self.__execute(query, tuple(values)) as cursor:
+            res = [dict(elt) for elt in cursor.fetchall()] or [{}]
+            return res[0]
 
     #@utils.trace
     def ho_select(self, *args):
@@ -344,9 +344,9 @@ class Relation:
         """
         self._ho_check_colums(*args)
         query, values = self._ho_prep_select(*args)
-        cursor = self.__execute(query, values)
-        for elt in cursor:
-            yield dict(elt)
+        with self.__execute(query, values) as cursor:
+            for elt in cursor:
+                yield dict(elt)
 
     #@utils.trace
     def ho_get(self, *args: List[str]) -> 'Relation':
@@ -424,11 +424,11 @@ class Relation:
         query = query_template.format(self._qrn, what, where)
         if args:
             query = self._ho_add_returning(query, *args)
-        cursor = self.__execute(query, tuple(values))
-        for field_name, value in update_args.items():
-            self._ho_fields[field_name].set(value)
-        if args:
-            return [dict(elt) for elt in cursor.fetchall()]
+        with self.__execute(query, tuple(values)) as cursor:
+            for field_name, value in update_args.items():
+                self._ho_fields[field_name].set(value)
+            if args:
+                return [dict(elt) for elt in cursor.fetchall()]
         return None
 
     #@utils.trace
@@ -451,9 +451,9 @@ class Relation:
         query = f"delete from {self._qrn} {where}"
         if args:
             query = self._ho_add_returning(query, *args)
-        cursor = self.__execute(query, tuple(values))
-        if args:
-            return [dict(elt) for elt in cursor.fetchall()]
+        with self.__execute(query, tuple(values)) as cursor:
+            if args:
+                return [dict(elt) for elt in cursor.fetchall()]
         return None
 
     def _ho_add_returning(self, query, *args) -> str:
@@ -798,25 +798,19 @@ Fkeys = {"""
         query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {}"
         query, values = self.__prep_query(query_template)
         vars_ = tuple(self._ho_sql_values + values)
-        cursor = self.__execute(query, vars_)
-        return cursor.fetchone()['count']
-
-    def __len__(self):
-        utils.deprectated('the usage of len', 'the Relation.ho_count method', '0.13.0', r'\s*list\(')
-        return self.ho_count()
+        return self.__execute(query, vars_).fetchone()['count']
 
     def ho_is_empty(self):
         """Returns True if the relation is empty, False otherwise.
 
         Same as __len__ but limits the request to 1 element (faster).
-        Use it instead of len(relation) == 0.
+        Use it instead of relation.ho_count() == 0.
         """
         self._ho_query = "select"
         query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {} limit 1"
         query, values = self.__prep_query(query_template)
         vars_ = tuple(self._ho_sql_values + values)
-        cursor = self.__execute(query, vars_)
-        return cursor.fetchone()['count'] == 0
+        return self.ho_count() == 0
 
     #@utils.trace
     def __update_args(self, **kwargs):
@@ -959,9 +953,7 @@ Fkeys = {"""
 
     def __iter__(self):
         query, values = self._ho_prep_select()
-        cursor = self.__execute(query, values)
-        liste = []
-        for elt in cursor:
+        for elt in self.__execute(query, values):
             yield dict(elt)
 
     def __next__(self):
