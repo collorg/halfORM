@@ -846,10 +846,10 @@ Fkeys = {"""
         return fields_names, set_fields, fk_fields, fk_queries, fk_values
 
     @classmethod
-    def ho_description(self):
+    def ho_description(cls):
         """Returns the description (comment) of the relation
         """
-        description = self._ho_metadata['description']
+        description = cls._ho_metadata['description']
         if description:
             description = description.strip()
         return description or 'No description available'

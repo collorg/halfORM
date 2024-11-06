@@ -40,9 +40,9 @@ def read_template(file_name):
 
 NO_APAPTER = {}
 HO_DATACLASSES = [
-    'from dataclasses import dataclass, field',
-    'from half_orm.relation import DC_Relation',
-    'from half_orm.field import Field']
+'''from dataclasses import dataclass, field
+from half_orm.relation import DC_Relation
+from half_orm.field import Field''']
 HO_DATACLASSES_IMPORTS = set()
 INIT_MODULE_TEMPLATE = read_template('init_module_template')
 MODULE_TEMPLATE_1 = read_template('module_template_1')
@@ -73,33 +73,37 @@ def __get_full_class_name(schemaname, relationname):
     relationname = ''.join([elt.capitalize() for elt in relationname.split('_')])
     return f'{schemaname}{relationname}'
 
-def __gen_dataclass(repo, class_name, module_path, relation, fkeys):
+def __get_field_desc(field_name, field):
+    #TODO: REFACTOR
+    sql_type = field._metadata['fieldtype']
+    field_desc = SQL_ADAPTER.get(sql_type)
+    if field_desc is None:
+        if not NO_APAPTER.get(sql_type):
+            NO_APAPTER[sql_type] = 0
+        NO_APAPTER[sql_type] += 1
+        field_desc = Any
+    if field_desc.__module__ != 'builtins':
+        HO_DATACLASSES_IMPORTS.add(field_desc.__module__)
+        field_desc = f'{field_desc.__module__}.{field_desc.__name__}'
+    else:
+        field_desc = field_desc.__name__
+    value = 'field(default=None)'
+    if field._metadata['fieldtype'][0] == '_':
+        value = 'field(default_factory=list)'
+    field_desc = f'{field_desc} = {value}'
+    field_desc = f"    {field_name}: {field_desc}"
+    error = utils.check_attribute_name(field_name)
+    if error:
+        field_desc = f'# {field_desc} FIX ME! {error}'
+    return field_desc
+
+def __gen_dataclass(relation, fkeys):
     rel = relation()
     dc_name = f'DC_{__get_full_class_name(relation._schemaname, relation._relationname)}'
     fields = []
     post_init = ['    def __post_init__(self):']
     for field_name, field in rel._ho_fields.items():
-        sql_type = field._metadata['fieldtype']
-        field_desc = SQL_ADAPTER.get(sql_type)
-        if field_desc is None:
-            field_desc = Any
-            if not NO_APAPTER.get(sql_type):
-                NO_APAPTER[sql_type] = 0
-            NO_APAPTER[sql_type] += 1
-        if field_desc.__module__ != 'builtins':
-            HO_DATACLASSES_IMPORTS.add(field_desc.__module__)
-            field_desc = f'{field_desc.__module__}.{field_desc.__name__}'
-        else:
-            field_desc = field_desc.__name__
-        value = 'field(default=None)'
-        if field._metadata['fieldtype'][0] == '_':
-            value = 'field(default_factory=list)'
-        field_desc = f'{field_desc} = {value}'
-        field_desc = f"    {field_name}: {field_desc} #{sql_type}"
-        error = utils.check_attribute_name(field_name)
-        if error:
-            field_desc = f'# {field_desc} FIX ME! {error}'
-        fields.append(field_desc)
+        fields.append(__get_field_desc(field_name, field))
         post_init.append(f'        self.{field_name} = Field(self.{field_name})')
 
     fkeys = {value:key for key, value in fkeys.items() if key != ''}
@@ -229,7 +233,6 @@ def __update_this_module(
     fields = "\n        ".join(fields)
     kwargs = ", ".join(kwargs)
     arg_names = ", ".join(arg_names)
-    fkeys = ''
     path[0] = package_dir
     path[1] = path[1].replace('.', os.sep)
 
@@ -268,10 +271,10 @@ def __update_this_module(
                 class_name=camel_case(path[-1]))
             )
     HO_DATACLASSES.append(__gen_dataclass(
-        repo, class_name, module_path, rel, __get_fkeys(repo, class_name, module_path)))
+        rel, __get_fkeys(repo, class_name, module_path)))
     return module_path
 
-def __reset_dataclasses(repo, package_dir, package_name):
+def __reset_dataclasses(repo, package_dir):
     with open(os.path.join(package_dir, "ho_dataclasses.py"), "w", encoding='utf-8') as file_:
         for relation in repo.database.model._relations():
             t_qrn = relation[1][1:]
@@ -307,7 +310,7 @@ def generate(repo):
     if not os.path.exists(package_dir):
         os.mkdir(package_dir)
 
-    __reset_dataclasses(repo, package_dir, package_name)
+    __reset_dataclasses(repo, package_dir)
 
     with open(os.path.join(package_dir, INIT_PY), 'w', encoding='utf-8') as file_:
         file_.write(INIT_MODULE_TEMPLATE.format(package_name=package_name))

@@ -11,7 +11,6 @@ class Transaction:
 
     __transactions = {}
     def __call__(self, model):
-        self.__dbname = model._dbname
         self.__id = id(model)
         self.__transaction = None
         if not self.__id in self.__class__.__transactions:

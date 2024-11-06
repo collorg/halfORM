@@ -82,7 +82,8 @@ class Test(TestCase):
 
     def test_and_3(self):
         a = self.set_1
-        self.assertEqual(a & a, a)
+        b = self.set_1
+        self.assertEqual(a & b, a)
 
     def test_and_4(self):
         a = self.set_1
@@ -138,7 +139,9 @@ class Test(TestCase):
 
     def test_or_absorbing_elt_3(self):
         empty = self.empty_set
-        self.assertEqual(empty | empty, empty)
+        empty1 = self.empty_set
+        empty2 = self.empty_set
+        self.assertEqual(empty1 | empty2, empty)
 
     def test_not(self):
         a = self.set_1
@@ -147,8 +150,9 @@ class Test(TestCase):
 
     def test_empty(self):
         a = self.set_1
+        b = self.set_1
         empty = self.empty_set
-        self.assertEqual(a - a, empty)
+        self.assertEqual(a - b, empty)
 
     def test_complementary_0(self):
         a = self.set_1
@@ -228,7 +232,8 @@ class Test(TestCase):
 
     def test_idempotent_laws_1(self):
         a = self.set_1
-        self.assertEqual(a | a, a)
+        b = self.set_1
+        self.assertEqual(a | b, a)
 
     def test_domination_laws_2(self):
         a = self.set_1
@@ -379,7 +384,8 @@ class Test(TestCase):
 
     def test_inequality_0(self):
         a = self.set_1
-        self.assertFalse(a != a)
+        b = self.set_1
+        self.assertFalse(a != b)
 
     def test_ne(self):
         a = self.set_1

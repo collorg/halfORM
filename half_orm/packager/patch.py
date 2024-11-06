@@ -199,7 +199,7 @@ class Patch:
         try:
             subprocess.run(
                 ['python', file_.path],
-                env=os.environ.update({'PYTHONPATH': self.__repo.base_dir}),
+                env={'PYTHONPATH': self.__repo.base_dir},
                 shell=False, check=True)
         except subprocess.CalledProcessError as err:
             utils.error(f'Problem with script {file_}\n{err}\n')

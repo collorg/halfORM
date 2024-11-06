@@ -116,7 +116,7 @@ class Test(TestCase):
         self.assertEqual(repr(self.pers.birth_date), f'(date) NOT NULL (birth_date = {date.today()})')
 
     def test_comps(self):
-        exprected_res = ('bonjour', 'au revoir')
+        #XXX check this tests
         self.post.content.set(['bonjour', 'au revoir'])
         self.assertIsInstance(self.post.content.value, tuple)
         self.post.content.set({'bonjour', 'au revoir'})
