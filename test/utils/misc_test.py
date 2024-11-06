@@ -14,10 +14,6 @@ c'est un test
 datalines = ['coucou\n', "c'est un test\n"]
 
 class Test(TestCase):
-    def setUp(self):
-        if os.path.exists(rwd_test_file):
-            os.remove(rwd_test_file)
-
     def tearDown(self):
         if os.path.exists(rwd_test_file):
             os.remove(rwd_test_file)

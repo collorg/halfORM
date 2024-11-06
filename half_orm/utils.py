@@ -88,9 +88,6 @@ def trace(fct): #pragma: no coverage
     """
     @wraps(fct)
     def wrapper(self, *args, **kwargs):
-        # if not TraceDepth.on:
-        #     return fct(self, *args, **kwargs)
-        # print(f'{" " * TraceDepth.depth()}>>[{TraceDepth.depth()}]>> {fct.__name__}')
         callerframerecord = inspect.stack()[1]
         frame = callerframerecord[0]
         info = inspect.getframeinfo(frame)

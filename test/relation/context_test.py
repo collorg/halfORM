@@ -26,7 +26,7 @@ class Test(TestCase):
         "context shout put the model in transaction mode"
         self.assertFalse(Transaction(halftest.model).is_set())
         with self.assertRaises(psycopg2.errors.UniqueViolation):
-            with Transaction(halftest.model) as tx:
+            with Transaction(halftest.model):
                 self.ab.ho_insert()
                 self.assertTrue(Transaction(halftest.model).is_set())
                 self.gaston.ho_insert()

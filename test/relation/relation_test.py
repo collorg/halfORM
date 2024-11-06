@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
+import uuid
 from unittest import TestCase
 from half_orm.relation import Relation
 
@@ -99,3 +100,10 @@ class Test(TestCase):
         self.maxDiff = None
         person_cls = halftest.model.get_relation_class('actor.person')
         self.assertEqual(person_cls().__repr__(), PERS_REPR)
+
+    def test_ho_is_empty(self):
+        empty = self.pers()
+        empty.first_name.set(str(uuid.uuid4()))
+        self.assertTrue(empty.ho_is_empty())
+        not_empty = self.pers()
+        self.assertFalse(not_empty.ho_is_empty())

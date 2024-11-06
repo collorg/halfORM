@@ -69,7 +69,7 @@ class Test(HoTestCase):
         update(pers, str.upper)
         pers = self.pers(last_name=('like', 'A%'))
         self.assertEqual(pers.ho_count(), 10)
-        with Transaction(halftest.model) as tx:
+        with Transaction(halftest.model):
             update(pers, str.lower)
 
     def test_update_none_values_are_removed(self):

@@ -13,7 +13,7 @@ class Transaction:
     def __call__(self, model):
         self.__id = id(model)
         self.__transaction = None
-        if not self.__id in self.__class__.__transactions:
+        if self.__id not in self.__class__.__transactions:
             self.__class__.__transactions[self.__id] = {}
             self.__transaction = self.__class__.__transactions[self.__id]
             self.__transaction['level'] = 0

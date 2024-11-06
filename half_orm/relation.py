@@ -808,8 +808,7 @@ Fkeys = {"""
         """
         self._ho_query = "select"
         query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {} limit 1"
-        query, values = self.__prep_query(query_template)
-        vars_ = tuple(self._ho_sql_values + values)
+        _, values = self.__prep_query(query_template)
         return self.ho_count() == 0
 
     #@utils.trace

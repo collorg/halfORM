@@ -34,7 +34,7 @@ class Test(TestCase):
                 for name in ['abc', 'abd', 'aa']:
                     pers.__class__(
                         first_name=name, last_name=name, birth_date='1970-01-01').ho_insert()
-            with Transaction(halftest.model) as tx:
+            with Transaction(halftest.model):
                 uniq_violation(self.pers)
             with contextlib.redirect_stderr(self.f):
                 self.assertRaises(UniqueViolation, error)
@@ -52,13 +52,13 @@ class Test(TestCase):
 
             def uniq_violation1(pers):
                 self.assertEqual(Transaction(halftest.model).level, 1)
-                with Transaction(halftest.model) as tx:
+                with Transaction(halftest.model):
                     uniq_violation2(pers)
                 for name in ['abc', 'abd', 'aa']:
                     pers.__class__(
                         first_name=name, last_name=name, birth_date='1970-01-01').ho_insert()
 
-            with Transaction(halftest.model) as tx:
+            with Transaction(halftest.model):
                 uniq_violation1(self.pers)
 
             with contextlib.redirect_stderr(self.f):

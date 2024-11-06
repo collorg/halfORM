@@ -105,7 +105,6 @@ class Test(TestCase):
         a = self.set_1
         empty = self.empty_set
         self.assertEqual(a & empty, empty)
-        self.assertTrue(empty.ho_is_empty())
 
     def test_and_neutral_elt(self):
         a = self.set_1
