@@ -4,9 +4,11 @@
 """This module provides the Field class. It is used by the `relation <#module-half_orm.relation>`_ module."""
 
 import sys
+import typing
 import psycopg2
 
 from half_orm.null import NULL
+from half_orm.packager.sql_adapter import SQL_ADAPTER
 
 class Field():
     """The class Field is for Relation internal usage. It is called by
@@ -29,6 +31,10 @@ class Field():
     @property
     def _metadata(self): # pragma: no cover
         return self.__metadata
+
+    @property
+    def py_type(self):
+        return SQL_ADAPTER.get(self.__sql_type, typing.Any)
 
     def is_set(self):
         "Returns if the field is set or not."
