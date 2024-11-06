@@ -89,6 +89,8 @@ class _SetOperators:
 
 @dataclass
 class DC_Relation:
+    def __init__(self, **kwargs): ...
+
     def ho_insert(self, *args: List[str]) -> Dict:
         """Insert a new tuple into the Relation.
 
@@ -488,14 +490,6 @@ class Relation:
     #@utils.trace
     def __execute(self, query, values):
         return self._model.execute_query(query, values, self._ho_mogrify)
-        # try:
-        #     if self._ho_mogrify:
-        #         print(self.__cursor.mogrify(query, values).decode('utf-8'))
-        #     return self.__cursor.execute(query, values)
-        # except (psycopg2.OperationalError, psycopg2.InterfaceError):
-        #     self._model.ping()
-        #     self.__cursor = self._model._connection.cursor(cursor_factory=RealDictCursor)
-        #     return self.__cursor.execute(query, values)
 
     @property
     def ho_id(self):

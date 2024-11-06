@@ -218,11 +218,17 @@ def __update_this_module(
         sys.stderr.flush()
         return None
     fields = []
-    for key in rel._ho_fields:
+    kwargs = []
+    arg_names = []
+    for key, value in rel._ho_fields.items():
         error = utils.check_attribute_name(key)
         if not error:
             fields.append(f"self.{key}: Field = None")
+            kwargs.append(f"{key}: '{str(value.py_type.__name__)}'=None")
+            arg_names.append(f'{key}={key}')
     fields = "\n        ".join(fields)
+    kwargs = ", ".join(kwargs)
+    arg_names = ", ".join(arg_names)
     fkeys = ''
     path[0] = package_dir
     path[1] = path[1].replace('.', os.sep)
@@ -249,6 +255,8 @@ def __update_this_module(
                 class_name=class_name,
                 dc_name=f'DC_{__get_full_class_name(rel._schemaname, rel._relationname)}',
                 fqtn=fqtn,
+                kwargs=kwargs,
+                arg_names=arg_names,
                 warning=WARNING_TEMPLATE.format(package_name=package_name)))
     if not os.path.exists(module_path.replace('.py', TEST_EXT)):
         with open(module_path.replace('.py', TEST_EXT), 'w', encoding='utf-8') as file_:
