@@ -23,7 +23,6 @@ FIELDS:
 
 PRIMARY KEY (first_name, last_name, birth_date)
 UNIQUE CONSTRAINT (id)
-UNIQUE CONSTRAINT (first_name)
 FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_comment_author_id: ("id")
  ↳ "halftest":"blog"."comment"(author_id)
@@ -107,3 +106,16 @@ class Test(TestCase):
         self.assertTrue(empty.ho_is_empty())
         not_empty = self.pers()
         self.assertFalse(not_empty.ho_is_empty())
+
+    def test_ho_count_limit(self):
+        pers = self.pers()
+        pers.ho_limit(2)
+        self.assertEqual(pers.ho_count(), 2)
+
+    def test_ho_count_distinct(self):
+        pers = self.pers()
+        pers.ho_mogrify()
+        pers.ho_distinct()
+        self.assertEqual(pers.ho_count('birth_date'), 1)
+        pers.ho_distinct(False)
+        self.assertEqual(pers.ho_count('birth_date'), 60)

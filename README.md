@@ -6,7 +6,7 @@
 [![Test on different versions of Python](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg)](https://github.com/collorg/halfORM/actions/workflows/python-package.yml)
 [![Test on different versions of PostgreSQL](https://github.com/collorg/halfORM/actions/workflows/postgresql-releases.yml/badge.svg)](https://github.com/collorg/halfORM/actions/workflows/postgresql-releases.yml)
 [![Coverage Status](https://coveralls.io/repos/github/collorg/halfORM/badge.svg?branch=main)](https://coveralls.io/github/collorg/halfORM?branch=main)
-[![Downloads](https://static.pepy.tech/badge/half_orm/month)](https://pepy.tech/project/half_orm)
+[![Downloads](https://static.pepy.tech/badge/half_orm)](https://clickpy.clickhouse.com/dashboard/half-orm)
 [![Contributors](https://img.shields.io/github/contributors/collorg/halform)](https://github.com/collorg/halfORM/graphs/contributors)
 
 Nowadays, most applications require interacting with a relational database. While full-fledged ORMs like SQLAlchemy are very powerful, their complexity, steep learning curve, and some of their limitations can be a hindrance. This is the context in which half_orm was born, a minimalist ORM specifically designed for PostgreSQL. The main motivation is to allow modeling the database directly in SQL, taking full advantage of the capabilities offered by the PostgreSQL engine (triggers, views, functions, stored procedures, inheritance handling...), while avoiding the "impedance mismatch" issues, loss of control over generated SQL, and rigidity encountered with full-fledged ORMs that model the schema at the object level. Half_orm intentionally excludes the DDL aspects (schema creation) of the SQL language. The goal is to provide a lightweight abstraction layer over standard SQL queries while maintaining transparent access to the underlying database engine. With half_orm, writing INSERT, SELECT, UPDATE, and DELETE queries becomes as simple as with SQL, but in the comfort of Python. Its operation aims to be intuitive thanks to a lean API that emphasizes productivity and code readability.
@@ -244,54 +244,7 @@ gaston(lost_name='Lagaffe')
 # raises a half_orm.relation_errors.IsFrozenError Exception
 ```
 
-## Cardinality of a set
-
-**[BREAKING CHANGE]** From version 0.12 onward, the *`__len__`* method has been deprecated. It has been replaced by the `ho_count` method.
-
-*The code `len(Person())` must be replaced by `Person().ho_count()`*.
-
-> The problem was that the Python `list` builtin function triggers the `__len__` method if it exists. So the
-> code `list(Person())` was triggering two requests on the database : frist a SQL `select count` (which can be [slow
-> in PostgreSQL](https://wiki.postgresql.org/wiki/Slow_Counting)) and then the SQL `select`.
-
-You can get the number of elements in a relation with the `ho_count` method, as in `Person().ho_count()`.
-
-### The `NULL` value
-
-`half_orm` provides the `NULL` value:
-
-```py
-from half_orm.null import NULL
-
-nobody = Person()
-nobody.last_name.set(NULL)
-assert nobody.ho_count() == 0 # last_name is part of the PK
-[...]
-```
-
-The `None` value, unsets a constraint on a field:
-
-```py
-[...]
-nobody.last_name.set(None)
-assert nobody.ho_count() == Person().ho_count()
-```
-
-## Set operators
-
-You can use the set operators to set more complex constraints on your relations:
-- `&`, `|`, `^` and `-` for `and`, `or`, `xor` and `not`.
-Take a look at [the algebra test file](https://github.com/collorg/halfORM/blob/main/test/relation/algebra_test.py).
-- you can also use the `==`, `!=` and `in` operators to compare two sets.
-
-```py
-my_selection = Person(last_name=('ilike', '_a%')) | Person(first_name=('like', 'A%'))
-```
-
-`my_selection` represents the set of people whose second letter of the name is in `['a', 'A']` or whose first letter of the first name is an `A`.
-
-
-# DML. The `ho_insert`, `ho_select`, `ho_update`, `ho_delete` methods.
+# DML. The `ho_insert`, `ho_update`, `ho_delete`, `ho_select` methods.
 
 These methods trigger their corresponding SQL querie on the database.
 For debugging purposes, you can print the SQL query built
@@ -355,6 +308,89 @@ would be inserted.
 
 By default `ho_insert` returns all the inserted values as a dictionary. You can specify the columns
 you want to get by passing their names as argurments to `ho_insert`.
+
+## ho_update
+
+To update a subset, you first define the subset an then invoque the `ho_udpate`
+method with the new values passed as argument.
+
+```py
+gaston = Person(first_name='Gaston')
+gaston.ho_update(birth_date='1970-01-01')
+```
+
+Let's look at how we could turn the last name into capital letters for a subset of people:
+
+```py
+class Person(halftest.get_relation_class('actor.person')):
+    # [...]
+
+    def upper_last_name(self):
+        "tranform last name to upper case."
+
+        def update(self):
+            for d_pers in self.ho_select('id', 'last_name'):
+                pers = Person(**d_pers)
+                pers.ho_update(last_name=d_pers['last_name'].upper())
+        with Transaction(halftest):
+            update(self)
+```
+
+Again, we insure the atomicity of the transaction using the `Transaction(halftest)`
+context manager.
+
+```
+>>> a_pers = Person(last_name=('ilike', '_a%'))
+>>> print([elt.last_name for elt in list(a_pers.ho_select())])
+>>> a_pers = Person(last_name=('ilike', '_a%'))
+>>> print([elt['last_name'] for elt in a_pers.ho_select('last_name')])
+['Lagaffe', 'Maltese', 'Talon']
+>>> a_pers.upper_last_name()
+>>> print([elt['last_name'] for elt in a_pers.ho_select('last_name')])
+['LAGAFFE', 'MALTESE', 'TALON']
+```
+
+### Returning values
+
+To return the updated values, you can add to `ho_update` the column names you want to get, or `*` if you want to get all the columns.
+
+```py
+>>> gaston.ho_update('*', birth_date='1970-01-01')
+```
+
+### Update all data in a table
+
+If you want to update all the data in a relation, you must set the argument `update_all` to `True`. A `RuntimeError` is raised otherwise.
+
+```py
+Person().ho_update(birth_date='1970-01-01', update_all=True)
+```
+
+## ho_delete
+
+The `ho_delete` method allows you to remove a set of elements from a table:
+
+```py
+gaston = Person(first_name='Gaston')
+gaston.ho_delete()
+```
+
+To remove every tuples from a table, you must set the argument `delete_all` to `True`. A `RuntimeError` is raised otherwise.
+
+```py
+Person().ho_delete(delete_all=True)
+if not Person().ho_is_empty():
+    print('Weird! You should check your "on delete cascade".')
+```
+Well, there is not much left after this in the `actor.person` table.
+
+### Returning values
+
+As for `ho_update`, to return the deleted values, you can add to `ho_delete` the column names you want to get, or `*` if you want to get all the columns.
+
+```py
+>>> gaston.ho_delete('first_name', 'last_name', 'birth_date')
+```
 
 ## ho_select
 The `ho_select` method is a generator. It returns all the data of the relation that matches the constraint defined on the Relation object.
@@ -479,88 +515,49 @@ Note: Calling `ho_select` with columns corresponding to the primary key as argum
 2. The table `actor.person` has a primary key which makes it a set (ie. each element returned by select is
 indeed a singleton).
 
-## ho_update
+## ho_count: cardinality of a set
 
-To update a subset, you first define the subset an then invoque the `ho_udpate`
-method with the new values passed as argument.
+**[BREAKING CHANGE]** From version 0.12 onward, the *`__len__`* method has been deprecated. It has been replaced by the `ho_count` method.
 
-```py
-gaston = Person(first_name='Gaston')
-gaston.ho_update(birth_date='1970-01-01')
-```
+*The code `len(Person())` must be replaced by `Person().ho_count()`*.
 
-Let's look at how we could turn the last name into capital letters for a subset of people:
 
-```py
-class Person(halftest.get_relation_class('actor.person')):
-    # [...]
+You can get the number of elements in a relation with the `ho_count` method, as in `Person().ho_count()`.
 
-    def upper_last_name(self):
-        "tranform last name to upper case."
+### The `NULL` value
 
-        def update(self):
-            for d_pers in self.ho_select('id', 'last_name'):
-                pers = Person(**d_pers)
-                pers.ho_update(last_name=d_pers['last_name'].upper())
-        with Transaction(halftest):
-            update(self)
-```
-
-Again, we insure the atomicity of the transaction using the `Transaction(halftest)`
-context manager.
-
-```
->>> a_pers = Person(last_name=('ilike', '_a%'))
->>> print([elt.last_name for elt in list(a_pers.ho_select())])
->>> a_pers = Person(last_name=('ilike', '_a%'))
->>> print([elt['last_name'] for elt in a_pers.ho_select('last_name')])
-['Lagaffe', 'Maltese', 'Talon']
->>> a_pers.upper_last_name()
->>> print([elt['last_name'] for elt in a_pers.ho_select('last_name')])
-['LAGAFFE', 'MALTESE', 'TALON']
-```
-
-### Returning values
-
-To return the updated values, you can add to `ho_update` the column names you want to get, or `*` if you want to get all the columns.
+`half_orm` provides the `NULL` value:
 
 ```py
->>> gaston.ho_update('*', birth_date='1970-01-01')
+from half_orm.null import NULL
+
+nobody = Person()
+nobody.last_name.set(NULL)
+assert nobody.ho_count() == 0 # last_name is part of the PK
+[...]
 ```
 
-### Update all data in a table
-
-If you want to update all the data in a relation, you must set the argument `update_all` to `True`. A `RuntimeError` is raised otherwise.
+The `None` value, unsets a constraint on a field:
 
 ```py
-Person().ho_update(birth_date='1970-01-01', update_all=True)
+[...]
+nobody.last_name.set(None)
+assert nobody.ho_count() == Person().ho_count()
 ```
 
-## ho_delete
+## Set operators
 
-The `ho_delete` method allows you to remove a set of elements from a table:
+You can use the set operators to set more complex constraints on your relations:
+- `&`, `|`, `^` and `-` for `and`, `or`, `xor` and `not`.
+Take a look at [the algebra test file](https://github.com/collorg/halfORM/blob/main/test/relation/algebra_test.py).
+- you can also use the `==`, `!=` and `in` operators to compare two sets.
 
 ```py
-gaston = Person(first_name='Gaston')
-gaston.ho_delete()
+my_selection = Person(last_name=('ilike', '_a%')) | Person(first_name=('like', 'A%'))
 ```
 
-To remove every tuples from a table, you must set the argument `delete_all` to `True`. A `RuntimeError` is raised otherwise.
+`my_selection` represents the set of people whose second letter of the name is in `['a', 'A']` or whose first letter of the first name is an `A`.
 
-```py
-Person().ho_delete(delete_all=True)
-if not Person().ho_is_empty():
-    print('Weird! You should check your "on delete cascade".')
-```
-Well, there is not much left after this in the `actor.person` table.
-
-### Returning values
-
-As for `ho_update`, to return the deleted values, you can add to `ho_delete` the column names you want to get, or `*` if you want to get all the columns.
-
-```py
->>> gaston.ho_delete('first_name', 'last_name', 'birth_date')
-```
 
 # Working with foreign keys [WIP]
 

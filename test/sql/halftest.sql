@@ -414,14 +414,6 @@ CREATE VIEW "half_orm_meta.view".hop_penultimate_release AS
 
 
 --
--- Name: person person_first_name_key; Type: CONSTRAINT; Schema: actor; Owner: -
---
-
-ALTER TABLE ONLY actor.person
-    ADD CONSTRAINT person_first_name_key UNIQUE (first_name);
-
-
---
 -- Name: person person_id_key; Type: CONSTRAINT; Schema: actor; Owner: -
 --
 

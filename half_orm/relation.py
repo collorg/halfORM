@@ -88,7 +88,7 @@ class _SetOperators:
         self.__right = right
 
 @dataclass
-class DC_Relation:
+class DC_Relation: # pragma: no cover
     def __init__(self, **kwargs): ...
 
     def ho_insert(self, *args: List[str]) -> Dict:
@@ -147,7 +147,7 @@ class DC_Relation:
         """The get method allows you to fetch a singleton from the database.
         It garantees that the constraint references one and only one tuple.
 
-        Args:
+        Arguments:
             args (List[str]): list of fields names.\
             If ommitted, all the values of the row retreived from the database\
             are set for the self object.\
@@ -203,15 +203,13 @@ class DC_Relation:
         """Set the offset for the next SQL select request."""
         ...
 
-    def ho_count(self):
+    def ho_count(self, limit=0):
         """Returns the number of tuples matching the intention in the relation.
         """
         ...
 
     def ho_is_empty(self):
         """Returns True if the self is an empty set, False otherwise.
-
-        Same as self.ho_count() == 0 but limits the request to 1 element (faster).
         """
         ...
 
@@ -748,9 +746,14 @@ Fkeys = {"""
             query = f"{query} offset {self._ho_select_params['offset']}"
         return query, values
 
-    def ho_distinct(self):
+    def ho_distinct(self, dist=True):
         """Set distinct in SQL select request."""
-        self._ho_select_params['distinct'] = 'distinct'
+        distinct = 'distinct'
+        if dist not in {True, False, None}:
+            raise ValueError('dist must be one of {True, False, None}')
+        if dist in {False, None}:
+            distinct = ''
+        self._ho_select_params['distinct'] = distinct
         return self
 
     def ho_unaccent(self, *fields_names):
@@ -789,26 +792,23 @@ Fkeys = {"""
         return self
 
     # @utils.trace
-    def ho_count(self):
+    def ho_count(self, *args):
         """Returns the number of tuples matching the intention in the relation.
-
-        See select for arguments.
         """
+        previous_distinct = self._ho_select_params.get('distinct')
+        if args and previous_distinct is None:
+            self.ho_distinct(True)
         self._ho_query = "select"
-        query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {}"
-        query, values = self.__prep_query(query_template)
-        vars_ = tuple(self._ho_sql_values + values)
-        return self.__execute(query, vars_).fetchone()['count']
+        query, values = self._ho_prep_select(*args)
+        query = f'select\n  count(*) from ({query}) as ho_count'
+        if previous_distinct is not None:
+            self._ho_select_params['distinct'] = previous_distinct
+        return self.__execute(query, values).fetchone()['count']
 
     def ho_is_empty(self):
         """Returns True if the relation is empty, False otherwise.
-
-        Same as __len__ but limits the request to 1 element (faster).
-        Use it instead of relation.ho_count() == 0.
         """
-        self._ho_query = "select"
-        query_template = "select\n  count(distinct {})\nfrom {}\n  {}\n  {} limit 1"
-        _, values = self.__prep_query(query_template)
+        self.ho_limit(1)
         return self.ho_count() == 0
 
     #@utils.trace

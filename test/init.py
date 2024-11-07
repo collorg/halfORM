@@ -90,7 +90,7 @@ class HalfTest:
             for letter in 'abcdef':
                 for i in range(10):
                     last_name = name(letter, i)
-                    first_name = name(letter, i)
+                    first_name = name(letter, 0)
                     birth_date = self.today
                     pers(
                         last_name=last_name,
