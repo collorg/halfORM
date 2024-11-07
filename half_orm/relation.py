@@ -958,6 +958,56 @@ Fkeys = {"""
     def __next__(self):
         return next(self.ho_select())
 
+    # deprecated. To remove with release 1.0.0
+
+    @utils._ho_deprecated
+    def select(self, *args):
+        return self.ho_select(*args)
+
+    @utils._ho_deprecated
+    def insert(self, *args):
+        return self.ho_insert(*args)
+
+    @utils._ho_deprecated
+    def update(self, *args, update_all=False, **kwargs):
+        return self.ho_update(*args, update_all, **kwargs)
+
+    @utils._ho_deprecated
+    def delete(self, *args, delete_all=False):
+        return self.ho_delete(*args, delete_all)
+
+    @utils._ho_deprecated
+    def get(self, *args):
+        return self.ho_get(*args)
+
+    @utils._ho_deprecated
+    def unaccent(self, *fields_names):
+        return self.ho_unaccent(*fields_names)
+
+    @utils._ho_deprecated
+    def order_by(self, _order_):
+        return self.ho_order_by(_order_)
+
+    @utils._ho_deprecated
+    def limit(self, _limit_):
+        return self.ho_limit(_limit_)
+
+    @utils._ho_deprecated
+    def offset(self, _offset_):
+        return self.ho_offset(_offset_)
+
+    @utils._ho_deprecated
+    def _mogrify(self):
+        return self.ho_mogrify()
+
+    @utils._ho_deprecated
+    def count(self, *args):
+        return self.ho_count(*args)
+
+    @utils._ho_deprecated
+    def is_empty(self):
+        return self.ho_is_empty()
+
 def singleton(fct):
     """Decorator. Enforces the relation to define a singleton.
 
