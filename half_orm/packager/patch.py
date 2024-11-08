@@ -197,9 +197,17 @@ class Patch:
 
     def __execute_script(self, file_):
         try:
+            python_path = os.environ.get('PYTHONPATH')
+            if python_path:
+                python_path = python_path.split(':')
+            else:
+                python_path = []
+            if self.__repo.base_dir:
+                os.environ.update({'PYTHONPATH': ':'.join([self.__repo.base_dir] + python_path)})
             subprocess.run(
                 ['python', file_.path],
-                env={'PYTHONPATH': self.__repo.base_dir},
+                cwd=self.__repo.base_dir,
+                env=os.environ,
                 shell=False, check=True)
         except subprocess.CalledProcessError as err:
             utils.error(f'Problem with script {file_}\n{err}\n')

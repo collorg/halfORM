@@ -81,7 +81,10 @@ hop prepare -l patch -m "Second patch release"
 if [ `git branch --show-current` != 'hop_0.0.2' ] ; then echo "It should be on branch hop_0.0.2" ; exit 1 ; fi
 
 echo 'create table a ( a text primary key )' > Patches/0/0/2/00_a.sql
-echo 'print("I am a script without x permission...")' > Patches/0/0/2/a.py
+cat > Patches/0/0/2/a.py << EOF
+from hop_test.public.first import First
+list(First())
+EOF
 
 # It should be able to apply multiple times
 sync; sync
