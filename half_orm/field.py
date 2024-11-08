@@ -6,6 +6,7 @@
 import sys
 import typing
 import psycopg2
+import psycopg2.extras
 
 from half_orm.null import NULL
 from half_orm.packager.sql_adapter import SQL_ADAPTER
