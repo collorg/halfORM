@@ -4,6 +4,7 @@
 import uuid
 from unittest import TestCase
 from half_orm.relation import Relation
+from half_orm.relation_errors import IsFrozenError
 
 import psycopg2
 
@@ -42,6 +43,9 @@ Fkeys = {
     '': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
 }"""
 
+FROZEN_ERROR = """ERROR! The class <class 'halftest.actor.person.Person'> is forzen.
+Use ho_unfreeze to add the 'coucou' attribute to it."""
+
 class Test(TestCase):
     def setUp(self):
         self.pers = halftest.person_cls()()
@@ -70,14 +74,16 @@ class Test(TestCase):
         self.assertEqual(add_returning(self.pers, 'query'), 'query')
 
     def testho_is_frozen(self):
-        frozen = self.pers.__dict__['_ho_isfrozen']
-        self.assertTrue(frozen)
-        self.pers.ho_unfreeze()
-        frozen = self.pers.__dict__['_ho_isfrozen']
-        self.assertFalse(frozen)
-        self.pers.ho_freeze()
-        frozen = self.pers.__dict__['_ho_isfrozen']
-        self.assertTrue(frozen)
+        pers = self.pers()
+        self.assertTrue(pers._ho_isfrozen)
+        with self.assertRaises(IsFrozenError) as exc:
+            setattr(pers, 'coucou', None)
+        self.assertEqual(FROZEN_ERROR, str(exc.exception))
+        pers.ho_unfreeze()
+        self.assertFalse(pers._ho_isfrozen)
+        setattr(pers, 'coucou', 1)
+        pers.ho_freeze()
+        self.assertTrue(pers._ho_isfrozen)
 
     def testho_unaccent(self):
         self.assertFalse(self.pers.first_name.unaccent)
