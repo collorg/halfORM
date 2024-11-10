@@ -23,7 +23,7 @@ class Test(TestCase):
         "it should be the same model object"
         self.assertEqual(
             ID_MODEL,
-            id(model.get_relation_class(PERSON)._model))
+            id(model.get_relation_class(PERSON)._ho_model))
 
     def test_get_relation_class(self):
         "it should return the same class"

@@ -35,7 +35,7 @@ class FKey:
         """Returns the relation class referenced by fqtn.
         First try model._import_class fallback to model.get_relation_class on ImportError.
         """
-        return self.__relation._model._import_class(fqtn)
+        return self.__relation._ho_model._import_class(fqtn)
 
     def __call__(self, __cast__=None, **kwargs):
         """Returns the relation referenced by the fkey.

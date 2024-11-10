@@ -39,7 +39,7 @@ def factory(dct):
     tbl_attr.update(dict(zip(['_dbname', '_schemaname', '_relationname'], dct['fqrn'])))
     model = dct['model']
     model._classes_.setdefault(tbl_attr['_dbname'], {})
-    tbl_attr['_model'] = model
+    tbl_attr['_ho_model'] = model
     dbname, schema, relation = dct['fqrn']
     rel_class = None
     if model._classes_.get(dbname):

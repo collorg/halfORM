@@ -487,7 +487,7 @@ class Relation:
 
     #@utils.trace
     def __execute(self, query, values):
-        return self._model.execute_query(query, values, self._ho_mogrify)
+        return self._ho_model.execute_query(query, values, self._ho_mogrify)
 
     @property
     def ho_id(self):
@@ -510,7 +510,7 @@ class Relation:
 
     def _ho_set_fields(self):
         """Initialise the fields of the relation."""
-        _fields_metadata = self._model._fields_metadata(self._t_fqrn)
+        _fields_metadata = self._ho_model._fields_metadata(self._t_fqrn)
 
         for field_name, f_metadata in _fields_metadata.items():
             field = Field(field_name, self, f_metadata)
@@ -524,7 +524,7 @@ class Relation:
         #pylint: disable=import-outside-toplevel
         from half_orm.fkey import FKey
 
-        _fkeys_metadata = self._model._fkeys_metadata(self._t_fqrn)
+        _fkeys_metadata = self._ho_model._fkeys_metadata(self._t_fqrn)
         for fkeyname, f_metadata in _fkeys_metadata.items():
             self._ho_fkeys[fkeyname] = FKey(fkeyname, self, *f_metadata)
         if hasattr(self.__class__, 'Fkeys') and not self._ho_fkeys_properties:
@@ -587,10 +587,10 @@ Fkeys = {"""
                 field_desc = f'{field_desc} --- FIX ME! {error}'
             ret.append(field_desc)
         ret.append('')
-        pkey = self._model._pkey_constraint(self._t_fqrn)
+        pkey = self._ho_model._pkey_constraint(self._t_fqrn)
         if pkey:
             ret.append(f"PRIMARY KEY ({', '.join(pkey)})")
-        for uniq in self._model._unique_constraints_list(self._t_fqrn):
+        for uniq in self._ho_model._unique_constraints_list(self._t_fqrn):
             ret.append(f"UNIQUE CONSTRAINT ({', '.join(uniq)})")
         if self._ho_fkeys.keys():
             plur = 'S' if len(self._ho_fkeys) > 1 else ''
@@ -853,7 +853,7 @@ Fkeys = {"""
 
         TODO: check that qrn inherits self (or is inherited by self)?
         """
-        new = self._model._import_class(qrn)(**self.__to_dict_val_comp())
+        new = self._ho_model._import_class(qrn)(**self.__to_dict_val_comp())
         new._ho_id_cast = id(self)
         new._ho_join_to = self._ho_join_to
         new._ho_set_operators = self._ho_set_operators
@@ -935,14 +935,14 @@ Fkeys = {"""
             new_elt = relation(**elt)
             new_elt.ho_update(col=new_val)
         """
-        self.ho_transaction._enter(self._model)
+        self.ho_transaction._enter(self._ho_model)
         return self
 
     def __exit__(self, *__):
         """Context management exit
 
         """
-        self.ho_transaction._exit(self._model)
+        self.ho_transaction._exit(self._ho_model)
         return False
 
     def __iter__(self):
