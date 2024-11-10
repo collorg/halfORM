@@ -1022,6 +1022,28 @@ def singleton(fct):
     wrapper.__orig_args = inspect.getfullargspec(fct)
     return wrapper
 
+def transaction(fct):
+    """Decorator. Enforces every SQL insert, update or delete operation called within a
+    Relation method to be executed in a transaction.
+    
+    Usage:
+        from relation import transaction
+        class Person(model.get_relation_class(actor.person)):
+            [...]
+            @transaction
+            def insert_many(self, **data):
+                for d_pers in **data:
+                    self(**d_pers).ho_insert()
+            [...]
+        
+        Pers().insert_many([{...}, {...}])
+
+    """
+    def wrapper(self, *args, **kwargs):
+        with Transaction(self._ho_model):
+            return fct(self, *args, **kwargs)
+    return wrapper
+
 REL_CLASS_NAMES = {
     'r': 'Table',
     'p': 'Partioned table',

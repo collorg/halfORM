@@ -268,25 +268,21 @@ lagaffe = Person(last_name='Lagaffe', first_name='Gaston', birth_date='1957-02-2
 lagaffe_id = lagaffe.ho_insert()['id']
 ```
 
-As of version 0.13, the `Relation.ho_transaction` decorator is deprecated and replaced by
-the `Transaction(<model>)` context manager, as shown in the following example:
+As of version 0.13, the `Relation.ho_transaction` decorator is replaced by the `transaction`
+decorator. It uses the new `Transaction(<model>)` context manager:
 
 ```py
-from half_orm.transaction import Transaction
+from half_orm.relation import transaction
 # [...]
 
 class Person(halftest.get_relation_class('actor.person')):
     # [...]
 
+    @transaction
     def insert_many(self, *data):
         """Insert serveral people in a single transaction."""
-
-        def insert(self, *data):
-            for d_pers in data:
-                self(**d_pers).ho_insert()
-
-        with Transaction(halftest):
-            insert(self, *data)
+        for d_pers in data:
+            self(**d_pers).ho_insert()
 
 ```
 
@@ -332,12 +328,12 @@ class Person(halftest.get_relation_class('actor.person')):
             for d_pers in self.ho_select('id', 'last_name'):
                 pers = Person(**d_pers)
                 pers.ho_update(last_name=d_pers['last_name'].upper())
-        with Transaction(halftest):
+        with Transaction(self._ho_model):
             update(self)
 ```
 
-Again, we insure the atomicity of the transaction using the `Transaction(halftest)`
-context manager.
+We here use the `Transaction` context manager to insure the atomicity of 
+the operation.
 
 ```
 >>> a_pers = Person(last_name=('ilike', '_a%'))

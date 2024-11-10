@@ -59,6 +59,7 @@ FIELDS:
 
 PRIMARY KEY (first_name, last_name, birth_date)
 UNIQUE CONSTRAINT (id)
+UNIQUE CONSTRAINT (last_name)
 FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_comment_author_id: ("id")
  ↳ "halftest":"blog"."comment"(author_id)
@@ -116,6 +117,7 @@ FOREIGN KEYS:
      
      PRIMARY KEY (first_name, last_name, birth_date)
      UNIQUE CONSTRAINT (id)
+     UNIQUE CONSTRAINT (last_name)
      FOREIGN KEYS:
      - _reverse_fkey_halftest_blog_comment_author_id: ("id")
       ↳ "halftest":"blog"."comment"(author_id)

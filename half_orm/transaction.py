@@ -36,7 +36,6 @@ class Transaction:
                 self.__transaction['model']._connection.autocommit = True
             except Exception as exc:
                 self.__transaction['model']._connection.rollback()
-                raise exc
 
     @property
     def level(self):
@@ -44,6 +43,3 @@ class Transaction:
 
     def is_set(self):
         return self.__transaction.get('level', 0) > 0
-
-    def __repr__(self):
-        return f"model: {self.__transaction['model']._dbname}({self.__id}), level: {self.__transaction.get('level')}"

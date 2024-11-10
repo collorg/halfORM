@@ -17,4 +17,4 @@ class Test(HoTestCase):
     def test_unique_error(self):
         "it should raise an error"
         with self.assertRaises(AssertionError):
-            self.hotAssertIsUnique(self.pers, ['last_name'])
+            self.hotAssertIsUnique(self.pers, ['first_name'])
