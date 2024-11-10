@@ -6,8 +6,6 @@ import io
 import re
 import sys
 from half_orm.hotest import HoTestCase
-from half_orm.utils import TraceDepth
-
 
 from ..init import halftest
 

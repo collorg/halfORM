@@ -123,23 +123,6 @@ def _ho_deprecated(fct):
         return fct(self, *args, **kwargs)
     return wrapper
 
-def deprectated(old, new, release, skip_re=None):
-    callerframerecord = inspect.stack()[2]
-    frame = callerframerecord[0]
-    info = inspect.getframeinfo(frame)
-    warn_msg = (f'{old} is deprecated. '
-        f'It will be removed in half_orm {release}.\n'
-        f'Use {new} instead.\n\n')
-    skip = False
-    if info.code_context:
-        context = info.code_context[0]
-        if skip_re:
-            skip = re.findall(skip_re, context)
-        warn_msg += (f'{info.filename}:{info.lineno}, in {info.function}\n'
-            f'{context}\n')
-    if not skip:
-        warning(warn_msg)
-
 def check_attribute_name(string: str):
     err = None
     if not string.isidentifier():

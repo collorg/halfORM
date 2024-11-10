@@ -1,5 +1,9 @@
+import contextlib
+import io
 import os
+import re
 import sys
+import pytest
 from unittest import TestCase, skip
 from half_orm import utils
 
@@ -12,6 +16,12 @@ c'est un test
 """
 
 datalines = ['coucou\n', "c'est un test\n"]
+deprecated_warning = '''HalfORM WARNING! "\x1b[1mtoto\x1b[0m" is deprecated. It will be removed in half_orm 1.0.
+Use "\x1b[1mtoto\x1b[0m" instead.
+/home/joel/devel/halfORM/test/utils/misc_test.py:65, in test_ho_deprecated
+            toto(a)
+
+'''
 
 class Test(TestCase):
     def tearDown(self):
@@ -44,3 +54,24 @@ class Test(TestCase):
 
     def test_blue(self):
         self.assertEqual(utils.Color.blue('coucou'), '\x1b[1;34mcoucou\x1b[0m')
+
+    def test_ho_deprecated(self):
+        a = 1
+        @utils._ho_deprecated
+        def toto(self):
+            pass
+        f = io.StringIO()
+        with contextlib.redirect_stderr(f):
+            toto(a)
+            self.assertEqual(deprecated_warning, str(f.getvalue()))
+
+    def test_warning(self):
+        f = io.StringIO()
+        with contextlib.redirect_stderr(f):
+            utils.warning('coucou')
+            self.assertEqual(f.getvalue(), '\x1b[1mHOP WARNING\x1b[0m: coucou')
+
+    def test_error_exit_code(self):
+        with self.assertRaises(SystemExit) as cm:
+            utils.error('coucou', 42)
+        self.assertEqual(cm.exception.code, 42)
