@@ -15,6 +15,9 @@ class Test(TestCase):
         self.aa = self.pers(last_name='aa')
         assert(self.aa.ho_count() == 1)
 
+    def tearDown(self):
+        self.aa.post_rfk().ho_delete()
+
     def test_fkey_update(self):
         "should insert blog.post with fkey reference on author"
         self.post._ho_fkeys['author'].set(self.aa)
@@ -29,4 +32,3 @@ class Test(TestCase):
         self.assertEqual(upost.ho_count(), 1)
         upost.ho_delete()
         self.assertEqual(post.ho_count(), 0)
-
