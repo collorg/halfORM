@@ -125,3 +125,14 @@ class Test(TestCase):
         self.assertEqual(pers.ho_count('birth_date'), 1)
         pers.ho_distinct(False)
         self.assertEqual(pers.ho_count('birth_date'), 60)
+
+    def test_keys(self):
+        self.assertEqual(list(self.pers.keys()), ['id', 'first_name', 'last_name', 'birth_date'])
+
+    def test_items(self):
+        pers = self.pers(first_name='Gaston', last_name='Lagaffe')
+        self.assertEqual(list(pers.items()), [('id', None), ('first_name', 'Gaston'), ('last_name', 'Lagaffe'), ('birth_date', None)])
+
+    def test_getitem(self):
+        pers = self.pers(first_name='Gaston', last_name='Lagaffe')
+        self.assertEqual(pers['last_name'], 'Lagaffe')
