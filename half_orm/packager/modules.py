@@ -104,7 +104,7 @@ def __gen_dataclass(relation, fkeys):
     post_init = ['    def __post_init__(self):']
     for field_name, field in rel._ho_fields.items():
         fields.append(__get_field_desc(field_name, field))
-        post_init.append(f'        self.{field_name} = Field(self.{field_name})')
+        post_init.append(f'        self.{field_name}: Field = None')
 
     fkeys = {value:key for key, value in fkeys.items() if key != ''}
     for key, value in rel()._ho_fkeys.items():
