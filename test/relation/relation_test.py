@@ -126,6 +126,11 @@ class Test(TestCase):
         pers.ho_distinct(False)
         self.assertEqual(pers.ho_count('birth_date'), 60)
 
+    def test_ho_count_arg(self):
+        with self.assertRaises(ValueError) as exc:
+            self.pers().ho_distinct(2)
+        self.assertEqual("ho_distinct argument must be either True or False!", str(exc.exception))
+
     def test_keys(self):
         self.assertEqual(list(self.pers.keys()), ['id', 'first_name', 'last_name', 'birth_date'])
 

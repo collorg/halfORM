@@ -749,8 +749,8 @@ Fkeys = {"""
     def ho_distinct(self, dist=True):
         """Set distinct in SQL select request."""
         distinct = 'distinct'
-        if dist not in {True, False, None}:
-            raise ValueError('dist must be one of {True, False, None}')
+        if dist not in {True, False}:
+            raise ValueError('ho_distinct argument must be either True or False!')
         if dist in {False, None}:
             distinct = ''
         self._ho_select_params['distinct'] = distinct
@@ -795,14 +795,9 @@ Fkeys = {"""
     def ho_count(self, *args):
         """Returns the number of tuples matching the intention in the relation.
         """
-        previous_distinct = self._ho_select_params.get('distinct')
-        if args and previous_distinct is None:
-            self.ho_distinct(True)
         self._ho_query = "select"
         query, values = self._ho_prep_select(*args)
         query = f'select\n  count(*) from ({query}) as ho_count'
-        if previous_distinct is not None:
-            self._ho_select_params['distinct'] = previous_distinct
         return self.__execute(query, values).fetchone()['count']
 
     def ho_is_empty(self):
