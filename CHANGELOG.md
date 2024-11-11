@@ -1,3 +1,24 @@
+# 0.13.3 -- hop 0.1.0 alpha 18 (2024-11-11)
+
+* [relation] New relation.transaction decorator (replaces Relation.ho_transaction). (07f3a07)
+* [relation] Replace attribute _model by _ho_model. (8d55b6a)
+* [test] ho_distinct argument values. (d45242c)
+* [test][relation] test dict behavior (keys, items and __getitem__). (076139f)
+* [test] utils. Fix CI (9e5223f)
+* [test] utils. (8f0352d)
+* [test] ho_count with fkeys. (8928400)
+* [hop] Pylint score improvement (8d218c9)
+* [hop] Add repo base dir to PYTHONPATH. (064576f)
+* [field] Add missing import. (63c24dd)
+* [test][relation] ho_freeze and ho_unfreeze (4bcb2f5)
+* [relation] Reintroduction of deprecated methods to be remove with release 1.0.0 (680cd5f)
+* [relation] refactor ho_count. (89d2f5d)
+* [sonarcloud] More fixes. (a99e57d)
+* [refactor] Fix some issues pointed out by Sonarcloud. (b106f74)
+* [relation] Use context manager for cursors. (2260f32)
+* [hop] Replace kwargs with the explicit list of fields. (b947737)
+* [field] Adds the Field.py_type property returning the Python type corresponding to the SQL type. (ee0202e)
+
 # 0.13.2 -- hop 0.1.0 alpha 17 (2024-10-31)
 
 ## BREAKING CHANGE
