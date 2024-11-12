@@ -224,7 +224,8 @@ CREATE TABLE blog.comment (
     content text,
     post_id integer,
     author_id integer,
-    "a = 1" text
+    "a = 1" text,
+    tags _text
 );
 
 

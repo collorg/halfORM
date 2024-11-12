@@ -13,6 +13,7 @@ class Test(TestCase):
     def setUp(self):
         self.pers = halftest.person_cls()
         self.post = halftest.post_cls()
+        self.comment = halftest.comment_cls()
         self.today = halftest.today
 
     def tearDown(self):
@@ -123,3 +124,6 @@ class Test(TestCase):
         self.assertIsInstance(self.post.content.value, tuple)
         self.post.content.unaccent = True
         self.assertEqual(self.post.content._where_repr('', id(self.post)), 'unaccent("content") = unaccent(%s)')
+
+    def test_py_type(self):
+        self.assertEqual(str(self.comment.tags.py_type), 'typing.List[str]')

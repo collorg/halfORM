@@ -47,7 +47,6 @@ SQL_ADAPTER = {
   'serial': int,
   'serial4': int,
   'text': str,
-  '_text': typing.List[str],
   'time': datetime.datetime,
   'timestamp': datetime.datetime,
   'tsquery': typing.Any,

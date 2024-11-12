@@ -35,7 +35,15 @@ class Field():
 
     @property
     def py_type(self):
-        return SQL_ADAPTER.get(self.__sql_type, typing.Any)
+        sql_type = self.__sql_type
+        list_ = False
+        if sql_type[0] == '_':
+            sql_type = sql_type[1:]
+            list_ = True
+        python_type = SQL_ADAPTER.get(sql_type, typing.Any)
+        if list_:
+            python_type = typing.List[python_type]
+        return python_type
 
     def is_set(self):
         "Returns if the field is set or not."
