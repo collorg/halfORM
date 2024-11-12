@@ -9,7 +9,7 @@ import psycopg2
 import psycopg2.extras
 
 from half_orm.null import NULL
-from half_orm.packager.sql_adapter import SQL_ADAPTER
+from half_orm.sql_adapter import SQL_ADAPTER
 
 class Field():
     """The class Field is for Relation internal usage. It is called by
