@@ -110,3 +110,18 @@ class Test(TestCase):
         "it should return the name of the foreign key"
         self.assertEqual(self.pers().post_rfk.name, '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date')
         self.assertEqual(self.post().author_fk.name, 'author')
+
+    def test_cast(self):
+        self.assertIsInstance(halftest.comment_cls().post_fk(__cast__='blog.event'), halftest.event_cls)
+
+    def test_cast_reverse(self):
+        post = halftest.post_cls(title='coucou')
+        self.pers.post_rfk(__cast__='blog.event')
+        pers = halftest.person_cls(last_name='Lagaffe')
+        pers.ho_mogrify()
+        list(pers)
+        event = pers.post_rfk(title='coucou', __cast__='blog.event')
+        self.assertEqual(event.title.value, 'coucou')
+        self.assertIsInstance(event, halftest.event_cls)
+        event.ho_mogrify()
+        list(event)

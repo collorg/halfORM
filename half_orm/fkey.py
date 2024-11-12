@@ -41,12 +41,7 @@ class FKey:
         """Returns the relation referenced by the fkey.
         Uses the __cast__ if it is set.
         """
-        f_cast = None
-        if self.__name.find('_reverse_fkey_') == 0 and __cast__:
-            self.__relation = self.__get_rel(__cast__)(**self.__relation.ho_dict())
-        else:
-            f_cast = __cast__
-        f_relation = self.__get_rel(f_cast or normalize_qrn(self.__fk_fqrn))(**kwargs)
+        f_relation = self.__get_rel(__cast__ or normalize_qrn(self.__fk_fqrn))(**kwargs)
         rev_fkey_name = f'_reverse_{f_relation.ho_id}'
         f_relation._ho_fkeys[rev_fkey_name] = FKey(
             rev_fkey_name,
@@ -74,6 +69,7 @@ class FKey:
         self.__fk_to = __to
         self.__is_set = __to.ho_is_set()
         from_._ho_join_to[self] = __to
+        return self
 
     def is_set(self):
         """Return if the foreign key is set (boolean)."""
