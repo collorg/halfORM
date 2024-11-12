@@ -16,13 +16,6 @@ c'est un test
 """
 
 datalines = ['coucou\n', "c'est un test\n"]
-deprecated_warning = re.compile('''HalfORM WARNING! "\\x1b\[1mtoto\\x1b\[0m" is deprecated\. It will be removed in half_orm 1\.0\.
-Use "\\x1b\[1mtoto\\x1b\[0m" instead\.
-.*/halfORM/test/utils/misc_test\.py:65, in test_ho_deprecated
-            toto\(a\)
-
-''', re.MULTILINE)
-
 class Test(TestCase):
     def tearDown(self):
         if os.path.exists(rwd_test_file):
@@ -54,16 +47,6 @@ class Test(TestCase):
 
     def test_blue(self):
         self.assertEqual(utils.Color.blue('coucou'), '\x1b[1;34mcoucou\x1b[0m')
-
-    def test_ho_deprecated(self):
-        a = 1
-        @utils._ho_deprecated
-        def toto(self):
-            pass
-        f = io.StringIO()
-        with contextlib.redirect_stderr(f):
-            toto(a)
-            self.assertIsNotNone(re.match(deprecated_warning, str(f.getvalue())))
 
     def test_warning(self):
         f = io.StringIO()
