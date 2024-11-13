@@ -1,5 +1,6 @@
 # `half_orm`: A simple PostgreSQL to Python mapper
 
+[![PyPI version](https://img.shields.io/pypi/l/half_orm?color=green)](https://pypi.org/project/half-orm/)
 [![PyPI version](https://img.shields.io/pypi/v/half_orm)](https://pypi.org/project/half-orm/)
 [![Python versions](https://img.shields.io/badge/Python-%20&ge;%203.7-blue)](https://www.python.org)
 [![PostgreSQL versions](https://img.shields.io/badge/PostgreSQL-%20&ge;%209.6-blue)](https://www.postgresql.org)
