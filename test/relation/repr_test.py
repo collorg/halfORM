@@ -168,5 +168,5 @@ class Test(HoTestCase):
         self.maxDiff = None
         posts = self.pers.post_rfk(title='Easy')
         res = ''.join(repr(posts))
-        res = re.sub(r'_reverse_\d{15}', '_reverse_...............', res, 2)
+        res = re.sub(r'_reverse_\d{15}', '_reverse_...............', res, count=2)
         self.assertEqual(res, PERS_POSTS)
