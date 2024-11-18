@@ -1,3 +1,13 @@
+# 0.13.4 (2024-11-18)
+
+* Add python3.13 to setup.py (47e9371)
+* [readme] Add licence badge. (fc050ed)
+* [test] test utils._ho_deprecated decorator. (af8cde9)
+* [fkeys] Fkey.set method now returns self. Fix bug with cast and reverse keys. (20978d2)
+* [sql_adapter] a little more genericity for postgresql lists -> python transtyping (4882a03)
+* Move sql_adapter. (7534efb)
+* [requirements] Update. (ce8737f)
+
 # 0.13.3 -- hop 0.1.0 alpha 18 (2024-11-11)
 
 * [relation] New relation.transaction decorator (replaces Relation.ho_transaction). (07f3a07)
