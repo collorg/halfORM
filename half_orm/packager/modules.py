@@ -231,6 +231,7 @@ def __update_this_module(
             kwargs.append(f"{key}: '{str(value.py_type.__name__)}'=None")
             arg_names.append(f'{key}={key}')
     fields = "\n        ".join(fields)
+    kwargs.append('**kwargs')
     kwargs = ", ".join(kwargs)
     arg_names = ", ".join(arg_names)
     path[0] = package_dir
