@@ -40,7 +40,7 @@ def read_template(file_name):
 
 NO_APAPTER = {}
 HO_DATACLASSES = [
-'''from dataclasses import dataclass, field
+'''import dataclasses
 from half_orm.relation import DC_Relation
 from half_orm.field import Field''']
 HO_DATACLASSES_IMPORTS = set()
@@ -87,9 +87,9 @@ def __get_field_desc(field_name, field):
         field_desc = f'{field_desc.__module__}.{field_desc.__name__}'
     else:
         field_desc = field_desc.__name__
-    value = 'field(default=None)'
+    value = 'dataclasses.field(default=None)'
     if field._metadata['fieldtype'][0] == '_':
-        value = 'field(default_factory=list)'
+        value = 'dataclasses.field(default_factory=list)'
     field_desc = f'{field_desc} = {value}'
     field_desc = f"    {field_name}: {field_desc}"
     error = utils.check_attribute_name(field_name)
@@ -112,7 +112,7 @@ def __gen_dataclass(relation, fkeys):
             fkey_alias = fkeys[key]
             fdc_name = f'DC_{__get_full_class_name(*(value._FKey__fk_fqrn[1:]))}'
             post_init.append(f"        self.{fkey_alias} = {fdc_name}")
-    return '\n'.join([f'@dataclass\nclass {dc_name}(DC_Relation):'] + fields + post_init)
+    return '\n'.join([f'@dataclasses.dataclass\nclass {dc_name}(DC_Relation):'] + fields + post_init)
 
 def __get_modules_list(dir, files_list, files):
     all_ = []
