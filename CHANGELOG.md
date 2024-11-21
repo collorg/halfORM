@@ -1,3 +1,9 @@
+# 0.13.5 -- hop 0.1.0 alpha 19 (2024-11-21)
+
+* [hop] Add '**kwargs' to deal with inheritance. (1ab8952)
+* [hop] Fix ho_dataclasses pb with columns named 'field' (ce626c1)
+* [test] Fix deprecation warning re.sub Python3.13. (9ee907a)
+
 # 0.13.4 (2024-11-18)
 
 * Add python3.13 to setup.py (47e9371)
