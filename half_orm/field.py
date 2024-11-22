@@ -83,10 +83,13 @@ class Field():
         where_repr = ''
         comp_str = '%s'
         comp = self._comp()
+        cast = ''
+        if self.__value != NULL:
+            cast = f'::{self.__sql_type}'
         if not self.unaccent:
-            where_repr = f"{self.__praf(query, ho_id)} {comp} {comp_str}"
+            where_repr = f"{self.__praf(query, ho_id)} {comp} {comp_str}{cast}"
         else:
-            where_repr = f"unaccent({self.__praf(query, ho_id)}) {comp} unaccent({comp_str})"
+            where_repr = f"unaccent({self.__praf(query, ho_id)}) {comp} unaccent({comp_str}{cast})"
         return where_repr
 
     @property

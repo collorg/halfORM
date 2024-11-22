@@ -123,7 +123,7 @@ class Test(TestCase):
         self.post.content.set({'bonjour', 'au revoir'})
         self.assertIsInstance(self.post.content.value, tuple)
         self.post.content.unaccent = True
-        self.assertEqual(self.post.content._where_repr('', id(self.post)), 'unaccent("content") = unaccent(%s)')
+        self.assertEqual(self.post.content._where_repr('', id(self.post)), 'unaccent("content") = unaccent(%s::text)')
 
     def test_py_type(self):
         self.assertEqual(str(self.comment.tags.py_type), 'typing.List[str]')
