@@ -51,6 +51,7 @@ MODULE_TEMPLATE_3 = read_template('module_template_3')
 WARNING_TEMPLATE = read_template('warning')
 BASE_TEST = read_template('base_test')
 TEST = read_template('relation_test')
+SQL_ADAPTER_TEMPLATE = read_template('sql_adapter')
 SKIP = re.compile('[A-Z]')
 
 MODULE_FORMAT = (
@@ -301,9 +302,12 @@ def generate(repo):
     package_dir = os.path.join(repo.base_dir, package_name)
     files_list = []
     try:
-        sql_adapter_module = importlib.import_module('sql_adapter', package_dir)
+        sql_adapter_module = importlib.import_module('.sql_adapter', package_name)
         SQL_ADAPTER.update(sql_adapter_module.SQL_ADAPTER)
     except ModuleNotFoundError as exc:
+        os.makedirs(package_dir)
+        with open(os.path.join(package_dir, 'sql_adapter.py'), "w") as file_:
+            file_.write(SQL_ADAPTER_TEMPLATE)
         sys.stderr.write(f"{exc}\n")
     except AttributeError as exc:
         sys.stderr.write(f"{exc}\n")
@@ -335,6 +339,7 @@ def generate(repo):
 
     if len(NO_APAPTER):
         print("MISSING ADAPTER FOR SQL TYPE")
-        for key, value in NO_APAPTER.items():
-            print(f"- {key}: {value}")
+        print(f"Add the following items to __SQL_ADAPTER in {os.path.join(package_dir, 'sql_adapter.py')}")
+        for key in NO_APAPTER.keys():
+            print(f"  '{key}': typing.Any,")
     __update_init_files(package_dir, files_list, warning)

@@ -2,7 +2,7 @@ import typing
 import datetime
 import uuid
 
-SQL_ADAPTER = {
+__SQL_ADAPTER = {
   'string': str,
   'bigint': int,
   'int8': int,
@@ -12,6 +12,7 @@ SQL_ADAPTER = {
   'bool': bool,
   'character': str,
   'char': str,
+  'bpchar': str,
   'character varying': str,
   'varchar': str,
   'cidr': typing.Any,
@@ -55,3 +56,6 @@ SQL_ADAPTER = {
   'uuid': uuid.UUID,
   'xml': typing.Any,
 }
+
+__SQL_ADAPTER.update({f'_{key}': value for key, value in __SQL_ADAPTER.items()})
+SQL_ADAPTER = __SQL_ADAPTER
