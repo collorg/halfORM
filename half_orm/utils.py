@@ -126,9 +126,9 @@ def _ho_deprecated(fct):
 def check_attribute_name(string: str):
     err = None
     if not string.isidentifier():
-        error(f'"{Color.bold(string)}" is not a valid identifier in Python.\n')
+        warning(f'"{Color.bold(string)}" is not a valid identifier in Python.\n')
         err = f'"{string}": not a valid identifier in Python!'
     if iskeyword(string):
-        error(f'"{Color.bold(string)}" is a reserved keyword in Python.\n')
+        warning(f'"{Color.bold(string)}" is a reserved keyword in Python.\n')
         err = f'"{string}": reserved keyword in Python!'
     return err
