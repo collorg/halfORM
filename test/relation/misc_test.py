@@ -134,4 +134,4 @@ class Test(TestCase):
         with contextlib.redirect_stderr(out):
             self.ColumnAliasTest()
             value1 = out.getvalue()
-        self.assertEqual(value1, '\x1b[1mHALFORM WARNING\x1b[0m: "\x1b[1m2 + 1\x1b[0m" is not a valid identifier in Python.\n')
+        self.assertEqual(value1, '\x1b[1mHOP WARNING\x1b[0m: "\x1b[1m2 + 1\x1b[0m" is not a valid identifier in Python.\n')
