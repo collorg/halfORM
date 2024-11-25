@@ -1,16 +1,20 @@
 #!/usr/bin/env python
 #-*- coding:  utf-8 -*-
 
-from random import randint
-import psycopg2
+import contextlib
+import io
 import sys
+import psycopg2
+from random import randint
 from unittest import TestCase
 from datetime import date
 
-from ..init import halftest, GASTON
-from half_orm import relation_errors, model
+from ..init import halftest, GASTON, model
+from half_orm import relation_errors
+from half_orm.relation import Relation
 
 class Test(TestCase):
+    maxDiff = None
     def setUp(self):
         self.gaston = halftest.gaston
         self.gaston.ho_insert()
@@ -19,9 +23,16 @@ class Test(TestCase):
         self.gaston.post_rfk(title='Super', content='bli').ho_insert()
         self.gaston.post_rfk(title='A super easy', content='blo').ho_insert()
         self.gaston.post_rfk(title='Bad', content='blu').ho_insert()
+        model.execute_query('create table column_alias_test(class int, "class + 1" int, "2 + 1" int)')
+        model.reconnect(reload=True)
+        self.ColumnAliasTest = model.get_relation_class(
+            'public.column_alias_test',
+            fields_aliases={'class': 'class_', 'class + 1': 'class_plus_one'})
 
     def tearDown(self):
         self.gaston.ho_delete()
+        model.execute_query('drop table column_alias_test')
+        model.reconnect(reload=True)
 
     def testho_only(self):
         posts1 = self.gaston.post_rfk(title=('ilike', '%easy%'))
@@ -108,3 +119,19 @@ class Test(TestCase):
         with self.assertRaises(relation_errors.UnknownAttributeError) as exc:
             halftest.post_cls(title='coucou').ho_cast('actor.person')
         self.assertEqual(str(exc.exception), "ERROR! Unknown attribute: title.")
+
+    def test_field_aliases(self):
+        self.assertEqual('class_', self.ColumnAliasTest._Relation__py_field_name('class', 1))
+        self.assertEqual('class_plus_one', self.ColumnAliasTest._Relation__py_field_name('class + 1', 2))
+        self.assertEqual('column3', self.ColumnAliasTest._Relation__py_field_name('1 + 1', 3))
+        self.ColumnAliasTest().class_.set(3)
+        self.ColumnAliasTest(class_plus_one=4, column3=12)
+        self.assertEqual(self.ColumnAliasTest().column3.name, '2 + 1')
+        
+    def test_wrong_fiel_name_err_msg(self):
+        out = io.StringIO()
+        value1 = ''
+        with contextlib.redirect_stderr(out):
+            self.ColumnAliasTest()
+            value1 = out.getvalue()
+        self.assertEqual(value1, '\x1b[1mHOP ERROR\x1b[0m: \x1b[1;31m"\x1b[1m2 + 1\x1b[0m" is not a valid identifier in Python.\n\x1b[0m')

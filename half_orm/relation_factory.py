@@ -40,6 +40,7 @@ def factory(dct):
     model = dct['model']
     model._classes_.setdefault(tbl_attr['_dbname'], {})
     tbl_attr['_ho_model'] = model
+    tbl_attr['_ho_fields_aliases'] = dct is not None and dct.get('fields_aliases', {}) or {}
     dbname, schema, relation = dct['fqrn']
     rel_class = None
     if model._classes_.get(dbname):

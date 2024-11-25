@@ -23,9 +23,9 @@ Note:
 import importlib
 import os
 import sys
+import typing
 from configparser import ConfigParser
 from os import environ
-from typing import List
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -132,7 +132,7 @@ class Model:
 
     reconnect = __connect
 
-    def get_relation_class(self, relation_name: str): # -> Relation
+    def get_relation_class(self, relation_name: str, fields_aliases: typing.Dict=None): # -> Relation
         """This method is a factory that generates a class that inherits the `Relation <#half_orm.relation.Relation>`_ class.
 
         Args:
@@ -170,7 +170,7 @@ class Model:
             schema, table = relation_name.replace('"', '').rsplit('.', 1)
         except ValueError as err:
             raise model_errors.MissingSchemaInName(relation_name) from err
-        return factory({'fqrn': (self.__dbname, schema, table), 'model': self.__deja_vu[self.__dbname]})
+        return factory({'fqrn': (self.__dbname, schema, table), 'model': self.__deja_vu[self.__dbname], 'fields_aliases':fields_aliases})
 
 
     @staticmethod
@@ -274,7 +274,7 @@ class Model:
             cursor.execute(query, values)
         return cursor
 
-    def execute_function(self, fct_name, *args, **kwargs) -> List[tuple]:
+    def execute_function(self, fct_name, *args, **kwargs) -> typing.List[tuple]:
         """`Executes a PostgreSQL function <https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html>`_.
 
         Arguments:

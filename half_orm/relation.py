@@ -41,6 +41,7 @@ from dataclasses import dataclass
 from functools import wraps
 from collections import OrderedDict
 from typing import List, Generic, TypeVar, Dict
+from keyword import iskeyword
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -244,6 +245,7 @@ class Relation:
             >>> Person(lost_name='Lagaffe')
             [...]UnknownAttributeError: ERROR! Unknown attribute: {'lost_name'}.
     """
+    _ho_fields_aliases = {}
 
     def __init__(self, **kwargs):
         _fqrn = ""
@@ -408,11 +410,7 @@ class Relation:
 
         _ = args and args != ('*',) and self._ho_check_colums(*args)
         self._ho_check_colums(*(kwargs.keys()))
-        update_args = dict(kwargs)
-        for key, value in kwargs.items():
-            # None values are first removed
-            if value is None:
-                update_args.pop(key)
+        update_args = {key: value for key, value in kwargs.items() if value is not None}
         if not update_args:
             return None # no new value update. Should we raise an error here?
 
@@ -508,12 +506,20 @@ class Relation:
             raise ValueError(f'{value} is not a bool!')
         self._ho_only = value
 
+    @classmethod
+    def __py_field_name(cls, name, field_num):
+        py_name = cls._ho_fields_aliases.get(name, name)
+        if utils.check_attribute_name(py_name) is not None:
+            return f'column{field_num}'
+        return py_name
+
     def _ho_set_fields(self):
         """Initialise the fields of the relation."""
         _fields_metadata = self._ho_model._fields_metadata(self._t_fqrn)
 
         for field_name, f_metadata in _fields_metadata.items():
             field = Field(field_name, self, f_metadata)
+            field_name = self.__py_field_name(field_name, f_metadata['fieldnum'])
             self._ho_fields[field_name] = field
             setattr(self, field_name, field)
             if field._is_part_of_pk():
@@ -582,7 +588,7 @@ Fkeys = {"""
             mx_fld_n_len = max(mx_fld_n_len, len(field_name))
         for field_name, field in self._ho_fields.items():
             field_desc = f"- {field_name}:{' ' * (mx_fld_n_len + 1 - len(field_name))}{repr(field)}"
-            error = utils.check_attribute_name(field_name)
+            error = utils.check_attribute_name(field.name)
             if error:
                 field_desc = f'{field_desc} --- FIX ME! {error}'
             ret.append(field_desc)
@@ -815,7 +821,7 @@ Fkeys = {"""
         _, where, values = self.__where_args()
         where = f" where {where}"
         for field_name, new_value in kwargs.items():
-            what_fields.append(field_name)
+            what_fields.append(self._ho_fields[field_name].name)
             new_values.append(new_value)
         what = ", ".join([f'"{elt}" = %s' for elt in what_fields])
         return what, where, new_values + values
@@ -826,7 +832,7 @@ Fkeys = {"""
         """
         set_fields = self.__get_set_fields()
         fields_names = [
-            f'"{name}"' for name, field in self._ho_fields.items() if field.is_set()]
+            f'"{field.name}"' for field in self._ho_fields.values() if field.is_set()]
         fk_fields = []
         fk_queries = ''
         fk_values = []
@@ -956,51 +962,51 @@ Fkeys = {"""
     # deprecated. To remove with release 1.0.0
 
     @utils._ho_deprecated
-    def select(self, *args):
+    def select(self, *args): # pragma: no cover
         return self.ho_select(*args)
 
     @utils._ho_deprecated
-    def insert(self, *args):
+    def insert(self, *args): # pragma: no cover
         return self.ho_insert(*args)
 
     @utils._ho_deprecated
-    def update(self, *args, update_all=False, **kwargs):
+    def update(self, *args, update_all=False, **kwargs): # pragma: no cover
         return self.ho_update(*args, update_all, **kwargs)
 
     @utils._ho_deprecated
-    def delete(self, *args, delete_all=False):
+    def delete(self, *args, delete_all=False): # pragma: no cover
         return self.ho_delete(*args, delete_all)
 
     @utils._ho_deprecated
-    def get(self, *args):
+    def get(self, *args): # pragma: no cover
         return self.ho_get(*args)
 
     @utils._ho_deprecated
-    def unaccent(self, *fields_names):
+    def unaccent(self, *fields_names): # pragma: no cover
         return self.ho_unaccent(*fields_names)
 
     @utils._ho_deprecated
-    def order_by(self, _order_):
+    def order_by(self, _order_): # pragma: no cover
         return self.ho_order_by(_order_)
 
     @utils._ho_deprecated
-    def limit(self, _limit_):
+    def limit(self, _limit_): # pragma: no cover
         return self.ho_limit(_limit_)
 
     @utils._ho_deprecated
-    def offset(self, _offset_):
+    def offset(self, _offset_): # pragma: no cover
         return self.ho_offset(_offset_)
 
     @utils._ho_deprecated
-    def _mogrify(self):
+    def _mogrify(self): # pragma: no cover
         return self.ho_mogrify()
 
     @utils._ho_deprecated
-    def count(self, *args):
+    def count(self, *args): # pragma: no cover
         return self.ho_count(*args)
 
     @utils._ho_deprecated
-    def is_empty(self):
+    def is_empty(self): # pragma: no cover
         return self.ho_is_empty()
 
 def singleton(fct):

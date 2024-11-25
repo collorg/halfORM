@@ -80,7 +80,7 @@ hop release
 hop prepare -l patch -m "Second patch release"
 if [ `git branch --show-current` != 'hop_0.0.2' ] ; then echo "It should be on branch hop_0.0.2" ; exit 1 ; fi
 
-echo 'create table a ( a text primary key )' > Patches/0/0/2/00_a.sql
+echo 'create table a ( a text primary key, class int, "class + 1" int )' > Patches/0/0/2/00_a.sql
 cat > Patches/0/0/2/a.py << EOF
 from hop_test.public.first import First
 list(First())

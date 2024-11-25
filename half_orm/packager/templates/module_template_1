@@ -9,3 +9,4 @@ WARNING!
 
 from {package_name} import MODEL, ho_dataclasses
 {inheritance_import}
+fields_aliases=None

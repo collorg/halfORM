@@ -45,6 +45,10 @@ class Field():
             python_type = typing.List[python_type]
         return python_type
 
+    @property
+    def name(self):
+        return self.__name
+
     def is_set(self):
         "Returns if the field is set or not."
         return self.__is_set
