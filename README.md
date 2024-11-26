@@ -226,7 +226,7 @@ half_orm will replace these names by "column<#column>". So:
 >>> Weird = db.get_relation_class('public.weird')
 >>> Weird()
 ```
-will display:
+will print:
 ```
 HALFORM WARNING: "class" is a reserved keyword in Python.
 HALFORM WARNING: "class + 1" is not a valid identifier in Python.

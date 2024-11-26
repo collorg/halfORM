@@ -127,6 +127,8 @@ class Model:
         self.__conn = psycopg2.connect(**self.__dbinfo, cursor_factory=RealDictCursor)
         self.__conn.autocommit = True
         self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
+        if reload:
+            self._classes_[self._dbname] = {}
         if self.__dbname not in self.__class__.__deja_vu:
             self.__deja_vu[self.__dbname] = self
 
