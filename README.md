@@ -210,6 +210,61 @@ It provides you with information extracted from the database metadata:
 * fields: the list of columns, their types and contraints
 * foreign keys: the list of FKs if any. A `_reverse_*` FK is a FK made on the current relation.
 
+### Weird column names
+
+In PostgreSQL, fields can have any name. For instance, consider the following table:
+
+```sql
+create table weird (class int, "class + 1" int, "2 + 1" int default 3)
+```
+
+Those names are either reserved keywords or invalid identifiers in Python. By default,
+half_orm will replace these names by "column<#column>". So:
+
+```py
+>>> db = Model('test')
+>>> Weird = db.get_relation_class('public.weird')
+>>> Weird()
+```
+will display:
+```
+HALFORM WARNING: "class" is a reserved keyword in Python.
+HALFORM WARNING: "class + 1" is not a valid identifier in Python.
+HALFORM WARNING: "2 + 1" is not a valid identifier in Python.
+DATABASE: test
+SCHEMA: public
+TABLE: weird
+
+FIELDS:
+- column1: (int4) --- FIX ME! "class": reserved keyword in Python!
+- column2: (int4) --- FIX ME! "class + 1": not a valid identifier in Python!
+- column3: (int4) --- FIX ME! "2 + 1": not a valid identifier in Python!
+```
+As is you can use the class Weird with column1, column2 and column3 attributes.
+
+You could also define aliases for those fields:
+
+```py
+>>> Weird = db.get_relation_class(
+    'public.weird',
+    fields_aliases={
+        'class': 'class_',
+        'class + 1': 'class_plus_one',
+        '2 + 1': 'three'
+    })
+>>> Weird()
+```
+now prints:
+```
+DATABASE: test
+SCHEMA: public
+TABLE: weird
+
+FIELDS:
+- class_:         (int4)
+- class_plus_one: (int4)
+- three:          (int4)
+```
 
 ## Constraining a relation
 

@@ -24,11 +24,11 @@ class Test(TestCase):
     def test_check_attribute_name(self):
         "it return errors"
         self.assertEqual(
-            utils.check_attribute_name("class"), '"class": reserved keyword in Python!')
+            utils.check_attribute_name("class"), '"class" is a reserved keyword in Python.')
         self.assertEqual(
             utils.check_attribute_name(
                 "not a valid variable"),
-                '"not a valid variable": not a valid identifier in Python!')
+                '"not a valid variable" is not a valid identifier in Python.')
 
     def test_file_utils(self):
         self.assertFalse(os.path.exists(rwd_test_file))

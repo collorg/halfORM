@@ -61,9 +61,9 @@ def error(msg: str, exit_code: int=None):
     if exit_code:
         sys.exit(exit_code)
 
-def warning(msg: str):
+def warning(msg: str, context="HOP"):
     "Write warning message on stderr"
-    sys.stderr.write(f'{Color.bold("HOP WARNING")}: {msg}')
+    sys.stderr.write(f'{Color.bold(context + " WARNING")}: {msg}')
 
 class TraceDepth: #pragma: no coverage
     "Trace dept class"
@@ -126,9 +126,7 @@ def _ho_deprecated(fct):
 def check_attribute_name(string: str):
     err = None
     if not string.isidentifier():
-        warning(f'"{Color.bold(string)}" is not a valid identifier in Python.\n')
-        err = f'"{string}": not a valid identifier in Python!'
+        err = f'"{string}" is not a valid identifier in Python.'
     if iskeyword(string):
-        warning(f'"{Color.bold(string)}" is a reserved keyword in Python.\n')
-        err = f'"{string}": reserved keyword in Python!'
+        err = f'"{string}" is a reserved keyword in Python.'
     return err

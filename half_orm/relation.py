@@ -506,10 +506,11 @@ class Relation:
             raise ValueError(f'{value} is not a bool!')
         self._ho_only = value
 
-    @classmethod
-    def __py_field_name(cls, name, field_num):
-        py_name = cls._ho_fields_aliases.get(name, name)
-        if utils.check_attribute_name(py_name) is not None:
+    def __py_field_name(self, name, field_num):
+        py_name = self._ho_fields_aliases.get(name, name)
+        error = utils.check_attribute_name(py_name)
+        if error is not None:
+            utils.warning(f"{error}\n", 'HALFORM')
             return f'column{field_num}'
         return py_name
 
@@ -589,7 +590,7 @@ Fkeys = {"""
         for field_name, field in self._ho_fields.items():
             field_desc = f"- {field_name}:{' ' * (mx_fld_n_len + 1 - len(field_name))}{repr(field)}"
             error = utils.check_attribute_name(field.name)
-            if error:
+            if error and not field.name in self._ho_fields_aliases:
                 field_desc = f'{field_desc} --- FIX ME! {error}'
             ret.append(field_desc)
         ret.append('')
