@@ -1,3 +1,13 @@
+# 0.13.6 -- hop 0.1.0 alpha 20 (2024-11-26)
+
+* [model] Reload now clears cached classes. (2f94c6e)
+* [relation] Fix warning messages for invalid field names. (be1874c)
+* [hop] Add missing line. (e536451)
+* [relation] Replace the error message with a warning for fields with invalid identifiers. (b7afb93)
+* [model] Added fields_aliases argument to get_relation_class to handle column names that are Python keywords or invalid variable names. (994e3a0)
+* [hop] Add sql_adapter module if missing. (e643ba8)
+* [field] Use cast in where representation to handle user-defined domains. (188e06b)
+
 # 0.13.5 -- hop 0.1.0 alpha 19 (2024-11-21)
 
 * [hop] Add '**kwargs' to deal with inheritance. (1ab8952)
