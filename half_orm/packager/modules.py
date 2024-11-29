@@ -85,7 +85,10 @@ def __get_field_desc(field_name, field):
         field_desc = Any
     if field_desc.__module__ != 'builtins':
         HO_DATACLASSES_IMPORTS.add(field_desc.__module__)
-        field_desc = f'{field_desc.__module__}.{field_desc.__name__}'
+        ext = 'Any'
+        if hasattr(field_desc, '__name__'):
+            ext = field_desc.__name__
+        field_desc = f'{field_desc.__module__}.{ext}'
     else:
         field_desc = field_desc.__name__
     value = 'dataclasses.field(default=None)'
@@ -100,7 +103,7 @@ def __get_field_desc(field_name, field):
 
 def __gen_dataclass(relation, fkeys):
     rel = relation()
-    dc_name = f'DC_{__get_full_class_name(relation._schemaname, relation._relationname)}'
+    dc_name = relation._ho_dataclass_name()
     fields = []
     post_init = ['    def __post_init__(self):']
     for field_name, field in rel._ho_fields.items():
@@ -111,7 +114,7 @@ def __gen_dataclass(relation, fkeys):
     for key, value in rel()._ho_fkeys.items():
         if key in fkeys:
             fkey_alias = fkeys[key]
-            fdc_name = f'DC_{__get_full_class_name(*(value._FKey__fk_fqrn[1:]))}'
+            fdc_name = f'{value._FKey__relation._ho_dataclass_name()}'
             post_init.append(f"        self.{fkey_alias} = {fdc_name}")
     return '\n'.join([f'@dataclasses.dataclass\nclass {dc_name}(DC_Relation):'] + fields + post_init)
 
@@ -229,7 +232,10 @@ def __update_this_module(
         error = utils.check_attribute_name(key)
         if not error:
             fields.append(f"self.{key}: Field = None")
-            kwargs.append(f"{key}: '{str(value.py_type.__name__)}'=None")
+            kwarg_type = 'typing.Any'
+            if hasattr(value.py_type, '__name__'):
+                kwarg_type = str(value.py_type.__name__)
+            kwargs.append(f"{key}: '{kwarg_type}'=None")
             arg_names.append(f'{key}={key}')
     fields = "\n        ".join(fields)
     kwargs.append('**kwargs')
@@ -258,7 +264,7 @@ def __update_this_module(
                 inheritance_import=inheritance_import,
                 inherited_classes=inherited_classes,
                 class_name=class_name,
-                dc_name=f'DC_{__get_full_class_name(rel._schemaname, rel._relationname)}',
+                dc_name=rel._ho_dataclass_name(),
                 fqtn=fqtn,
                 kwargs=kwargs,
                 arg_names=arg_names,

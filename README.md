@@ -236,15 +236,16 @@ SCHEMA: public
 TABLE: weird
 
 FIELDS:
-- column1: (int4) --- FIX ME! "class": reserved keyword in Python!
-- column2: (int4) --- FIX ME! "class + 1": not a valid identifier in Python!
-- column3: (int4) --- FIX ME! "2 + 1": not a valid identifier in Python!
+- column1: (int4) --- FIX ME! "class" is a reserved keyword in Python.
+- column2: (int4) --- FIX ME! "class + 1" is not a valid identifier in Python.
+- column3: (int4) --- FIX ME! "2 + 1" is not a valid identifier in Python.
 ```
-As is you can use the class Weird with column1, column2 and column3 attributes.
+As is, you can use the class Weird with column1, column2 and column3 as attributes.
 
 You could also define aliases for those fields:
 
 ```py
+>>> db.reconnect(reload=True) # to remove the cached class Weird
 >>> Weird = db.get_relation_class(
     'public.weird',
     fields_aliases={
@@ -391,7 +392,7 @@ class Person(halftest.get_relation_class('actor.person')):
 We here use the `Transaction` context manager to insure the atomicity of 
 the operation.
 
-```
+```py
 >>> a_pers = Person(last_name=('ilike', '_a%'))
 >>> print([elt.last_name for elt in list(a_pers.ho_select())])
 >>> a_pers = Person(last_name=('ilike', '_a%'))

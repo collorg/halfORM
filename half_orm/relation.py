@@ -544,6 +544,13 @@ class Relation:
                     raise relation_errors.WrongFkeyError(self, value) from exp
         self._ho_fkeys_properties = True
 
+    @classmethod
+    def _ho_dataclass_name(cls):
+        database, schema, relation = cls._t_fqrn
+        schemaname = ''.join([elt.capitalize() for elt in schema.split('.')])
+        relationname = ''.join([elt.capitalize() for elt in relation.split('_')])
+        return f'DC_{schemaname}{relationname}'
+
     def ho_dict(self):
         """Returns a dictionary containing only the values of the fields
         that are set."""

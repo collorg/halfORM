@@ -135,3 +135,6 @@ class Test(TestCase):
             self.ColumnAliasTest()
             value1 = out.getvalue()
         self.assertEqual(value1, '\x1b[1mHALFORM WARNING\x1b[0m: "2 + 1" is not a valid identifier in Python.\n')
+
+    def test_ho_dataclass_name(self):
+        self.assertEqual(halftest.comment_cls._ho_dataclass_name(), 'DC_BlogComment')
