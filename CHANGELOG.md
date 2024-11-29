@@ -1,3 +1,7 @@
+# 0.13.7 -- hop 0.1.0 alpha 21 (2024-11-29)
+
+* [hop] Fix bug with pg enum types. (3e3e0fe)
+
 # 0.13.6 -- hop 0.1.0 alpha 20 (2024-11-26)
 
 * [model] Reload now clears cached classes. (2f94c6e)
