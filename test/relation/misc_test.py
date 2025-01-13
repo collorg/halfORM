@@ -34,7 +34,8 @@ class Test(TestCase):
         model.execute_query('drop table column_alias_test')
         model.reconnect(reload=True)
 
-    def testho_only(self):
+    def test_ho_only(self):
+        "it should set ONLY to select SQL request"
         posts1 = self.gaston.post_rfk(title=('ilike', '%easy%'))
         posts1.ho_only = False
         self.assertEqual(posts1.ho_count(), 2)
@@ -48,21 +49,21 @@ class Test(TestCase):
         list(posts)
         self.assertEqual(posts.ho_count(), 1)
 
-    def testho_only_accepts_only_bool_values(self):
+    def test_ho_only_accepts_only_bool_values(self):
         "ho_only should only accept boolean values"
         with self.assertRaises(ValueError) as err:
             self.post.ho_only = 'coucou'
         self.assertEqual(str(err.exception), 'coucou is not a bool!')
 
-    def testho_dict(self):
+    def test_ho_dict(self):
         "it should return the dict with the set values"
         self.assertEqual(self.gaston.ho_dict(), GASTON)
 
-    def testho_dict_empty(self):
+    def test_ho_dict_empty(self):
         "it should return an empty dict if the relation is not constrain"
         self.assertEqual(halftest.person_cls().ho_dict(), {})
 
-    def testho_order_by(self):
+    def test_ho_order_by(self):
         "it should return the set ordered by..."
         list_ = ['Easy', 'Super', 'A super easy', 'Bad']
         posts = halftest.post_cls().ho_order_by('content, title')
@@ -76,13 +77,13 @@ class Test(TestCase):
         ordered_list_on_title_reversed.reverse()
         self.assertEqual([elt['title'] for elt in list(posts)], ordered_list_on_title_reversed)
 
-    def testho_limit(self):
+    def test_ho_limit(self):
         "it should return the set limited to limit"
         limit = randint(1, halftest.post_cls().ho_count())
         posts = halftest.post_cls().ho_order_by('content, title').ho_limit(limit)
         self.assertEqual(len(list(posts)), limit)
 
-    def testho_limit_with_no_limit(self):
+    def test_ho_limit_with_no_limit(self):
         "it should return the set"
         posts = halftest.post_cls()
         posts.ho_limit(1)
@@ -121,6 +122,7 @@ class Test(TestCase):
         self.assertEqual(str(exc.exception), "ERROR! Unknown attribute: title.")
 
     def test_field_aliases(self):
+        "it should alias weird field names"
         self.assertEqual('class_', self.ColumnAliasTest()._Relation__py_field_name('class', 1))
         self.assertEqual('class_plus_one', self.ColumnAliasTest()._Relation__py_field_name('class + 1', 2))
         self.assertEqual('column3', self.ColumnAliasTest()._Relation__py_field_name('1 + 1', 3))
@@ -128,7 +130,8 @@ class Test(TestCase):
         self.ColumnAliasTest(class_plus_one=4, column3=12)
         self.assertEqual(self.ColumnAliasTest().column3.name, '2 + 1')
         
-    def test_wrong_fiel_name_err_msg(self):
+    def test_wrong_field_name_err_msg(self):
+        "it should write a warning message on stderr"
         out = io.StringIO()
         value1 = ''
         with contextlib.redirect_stderr(out):
@@ -138,3 +141,14 @@ class Test(TestCase):
 
     def test_ho_dataclass_name(self):
         self.assertEqual(halftest.comment_cls._ho_dataclass_name(), 'DC_BlogComment')
+
+    def test_field_set_and_kwargs(self):
+        "it should be able to set fields with kwargs and Field.set"
+        event = halftest.event_cls(id=1, title='coucou', end='2024-01-01')
+        event.content.set('re coucou')
+        event.begin.set('2024-01-01')
+        self.assertTrue(event.id.is_set())
+        self.assertTrue(event.title.is_set())
+        self.assertTrue(event.content.is_set())
+        self.assertTrue(event.end.is_set())
+        self.assertTrue(event.begin.is_set())
