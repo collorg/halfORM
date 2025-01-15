@@ -1,3 +1,10 @@
+# 0.13.8 -- hop 0.1.0 alpha 22 (2025-01-15)
+
+* Update licence date. (HEAD -> main)
+* [hop] Fix: add missing kwargs in arguments transmitted to the parent table. (ddbe18f)
+* Bump virtualenv from 20.25.1 to 20.26.6 (e09fc9e)
+* [github/CI] Use ubuntu-22 (Python 3.7 not present on ubuntu-24). (38212e8)
+
 # 0.13.7 -- hop 0.1.0 alpha 21 (2024-11-29)
 
 * [hop] Fix bug with pg enum types. (3e3e0fe)

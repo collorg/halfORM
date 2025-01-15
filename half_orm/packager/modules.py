@@ -22,6 +22,7 @@ history with the last release applied.
 import importlib
 import os
 import re
+import shutil
 import sys
 import time
 from keyword import iskeyword
@@ -147,11 +148,15 @@ def __update_init_files(package_dir, files_list, warning):
         if re.findall(SKIP, reldir):
             continue
         all_ = __get_modules_list(dir, files_list, files)
-        with open(os.path.join(dir, INIT_PY), 'w', encoding='utf-8') as init_file:
-            init_file.write(f'"""{warning}"""\n\n')
+        dirs = next(os.walk(dir))[1]
 
-            all_ = ",\n    ".join([f"'{elt}'" for elt in all_])
-            init_file.write(f'__all__ = [\n    {all_}\n]\n')
+        if len(all_) == 0 and dirs == ['__pycache__']:
+            shutil.rmtree(dir)
+        else:
+            with open(os.path.join(dir, INIT_PY), 'w', encoding='utf-8') as init_file:
+                init_file.write(f'"""{warning}"""\n\n')
+                all_ = ",\n    ".join([f"'{elt}'" for elt in all_])
+                init_file.write(f'__all__ = [\n    {all_}\n]\n')
 
 def __get_inheritance_info(rel, package_name):
     """Returns inheritance informations for the rel relation.
