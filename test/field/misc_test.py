@@ -117,13 +117,12 @@ class Test(TestCase):
         self.assertEqual(repr(self.pers.birth_date), f'(date) NOT NULL (birth_date = {date.today()})')
 
     def test_comps(self):
-        #XXX check this tests
         self.post.content.set(['bonjour', 'au revoir'])
         self.assertIsInstance(self.post.content.value, tuple)
         self.post.content.set({'bonjour', 'au revoir'})
         self.assertIsInstance(self.post.content.value, tuple)
-        self.post.content.unaccent = True
-        self.assertEqual(self.post.content._where_repr('', id(self.post)), 'unaccent("content") = unaccent(%s::text)')
+        self.assertEqual(self.post.content._where_repr('', id(self.post)), '"content" in %s')
+        list(self.post)
 
     def test_py_type(self):
         self.assertEqual(str(self.comment.tags.py_type), 'typing.List[str]')

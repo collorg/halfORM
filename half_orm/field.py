@@ -8,6 +8,7 @@ import typing
 import psycopg2
 import psycopg2.extras
 
+from collections.abc import Iterable
 from half_orm.null import NULL
 from half_orm.sql_adapter import SQL_ADAPTER
 
@@ -86,9 +87,12 @@ class Field():
         """
         where_repr = ''
         comp_str = '%s'
+        isiterable = type(self.__value) in {tuple, list, set}
         comp = self._comp()
+        if comp == '=' and isiterable:
+            comp = 'in'
         cast = ''
-        if self.__value != NULL:
+        if self.__value != NULL and not isiterable:
             cast = f'::{self.__sql_type}'
         if not self.unaccent:
             where_repr = f"{self.__praf(query, ho_id)} {comp} {comp_str}{cast}"
