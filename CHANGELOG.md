@@ -1,3 +1,8 @@
+# 0.13.9 -- hop 0.1.0 alpha 22 (2025-02-12)
+
+* Bump cryptography from 43.0.1 to 44.0.1 (b53d88d)
+* Pass a list as Field value to select the entries in the list. (916c334)
+
 # 0.13.8 -- hop 0.1.0 alpha 22 (2025-01-15)
 
 * Update licence date. (HEAD -> main)
