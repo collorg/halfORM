@@ -88,13 +88,16 @@ class Field():
         where_repr = ''
         comp_str = '%s'
         isiterable = type(self.__value) in {tuple, list, set}
+        col_is_array = self.__sql_type[0] == '_'
         comp = self._comp()
         if comp == '=' and isiterable:
             comp = 'in'
         cast = ''
         if self.__value != NULL and not isiterable:
             cast = f'::{self.__sql_type}'
-        if not self.unaccent:
+        if col_is_array and comp == '=':
+            where_repr = f'{comp_str} = ANY({self.__praf(query, ho_id)})'
+        elif not self.unaccent:
             where_repr = f"{self.__praf(query, ho_id)} {comp} {comp_str}{cast}"
         else:
             where_repr = f"unaccent({self.__praf(query, ho_id)}) {comp} unaccent({comp_str}{cast})"

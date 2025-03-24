@@ -123,6 +123,9 @@ class Test(TestCase):
         self.assertIsInstance(self.post.content.value, tuple)
         self.assertEqual(self.post.content._where_repr('', id(self.post)), '"content" in %s')
         list(self.post)
+        self.comment.tags.set('coucou')
+        self.assertEqual(self.comment.tags._where_repr('', id(self.comment)), """%s = ANY("tags")""")
+        list(self.comment)
 
     def test_py_type(self):
         self.assertEqual(str(self.comment.tags.py_type), 'typing.List[str]')
