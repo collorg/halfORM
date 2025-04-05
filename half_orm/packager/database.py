@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-from psycopg2 import OperationalError
+from psycopg.errors import OperationalError
 from half_orm.model import Model
 from half_orm.model_errors import UnknownRelation
 from half_orm import utils

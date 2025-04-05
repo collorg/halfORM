@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #-*- coding:  utf-8 -*-
 
-import psycopg2
+import psycopg
 from unittest import TestCase, skip
 
 from ..init import halftest
@@ -118,10 +118,8 @@ class Test(TestCase):
         post = halftest.post_cls(title='coucou')
         self.pers.post_rfk(__cast__='blog.event')
         pers = halftest.person_cls(last_name='Lagaffe')
-        pers.ho_mogrify()
         list(pers)
         event = pers.post_rfk(title='coucou', __cast__='blog.event')
         self.assertEqual(event.title.value, 'coucou')
         self.assertIsInstance(event, halftest.event_cls)
-        event.ho_mogrify()
         list(event)

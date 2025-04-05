@@ -42,8 +42,6 @@ from functools import wraps
 from collections import OrderedDict
 from typing import List, Generic, TypeVar, Dict
 from keyword import iskeyword
-import psycopg2
-from psycopg2.extras import RealDictCursor
 
 from half_orm import relation_errors
 from half_orm.transaction import Transaction
@@ -277,7 +275,6 @@ class Relation:
         self._ho_set_operators = _SetOperators(self)
         self._ho_select_params = {}
         self._ho_id_cast = None
-        self._ho_mogrify = False
         self._ho_check_colums(*kwargs.keys())
         _ = {self.__dict__[field_name].set(value)
             for field_name, value in kwargs.items() if value is not None}
@@ -485,7 +482,7 @@ class Relation:
 
     #@utils.trace
     def __execute(self, query, values):
-        return self._ho_model.execute_query(query, values, self._ho_mogrify)
+        return self._ho_model.execute_query(query, tuple(values))
 
     @property
     def ho_id(self):
@@ -632,7 +629,7 @@ Fkeys = {"""
             joined_to |= jt_.ho_is_set()
         self._ho_fk_loop = set()
         return (joined_to or bool(self._ho_set_operators.operator) or bool(self._ho_neg) or
-                bool({field for field in self._ho_fields.values() if field.is_set()}))
+                bool({field.value for field in self._ho_fields.values() if field.is_set()}))
 
     def __get_set_fields(self):
         """Returns a list containing only the fields that are set."""
@@ -687,8 +684,8 @@ Fkeys = {"""
             fk_rel.__get_from(orig_rel, deja_vu)
             deja_vu[fk_rel.ho_id].append((fk_rel, fkey))
             _, where, values = fk_rel.__where_args()
-            where = f" and\n {where}"
-            orig_rel._ho_sql_query.insert(1, f'\n  join {fk_rel._ho_sql_id()} on\n   ')
+            where = f" and {where}"
+            orig_rel._ho_sql_query.insert(1, f'join {fk_rel._ho_sql_id()} on')
             orig_rel._ho_sql_query.insert(2, fkey._join_query(self))
             orig_rel._ho_sql_query.append(where)
             orig_rel._ho_sql_values += values
@@ -724,12 +721,12 @@ Fkeys = {"""
         self._ho_sql_values = []
         self._ho_query_type = 'select'
         what, where, values = self.__where_args(*args)
-        where = f"\nwhere\n    {where}"
+        where = f"where {where}"
         self.__get_from()
         # remove duplicates
         for idx, elt in reversed(list(enumerate(self._ho_sql_query))):
-            if elt.find('\n  join ') == 0 and self._ho_sql_query.count(elt) > 1:
-                self._ho_sql_query[idx] = '  and\n'
+            if elt.find('join') == 0 and self._ho_sql_query.count(elt) > 1:
+                self._ho_sql_query[idx] = 'and'
         # check that fkeys are fkeys
         for fkey_name in self._ho_fkeys_attr:
             fkey_cls = self.__dict__[fkey_name].__class__
@@ -739,17 +736,24 @@ Fkeys = {"""
                     f'- use: self.{fkey_name}.set({fkey_cls.__name__}(...))\n'
                     f'- not: self.{fkey_name} = {fkey_cls.__name__}(...)'
                     )
+        final_values = []
+        for field in values:
+            if isinstance(field.value, (list, tuple, set)):
+                for value in field.value:
+                    final_values.append(value)
+            else:
+                final_values.append(field.value)
         return (
             query_template.format(
                 what,
                 self._ho_only and "only" or "",
                 ' '.join(self._ho_sql_query), where),
-            values)
+            final_values)
 
     #@utils.trace
     def _ho_prep_select(self, *args):
         distinct = self._ho_select_params.get('distinct', '')
-        query_template = f"select\n {distinct} {{}}\nfrom\n  {{}} {{}}\n  {{}}"
+        query_template = f"select {distinct} {{}} from {{}} {{}} {{}}"
         query, values = self.__prep_query(query_template, *args)
         values = tuple(self._ho_sql_values + values)
         if 'order_by' in self._ho_select_params:
@@ -800,18 +804,13 @@ Fkeys = {"""
         self._ho_select_params['offset'] = int(_offset_)
         return self
 
-    def ho_mogrify(self):
-        """Prints the select query."""
-        self._ho_mogrify = True
-        return self
-
     # @utils.trace
     def ho_count(self, *args):
         """Returns the number of tuples matching the intention in the relation.
         """
         self._ho_query = "select"
         query, values = self._ho_prep_select(*args)
-        query = f'select\n  count(*) from ({query}) as ho_count'
+        query = f'select count(*) from ({query}) as ho_count'
         return self.__execute(query, values).fetchone()['count']
 
     def ho_is_empty(self):
@@ -829,9 +828,11 @@ Fkeys = {"""
         _, where, values = self.__where_args()
         where = f" where {where}"
         for field_name, new_value in kwargs.items():
-            what_fields.append(self._ho_fields[field_name].name)
+            what_fields.append((
+                self._ho_fields[field_name].name,
+                self._ho_fields[field_name].value is not None and f"::{self._ho_fields[field_name].sql_type}" or ''))
             new_values.append(new_value)
-        what = ", ".join([f'"{elt}" = %s' for elt in what_fields])
+        what = ", ".join([f'"{elt[0]}" = %s{elt[1]}' for elt in what_fields])
         return what, where, new_values + values
 
     #@utils.trace
@@ -1004,10 +1005,6 @@ Fkeys = {"""
     @utils._ho_deprecated
     def offset(self, _offset_): # pragma: no cover
         return self.ho_offset(_offset_)
-
-    @utils._ho_deprecated
-    def _mogrify(self): # pragma: no cover
-        return self.ho_mogrify()
 
     @utils._ho_deprecated
     def count(self, *args): # pragma: no cover

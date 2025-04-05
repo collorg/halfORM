@@ -6,8 +6,7 @@ from unittest import TestCase
 from half_orm.relation import Relation
 from half_orm.relation_errors import IsFrozenError
 
-import psycopg2
-
+import psycopg
 from ..init import halftest
 
 PERS_REPR = """DATABASE: halftest
@@ -121,7 +120,6 @@ class Test(TestCase):
 
     def test_ho_count_distinct(self):
         pers = self.pers()
-        pers.ho_mogrify()
         pers.ho_distinct()
         self.assertEqual(pers.ho_count('birth_date'), 1)
         pers.ho_distinct(False)

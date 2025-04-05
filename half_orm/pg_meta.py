@@ -32,7 +32,6 @@ Note that this module requires the psycopg2 library to be installed.
 """
 
 from collections import OrderedDict
-from psycopg2.extras import RealDictCursor
 
 def strip_quotes(qrn):
     "Removes all double quotes from the qrn/fqrn"
@@ -202,7 +201,7 @@ class PgMeta:
             reload (bool, optional): A flag indicating whether to reload the metadata from the database. \
             Defaults to False.
         """
-        self.__dbname = connection.get_dsn_parameters()['dbname']
+        self.__dbname = connection.info.get_parameters()['dbname']
         if not PgMeta.meta.deja_vu(self.__dbname) or reload:
             self.__load_metadata(connection)
 
@@ -237,7 +236,7 @@ class PgMeta:
         metadata = {'relations_list': []}
         byname = metadata['byname'] = OrderedDict()
         byid = metadata['byid'] = {}
-        with connection.cursor(cursor_factory=RealDictCursor) as cur:
+        with connection.cursor() as cur:
             cur.execute(_REQUEST)
             all_ = [elt for elt in cur.fetchall()]
             for dct in all_:

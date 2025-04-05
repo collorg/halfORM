@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-import psycopg2
+import psycopg
 
 from half_orm import utils
 from half_orm.packager import modules
@@ -191,7 +191,7 @@ class Patch:
             return
         try:
             self.__repo.model.execute_query(query)
-        except psycopg2.Error as err:
+        except psycopg.errors.Error as err:
             utils.error(f'Problem with query in {file_.name}\n{err}\n')
             self.__restore_previous_release()
 

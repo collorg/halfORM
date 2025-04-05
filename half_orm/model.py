@@ -27,8 +27,7 @@ import typing
 from configparser import ConfigParser
 from os import environ
 
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg
 
 from half_orm import model_errors
 from half_orm import pg_meta
@@ -37,7 +36,6 @@ from half_orm.relation_factory import factory
 CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 
 
-psycopg2.extras.register_uuid()
 
 
 class Model:
@@ -124,7 +122,7 @@ class Model:
         if config_file:
             self.__load_config(config_file)
 
-        self.__conn = psycopg2.connect(**self.__dbinfo, cursor_factory=RealDictCursor)
+        self.__conn = psycopg.connect(**self.__dbinfo, row_factory=psycopg.rows.dict_row)
         self.__conn.autocommit = True
         self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
         if reload:
@@ -198,11 +196,11 @@ class Model:
         try:
             self.execute_query("select 1")
             return True
-        except (psycopg2.OperationalError, psycopg2.InterfaceError):
+        except (psycopg.errors.OperationalError, psycopg.errors.InterfaceError):
             try:
                 self.__connect()
                 self.execute_query("select 1")
-            except (psycopg2.OperationalError, psycopg2.InterfaceError) as exc: #pragma: no cover
+            except (psycopg.errors.OperationalError, psycopg.errors.InterfaceError) as exc: #pragma: no cover
                 # log reconnection attempt failure
                 sys.stderr.write(f'{exc.exception}\n')
                 sys.stderr.flush()
@@ -255,7 +253,7 @@ class Model:
         "Proxy to PgMeta._pkey_constraint"
         return self.__pg_meta._pkey_constraint(self.__dbname, fqrn)
 
-    def execute_query(self, query, values=(), mogrify=False):
+    def execute_query(self, query, values=()):
         """Executes a raw SQL query.
 
         Warning:
@@ -265,74 +263,51 @@ class Model:
             Please read the psycopg2 documentation on
             `passing parameters to SQL queries <https://www.psycopg.org/docs/usage.html#query-parameters>`_.
         """
-        cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
+        cursor = self.__conn.cursor(row_factory=psycopg.rows.dict_row)
         try:
-            if mogrify:
-                print(cursor.mogrify(query, values).decode('utf-8'))
             cursor.execute(query, values)
-        except (psycopg2.OperationalError, psycopg2.InterfaceError):
+        except (psycopg.errors.OperationalError, psycopg.errors.InterfaceError):
             self.ping()
-            cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
+            cursor = self.__conn.cursor(row_factory=psycopg.rows.dict_row)
             cursor.execute(query, values)
         return cursor
 
-    def execute_function(self, fct_name, *args, **kwargs) -> typing.List[tuple]:
-        """`Executes a PostgreSQL function <https://www.postgresql.org/docs/current/sql-syntax-calling-funcs.html>`_.
-
-        Arguments:
-            *args: The list of parameters to be passed to the postgresql function.
-            **kwargs: The list of named parameters to be passed to the postgresql function.
-
-        Returns:
-            List[tuple]: a list of tuples.
-
-        Raises:
-            RuntimeError: If you mix ***args** and ****kwargs**.
-
-        Note:
-            You can't mix args and kwargs with the execute_function method!
-        """
+    def execute_function(self, func_name: str, *args, **kwargs):
+        """Execute a PostgreSQL function and return its result.
+        Handles both scalar and set-returning functions."""
         if bool(args) and bool(kwargs):
             raise RuntimeError("You can't mix args and kwargs with the execute_function method!")
-        cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
-        if kwargs:
-            values = kwargs
-        else:
-            values = args
-        cursor.callproc(fct_name, values)
-        return cursor.fetchall()
+        
+        with psycopg.ClientCursor(self.__conn) as cursor:
+            if kwargs:
+                params = ', '.join(f"%({k})s" for k in kwargs.keys())
+                query = f"SELECT * FROM {func_name}({params})"
+                cursor.execute(query, kwargs)
+            else:
+                params = ', '.join(['%s' for _ in args])
+                query = f"SELECT * FROM {func_name}({params})"
+                cursor.execute(query, args)
+            
+            try:
+                return cursor.fetchall()
+            except psycopg.ProgrammingError:
+                # Void function or no results
+                return None
 
-    def call_procedure(self, proc_name, *args, **kwargs):
-        """`Executes a PostgreSQL procedure <https://www.postgresql.org/docs/current/sql-call.html>`_.
-
-        Arguments:
-            *args: The list of parameters to be passed to the postgresql function.
-            **kwargs: The list of named parameters to be passed to the postgresql function.
-
-        Returns:
-            None | List[tuple]: None or a list of tuples.
-
-        Raises:
-            RuntimeError: If you mix ***args** and ****kwargs**.
-
-        Note:
-            You can't mix args and kwargs with the call_procedure method!
-        """
+    def call_procedure(self, proc_name: str, *args, **kwargs):
+        """Call a stored procedure (no results expected)."""
         if bool(args) and bool(kwargs):
             raise RuntimeError("You can't mix args and kwargs with the call_procedure method!")
-        if kwargs:
-            params = ', '.join([f'{key} => %s' for key in kwargs])
-            values = tuple(kwargs.values())
-        else:
-            params = ', '.join(['%s' for _ in range(len(args))])
-            values = args
-        query = f'call {proc_name}({params})'
-        cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute(query, values)
-        try:
-            return cursor.fetchall()
-        except psycopg2.ProgrammingError:
-            return None
+        
+        with psycopg.ClientCursor(self.__conn) as cursor:
+            if kwargs:
+                params = ', '.join(f"%({k})s" for k in kwargs.keys())
+                query = f"CALL {proc_name}({params})"
+                cursor.execute(query, kwargs)
+            else:
+                params = ', '.join(['%s' for _ in args])
+                query = f"CALL {proc_name}({params})"
+                cursor.execute(query, args)
 
     def has_relation(self, qtn: str) -> bool:
         """Checks if the qtn is a relation in the database

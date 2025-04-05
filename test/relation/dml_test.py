@@ -10,7 +10,7 @@ from unittest import TestCase
 from time import sleep
 from random import randint
 
-import psycopg2
+import psycopg
 
 from half_orm.hotest import HoTestCase
 from half_orm import relation_errors, model
@@ -42,7 +42,7 @@ class Test(HoTestCase):
         pers = self.pers(last_name='ba')
         self.assertEqual(pers.ho_count(), 1)
         pers = pers.ho_get()
-        self.assertRaises(psycopg2.IntegrityError, pers.ho_insert)
+        self.assertRaises(psycopg.errors.UniqueViolation, pers.ho_insert)
 
     def test_select(self):
         n = 'abcdef'[randint(0, 5)]
@@ -74,7 +74,6 @@ class Test(HoTestCase):
 
     def test_update_none_values_are_removed(self):
         "it should remove None values before update"
-        self.post.ho_mogrify()
         f1 = io.StringIO()
         value1 = ''
         with contextlib.redirect_stdout(f1):

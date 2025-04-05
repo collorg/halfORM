@@ -78,7 +78,7 @@ def __get_full_class_name(schemaname, relationname):
 def __get_field_desc(field_name, field):
     #TODO: REFACTOR
     sql_type = field._metadata['fieldtype']
-    field_desc = SQL_ADAPTER.get(sql_type)
+    field_desc = SQL_ADAPTER.get(sql_type, (Any, None))[0]
     if field_desc is None:
         if not NO_APAPTER.get(sql_type):
             NO_APAPTER[sql_type] = 0

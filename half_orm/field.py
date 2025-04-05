@@ -5,11 +5,10 @@
 
 import sys
 import typing
-import psycopg2
-import psycopg2.extras
+import psycopg
 
 from collections.abc import Iterable
-from half_orm.null import NULL
+from half_orm.null import Null, NULL
 from half_orm.sql_adapter import SQL_ADAPTER
 
 class Field():
@@ -20,6 +19,7 @@ class Field():
         self.__relation = relation
         self.__name = name
         self.__is_set = False
+        self.__null = False
         self.__metadata = metadata
         self.__sql_type = self.__metadata['fieldtype']
         self.__value = None
@@ -35,13 +35,17 @@ class Field():
         return self.__metadata
 
     @property
+    def sql_type(self):
+        return self.__sql_type
+
+    @property
     def py_type(self):
         sql_type = self.__sql_type
         list_ = False
         if sql_type[0] == '_':
             sql_type = sql_type[1:]
             list_ = True
-        python_type = SQL_ADAPTER.get(sql_type, typing.Any)
+        python_type = SQL_ADAPTER.get(sql_type, (typing.Any, None))[0]
         if list_:
             python_type = typing.List[python_type]
         return python_type
@@ -57,6 +61,14 @@ class Field():
     def _is_part_of_pk(self):
         "Returns True if the field is part of the PK"
         return bool(self.__metadata['pkey'])
+
+    def __null_getter(self):
+        return self.__null
+    def __null_setter(self, value: bool):
+        self.__is_set = True
+        self.__null = value
+        self.__value = None
+    
 
     def is_not_null(self):
         "Returns True if the field is defined as not null."
@@ -86,17 +98,19 @@ class Field():
         """Returns the SQL representation of the field for the where clause
         """
         where_repr = ''
-        comp_str = '%s'
+        comp_str = f'%s'
         isiterable = type(self.__value) in {tuple, list, set}
         col_is_array = self.__sql_type[0] == '_'
         comp = self._comp()
         if comp == '=' and isiterable:
             comp = 'in'
+            comp_str = f"({', '.join(['%s'] * len(self.__value))})"
         cast = ''
-        if self.__value != NULL and not isiterable:
+        if self.__value != None and not isiterable:
             cast = f'::{self.__sql_type}'
         if col_is_array and comp == '=':
-            where_repr = f'{comp_str} = ANY({self.__praf(query, ho_id)})'
+            cast = f'::{self.__sql_type[1:]}'
+            where_repr = f'{comp_str}{cast} = ANY({self.__praf(query, ho_id)})'
         elif not self.unaccent:
             where_repr = f"{self.__praf(query, ho_id)} {comp} {comp_str}{cast}"
         else:
@@ -122,7 +136,7 @@ class Field():
             if len(value) != 2:
                 raise ValueError(f"Can't match {value} with (comp, value)!")
             comp, value = value
-        if value is None:
+        if value is None and comp not in {'=', '=='}:
             raise ValueError("Can't have a None value with a comparator!")
         if value is NULL and comp is None:
             comp = 'is'
@@ -135,6 +149,12 @@ class Field():
             raise ValueError("comp should be 'is' or 'is not' with NULL value!")
         self.__is_set = True
         self.__value = value
+        if value is NULL:
+            if comp == 'is':
+                comp = '='
+            if comp == 'is not':
+                comp = '!='
+            self.__value = None
         self.__comp = comp
 
     def _set(self, *args):
@@ -176,10 +196,6 @@ class Field():
         """
         return self.__relation
 
-    def _psycopg_adapter(self):
-        """Return the SQL representation of self.__value"""
-        return psycopg2.extensions.adapt(self.__value)
-
     @property
     def _name(self):
         return self.__name
@@ -196,5 +212,55 @@ class Field():
             err_msg = f"{err_msg}\nDo not use '{self.__name}' as a method name."
         raise TypeError(err_msg)
 
-psycopg2.extensions.register_adapter(Field, Field._psycopg_adapter)
-psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
+from psycopg.adapt import Dumper, PyFormat
+from psycopg.pq import Format
+
+# class FieldDumper(Dumper):
+#     def dump(self, field: Field):
+#         dumper = psycopg.adapt.AdaptersMap.get_dumper(self, field.value, psycopg.adapt.PyFormat.AUTO)
+#         return dumper.dump(field.value)
+
+# psycopg.adapters.register_dumper(Field, FieldDumper)
+
+# class FieldDumper(Dumper):
+#     def __init__(self, cls, context):
+#         super().__init__(cls, context)
+#         # Get the appropriate dumper for TEXT format
+#         self._dumper = context.adapters.get_dumper(cls, PyFormat.TEXT)
+    
+#     def dump(self, field: Field):
+#         if field.value is None:
+#             return None
+#         return self._dumper.dump(field.value)
+
+# psycopg.adapters.register_dumper(Field, FieldDumper)
+
+from psycopg.adapt import Dumper
+from psycopg.pq import Format
+from psycopg.types.json import Jsonb, Json
+import json
+
+class FieldDumper(Dumper):
+    def __init__(self, cls, context):
+        super().__init__(cls, context)
+        self.context = context
+    def dump(self, field):
+        value = field.value
+        if value is None:
+            return None
+        format = PyFormat.TEXT
+        py_type, adapter = SQL_ADAPTER.get(field.sql_type, (None, None))
+        if adapter:
+            value = adapter(field.value)
+        dumper = self.context.get_dumper(value, format)
+        return dumper.dump(value)
+
+psycopg.adapters.register_dumper(Field, FieldDumper)
+class NullDumper(psycopg.adapt.Dumper):
+    def dump(self, obj):
+        if isinstance(obj, Null):
+            return None
+        return super().dump(obj)
+
+psycopg.adapters.register_dumper(Null, NullDumper)
+

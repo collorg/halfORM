@@ -4,8 +4,8 @@
 import subprocess
 from unittest import TestCase
 
-import psycopg2
-from psycopg2.errors import UndefinedTable
+import psycopg
+from psycopg.errors import UndefinedTable
 
 from ..init import halftest, model, model2
 
@@ -39,7 +39,7 @@ class Test(TestCase):
     def test_disconnect(self):
         "it should disconnect"
         model.disconnect()
-        with self.assertRaises(psycopg2.InterfaceError):
+        with self.assertRaises(psycopg.errors.OperationalError):
             model.execute_query("select 1")
 
     def test_ping(self):
@@ -58,7 +58,6 @@ class Test(TestCase):
         coucou = Test(class_='coucou')
         coucou.ho_insert()
         self.assertEqual(coucou.ho_count(), 1)
-        print('XXX', list(coucou))
         coucou.ho_update(class_='truc')
         self.assertEqual(coucou.class_.value, 'truc')
         coucou.ho_delete()

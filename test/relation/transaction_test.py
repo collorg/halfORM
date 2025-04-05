@@ -5,7 +5,7 @@ import io
 import contextlib
 
 from unittest import TestCase
-from psycopg2.errors import UniqueViolation
+from psycopg.errors import UniqueViolation
 from half_orm.transaction import Transaction
 from half_orm.relation import transaction
 
