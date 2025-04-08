@@ -32,6 +32,7 @@ Note that this module requires the psycopg2 library to be installed.
 """
 
 from collections import OrderedDict
+from psycopg import Connection, AsyncConnection
 
 def strip_quotes(qrn):
     "Removes all double quotes from the qrn/fqrn"
@@ -202,8 +203,13 @@ class PgMeta:
             Defaults to False.
         """
         self.__dbname = connection.info.get_parameters()['dbname']
-        if not PgMeta.meta.deja_vu(self.__dbname) or reload:
-            self.__load_metadata(connection)
+        if isinstance(connection, Connection):
+            if not PgMeta.meta.deja_vu(self.__dbname) or reload:
+                self.__load_metadata(connection)
+
+    async def initialize(self):
+        """Initialisation asynchrone après la création de l'objet"""
+        await self.__async_load_metadata(self.connection)
 
     def metadata(self, dbname):
         """Retrieves the metadata for the specified database name.
@@ -227,64 +233,76 @@ class PgMeta:
         """
         return self.metadata(dbname)['relations_list']
 
+    def __set_metadata(self, all_):
+        metadata = {'relations_list': []}
+        byname = metadata['byname'] = OrderedDict()
+        byid = metadata['byid'] = {}
+        for dct in all_:
+            table_key = (self.__dbname, dct['schemaname'], dct['relationname'])
+            tableid = dct['tableid']
+            description = dct['tabledescription']
+            if table_key not in byname:
+                byid[tableid] = {}
+                byid[tableid]['sfqrn'] = table_key
+                byid[tableid]['fields'] = OrderedDict()
+                byid[tableid]['fkeys'] = OrderedDict()
+                byname[table_key] = OrderedDict()
+                byname[table_key]['description'] = description
+                byname[table_key]['fields'] = OrderedDict()
+                byname[table_key]['fkeys'] = OrderedDict()
+                byname[table_key]['fields_by_num'] = OrderedDict()
+        for dct in all_:
+            tableid = dct['tableid']
+            table_key = byid[tableid]['sfqrn']
+            fieldname = dct.pop('fieldname')
+            fieldnum = dct['fieldnum']
+            tablekind = dct.pop('tablekind')
+            inherits = [byid[int(elt.split(':')[1])]['sfqrn']
+                        for elt in dct.pop('inherits') if elt is not None]
+            byname[table_key]['tableid'] = tableid
+            byname[table_key]['tablekind'] = tablekind
+            byname[table_key]['inherits'] = inherits
+            byname[table_key]['fields'][fieldname] = dct
+            byname[table_key]['fields_by_num'][fieldnum] = dct
+            byid[tableid]['fields'][fieldnum] = fieldname
+            if (tablekind, table_key) not in metadata['relations_list']:
+                metadata['relations_list'].append((tablekind, table_key))
+        for dct in all_:
+            tableid = dct['tableid']
+            table_key = byid[tableid]['sfqrn']
+            fkeyname = dct['fkeyname']
+            if fkeyname and fkeyname not in byname[table_key]['fkeys']:
+                fkeytableid = dct['fkeytableid']
+                ftable_key = byid[fkeytableid]['sfqrn']
+                fields = [byid[tableid]['fields'][num] for num in dct['lfkeynum']]
+                confupdtype = dct['fkey_confupdtype']
+                confdeltype = dct['fkey_confdeltype']
+                ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
+                rev_fkey_name = f'_reverse_fkey_{"_".join(table_key)}.{".".join(fields)}'
+                rev_fkey_name = strip_quotes(rev_fkey_name.replace(".", "_").replace(":", "_"))
+                byname[table_key]['fkeys'][fkeyname] = (
+                    ftable_key, ffields, fields, confupdtype, confdeltype)
+                byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields, confupdtype, confdeltype)
+        return metadata
+
+    async def __async_load_metadata(self, connection):
+        async with connection.cursor() as cur:
+            await cur.execute(_REQUEST)
+            metadata = self.__set_metadata([elt for elt in cur.fetchall()])
+
+        metadata['relations_list'].sort()
+        PgMeta.meta.register(self.__dbname, metadata)
+
     def __load_metadata(self, connection):
         """Loads the metadata by querying the PostgreSQL database and registers it in the _Meta singleton.
 
         Args:
             connection (psycopg2.extensions.connection): A connection object to a PostgreSQL database.
         """
-        metadata = {'relations_list': []}
-        byname = metadata['byname'] = OrderedDict()
-        byid = metadata['byid'] = {}
+        # Connexion synchrone
         with connection.cursor() as cur:
             cur.execute(_REQUEST)
-            all_ = [elt for elt in cur.fetchall()]
-            for dct in all_:
-                table_key = (self.__dbname, dct['schemaname'], dct['relationname'])
-                tableid = dct['tableid']
-                description = dct['tabledescription']
-                if table_key not in byname:
-                    byid[tableid] = {}
-                    byid[tableid]['sfqrn'] = table_key
-                    byid[tableid]['fields'] = OrderedDict()
-                    byid[tableid]['fkeys'] = OrderedDict()
-                    byname[table_key] = OrderedDict()
-                    byname[table_key]['description'] = description
-                    byname[table_key]['fields'] = OrderedDict()
-                    byname[table_key]['fkeys'] = OrderedDict()
-                    byname[table_key]['fields_by_num'] = OrderedDict()
-            for dct in all_:
-                tableid = dct['tableid']
-                table_key = byid[tableid]['sfqrn']
-                fieldname = dct.pop('fieldname')
-                fieldnum = dct['fieldnum']
-                tablekind = dct.pop('tablekind')
-                inherits = [byid[int(elt.split(':')[1])]['sfqrn']
-                            for elt in dct.pop('inherits') if elt is not None]
-                byname[table_key]['tableid'] = tableid
-                byname[table_key]['tablekind'] = tablekind
-                byname[table_key]['inherits'] = inherits
-                byname[table_key]['fields'][fieldname] = dct
-                byname[table_key]['fields_by_num'][fieldnum] = dct
-                byid[tableid]['fields'][fieldnum] = fieldname
-                if (tablekind, table_key) not in metadata['relations_list']:
-                    metadata['relations_list'].append((tablekind, table_key))
-            for dct in all_:
-                tableid = dct['tableid']
-                table_key = byid[tableid]['sfqrn']
-                fkeyname = dct['fkeyname']
-                if fkeyname and fkeyname not in byname[table_key]['fkeys']:
-                    fkeytableid = dct['fkeytableid']
-                    ftable_key = byid[fkeytableid]['sfqrn']
-                    fields = [byid[tableid]['fields'][num] for num in dct['lfkeynum']]
-                    confupdtype = dct['fkey_confupdtype']
-                    confdeltype = dct['fkey_confdeltype']
-                    ffields = [byid[fkeytableid]['fields'][num] for num in dct['fkeynum']]
-                    rev_fkey_name = f'_reverse_fkey_{"_".join(table_key)}.{".".join(fields)}'
-                    rev_fkey_name = strip_quotes(rev_fkey_name.replace(".", "_").replace(":", "_"))
-                    byname[table_key]['fkeys'][fkeyname] = (
-                        ftable_key, ffields, fields, confupdtype, confdeltype)
-                    byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields, confupdtype, confdeltype)
+            metadata = self.__set_metadata([elt for elt in cur.fetchall()])
 
         metadata['relations_list'].sort()
         PgMeta.meta.register(self.__dbname, metadata)

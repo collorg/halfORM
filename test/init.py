@@ -4,6 +4,7 @@ import os
 import sys
 from datetime import date
 from half_orm.model import Model
+from half_orm.async_model import AsyncModel
 from half_orm.relation import singleton
 from half_orm.transaction import Transaction
 
@@ -23,6 +24,7 @@ To drop halftest database and user when you're done with the tests:
 """
 
 model = Model('halftest', scope="halftest")
+async_model = AsyncModel('halftest')
 model2 = Model('hop_test')
 
 HALFTEST_STR = '''r "actor"."person"

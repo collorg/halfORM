@@ -8,7 +8,7 @@ from ..init import halftest, model, HALFTEST_STR, HALFTEST_REL_LISTS, HALFTEST_D
 
 class Test(TestCase):
     def setUp(self):
-        self.pg_meta = model._Model__pg_meta
+        self.pg_meta = model._pg_meta
 
     def test_desc(self):
         "it should return the list of relations as [(<type>, <fqrn>, [<inherits>, ...]), ...]"

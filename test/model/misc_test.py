@@ -56,9 +56,9 @@ class Test(TestCase):
 
     def test_deja_vu(self):
         "It should return an instance of the model if it's already been loaded."
-        self.assertIsInstance(model._deja_vu('halftest'), Model)
-        self.assertEqual(id(model._deja_vu('halftest')), ID_MODEL)
+        self.assertIsInstance(model._deja_vu.get('halftest'), Model)
+        self.assertEqual(id(model._deja_vu.get('halftest')), ID_MODEL)
 
     def test_not_deja_vu(self):
         "It should return None if the model has not been seen."
-        self.assertIsNone(model._deja_vu('coucou'))
+        self.assertIsNone(model._deja_vu.get('coucou'))
