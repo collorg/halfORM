@@ -6,9 +6,11 @@ from functools import wraps
 from half_orm import pg_meta
 from half_orm import model_errors
 from half_orm import utils
-from half_orm.relation import Relation, REL_CLASS_NAMES
+from .base_relation import REL_CLASS_NAMES
+from .relation import Relation
+from .async_relation import AsyncRelation
 
-def factory(dct):
+def factory(dct, async_=False):
     """Factory function that generates a `Relation` subclass corresponding to a PostgreSQL relation.
 
     Args:
@@ -31,7 +33,7 @@ def factory(dct):
                             [elt.replace('.', '') for elt in sfqrn]])
         return f"{rel_kind}_{class_name}"
 
-    bases = [Relation,]
+    bases = [AsyncRelation if async_ else Relation]
     tbl_attr = {}
     tbl_attr['_ho_fkeys_properties'] = False
     tbl_attr['_qrn'] = pg_meta.normalize_qrn(dct['fqrn'])
@@ -54,7 +56,7 @@ def factory(dct):
             metadata['inherits'].sort()
             bases = []
         for parent_fqrn in metadata['inherits']:
-            bases.append(factory({'fqrn': parent_fqrn, 'model': model}))
+            bases.append(factory({'fqrn': parent_fqrn, 'model': model}, async_))
         tbl_attr['_ho_metadata'] = metadata
         tbl_attr['_t_fqrn'] = dct['fqrn']
         tbl_attr['_fqrn'] = pg_meta.normalize_fqrn(dct['fqrn'])

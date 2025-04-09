@@ -46,7 +46,6 @@ class BaseModel:
         except KeyError as exc:
             raise model_errors.MalformedConfigFile(file_, 'Missing mandatory parameter', 'name') from exc
 
-        print('XXX', config['database']['name'], self._dbinfo)
         if self._dbinfo and config_file and dbname != self._dbname:
             raise RuntimeError(
                 f"Can't reconnect to another database: {dbname} != {self._dbname}")

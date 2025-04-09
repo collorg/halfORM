@@ -123,9 +123,9 @@ class Test(TestCase):
 
     def test_field_aliases(self):
         "it should alias weird field names"
-        self.assertEqual('class_', self.ColumnAliasTest()._Relation__py_field_name('class', 1))
-        self.assertEqual('class_plus_one', self.ColumnAliasTest()._Relation__py_field_name('class + 1', 2))
-        self.assertEqual('column3', self.ColumnAliasTest()._Relation__py_field_name('1 + 1', 3))
+        self.assertEqual('class_', self.ColumnAliasTest()._py_field_name('class', 1))
+        self.assertEqual('class_plus_one', self.ColumnAliasTest()._py_field_name('class + 1', 2))
+        self.assertEqual('column3', self.ColumnAliasTest()._py_field_name('1 + 1', 3))
         self.ColumnAliasTest().class_.set(3)
         self.ColumnAliasTest(class_plus_one=4, column3=12)
         self.assertEqual(self.ColumnAliasTest().column3.name, '2 + 1')

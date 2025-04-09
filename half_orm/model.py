@@ -27,7 +27,6 @@ import psycopg
 from half_orm import pg_meta
 from .base_model import BaseModel
 
-
 class Model(BaseModel):
     """
     Parameters:

@@ -329,7 +329,7 @@ As of version 0.13, the `Relation.ho_transaction` decorator is replaced by the `
 decorator. It uses the new `Transaction(<model>)` context manager:
 
 ```py
-from half_orm.relation import transaction
+from half_orm.base_relation import transaction
 # [...]
 
 class Person(halftest.get_relation_class('actor.person')):
