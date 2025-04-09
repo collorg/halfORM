@@ -78,7 +78,7 @@ class Model(BaseModel):
 
         self.__conn = psycopg.connect(**self._dbinfo, row_factory=psycopg.rows.dict_row)
         self.__conn.autocommit = True
-        self._pg_meta = pg_meta.PgMeta(self.__conn, reload)
+        self._pg_meta = pg_meta.PgMeta(self._dbname, self.__conn, reload)
         if reload:
             self._classes_[self._dbname] = {}
         if self._dbname not in self.__class__._deja_vu:

@@ -150,7 +150,7 @@ class BaseRelation:
         self._ho_set_operators = _SetOperators(self)
         self._ho_select_params = {}
         self._ho_id_cast = None
-        self._ho_check_colums(*kwargs.keys())
+        self._ho_check_columns(*kwargs.keys())
         _ = {self.__dict__[field_name].set(value)
             for field_name, value in kwargs.items() if value is not None}
         self._ho_isfrozen = True
@@ -158,7 +158,7 @@ class BaseRelation:
     def __call__(self, **kwargs):
         return self.__class__(**kwargs)
 
-    def _ho_check_colums(self, *args):
+    def _ho_check_columns(self, *args):
         "Check that the args are actual columns of the relation"
         columns = {elt.replace('"', '') for elt in args}
         if columns.intersection(self._ho_fields.keys()) != columns:

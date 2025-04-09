@@ -21,11 +21,12 @@ class AsyncModel(BaseModel):
     async def connect(self, reload: bool = False):
         await self.disconnect()
         self.__conn = await psycopg.AsyncConnection.connect(**self._dbinfo, row_factory=psycopg.rows.dict_row)
-        self._pg_meta = pg_meta.PgMeta(self.__conn, reload)
+        self._pg_meta = pg_meta.PgMeta(self._dbname, self.__conn, reload)
+        await self._pg_meta.async_load_metadata(self.__conn)
         if reload:
             self._classes_[self._dbname] = {}
         if self._dbname not in self.__class__._deja_vu:
-            self._deja_vu[self._dbname] = self
+            self.__class__._deja_vu[self._dbname] = self
 
     async def reconnect(self):
         await self.connect(reload=True)

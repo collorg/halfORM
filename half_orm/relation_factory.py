@@ -45,9 +45,11 @@ def factory(dct, async_=False):
     tbl_attr['_ho_fields_aliases'] = dct is not None and dct.get('fields_aliases', {}) or {}
     dbname, schema, relation = dct['fqrn']
     rel_class = None
+    print('XXX', model._relation_metadata)
     if model._classes_.get(dbname):
         rel_class = model._classes_[dbname].get((dbname, schema, relation))
     if not rel_class:
+        print('XXX', dct['fqrn'])
         try:
             metadata = model._relation_metadata(dct['fqrn'])
         except KeyError as exc:

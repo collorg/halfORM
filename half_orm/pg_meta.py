@@ -194,7 +194,7 @@ class PgMeta:
         meta (_Meta): A singleton instance of the `_Meta` class.
     """
     meta = _Meta()
-    def __init__(self, connection, reload=False):
+    def __init__(self, dbname, connection, reload=False):
         """Initializes a new instance of the `PgMeta` class.
 
         Args:
@@ -202,9 +202,10 @@ class PgMeta:
             reload (bool, optional): A flag indicating whether to reload the metadata from the database. \
             Defaults to False.
         """
-        self.__dbname = connection.info.get_parameters()['dbname']
+        self.__dbname = dbname
         if isinstance(connection, Connection):
             if not PgMeta.meta.deja_vu(self.__dbname) or reload:
+                print('XXX', reload)
                 self.__load_metadata(connection)
 
     def metadata(self, dbname):
@@ -281,10 +282,10 @@ class PgMeta:
                 byname[ftable_key]['fkeys'][rev_fkey_name] = (table_key, fields, ffields, confupdtype, confdeltype)
         return metadata
 
-    async def __async_load_metadata(self, connection):
+    async def async_load_metadata(self, connection):
         async with connection.cursor() as cur:
             await cur.execute(_REQUEST)
-            metadata = self.__set_metadata([elt for elt in cur.fetchall()])
+            metadata = self.__set_metadata([elt for elt in await cur.fetchall()])
 
         metadata['relations_list'].sort()
         PgMeta.meta.register(self.__dbname, metadata)

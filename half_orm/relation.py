@@ -229,7 +229,7 @@ class Relation(BaseRelation):
         Note:
             It is not possible to insert more than one row with the insert method
         """
-        _ = args and args != ('*',) and self._ho_check_colums(*args)
+        _ = args and args != ('*',) and self._ho_check_columns(*args)
         query_template = "insert into {} ({}) values ({})"
         self._ho_query_type = 'insert'
         fields_names, values, fk_fields, fk_query, fk_values = self._what()
@@ -263,7 +263,7 @@ class Relation(BaseRelation):
             >>>     print(person)
             {'id': 1772}
         """
-        self._ho_check_colums(*args)
+        self._ho_check_columns(*args)
         query, values = self._ho_prep_select(*args)
         with self.__execute(query, values) as cursor:
             for elt in cursor:
@@ -297,7 +297,7 @@ class Relation(BaseRelation):
             >>> gaston.id.value
             1772
         """
-        self._ho_check_colums(*args)
+        self._ho_check_columns(*args)
         self.ho_limit(2)
         _count = self.ho_count()
         if _count != 1:
@@ -319,8 +319,8 @@ class Relation(BaseRelation):
                 f'Attempt to update all rows of {self.__class__.__name__}'
                 ' without update_all being set to True!')
 
-        _ = args and args != ('*',) and self._ho_check_colums(*args)
-        self._ho_check_colums(*(kwargs.keys()))
+        _ = args and args != ('*',) and self._ho_check_columns(*args)
+        self._ho_check_columns(*(kwargs.keys()))
         update_args = {key: value for key, value in kwargs.items() if value is not None}
         if not update_args:
             return None # no new value update. Should we raise an error here?
@@ -343,7 +343,7 @@ class Relation(BaseRelation):
         """Removes a set of tuples from the relation.
         To empty the relation, delete_all must be set to True.
         """
-        _ = args and args != ('*',) and self._ho_check_colums(*args)
+        _ = args and args != ('*',) and self._ho_check_columns(*args)
         if not (self.ho_is_set() or delete_all):
             raise RuntimeError(
                 f'Attempt to delete all rows from {self.__class__.__name__}'

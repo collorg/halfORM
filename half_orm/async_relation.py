@@ -229,7 +229,7 @@ class AsyncRelation(BaseRelation):
         Note:
             It is not possible to insert more than one row with the insert method
         """
-        _ = args and args != ('*',) and self._ho_check_colums(*args)
+        _ = args and args != ('*',) and self._ho_check_columns(*args)
         query_template = "insert into {} ({}) values ({})"
         self._ho_query_type = 'insert'
         fields_names, values, fk_fields, fk_query, fk_values = self._what()
@@ -242,9 +242,10 @@ class AsyncRelation(BaseRelation):
         returning = args or ['*']
         if returning:
             query = self._ho_add_returning(query, *returning)
-        async with self.__execute(query, tuple(values)) as cursor:
-            res = [dict(elt) for elt in await cursor.fetchall()] or [{}]
-            return res[0]
+        result = await self.__execute(query, tuple(values))
+        for elt in result:
+            return elt
+        return [{}]
 
     #@utils.trace
     async def ho_select(self, *args):
@@ -263,11 +264,11 @@ class AsyncRelation(BaseRelation):
             >>>     print(person)
             {'id': 1772}
         """
-        self._ho_check_colums(*args)
+        self._ho_check_columns(*args)
         query, values = self._ho_prep_select(*args)
-        async with self.__execute(query, values) as cursor:
-            for elt in await cursor:
-                yield dict(elt)
+        result = await self.__execute(query, values)
+        for elt in result:
+            yield dict(elt)
 
     #@utils.trace
     async def ho_get(self, *args: List[str]) -> 'AsyncRelation':
@@ -297,15 +298,19 @@ class AsyncRelation(BaseRelation):
             >>> gaston.id.value
             1772
         """
-        self._ho_check_colums(*args)
-        self.ho_limit(2)
-        _count = await self.ho_count()
+        self._ho_check_columns(*args)
+        self.ho_limit(2)  # Limiter à 2 pour vérifier s'il y a plus d'un résultat
+        _count = await self.ho_count()  # Vérifie le nombre de résultats
         if _count != 1:
             raise relation_errors.ExpectedOneError(self, _count)
-        self._ho_is_singleton = True
-        ret = self(**(next(await self.ho_select(*args))))
-        ret._ho_is_singleton = True
-        return ret
+        
+        # Utiliser async for pour récupérer le premier élément du générateur
+        async for elt in self.ho_select(*args):
+            ret = self(**elt)  # Créer l'objet à partir du dictionnaire
+            ret._ho_is_singleton = True
+            return ret
+        # Si aucun résultat n'est trouvé, il est bon de lever une exception ou de retourner None
+        raise relation_errors.ExpectedOneError(self, 0)
 
     #@utils.trace
     async def ho_update(self, *args, update_all=False, **kwargs):
@@ -319,8 +324,8 @@ class AsyncRelation(BaseRelation):
                 f'Attempt to update all rows of {self.__class__.__name__}'
                 ' without update_all being set to True!')
 
-        _ = args and args != ('*',) and self._ho_check_colums(*args)
-        self._ho_check_colums(*(kwargs.keys()))
+        _ = args and args != ('*',) and self._ho_check_columns(*args)
+        self._ho_check_columns(*(kwargs.keys()))
         update_args = {key: value for key, value in kwargs.items() if value is not None}
         if not update_args:
             return None # no new value update. Should we raise an error here?
@@ -343,7 +348,7 @@ class AsyncRelation(BaseRelation):
         """Removes a set of tuples from the relation.
         To empty the relation, delete_all must be set to True.
         """
-        _ = args and args != ('*',) and self._ho_check_colums(*args)
+        _ = args and args != ('*',) and self._ho_check_columns(*args)
         if not (self.ho_is_set() or delete_all):
             raise RuntimeError(
                 f'Attempt to delete all rows from {self.__class__.__name__}'
@@ -380,8 +385,8 @@ class AsyncRelation(BaseRelation):
         self._ho_query = "select"
         query, values = self._ho_prep_select(*args)
         query = f'select count(*) from ({query}) as ho_count'
-        async with self.__execute(query, values) as cursor:
-            return (await cursor.fetchone()['count'])
+        result = await self.__execute(query, values)
+        return result[0]['count']
 
     async def ho_is_empty(self):
         """Returns True if the relation is empty, False otherwise.
@@ -402,8 +407,6 @@ class AsyncRelation(BaseRelation):
             return next(await self.ho_select())
         except StopIteration:
             raise StopAsyncIteration
-
-    # deprecated. To remove with release 1.0.0
 
 async def async_singleton(fct):
     """Decorator. Enforces the relation to define a singleton.
@@ -445,10 +448,3 @@ def transaction(fct):
         with Transaction(self._ho_model):
             return fct(self, *args, **kwargs)
     return wrapper
-
-REL_CLASS_NAMES = {
-    'r': 'Table',
-    'p': 'Partioned table',
-    'v': 'View',
-    'm': 'Materialized view',
-    'f': 'Foreign data'}
