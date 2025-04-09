@@ -136,6 +136,7 @@ class BaseRelation:
         self._ho_pkey = {}
         self._ho_fkeys = OrderedDict()
         self._ho_fkeys_attr = set()
+        self._ho_fkeys_properties = False
         self._ho_join_to = {}
         self._ho_is_singleton = False
         self._ho_only = False

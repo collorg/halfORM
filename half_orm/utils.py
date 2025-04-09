@@ -92,6 +92,7 @@ def trace(fct): #pragma: no coverage
         frame = callerframerecord[0]
         info = inspect.getframeinfo(frame)
         context = ''
+        warn_msg = ''
         if info.code_context:
             context = info.code_context[0]
             warn_msg = f'\n{info.filename}:{info.lineno}, in {info.function}\n{context}\n'

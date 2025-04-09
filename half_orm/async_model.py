@@ -9,8 +9,8 @@ import psycopg
 
 from half_orm import pg_meta
 from .base_model import BaseModel
-
-
+from .relation_factory import factory
+from . import model_errors
 
 class AsyncModel(BaseModel):
     def __init__(self, config_file: str, scope: str = None):
@@ -92,3 +92,44 @@ class AsyncModel(BaseModel):
     @property
     async def _connection(self):
         return self.__conn
+
+    def get_relation_class(self, relation_name: str, fields_aliases: typing.Dict=None): # -> Relation
+        """This method is a factory that generates a class that inherits the `Relation <#half_orm.relation.Relation>`_ class.
+
+        Args:
+            relation_name (string): the full name (`<schema>.<relation>`) of the targeted relation in the database.
+
+        Raises:
+            ValueError: if the schema is missing in relation_name
+            UnknownRelationError: if the relation is not found in the database
+
+        Returns:
+            a class that inherits the `Relation <#half_orm.relation.Relation>`_ class:
+                the class corresponding to the relation in the database.
+
+        Examples:
+            A class inheriting the `Relation <#half_orm.relation.Relation>`_ class is returned:
+                >>> Person = model.get_relation_class('actor.person')
+                >>> Person
+                <class 'half_orm.relation.Table_HalftestActorPerson'>
+                >>> Person.__bases__
+                (<class 'half_orm.relation.Relation'>,)
+
+            A prefered way to create a class:
+                >>> class Person(model.get_relation_class('actor.person)):
+                >>>     # Your code goes here
+
+            A `MissingSchemaInName <#half_orm.model_errors.MissingSchemaInName>`_ is raised when the schema name is missing:
+                >>> model.get_relation_class('person')
+                [...]MissingSchemaInName: do you mean 'public.person'?
+
+            An `UnknownRelation <#half_orm.model_errors.UnknownRelation>`_ is raised if the relation is not found in the model:
+                >>> model.get_relation_class('public.person')
+                [...]UnknownRelation: 'public.person' does not exist in the database halftest.
+        """
+        try:
+            schema, table = relation_name.replace('"', '').rsplit('.', 1)
+        except ValueError as err:
+            raise model_errors.MissingSchemaInName(relation_name) from err
+        return factory({'fqrn': (self._dbname, schema, table), 'model': self._deja_vu[self._dbname], 'fields_aliases':fields_aliases}, async_=True)
+

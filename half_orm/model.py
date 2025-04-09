@@ -23,6 +23,7 @@ Note:
 import sys
 
 import psycopg
+from psycopg import Connection
 
 from half_orm import pg_meta
 from .base_model import BaseModel
@@ -56,7 +57,7 @@ class Model(BaseModel):
         reserved to the __factory metaclass.
         """
         super().__init__(config_file, scope)
-        self.__conn = None
+        self.__conn: Connection = None
         self.__connect()
 
     def __connect(self, config_file: str=None, reload: bool=False):
@@ -102,7 +103,7 @@ class Model(BaseModel):
                 self.execute_query("select 1")
             except (psycopg.errors.OperationalError, psycopg.errors.InterfaceError) as exc: #pragma: no cover
                 # log reconnection attempt failure
-                sys.stderr.write(f'{exc.exception}\n')
+                sys.stderr.write(f'{exc}\n')
                 sys.stderr.flush()
             return False
 
@@ -120,7 +121,7 @@ class Model(BaseModel):
         self.__connect(config_file, True)
 
     @property
-    def _connection(self):
+    def _connection(self) -> Connection:
         """\
         Property. Returns the psycopg2 connection attached to the Model object.
         """
@@ -198,8 +199,3 @@ class Model(BaseModel):
         module = __import__(
             module_path, globals(), locals(), [_class_name], 0)
         return module.__dict__[_class_name]
-
-    def _relations(self):
-        """List all_ the relations in the database"""
-        rels = self._pg_meta.relations_list(self._dbname)
-        return rels

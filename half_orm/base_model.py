@@ -165,3 +165,8 @@ class BaseModel:
             class_name = pg_meta.camel_case(relation[1][-1])
             module = importlib.import_module(f".{module_name}", package_name)
             yield getattr(module, class_name), relation[0]
+
+    def _relations(self):
+        """List all_ the relations in the database"""
+        rels = self._pg_meta.relations_list(self._dbname)
+        return rels

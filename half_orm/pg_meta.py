@@ -207,10 +207,6 @@ class PgMeta:
             if not PgMeta.meta.deja_vu(self.__dbname) or reload:
                 self.__load_metadata(connection)
 
-    async def initialize(self):
-        """Initialisation asynchrone après la création de l'objet"""
-        await self.__async_load_metadata(self.connection)
-
     def metadata(self, dbname):
         """Retrieves the metadata for the specified database name.
 
