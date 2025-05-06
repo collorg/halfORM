@@ -1,4 +1,4 @@
-image: python:${PYVERSION}-bullseye
+image: python:${PYVERSION}-bookworm
 
 stages:
   - test
@@ -45,6 +45,10 @@ test:
   script:
     - "$CI_PROJECT_DIR/half_orm/packager/test/dummy_test.sh"
     - pytest
+  artifacts:
+    paths:
+      - "$CI_PROJECT_DIR/*"
+    expire_in: 1 day
 
 build:
   stage: build
@@ -56,5 +60,6 @@ build:
     python -m build
   artifacts:
     paths:
-      - "$CI_PROJECT_DIR/dist"
-    expire_in: 1 week
+      - "$CI_PROJECT_DIR/*"
+    expire_in: 1 day
+
