@@ -30,9 +30,8 @@ class DbConn:
         self.__production = None
         if name:
             self.__connection_file = os.path.join(self.__conf_dir, self.__name)
-            if not os.path.exists(self.__connection_file):
-                utils.error(CONF_NOT_FOUND.format(self.__connection_file), 1)
-            self.__init()
+            if os.path.exists(self.__connection_file):
+                self.__init()
 
     @property
     def production(self):
@@ -70,6 +69,7 @@ class DbConn:
         """Asks for the connection parameters.
         """
         self.__name = name
+        return self
         if not os.access(self.__conf_dir, os.W_OK):
             sys.stderr.write(f"You don't have write access to {self.__conf_dir}.\n")
             if self.__conf_dir == '/etc/half_orm': # only on linux
@@ -133,4 +133,4 @@ class DbConn:
                 cmd_list, env=env, shell=False, check=True,
                 **kwargs)
         except subprocess.CalledProcessError as err:
-            utils.error(f'{err.stderr} with user: {self.__user}, host: {self.__host}, port: {self.__port}\n', exit_code=err.returncode)
+            utils.error(f'{err}\ndatabase: {self.__name} with user: {self.__user}, host: {self.__host}, port: {self.__port}\n', exit_code=err.returncode)

@@ -18,9 +18,9 @@ class Test(TestCase):
     def tearDown(self):
         halftest.model.reconnect()
 
-    def test_missing_config_file(self):
-        self.assertRaises(
-            model_errors.MissingConfigFile, model.Model, "missing")
+    # def test_missing_config_file(self):
+    #     self.assertRaises(
+    #         model_errors.MissingConfigFile, model.Model, "missing")
 
     def test_malformed_config_file_missing_database_section(self):
         "it should raise MalformedConfigFile if database section is missing"

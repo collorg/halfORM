@@ -32,6 +32,7 @@ from psycopg2.extras import RealDictCursor
 
 from half_orm import model_errors
 from half_orm import pg_meta
+from half_orm import utils
 from half_orm.relation_factory import factory
 
 CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
@@ -64,7 +65,7 @@ class Model:
     """
     __deja_vu = {}
     _classes_ = {}
-    def __init__(self, config_file: str, scope: str=None):
+    def __init__(self, config_file: None, scope: str=None):
         """Model constructor
 
         Use @config_file in your scripts. The @dbname parameter is
@@ -87,22 +88,27 @@ class Model:
         self.__config_file = config_file
         config = ConfigParser()
         file_ = os.path.join(CONF_DIR, self.__config_file)
-        if not config.read([file_]):
-            raise model_errors.MissingConfigFile(file_)
-        try:
-            database = config['database']
-        except KeyError as exc:
-            raise model_errors.MalformedConfigFile(file_, 'Missing section', 'database') from exc
-        try:
-            dbname = database['name']
-        except KeyError as exc:
-            raise model_errors.MalformedConfigFile(file_, 'Missing mandatory parameter', 'name') from exc
+        if config.read([file_]):
+            try:
+                database = config['database']
+            except KeyError as exc:
+                raise model_errors.MalformedConfigFile(file_, 'Missing section', 'database') from exc
+            try:
+                dbname = database['name']
+            except KeyError as exc:
+                raise model_errors.MalformedConfigFile(file_, 'Missing mandatory parameter', 'name') from exc
 
-        if self.__dbinfo and config_file and dbname != self.__dbname:
-            raise RuntimeError(
-                f"Can't reconnect to another database: {dbname} != {self.__dbname}")
+            if self.__dbinfo and dbname != self.__dbname:
+                raise RuntimeError(
+                    f"Can't reconnect to another database: {dbname} != {self.__dbname}")
+            self.__dbinfo['dbname'] = dbname
 
-        self.__dbinfo['dbname'] = dbname
+        else:
+            dbname = config_file
+            self.__dbinfo['dbname'] = dbname
+            database = {'user': None, 'password': None, 'host': None, 'port': None}
+            utils.warning(f"No config file for '{dbname}'\nI will try to use a trusted authentication to the database '{dbname}' with the role '{os.environ.get('USER') or os.getlogin()}'.\n")
+
         self.__dbinfo['user'] = database.get('user')
         self.__dbinfo['password'] = database.get('password')
         self.__dbinfo['host'] = database.get('host')
@@ -123,7 +129,6 @@ class Model:
 
         if config_file:
             self.__load_config(config_file)
-
         self.__conn = psycopg2.connect(**self.__dbinfo, cursor_factory=RealDictCursor)
         self.__conn.autocommit = True
         self.__pg_meta = pg_meta.PgMeta(self.__conn, reload)
