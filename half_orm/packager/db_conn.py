@@ -68,8 +68,6 @@ class DbConn:
     def set_params(self, name):
         """Asks for the connection parameters.
         """
-        self.__name = name
-        return self
         if not os.access(self.__conf_dir, os.W_OK):
             sys.stderr.write(f"You don't have write access to {self.__conf_dir}.\n")
             if self.__conf_dir == '/etc/half_orm': # only on linux

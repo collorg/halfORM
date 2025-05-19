@@ -83,7 +83,7 @@ class Database:
         try:
             self.__init(name, get_release=False)
         except FileNotFoundError:
-            self.__connection_params.set_params(name)
+            pass
         return self.__init_db()
 
     def __init_db(self):
