@@ -55,7 +55,7 @@ def main():
     gaston.ho_delete()
 ```
 
-If you want to build or patch a model, see the [`half_orm packager`](#next-hop-the-gitops-half_orm-packager-wipalpha).
+If you want to build or patch a model, see the [`half_orm packager`](#next-hop-the-gitops-half_orm-packager-wipalpha) command.
 
 # Tutorial: Learn `half_orm` in half an hour
 
@@ -91,6 +91,15 @@ host = localhost
 port = 5432
 ```
 
+**Note**: since the release 0.14, if the config file does not exist, `half-orm` tries to connect
+to the database with a trusted authentication with a role corresponding to the `$USER`. This is
+equivalent to the following config file:
+
+```ini
+[database]
+name = db_name
+```
+
 You are ready to go!
 ## Connect to the database
 
@@ -99,7 +108,8 @@ You are ready to go!
 >>> my_db = Model('my_database')
 ```
 
-The `my_database` is the name of the connexion file. It will be fetched in the directory referenced by
+The `my_database` is the name of the connection file (or the name of the database for a trusted
+authentication). The connection file will be fetched in the directory referenced by
 the environment variable `HALFORM_CONF_DIR` if defined, in `/etc/half_orm` otherwise.
 
 
@@ -359,7 +369,7 @@ would be inserted.
 
 ### Returned values
 
-By default `ho_insert` returns all the inserted values as a dictionary. You can specify the columns
+By default `ho_insert` returns the inserted value as a dictionary. You can specify the columns
 you want to get by passing their names as argurments to `ho_insert`.
 
 ## ho_update
@@ -476,7 +486,7 @@ You can also get a subset of the attributes by passing a list of columns names t
 
 ### Select one: the `ho_get` method
 
-The `ho_get` method returns an Relation object whose fields are populated with the values from the corresponding row in the database.
+The `ho_get` method returns a Relation object whose fields are populated with the values from the corresponding row in the database.
 It raises an [ExpectedOneError](https://github.com/collorg/halfORM/blob/main/half_orm/relation_errors.py)
 Exception if 0 or more than 1 rows match the intention. The returned object is a singleton (see below).
 

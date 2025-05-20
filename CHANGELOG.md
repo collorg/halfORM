@@ -1,3 +1,10 @@
+# 0.14.0 -- hop 0.1.0 alpha 23 (2025-05-20)
+
+* [hop] Remove call to db_conn.set_params if there is no config file. (cc825a1)
+* [model][hop] Try to use trust authentication if there is no config file. (ca69599)
+* [CI/gitlab] Use bookworm image. (a0569f9)
+* [CI/github] Use ubuntu 24.04 image. (ac9a1d6)
+
 # 0.13.10 -- hop 0.1.0 alpha 22 (2025-03-24)
 
 * Check if a value is in an array type column. (1a6dd01)
