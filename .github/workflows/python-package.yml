@@ -68,6 +68,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     container: python:3-slim
+    permissions:
+      contents: read
     steps:
     - name: Finished
       run: |
