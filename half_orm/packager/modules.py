@@ -316,7 +316,8 @@ def generate(repo):
         sql_adapter_module = importlib.import_module('.sql_adapter', package_name)
         SQL_ADAPTER.update(sql_adapter_module.SQL_ADAPTER)
     except ModuleNotFoundError as exc:
-        os.makedirs(package_dir)
+        if not os.path.exists(package_dir):
+            os.makedirs(package_dir)
         with open(os.path.join(package_dir, 'sql_adapter.py'), "w") as file_:
             file_.write(SQL_ADAPTER_TEMPLATE)
         sys.stderr.write(f"{exc}\n")

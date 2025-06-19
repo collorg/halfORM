@@ -24,3 +24,4 @@ lib64
 pyvenv.cfg
 .auto_venv
 .env
+.venv
