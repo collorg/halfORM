@@ -39,9 +39,6 @@ class Test(TestCase):
         utils.write(rwd_test_file, data, "a+")
         self.assertEqual(utils.read(rwd_test_file), data + data)
 
-    def test_hop_version(self):
-        self.assertRegex(utils.hop_version(), r'^\d+\.\d+\.\d+(?:(a|b|rc)(\d+))?$')
-
     def test_green(self):
         self.assertEqual(utils.Color.green('coucou'), '\x1b[1;32mcoucou\x1b[0m')
 

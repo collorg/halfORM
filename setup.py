@@ -12,12 +12,10 @@ def package_files(*directories):
     paths = set()
     for directory in directories:
         for (path, dirs, filenames) in os.walk(directory):
-            dirs[:] = [dir for dir in dirs if dir not in {'hop_test', '.git', '__pycache__'}]
+            dirs[:] = [dir for dir in dirs if dir not in {'.git', '__pycache__'}]
             for filename in filenames:
                 paths.add(os.path.join('..', path, filename))
     return list(paths)
-
-extra_files = package_files('half_orm/packager/templates', 'half_orm/packager/patches')
 
 setup(
     name='half_orm',
@@ -29,12 +27,12 @@ setup(
     author_email='joel.maizi@collorg.org',
     url='https://github.com/collorg/halfORM',
     license='GPLv3',
-    packages=['half_orm', 'half_orm/packager'],
+    packages=['half_orm'],
     install_requires=[
         'psycopg2-binary',
         'click',
         'GitPython'],
-    package_data={'half_orm': ['version.txt', 'packager/version.txt'], '': extra_files},
+    package_data={'half_orm': ['version.txt']},
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
@@ -61,11 +59,6 @@ setup(
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13'
     ],
-    entry_points={
-        'console_scripts': [
-            'hop=half_orm.packager.hop:main',
-        ],
-    },
     long_description_content_type = "text/markdown"
 
 )

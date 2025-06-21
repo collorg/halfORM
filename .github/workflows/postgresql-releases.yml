@@ -56,8 +56,7 @@ jobs:
         flake8 half_orm --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest & coverage
       run: |
-        HALFORM_CONF_DIR=$PWD/.config ./half_orm/packager/test/dummy_test.sh
-        HALFORM_CONF_DIR=$PWD/.config coverage run --source=half_orm --omit=half_orm/packager/* -m pytest test
+        HALFORM_CONF_DIR=$PWD/.config coverage run --source=half_orm -m pytest test
     - name: Upload coverage data to coveralls.io
       run: coveralls --service=github
       env:

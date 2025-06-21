@@ -26,9 +26,6 @@ class Color:
         "bold"
         return f"\033[1m{text}\033[0m"
 
-PWD = os.path.dirname(__file__)
-HOP_PATH = os.path.join(PWD, 'packager')
-TEMPLATE_DIRS = os.path.join(HOP_PATH, 'templates')
 
 BEGIN_CODE = "#>>> PLACE YOUR CODE BELOW THIS LINE. DO NOT REMOVE THIS LINE!\n"
 END_CODE = "#<<< PLACE YOUR CODE ABOVE THIS LINE. DO NOT REMOVE THIS LINE!\n"
@@ -47,13 +44,6 @@ def write(file_, data, mode='w'):
     "Write file helper"
     with open(file_, mode=mode, encoding='utf-8') as text_io_wrapper:
         return text_io_wrapper.write(data)
-
-def hop_version():
-    "Returns the version of hop"
-    hop_v = None
-    with open(os.path.join(HOP_PATH, 'version.txt'), encoding='utf-8') as version:
-        hop_v = version.read().strip()
-    return hop_v
 
 def error(msg: str, exit_code: int=None):
     "Write error message on stderr and exit if exit is not None"

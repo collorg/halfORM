@@ -7,7 +7,7 @@ from unittest import TestCase
 import psycopg2
 from psycopg2.errors import UndefinedTable
 
-from ..init import halftest, model, model2
+from ..init import halftest, model
 
 TEST = 'public.test'
 
@@ -68,7 +68,6 @@ class Test(TestCase):
         model.reconnect(reload=True)
         self.assertFalse(model.has_relation(TEST))
 
-    def test_model2(self):
-        "it should have load model2"
-        self.assertEqual(model2.desc(), [('r', ('hop_test', 'public', 'a'), []), ('r', ('hop_test', 'public', 'b'), []), ('r', ('hop_test', 'public', 'first'), [])])
+    def test_model(self):
+        "it should have load model"
         self.assertEqual(model.desc(), [('r', ('halftest', 'actor', 'person'), []), ('r', ('halftest', 'blog', 'comment'), []), ('r', ('halftest', 'blog', 'event'), [('halftest', 'blog', 'post')]), ('r', ('halftest', 'blog', 'post'), []), ('v', ('halftest', 'blog.view', 'post_comment'), [])])
