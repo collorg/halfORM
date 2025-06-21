@@ -61,11 +61,6 @@ setup(
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13'
     ],
-    entry_points={
-        'console_scripts': [
-            'hop=half_orm.packager.hop:main',
-        ],
-    },
     long_description_content_type = "text/markdown"
 
 )

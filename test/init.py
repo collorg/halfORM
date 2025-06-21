@@ -23,7 +23,6 @@ To drop halftest database and user when you're done with the tests:
 """
 
 model = Model('halftest', scope="halftest")
-model2 = Model('hop_test')
 
 HALFTEST_STR = '''r "actor"."person"
 r "blog"."comment"
@@ -62,7 +61,6 @@ def name(letter, integer):
 class HalfTest:
     def __init__(self):
         self.model = model
-        self.model2 = model2
         assert model._scope == "halftest"
         self.dbname = model._dbname
         self.today = date.today()
@@ -77,7 +75,6 @@ class HalfTest:
                 # a method with the name of a field.
                 pass
 
-        self.public_a_cls = model2.get_relation_class('public.a')
         self._person = self.person_cls()
         self.gaston = self.person_cls(**GASTON)
         self.pc = PC()

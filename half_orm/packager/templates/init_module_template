@@ -1,6 +1,0 @@
-"""This module provides the model of the database for the package {package_name}.
-"""
-
-from half_orm.model import Model
-
-MODEL = Model('{package_name}', scope=__name__)
