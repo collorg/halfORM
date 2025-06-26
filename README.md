@@ -98,12 +98,15 @@ Person(email='alice@example.com').ho_delete()
 ### Smart Querying
 
 ```python
-# Flexible filtering
+# No .filter() method needed - the object IS the filter
 young_people = Person(birth_date=('>', '1990-01-01'))
-email_users = Person(email=('ilike', '%@gmail.com'))
+gmail_users = Person(email=('ilike', '%@gmail.com'))
+
+# Navigate and constrain in one step
+alice_posts = Post().author_fk(name=('ilike', 'alice%'))
 
 # Chainable operations
-recent_posts = (Post()
+recent_posts = (Post(is_published=True)
     .ho_order_by('created_at desc')
     .ho_limit(10)
     .ho_offset(20))

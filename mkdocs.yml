@@ -1,0 +1,143 @@
+site_name: halfORM Documentation
+site_description: A simple PostgreSQL to Python mapper
+site_author: collorg
+site_url: https://collorg.github.io/halfORM/
+repo_url: https://github.com/collorg/halfORM
+repo_name: collorg/halfORM
+
+theme:
+  name: material
+  language: en
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.annotate
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_object_full_path: false
+            show_category_heading: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: date
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: collorg
+      repo: halfORM
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/collorg/halfORM
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/half-orm/
+
+nav:
+  - Home: index.md
+  - Quick Start: quick-start.md
+  - Tutorial:
+    - tutorial/index.md
+    - Installation: tutorial/installation.md
+    - First Steps: tutorial/first-steps.md
+    - Models and Relations: tutorial/models-relations.md
+    - Queries: tutorial/queries.md
+    - Foreign Keys: tutorial/foreign-keys.md
+    - Transactions: tutorial/transactions.md
+  - Guides:
+    - guides/index.md
+    - Configuration: guides/configuration.md
+    - Migration from other ORMs: guides/migration.md
+    - Performance Optimization: guides/performance.md
+    - Error Handling: guides/error-handling.md
+    - Testing: guides/testing.md
+  - API Reference:
+    - api/index.md
+    - Model: api/model.md
+    - Relation: api/relation.md
+    - Field: api/field.md
+    - FKey: api/fkey.md
+    - Transaction: api/transaction.md
+    - Errors: api/errors.md
+  - Architecture:
+    - architecture/index.md
+    - Overview: architecture/overview.md
+    - PostgreSQL Metadata: architecture/metadata.md
+    - Factory Pattern: architecture/factory.md
+    - Query Processing: architecture/query-processing.md
+  - Examples:
+    - examples/index.md
+    - Simple Blog: examples/blog.md
+    - E-commerce: examples/ecommerce.md
+    - Web Applications: examples/web-apps.md
+
+extra_css:
+  - assets/css/custom.css

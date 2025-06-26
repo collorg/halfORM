@@ -365,9 +365,12 @@ class Model:
         if self._scope:
             module_path = f'{self._scope}.{module_path}'
         _class_name = pg_meta.class_name(qtn) # XXX
-        module = __import__(
-            module_path, globals(), locals(), [_class_name], 0)
-        return module.__dict__[_class_name]
+        try:
+            module = __import__(
+                module_path, globals(), locals(), [_class_name], 0)
+            return module.__dict__[_class_name]
+        except:
+            return self.get_relation_class(qtn)
 
     def _relations(self):
         """List all_ the relations in the database"""
