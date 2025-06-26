@@ -224,10 +224,11 @@ print(f"Comments: {post.comments_rfk().ho_count()}")
 |---------|------------|------------|---------|-------------|
 | **Learning Curve** | Steep | Moderate | Gentle | **Minimal** |
 | **SQL Control** | Limited | Limited | Good | **Complete** |
+| **Database Support** | Multi | Multi | Multi | **PostgreSQL only** |
 | **PostgreSQL-Native** | Partial | Partial | No | **✅ Full** |
 | **Database-First** | No | No | Partial | **✅ Native** |
 | **Setup Complexity** | High | Framework | Low | **Ultra-Low** |
-| **Best For** | Complex Apps | Django Web | Prototypes | **PostgreSQL + Python** |
+| **Best For** | Complex Apps | Django Web | Multi-DB Apps | **PostgreSQL + Python** |
 
 ## 🎓 When to Choose halfORM
 
@@ -244,7 +245,7 @@ print(f"Comments: {post.comments_rfk().ho_count()}")
 - **Team prefers code-first** - You want to define models in Python
 - **Heavy ORM features needed** - You need advanced ORM patterns like lazy loading, identity maps, etc.
 
-## 📚 Documentation & Resources [WIP]
+## 📚 Documentation & Resources
 
 - **[Quick Start Guide](docs/quick-start.md)** - Get running in 5 minutes
 - **[Tutorial](docs/tutorial/)** - Step-by-step learning path  
