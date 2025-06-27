@@ -28,10 +28,7 @@ setup(
     url='https://github.com/collorg/halfORM',
     license='GPLv3',
     packages=['half_orm'],
-    install_requires=[
-        'psycopg2-binary',
-        'click',
-        'GitPython'],
+    install_requires=[ 'psycopg2-binary' ],
     package_data={'half_orm': ['version.txt']},
     classifiers=[
         # How mature is this project? Common values are
