@@ -8,6 +8,21 @@ from half_orm import model_errors
 from half_orm import utils
 from half_orm.relation import Relation, REL_CLASS_NAMES
 
+def register_class(relation_class):
+    try:
+        rel_id = id(relation_class)
+        if rel_id in relation_class._rels_ids:
+            return relation_class
+        model = relation_class._ho_model
+        dbname = model._dbname
+        schemaname, relationname = relation_class._qrn.replace('"', '').split('.')
+        key = (dbname, schemaname, relationname)
+        model._classes_[dbname][key] = relation_class
+        relation_class._rels_ids[rel_id] = key
+        return relation_class
+    except AttributeError as exc:
+        raise ValueError(f"Invalid relation class: {exc}")
+
 def factory(dct):
     """Factory function that generates a `Relation` subclass corresponding to a PostgreSQL relation.
 

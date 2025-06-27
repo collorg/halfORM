@@ -246,6 +246,7 @@ class Relation:
             [...]UnknownAttributeError: ERROR! Unknown attribute: {'lost_name'}.
     """
     _ho_fields_aliases = {}
+    _rels_ids = {}
 
     def __init__(self, **kwargs):
         _fqrn = ""
@@ -612,9 +613,14 @@ Fkeys = {"""
             for fkey in self._ho_fkeys.values():
                 ret.append(repr(fkey))
             ret.append('')
-            ret.append(fkeys_usage)
-            for fkey in self._ho_fkeys:
-                ret.append(f"    '': '{fkey}',")
+            if not hasattr(self, 'Fkeys'):
+                ret.append(fkeys_usage)
+                for fkey in self._ho_fkeys:
+                    ret.append(f"    '': '{fkey}',")
+            else:
+                ret.append("Fkeys = {")
+                for key, value in self.Fkeys.items():
+                    ret.append(f"    '{key}': '{value}',")
             ret.append('}')
         return '\n'.join(ret)
 

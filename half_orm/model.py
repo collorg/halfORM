@@ -33,13 +33,14 @@ from psycopg2.extras import RealDictCursor
 from half_orm import model_errors
 from half_orm import pg_meta
 from half_orm import utils
-from half_orm.relation_factory import factory
+from half_orm.relation_factory import factory, register_class
 
 CONF_DIR = os.path.abspath(environ.get('HALFORM_CONF_DIR', '/etc/half_orm'))
 
 
 psycopg2.extras.register_uuid()
 
+register = register_class
 
 class Model:
     """

@@ -313,6 +313,124 @@ query.ho_mogrify()
 list(query.ho_select())  # This will print the SQL query
 ```
 
+## Step 9: Register Custom Classes (Optional)
+
+For advanced use cases, you can override the auto-generated classes with custom implementations that include business logic and cleaner foreign key mappings:
+
+```python title="custom_blog_classes.py"
+from half_orm.model import Model, register
+
+blog = Model('halform_quickstart')
+
+@register
+class Author(blog.get_relation_class('blog.author')):
+    """Custom Author class with business methods"""
+    Fkeys = {
+        'posts_rfk': '_reverse_fkey_halform_quickstart_blog_post_author_id'
+    }
+    
+    def create_post(self, title, content, published=False):
+        """Create a new post for this author."""
+        return self.posts_rfk(
+            title=title, 
+            content=content, 
+            is_published=published
+        ).ho_insert()
+    
+    def get_published_posts(self):
+        """Get all published posts by this author."""
+        return self.posts_rfk(is_published=True).ho_select()
+    
+    def get_stats(self):
+        """Get author statistics."""
+        all_posts = self.posts_rfk()
+        published = all_posts(is_published=True)
+        return {
+            'total_posts': all_posts.ho_count(),
+            'published_posts': published.ho_count(),
+            'draft_posts': all_posts.ho_count() - published.ho_count()
+        }
+
+@register
+class Post(blog.get_relation_class('blog.post')):
+    """Custom Post class with business methods"""
+    Fkeys = {
+        'author_fk': 'post_author_id_fkey'
+    }
+    
+    def publish(self):
+        """Publish this post."""
+        from datetime import datetime
+        self.is_published.value = True
+        self.published_at.value = datetime.now()
+        return self.ho_update()
+    
+    def unpublish(self):
+        """Unpublish this post."""
+        self.is_published.value = False
+        return self.ho_update()
+    
+    def get_author_name(self):
+        """Get the name of this post's author."""
+        return self.author_fk().ho_get().name.value
+
+# Test the custom classes
+if __name__ == "__main__":
+    # Find Alice
+    alice = Author(name='Alice Johnson').ho_get()
+    
+    # Create a post using custom method
+    new_post = alice.create_post(
+        title="halfORM Custom Classes", 
+        content="This post was created using a custom method!",
+        published=True
+    )
+    print(f"✅ Created post: {new_post}")
+    
+    # Get author statistics
+    stats = alice.get_stats()
+    print(f"📊 Alice's stats: {stats}")
+    
+    # Navigate from post to author using custom method
+    post = Post(title='Welcome to halfORM').ho_get()
+    author_name = post.get_author_name()
+    print(f"📝 '{post.title.value}' was written by: {author_name}")
+```
+
+### The Power of @register
+
+Once registered, your custom classes are returned automatically by foreign key relationships:
+
+```python
+# Before @register: generic classes with limited functionality
+post = Post(title='Welcome').ho_get()
+author = post.author_fk().ho_get()  # Generic Author class
+# author only has basic CRUD methods
+
+# After @register: your custom classes with business logic
+post = Post(title='Welcome').ho_get()  
+author = post.author_fk().ho_get()  # YOUR custom Author class!
+author.create_post("New Post", "Content")  # Custom methods available!
+stats = author.get_stats()  # Your business logic works!
+```
+
+### Benefits
+
+- **Clean Fkeys**: Use friendly names instead of long constraint names
+- **Business Logic**: Encapsulate domain logic in your relation classes
+- **Automatic Resolution**: Foreign keys return your custom classes
+- **No Performance Cost**: Registration happens at import time
+- **Code Preservation**: Your custom code survives class regeneration
+
+!!! tip "When to Use Custom Classes"
+    Use `@register` when you need:
+    - Business logic methods on your data objects
+    - Cleaner, more readable foreign key names
+    - Domain-specific validation or computed properties
+    - Complex operations that involve multiple tables
+    
+    For simple CRUD operations, the auto-generated classes work perfectly!
+
 ## Next Steps
 
 Congratulations! You've successfully:

@@ -8,6 +8,7 @@ from random import randint
 from unittest import TestCase
 import psycopg2
 from half_orm.hotest import HoTestCase
+import pytest
 
 from ..init import halftest
 from half_orm import relation_errors, model
@@ -35,14 +36,9 @@ FOREIGN KEYS:
 - author: ("author_first_name", "author_last_name", "author_birth_date")
  ↳ "halftest":"actor"."person"(first_name, last_name, birth_date)
 
-To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
-your code as a class attribute and replace the empty string key(s) with the alias(es) you
-want to use. The aliases must be unique and different from any of the column names. Empty
-string keys are ignored.
-
 Fkeys = {
-    '': '_reverse_fkey_halftest_blog_comment_post_id',
-    '': 'author',
+    'comment_rfk': '_reverse_fkey_halftest_blog_comment_post_id',
+    'author_fk': 'author',
 }"""
 
 SET_PERS_REPR = """DATABASE: halftest
@@ -68,15 +64,10 @@ FOREIGN KEYS:
 - _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("first_name", "last_name", "birth_date")
  ↳ "halftest":"blog"."post"(author_first_name, author_last_name, author_birth_date)
 
-To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
-your code as a class attribute and replace the empty string key(s) with the alias(es) you
-want to use. The aliases must be unique and different from any of the column names. Empty
-string keys are ignored.
-
 Fkeys = {
-    '': '_reverse_fkey_halftest_blog_comment_author_id',
-    '': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
-    '': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
+    'comment_rfk': '_reverse_fkey_halftest_blog_comment_author_id',
+    'event_rfk': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
+    'post_rfk': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
 }"""
 
 PERS_POSTS="""DATABASE: halftest
@@ -126,26 +117,15 @@ FOREIGN KEYS:
      - _reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date: ("first_name", "last_name", "birth_date")
       ↳ "halftest":"blog"."post"(author_first_name, author_last_name, author_birth_date)
      
-     To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
-     your code as a class attribute and replace the empty string key(s) with the alias(es) you
-     want to use. The aliases must be unique and different from any of the column names. Empty
-     string keys are ignored.
-     
      Fkeys = {
-         '': '_reverse_fkey_halftest_blog_comment_author_id',
-         '': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
-         '': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
+         'comment_rfk': '_reverse_fkey_halftest_blog_comment_author_id',
+         'event_rfk': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
+         'post_rfk': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
      }
 
-To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
-your code as a class attribute and replace the empty string key(s) with the alias(es) you
-want to use. The aliases must be unique and different from any of the column names. Empty
-string keys are ignored.
-
 Fkeys = {
-    '': '_reverse_fkey_halftest_blog_comment_post_id',
-    '': 'author',
-    '': '_reverse_...............',
+    'comment_rfk': '_reverse_fkey_halftest_blog_comment_post_id',
+    'author_fk': 'author',
 }"""
 
 class Test(HoTestCase):

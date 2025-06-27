@@ -62,3 +62,28 @@ class Test(TestCase):
     def test_not_deja_vu(self):
         "It should return None if the model has not been seen."
         self.assertIsNone(model._deja_vu('coucou'))
+
+    def test_register_decorator(self):
+        """Test @register decorator functionality"""
+        from half_orm.model import register
+        
+        @register
+        class TestPerson(model.get_relation_class(PERSON)):
+            Fkeys = {
+                'comment_rfk': '_reverse_fkey_halftest_blog_comment_author_id',
+                'event_rfk': '_reverse_fkey_halftest_blog_event_author_first_name_author_last_name_author_birth_date',
+                'post_rfk': '_reverse_fkey_halftest_blog_post_author_first_name_author_last_name_author_birth_date',
+            }
+        assert TestPerson is register(TestPerson)
+
+        with self.assertRaises(ValueError) as exc:
+            @register
+            class WrongClass():
+                pass
+        self.assertEqual("Invalid relation class: type object 'WrongClass' has no attribute '_rels_ids'", str(exc.exception))
+
+
+        # check registration
+        key = (model._dbname, 'actor', 'person')
+        assert key in model._classes_[model._dbname]
+        assert model._classes_[model._dbname][key] is TestPerson

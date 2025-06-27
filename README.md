@@ -116,25 +116,60 @@ active_or_recent = active_users | recent_users
 power_users = premium_users & active_users
 ```
 
-### Foreign Key Navigation
+## 🎨 Custom Relation Classes with Foreign Key Navigation
+
+Override generic relation classes with custom implementations containing business logic and personalized foreign key mappings:
 
 ```python
-class Post(db.get_relation_class('blog.post')):
+from half_orm.model import Model, register
+from half_orm.relation import singleton
+
+blog = Model('blog_db')
+
+@register
+class Author(blog.get_relation_class('blog.author')):
+    Fkeys = {
+        'posts_rfk': '_reverse_fkey_blog_post_author_id',
+        'comments_rfk': '_reverse_fkey_blog_comment_author_id',
+    }
+    
+    @singleton
+    def create_post(self, title, content):
+        """Create a new blog post for this author."""
+        return self.posts_rfk(title=title, content=content).ho_insert()
+    
+    @singleton
+    def get_author_s_recent_posts(self, limit=10):
+        """Get author's most recent posts."""
+        return self.posts_rfk().ho_order_by('published_at desc').ho_limit(limit).ho_select()
+
+    def get_recent_posts(self, limit=10):
+        """Get most recent posts."""
+        return self.posts_rfk().ho_order_by('published_at desc').ho_limit(limit).ho_select()
+
+@register  
+class Post(blog.get_relation_class('blog.post')):
     Fkeys = {
         'author_fk': 'author_id',
-        'comments_rfk': '_reverse_fkey_blog_comment_post_id'
+        'comments_rfk': '_reverse_fkey_blog_comment_post_id',
     }
 
-class Author(db.get_relation_class('blog.author')):  
-    Fkeys = {
-        'posts_rfk': '_reverse_fkey_blog_post_author_id'
-    }
+    def publish(self):
+        """Publish this post."""
+        from datetime import datetime
+        self.published_at.value = datetime.now()
+        return self.ho_update()
 
-# Navigate relationships naturally
-post = Post(title='My First Post').ho_get()
-author = post.author_fk()
-comments = post.comments_rfk()
-author_posts = author.posts_rfk()
+# This returns your custom Author class with all methods!
+post = Post(title='Welcome').ho_get()
+author = post.author_fk().ho_get()  # Instance of your custom Author class
+
+# Use your custom methods
+author.create_post("New Post", "Content here")
+recent_posts = author.get_recent_posts(5)
+
+# Chain relationships seamlessly  
+author.posts_rfk().comments_rfk().author_fk()  # The authors that commented any post of the author
 ```
 
 ## 🔧 Advanced Features
@@ -184,12 +219,13 @@ is_empty = Person(email='nonexistent@example.com').ho_is_empty()
 ## 🏗️ Real-World Example
 
 ```python
-from half_orm.model import Model
+from half_orm.model import Model, register
 from half_orm.relation import singleton
 
 # Blog application
 blog = Model('blog')
 
+@register
 class Author(blog.get_relation_class('blog.author')):
     Fkeys = {
         'posts_rfk': '_reverse_fkey_blog_post_author_id'
@@ -199,6 +235,7 @@ class Author(blog.get_relation_class('blog.author')):
     def create_post(self, title, content):
         return self.posts_rfk(title=title, content=content).ho_insert()
 
+@register
 class Post(blog.get_relation_class('blog.post')):
     Fkeys = {
         'author_fk': 'author_id',
@@ -227,6 +264,7 @@ print(f"Comments: {post.comments_rfk().ho_count()}")
 |---------|------------|------------|---------|-------------|
 | **Learning Curve** | Steep | Moderate | Gentle | **Minimal** |
 | **SQL Control** | Limited | Limited | Good | **Complete** |
+| **Custom Business Logic** | Classes/Mixins | Model Methods | Model Methods | **@register decorator** |
 | **Database Support** | Multi | Multi | Multi | **PostgreSQL only** |
 | **PostgreSQL-Native** | Partial | Partial | No | **✅ Full** |
 | **Database-First** | No | No | Partial | **✅ Native** |
