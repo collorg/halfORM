@@ -1,3 +1,21 @@
+# 0.15.0 (2025-06-27)
+
+## BREAKING CHANGE
+
+**HOP Packager Moved**: The `hop` command and packaging functionality has been moved to a separate package `halfORM_dev`. 
+
+If you were using the `hop` command, please clone https://github.com/collorg/halfORM_dev.
+
+* chore: remove unused dependencies click and GitPython (6ea30e1)
+* feat: add @register decorator for custom relation classes (61d8fb8)
+* docs: Add quick start. (a24f8c7)
+* docs: half_orm only deals with PosgreSQL databases. (194ce7f)
+* docs: modernize README and add complete documentation skeleton (232e8e2)
+* refactor: remove HOP packager - moved to halfORM_dev (b16ab60)
+* [hop] Fix sync-package (c999449)
+* Bump requests from 2.32.0 to 2.32.4 (4ce1d6d)
+* [CI] Fix workflows permissions. (ee12aa4)
+
 # 0.14.0 -- hop 0.1.0 alpha 23 (2025-05-20)
 
 * [hop] Remove call to db_conn.set_params if there is no config file. (cc825a1)
