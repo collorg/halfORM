@@ -128,7 +128,7 @@ Get up and running in under 5 minutes:
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch: **Quick Start**
+-   🚀 **Quick Start**
 
     ---
 
@@ -136,7 +136,7 @@ Get up and running in under 5 minutes:
 
     **[Get Started →](quick-start.md)**
 
--   :material-school: **Tutorial**
+-   📚 **Tutorial**
 
     ---
 
@@ -144,7 +144,7 @@ Get up and running in under 5 minutes:
 
     **[Learn halfORM →](tutorial/index.md)**
 
--   :material-code-braces: **API Reference**
+-   📋 **API Reference**
 
     ---
 
@@ -152,7 +152,7 @@ Get up and running in under 5 minutes:
 
     **[API Docs →](api/index.md)**
 
--   :material-puzzle: **Examples**
+-   💡 **Examples**
 
     ---
 
@@ -160,7 +160,7 @@ Get up and running in under 5 minutes:
 
     **[View Examples →](examples/index.md)**
 
--   :material-map: **Guides**
+-   📖 **Guides**
 
     ---
 
@@ -168,7 +168,7 @@ Get up and running in under 5 minutes:
 
     **[Browse Guides →](guides/index.md)**
 
--   :material-cog: **Architecture**
+-   🏗️ **Architecture**
 
     ---
 
