@@ -83,8 +83,8 @@ UserStats = blog.get_relation_class('analytics.user_stats')  # Database view
 results = blog.execute_function('calculate_metrics', user_id=123)
 
 # Advanced PostgreSQL data types work seamlessly
-GeoData = blog.get_relation_class('spatial.locations')
-point = GeoData(coordinates='POINT(-122.4194 37.7749)')  # PostGIS
+JsonData = blog.get_relation_class('app.json_table')
+data = JsonData(metadata='{"type": "user", "premium": true}')  # JSONB support
 ```
 
 ## Quick Start

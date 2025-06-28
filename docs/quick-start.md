@@ -285,7 +285,7 @@ published_posts = Post(is_published=True)
 recent_posts = Post(published_at=('>', '2024-01-01'))
 
 # Pattern matching with foreign key navigation
-alice_posts = Post().author_fk(name=('ilike', 'alice%'))
+alice_posts = Author(name=('ilike', 'alice%')).posts_rfk(is_published=True)
 
 # === CHAINING ===
 # Get recent published posts, ordered by date
