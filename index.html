@@ -612,6 +612,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#migration-from-014x" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migration from 0.14.x
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1729,6 +1738,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#migration-from-014x" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migration from 0.14.x
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1754,6 +1772,11 @@
 
 
 <h1 id="halform-documentation">halfORM Documentation<a class="headerlink" href="#halform-documentation" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Documentation Version</p>
+<p>This documentation covers halfORM <strong>0.15.0</strong> (latest stable release).
+For older versions, see the <a href="https://github.com/collorg/halfORM/releases">GitHub releases</a>.</p>
+</div>
 <p><a href="https://pypi.org/project/half-orm/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/half_orm" /></a>
 <a href="https://www.python.org"><img alt="Python versions" src="https://img.shields.io/badge/Python-%20≥%203.7-blue" /></a>
 <a href="https://www.postgresql.org"><img alt="PostgreSQL versions" src="https://img.shields.io/badge/PostgreSQL-%20≥%209.6-blue" /></a>
@@ -1926,13 +1949,39 @@
 </ul>
 <h2 id="whats-new">What's New<a class="headerlink" href="#whats-new" title="Permanent link">&para;</a></h2>
 <h3 id="version-0150">Version 0.15.0 🎉<a class="headerlink" href="#version-0150" title="Permanent link">&para;</a></h3>
+<div class="admonition success">
+<p class="admonition-title">Latest Release - January 2025</p>
+<p>Major update with new custom relation classes and breaking changes.</p>
+</div>
 <ul>
-<li><strong>New <code>@register</code> decorator</strong> for custom relation classes</li>
-<li><strong>Enhanced documentation</strong> with complete rewrite</li>
-<li><strong>Improved foreign key navigation</strong> with custom class resolution</li>
-<li><strong>Breaking change</strong>: HOP packager moved to separate <code>halfORM_dev</code> package</li>
+<li><strong>🎨 New <code>@register</code> decorator</strong> for custom relation classes with business logic</li>
+<li><strong>🔗 Enhanced foreign key navigation</strong> with custom class resolution  </li>
+<li><strong>📚 Complete documentation rewrite</strong> with improved structure</li>
+<li><strong>⚠️ Breaking change</strong>: HOP packager moved to separate <code>halfORM_dev</code> package</li>
 </ul>
-<p><strong><a href="https://github.com/collorg/halfORM/blob/main/CHANGELOG.md">View Full Changelog →</a></strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># New in 0.15.0: Custom relation classes</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nd">@register</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">Author</span><span class="p">(</span><span class="n">blog</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;blog.author&#39;</span><span class="p">)):</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">Fkeys</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;posts_rfk&#39;</span><span class="p">:</span> <span class="s1">&#39;_reverse_fkey_blog_post_author_id&#39;</span><span class="p">}</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="nd">@singleton</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">posts_rfk</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">content</span><span class="p">)</span><span class="o">.</span><span class="n">ho_insert</span><span class="p">()</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># Foreign keys now return your custom classes!</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">post</span> <span class="o">=</span> <span class="n">Post</span><span class="p">()</span><span class="o">.</span><span class="n">ho_get</span><span class="p">()</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="n">author</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">author_fk</span><span class="p">()</span><span class="o">.</span><span class="n">ho_get</span><span class="p">()</span>  <span class="c1"># Returns Author instance</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="n">author</span><span class="o">.</span><span class="n">create_post</span><span class="p">(</span><span class="s2">&quot;Title&quot;</span><span class="p">,</span> <span class="s2">&quot;Content&quot;</span><span class="p">)</span>  <span class="c1"># Custom method available</span>
+</code></pre></div>
+<p><strong><a href="https://github.com/collorg/halfORM/releases/tag/v0.15.0">📋 View Full Changelog →</a></strong></p>
+<h3 id="migration-from-014x">Migration from 0.14.x<a class="headerlink" href="#migration-from-014x" title="Permanent link">&para;</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">HOP Users - Action Required</p>
+<p>If you were using the <code>hop</code> command, install the new package:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>pip<span class="w"> </span>install<span class="w"> </span>half_orm_dev
+</code></pre></div></p>
+<p>halfORM 0.15.0 focuses exclusively on ORM functionality.</p>
+</div>
 <hr />
 <div class="admonition tip">
 <p class="admonition-title">Ready to start?</p>
@@ -1961,7 +2010,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 28, 2025 10:09:08 UTC">June 28, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 28, 2025 10:14:49 UTC">June 28, 2025</span>
   </span>
 
     
