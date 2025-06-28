@@ -286,13 +286,15 @@ print(f"Comments: {post.comments_rfk().ho_count()}")
 - **Team prefers code-first** - You want to define models in Python
 - **Heavy ORM features needed** - You need advanced ORM patterns like lazy loading, identity maps, etc.
 
-## 📚 Documentation & Resources
+## 📚 Documentation (WIP)
 
-- **[Quick Start Guide](docs/quick-start.md)** - Get running in 5 minutes
-- **[Tutorial](docs/tutorial/)** - Step-by-step learning path  
-- **[API Reference](docs/api/)** - Complete method documentation
-- **[Examples](docs/examples/)** - Real-world applications
-- **[Migration Guides](docs/migration/)** - From SQLAlchemy, Django ORM, etc.
+**[📖 Complete Documentation](https://collorg.github.io/halfORM/)** - Full documentation site 🚧
+
+### Quick Links
+
+- **[🚀 Quick Start](https://collorg.github.io/halfORM/quick-start/)** - Get running in 5 minutes
+- **[🎓 Tutorial](https://collorg.github.io/halfORM/tutorial/)** - Step-by-step learning path *(WIP)*
+- **[📋 API Reference](https://collorg.github.io/halfORM/api/)** - Complete method documentation *(WIP)*
 
 ## 🤝 Contributing
 

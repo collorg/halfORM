@@ -2,9 +2,9 @@ name: Documentation
 
 on:
   push:
-    branches: [ main, docs-workflow ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, docs-workflow ]
+    branches: [ main ]
 
 permissions:
   contents: write
