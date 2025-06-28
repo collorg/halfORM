@@ -23,3 +23,4 @@ pyvenv.cfg
 .auto_venv
 .env
 .venv
+site
