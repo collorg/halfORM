@@ -1,5 +1,9 @@
 # halfORM Documentation
 
+!!! info "Documentation Version"
+    This documentation covers halfORM **0.15.0** (latest stable release).
+    For older versions, see the [GitHub releases](https://github.com/collorg/halfORM/releases).
+
 [![PyPI version](https://img.shields.io/pypi/v/half_orm)](https://pypi.org/project/half-orm/)
 [![Python versions](https://img.shields.io/badge/Python-%20≥%203.7-blue)](https://www.python.org)
 [![PostgreSQL versions](https://img.shields.io/badge/PostgreSQL-%20≥%209.6-blue)](https://www.postgresql.org)
@@ -201,12 +205,41 @@ Get up and running in under 5 minutes:
 
 ### Version 0.15.0 🎉
 
-- **New `@register` decorator** for custom relation classes
-- **Enhanced documentation** with complete rewrite
-- **Improved foreign key navigation** with custom class resolution
-- **Breaking change**: HOP packager moved to separate `halfORM_dev` package
+!!! success "Latest Release - January 2025"
+    Major update with new custom relation classes and breaking changes.
 
-**[View Full Changelog →](https://github.com/collorg/halfORM/blob/main/CHANGELOG.md)**
+- **🎨 New `@register` decorator** for custom relation classes with business logic
+- **🔗 Enhanced foreign key navigation** with custom class resolution  
+- **📚 Complete documentation rewrite** with improved structure
+- **⚠️ Breaking change**: HOP packager moved to separate `halfORM_dev` package
+
+```python
+# New in 0.15.0: Custom relation classes
+@register
+class Author(blog.get_relation_class('blog.author')):
+    Fkeys = {'posts_rfk': '_reverse_fkey_blog_post_author_id'}
+    
+    @singleton
+    def create_post(self, title, content):
+        return self.posts_rfk(title=title, content=content).ho_insert()
+
+# Foreign keys now return your custom classes!
+post = Post().ho_get()
+author = post.author_fk().ho_get()  # Returns Author instance
+author.create_post("Title", "Content")  # Custom method available
+```
+
+**[📋 View Full Changelog →](https://github.com/collorg/halfORM/releases/tag/v0.15.0)**
+
+### Migration from 0.14.x
+
+!!! warning "HOP Users - Action Required"
+    If you were using the `hop` command, install the new package:
+    ```bash
+    pip install half_orm_dev
+    ```
+    
+    halfORM 0.15.0 focuses exclusively on ORM functionality.
 
 ---
 
