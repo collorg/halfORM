@@ -24,7 +24,6 @@ halfORM is a lightweight, database-first Object-Relational Mapper designed speci
 - **🔍 SQL Transparency**: See exactly what queries are generated
 - **⚡ Zero Setup**: Connect to existing databases instantly
 - **🚀 PostgreSQL Native**: Leverage advanced PostgreSQL features
-- **🎨 Custom Classes**: Override with business logic using `@register`
 
 ## Key Features
 
@@ -46,6 +45,12 @@ from half_orm.model import register
 from half_orm.relation import singleton
 
 @register
+class Post(blog.get_relation_class('blog.post')):
+    Fkeys = {
+        'author_fk': 'post_author_id_fkey'
+    }
+
+@register
 class Author(blog.get_relation_class('blog.author')):
     Fkeys = {
         'posts_rfk': '_reverse_fkey_blog_post_author_id'
@@ -56,8 +61,8 @@ class Author(blog.get_relation_class('blog.author')):
         return self.posts_rfk(title=title, content=content).ho_insert()
 
 # Foreign keys now return your custom classes!
-post = Post(title='Welcome').ho_get()
-author = post.author_fk().ho_get()  # Returns Author instance
+post = Post(title='Welcome')
+author = post.author_fk()  # Returns Author instance
 author.create_post("New Post", "Content")  # Custom method available
 ```
 
@@ -68,7 +73,7 @@ young_people = Person(birth_date=('>', '1990-01-01'))
 gmail_users = Person(email=('ilike', '%@gmail.com'))
 
 # Navigate relationships while filtering
-alice_posts = Post().author_fk(name=('ilike', 'alice%'))
+alice_posts = Author(name=('ilike', 'alice%')).posts_rfk(is_published=True)
 
 # Chain operations naturally
 recent_posts = (Post(is_published=True)
@@ -118,7 +123,7 @@ Get up and running in under 5 minutes:
    result = person.ho_insert()
    
    # Query
-   for person in Person(email=('ilike', '%@gmail.com')).ho_select():
+   for person in Person(email=('ilike', '%@gmail.com')):
        print(f"Found: {person['name']}")
    ```
 
@@ -205,7 +210,7 @@ Get up and running in under 5 minutes:
 
 ### Version 0.15.0 🎉
 
-!!! success "Latest Release - January 2025"
+!!! success "Latest Release - June 2025"
     Major update with new custom relation classes and breaking changes.
 
 - **🎨 New `@register` decorator** for custom relation classes with business logic
@@ -229,7 +234,12 @@ author = post.author_fk().ho_get()  # Returns Author instance
 author.create_post("Title", "Content")  # Custom method available
 ```
 
-**[📋 View Full Changelog →](https://github.com/collorg/halfORM/releases/tag/v0.15.0)**
+### Version 0.15.1 🎉
+#### 🔧 Developer Experience
+- **New diagnostic command**: `python -m half_orm` for instant installation verification
+- **Improved peer authentication**: Better error messages and timeout handling
+- **Streamlined tutorial**: Simplified installation process with built-in testing
+
 
 ### Migration from 0.14.x
 
@@ -238,8 +248,6 @@ author.create_post("Title", "Content")  # Custom method available
     ```bash
     pip install half_orm_dev
     ```
-    
-    halfORM 0.15.0 focuses exclusively on ORM functionality.
 
 ---
 

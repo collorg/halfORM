@@ -108,12 +108,14 @@ class Model:
             dbname = config_file
             self.__dbinfo['dbname'] = dbname
             database = {'user': None, 'password': None, 'host': None, 'port': None}
-            utils.warning(f"No config file for '{dbname}'\nI will try to use a trusted authentication to the database '{dbname}' with the role '{os.environ.get('USER') or os.getlogin()}'.\n")
+            if dbname != 'template1':
+                utils.warning(f"No config file '{os.path.join(CONF_DIR, dbname)}'.\n\t Trying peer authentication for '{os.environ.get('USER') or os.getlogin()}'.\n")
 
         self.__dbinfo['user'] = database.get('user')
         self.__dbinfo['password'] = database.get('password')
         self.__dbinfo['host'] = database.get('host')
         self.__dbinfo['port'] = database.get('port')
+        self.__dbinfo['connect_timeout'] = database.get('timeout', 3)
 
     def __connect(self, config_file: str=None, reload: bool=False):
         """Setup a new connection to the database.
