@@ -24,11 +24,19 @@ To drop halftest database and user when you're done with the tests:
 
 model = Model('halftest', scope="halftest")
 
-HALFTEST_STR = '''r "actor"."person"
-r "blog"."comment"
-r "blog"."event"
-r "blog"."post"
-v "blog.view"."post_comment"'''
+HALFTEST_STR = '''📋 Available relations for halftest:
+r "actor"."person"            → The table actor.person contains the persons of the blogging system. The id attribute is a serial. Just pass first_name, last_name and birth_date to insert a new person.
+r "blog"."comment"            → The table blog.comment contains all the comments made by a person on a post.
+r "blog"."event"              → The table blog.event contains all the events of the blogging system. It inherits blog.post. It's just here to illustrate the inheriance in half_orm
+r "blog"."post"               → The table blog.post contains all the post made by a person in the blogging system.
+v "blog.view"."post_comment"  → This view joins: - comment, - author of the comment, - post, - author of the post.
+
+📋 Relation Types:
+  r: Table
+  p: Partioned table
+  v: View
+  m: Materialized view
+  f: Foreign data'''
 
 HALFTEST_REL_LISTS = [
     ('r', ('halftest', 'actor', 'person')),

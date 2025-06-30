@@ -6,7 +6,7 @@ from functools import wraps
 from half_orm import pg_meta
 from half_orm import model_errors
 from half_orm import utils
-from half_orm.relation import Relation, REL_CLASS_NAMES
+from half_orm.relation import Relation
 
 def register_class(relation_class):
     try:
@@ -73,8 +73,8 @@ def factory(dct):
         tbl_attr['_ho_metadata'] = metadata
         tbl_attr['_t_fqrn'] = dct['fqrn']
         tbl_attr['_fqrn'] = pg_meta.normalize_fqrn(dct['fqrn'])
-        tbl_attr['_ho_kind'] = REL_CLASS_NAMES[metadata['tablekind']]
-        class_name = _gen_class_name(REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
+        tbl_attr['_ho_kind'] = pg_meta.REL_CLASS_NAMES[metadata['tablekind']]
+        class_name = _gen_class_name(pg_meta.REL_CLASS_NAMES[metadata['tablekind']], dct['fqrn'])
         rel_class = type(class_name, tuple(bases), tbl_attr)
         model._classes_[tbl_attr['_dbname']][dct['fqrn']] = rel_class
     return rel_class

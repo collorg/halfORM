@@ -1063,10 +1063,3 @@ def transaction(fct):
         with Transaction(self._ho_model):
             return fct(self, *args, **kwargs)
     return wrapper
-
-REL_CLASS_NAMES = {
-    'r': 'Table',
-    'p': 'Partioned table',
-    'v': 'View',
-    'm': 'Materialized view',
-    'f': 'Foreign data'}

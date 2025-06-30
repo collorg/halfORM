@@ -34,6 +34,13 @@ Note that this module requires the psycopg2 library to be installed.
 from collections import OrderedDict
 from psycopg2.extras import RealDictCursor
 
+REL_CLASS_NAMES = {
+    'r': 'Table',
+    'p': 'Partioned table',
+    'v': 'View',
+    'm': 'Materialized view',
+    'f': 'Foreign data'}
+
 def strip_quotes(qrn):
     "Removes all double quotes from the qrn/fqrn"
     return qrn.replace('"', '')
@@ -367,22 +374,56 @@ class PgMeta:
         """
         return self.metadata(dbname)['byname'][fqrn]
 
-    def str(self, dbname):
+    def str(self, dbname, with_hop_meta=False):
         """
         Returns a string representation of the metadata for all tables in the given database.
-
         Args:
             dbname (str): The name of the database.
-
+            with_hop_meta (bool): Include half_orm_meta tables in output
         Returns:
             str: A string containing metadata about all tables in the given database.
         """
-        out = []
+        relations = []
+        max_entry_len = 0
         entry = self.metadata(dbname)['byname']
+        
+        
         for key in entry:
-            if key[1].find('half_orm_meta') == 0: continue
-            out.append(f"{entry[key]['tablekind']} {normalize_qrn(key)}")
-        return '\n'.join(out)
+            # Skip half_orm_meta tables unless explicitly requested
+            if not with_hop_meta and key[1].startswith('half_orm_meta'):
+                continue
+                
+            relname = f"{entry[key]['tablekind']} {normalize_qrn(key)}"
+            max_entry_len = max(len(relname), max_entry_len)
+            
+            # Handle missing descriptions gracefully
+            description = entry[key].get('description', 'No description available')
+            if not description or description.split('\n')[0].strip() == '':
+                description = 'No description available'
+                
+            relations.append((relname, description))
+        
+        # Sort relations by type then name for better organization
+        relations.sort(key=lambda x: (x[0].split()[0], x[0]))
+        
+        # Build the formatted output
+        rel_list = '\n'.join([
+            f"{rel:<{max_entry_len + 1}} → {description}" 
+            for rel, description in relations
+        ])
+        
+        rel_list = f"📋 Available relations for {dbname}:\n{rel_list}"
+
+        # Add legend if there are relations
+        if relations:
+            rel_list += '\n\n📋 Relation Types:'
+            for key, value in REL_CLASS_NAMES.items():
+                rel_list += f"\n  {key}: {value}"
+        else:
+            rel_list += "No relations found in this database."
+        
+        print('XXX', rel_list)
+        return rel_list
 
     def _unique_constraints_list(self, dbname, sfqrn):
         """

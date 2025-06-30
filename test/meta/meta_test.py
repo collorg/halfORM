@@ -16,7 +16,8 @@ class Test(TestCase):
 
     def test_str(self):
         "it should return a well formatted string"
-        self.assertEqual(self.pg_meta.str('halftest'), HALFTEST_STR)
+        self.maxDiff = None
+        self.assertEqual(HALFTEST_STR, self.pg_meta.str('halftest'))
 
     def test_relations_list(self):
         self.maxDiff = None

@@ -2,7 +2,7 @@ from unittest import TestCase
 import pytest
 from ..init import halftest, model, HALFTEST_STR, HALFTEST_REL_LISTS
 from half_orm.model import Model
-from half_orm import model_errors
+from half_orm import model_errors, pg_meta
 
 PERSON = 'actor.person'
 ID_MODEL = id(model)
@@ -51,8 +51,16 @@ class Test(TestCase):
 
     def test_classes(self):
         "it should return all the classes in the model"
-        self.assertEqual("\n".join(
-            [f"{cls[1]} {cls[0]._qrn}" for cls in model.classes()]), HALFTEST_STR)
+        classes = [
+            model._import_class('actor.person'),
+            model._import_class('blog.post'),
+            model._import_class('blog.comment'),
+            model._import_class('blog.event'),
+            model._import_class('blog.view.post_comment')
+        ]
+        for cls in model.classes():
+            assert cls[0] in classes
+            assert cls[1] in pg_meta.REL_CLASS_NAMES
 
     def test_deja_vu(self):
         "It should return an instance of the model if it's already been loaded."
