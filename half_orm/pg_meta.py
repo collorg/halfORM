@@ -398,7 +398,9 @@ class PgMeta:
             
             # Handle missing descriptions gracefully
             description = entry[key].get('description', 'No description available')
-            if not description or description.split('\n')[0].strip() == '':
+            if description:
+                description = description.split('\n')[0].strip()
+            if not description:
                 description = 'No description available'
                 
             relations.append((relname, description))
@@ -422,7 +424,6 @@ class PgMeta:
         else:
             rel_list += "No relations found in this database."
         
-        print('XXX', rel_list)
         return rel_list
 
     def _unique_constraints_list(self, dbname, sfqrn):

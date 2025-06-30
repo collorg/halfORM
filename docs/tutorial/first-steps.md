@@ -231,15 +231,6 @@ INSERT INTO blog.comment (content, author_id, post_id, is_approved) VALUES
 ('The performance tips section was especially helpful.', 4, 2, TRUE),
 ('This saved me hours of debugging. Thank you!', 2, 3, TRUE),
 ('Would love to see examples with larger datasets.', 1, 3, FALSE);
-
--- Update sequences to ensure they're owned by the correct columns
-ALTER SEQUENCE blog.author_id_seq OWNED BY blog.author.id;
-ALTER SEQUENCE blog.post_id_seq OWNED BY blog.post.id;
-ALTER SEQUENCE blog.comment_id_seq OWNED BY blog.comment.id;
-ALTER SEQUENCE blog.tag_id_seq OWNED BY blog.tag.id;
-
--- No need for explicit COMMIT in script
--- COMMIT;
 ```
 
 ### Step 2: Run the Setup Scripts
@@ -442,6 +433,31 @@ Fkeys = {
     - **Foreign key relationships** including reverse foreign keys (incoming references)
     - **Ready-to-use Fkeys template** that you can copy/paste into your custom classes
     - **Clear instructions** on how to use foreign keys as class attributes
+
+!!! important "Schema Names Are Required"
+    halfORM always requires the full `schema.table` format in `get_relation_class()`:
+    
+    ```sql
+    -- When you create a table without specifying a schema
+    CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(50) NOT NULL
+    );
+    -- PostgreSQL automatically places it in the 'public' schema
+    ```
+    
+    ```python
+    # ✅ Correct - always include schema name
+    Author = blog.get_relation_class('blog.author')
+    Product = blog.get_relation_class('inventory.products')
+    User = blog.get_relation_class('public.users')  # Even for public schema
+    
+    # ❌ Wrong - will raise MissingSchemaInName error
+    Author = blog.get_relation_class('author')
+    User = blog.get_relation_class('users')
+    ```
+    
+    Even though PostgreSQL creates the table in the `public` schema by default, halfORM requires you to be explicit: use `public.users` to access it.
 
 ## Your First CRUD Operations
 
