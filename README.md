@@ -243,7 +243,7 @@ class Post(blog.get_relation_class('blog.post')):
     }
 
 # Usage
-author = Author(name='Jane Doe', email='jane@blog.com')
+author = Author(name='Jane Doe', email='jane@collorg.org')
 if author.ho_is_empty():
     author.ho_insert()
 
