@@ -141,6 +141,14 @@ Get up and running in under 5 minutes:
 
     **[Get Started →](quick-start.md)**
 
+-   🧩 **Fundamentals**
+
+    ---
+
+    Core concepts that underpin halfORM's design and behavior. Essential reading for understanding the philosophy and patterns.
+
+    **[Master the Basics →](fundamentals.md)**
+
 -   📚 **Tutorial**
 
     ---

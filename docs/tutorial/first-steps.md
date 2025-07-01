@@ -2,6 +2,16 @@
 
 Welcome to your first real halfORM experience! In this chapter, you'll create a complete tutorial database, connect to it with halfORM, and perform your first operations. By the end, you'll understand halfORM's core concepts and be ready for more advanced topics.
 
+!!! important "Core Concepts"
+    This chapter introduces halfORM's fundamental concepts in action. For complete reference on these concepts, see **[halfORM Fundamentals](../fundamentals.md)** which covers:
+    
+    - Object-as-filter pattern and constraint syntax
+    - Declarative programming and lazy evaluation
+    - Method naming conventions (ho_ prefix)
+    - Database-first philosophy
+    
+    You can read Fundamentals now or refer to it as needed during this chapter.
+
 ## Tutorial Database Setup
 
 Let's start by creating a proper database with realistic data. We'll build a blog application schema that includes authors, posts, comments, and tags - perfect for exploring relationships and real-world patterns.
@@ -326,6 +336,9 @@ The `Model` class is your entry point to halfORM. It represents a connection to 
 - **Manage transactions** 
 - **Access database metadata**
 
+!!! tip "Model Details"
+    For complete information about the Model class and its responsibilities, see [Model Architecture in Fundamentals](../fundamentals.md#model-class).
+
 ## Exploring the Database Schema
 
 Let's explore what's in our database using halfORM:
@@ -350,7 +363,7 @@ Expected output:
 r "blog"."author"           → Authors who write blog posts and comments
 r "blog"."comment"          → Comments left by readers on blog posts
 r "blog"."post"             → Blog posts with content and metadata
-r "blog"."post_tag"         → Many-to-many relationship linking posts with their tags
+r "blog"."post_tag"         → Many-to-many relationship linking posts with tags
 r "blog"."tag"              → Tags for categorizing and organizing blog posts
 v "blog"."post_stats"       → Post statistics including view and comment counts
 v "blog"."published_posts"  → Published posts with author information for public display
@@ -435,29 +448,7 @@ Fkeys = {
     - **Clear instructions** on how to use foreign keys as class attributes
 
 !!! important "Schema Names Are Required"
-    halfORM always requires the full `schema.table` format in `get_relation_class()`:
-    
-    ```sql
-    -- When you create a table without specifying a schema
-    CREATE TABLE users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(50) NOT NULL
-    );
-    -- PostgreSQL automatically places it in the 'public' schema
-    ```
-    
-    ```python
-    # ✅ Correct - always include schema name
-    Author = blog.get_relation_class('blog.author')
-    Product = blog.get_relation_class('inventory.products')
-    User = blog.get_relation_class('public.users')  # Even for public schema
-    
-    # ❌ Wrong - will raise MissingSchemaInName error
-    Author = blog.get_relation_class('author')
-    User = blog.get_relation_class('users')
-    ```
-    
-    Even though PostgreSQL creates the table in the `public` schema by default, halfORM requires you to be explicit: use `public.users` to access it.
+    halfORM always requires the full `schema.table` format in `get_relation_class()`. For complete details on this requirement and the reasons behind it, see [Schema Requirements in Fundamentals](../fundamentals.md#schema-requirements).
 
 ## Your First CRUD Operations
 
@@ -504,6 +495,9 @@ print(f"\n🔢 Total authors: {author_count}")
 alice = Author(email='alice@collorg.org').ho_get()
 print(f"\n🎯 Found Alice: {alice.first_name} {alice.last_name}")
 ```
+
+!!! info "Method Reference"
+    For complete details on all available methods and their usage patterns, see [Method Naming Convention in Fundamentals](../fundamentals.md#method-naming-convention).
 
 ### Creating Data (C)
 
@@ -611,11 +605,10 @@ else:
 
 ## Basic Filtering and Querying
 
-halfORM's filtering approach is unique - the object IS the filter. To define a subset, you need to specify constraints on the values of the fields/columns:
+!!! important "Core Concept: Object-as-Filter"
+    halfORM uses a unique **object-as-filter** pattern where the object instance represents a subset of data. For complete details on this fundamental concept, constraint syntax, and all available operators, see [Object-as-Filter Pattern in Fundamentals](../fundamentals.md#object-as-filter-pattern).
 
-- **Single value** for an exact match: `Author(name='John')`
-- **Tuple `(comp, value)`** for other comparisons, where `comp` is either a SQL
-[comparison operator](https://www.postgresql.org/docs/current/static/functions-comparison.html) or a [pattern matching operator (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html): `Author(email=('like', '%@collorg.org'))`
+Here are some practical examples of this pattern in action:
 
 ```python title="filtering_examples.py"
 #!/usr/bin/env python3
@@ -672,68 +665,30 @@ for post in popular_posts:
     print(f"  🌟 {post['title']} - {post['view_count']} views")
 ```
 
-## Understanding halfORM Concepts
+!!! tip "More Operators Available"
+    This example shows basic patterns. For the complete list of operators including regular expressions, list operations, and range queries, see [Common Operators in Fundamentals](../fundamentals.md#common-operators).
 
-### Key Concepts You've Learned
+## Understanding halfORM's Core Concepts
 
-1. **Model Class** - Your database connection and entry point
-2. **Relation Classes** - Represent tables/views (created with `get_relation_class()`)
-3. **Object-as-Filter** - Create instances with filter criteria
-4. **ho_methods** - All halfORM operations start with `ho_`
-5. **Chain Operations** - Order, limit, offset operations can be chained
+### Declarative Programming Model
 
-### Method Patterns
+halfORM follows a **declarative programming model** where you build query intentions first, then execute them when needed:
 
-| Pattern | Purpose | Example |
-|---------|---------|---------|
-| `for x in relation:` | Iterate all records | `for author in Author(): print(author['name'])` |
-| `ho_select()` | All columns explicitly | `Author().ho_select()` (same as iteration) |
-| `ho_select('col1', 'col2')` | Specific columns | `Author().ho_select('name', 'email')` |
-| `ho_get()` | Get single record. Returns a Relation object | `Author(id=1).ho_get()` |
-| `ho_insert()` | Create new record | `Author(name='John').ho_insert()` |
-| `ho_update()` | Modify existing | `Author(id=1).ho_update(name='Jane')` |
-| `ho_delete()` | Remove records | `Author(id=1).ho_delete()` |
-| `ho_count()` | Count records | `Author().ho_count()` |
-| `ho_is_empty()` | Check existence | `Author(email='test').ho_is_empty()` |
+```python
+# 🎯 Declaration phase - no SQL executed yet
+authors = Author(is_active=True)
+gmail_authors = Author(email=('ilike', '%@gmail.com'))
+ordered_authors = authors.ho_order_by('last_name')
 
-### Filtering Operators
+# ⚡ Execution phase - SQL runs now
+for author in ordered_authors:  # Query executes here
+    print(author['first_name'])
+```
 
-halfORM supports two forms of constraints:
+!!! info "Learn More"
+    This is a fundamental halfORM concept. For complete details on when queries execute and how to optimize the declarative flow, see [Query Execution Model in Fundamentals](../fundamentals.md#query-execution-model).
 
-| Form | Usage | Example | SQL Generated |
-|------|-------|---------|---------------|
-| **Single value** | Exact match | `Author(name='John')` | `WHERE name = 'John'` |
-| **Tuple (comp, value)** | Custom comparison | `Author(age=('>', 18))` | `WHERE age > 18` |
-
-#### Common Comparison Operators
-
-| Operator | SQL Equivalent | Example | Description |
-|----------|----------------|---------|-------------|
-| `=` (default) | `=` | `Author(name='John')` | Exact equality |
-| `('>', value)` | `>` | `Author(age=('>', 18))` | Greater than |
-| `('<', value)` | `<` | `Author(age=('<', 65))` | Less than |
-| `('>=', value)` | `>=` | `Author(age=('>=', 21))` | Greater than or equal |
-| `('<=', value)` | `<=` | `Author(age=('<=', 65))` | Less than or equal |
-| `('!=', value)` | `!=` | `Author(status=('!=', 'inactive'))` | Not equal |
-
-#### Pattern Matching Operators
-
-| Operator | SQL Equivalent | Example | Description |
-|----------|----------------|---------|-------------|
-| `('like', pattern)` | `LIKE` | `Author(name=('like', 'John%'))` | Case-sensitive pattern |
-| `('ilike', pattern)` | `ILIKE` | `Author(email=('ilike', '%@gmail.com'))` | Case-insensitive pattern |
-| `('~', pattern)` | `~` | `Author(name=('~', '^[A-Z]'))` | POSIX regex (case-sensitive) |
-| `('~*', pattern)` | `~*` | `Author(name=('~*', '^john'))` | POSIX regex (case-insensitive) |
-
-#### List and Range Operators
-
-| Operator | SQL Equivalent | Example | Description |
-|----------|----------------|---------|-------------|
-| `('in', list)` | `IN` | `Author(id=('in', [1, 2, 3]))` | Value in list |
-| `('not in', list)` | `NOT IN` | `Author(status=('not in', ['deleted', 'banned']))` | Value not in list |
-| `('between', (a, b))` | `BETWEEN` | `Author(age=('between', (18, 65)))` | Value between range |
-
-## SQL Transparency - See What's Generated
+### SQL Transparency - See What's Generated
 
 One of halfORM's key features is SQL transparency. You can see exactly what SQL query is executed:
 
@@ -767,6 +722,9 @@ for result in results:
 
 This will show you the exact SQL being generated, helping you understand what halfORM is doing and optimize your queries.
 
+!!! info "SQL Transparency Details"
+    For more information on halfORM's commitment to SQL transparency and how it benefits development, see [SQL Transparency in Fundamentals](../fundamentals.md#sql-transparency).
+
 ## What's Next?
 
 Congratulations! You've successfully:
@@ -793,8 +751,11 @@ In the next chapter, [Models & Relations](models-relations.md), you'll learn:
     Try modifying the examples above:
     
     - Create new authors and posts
-    - Experiment with different filters
+    - Experiment with different filters (try the operators from [Fundamentals](../fundamentals.md#common-operators))
     - Try combining multiple filter conditions
     - Explore the other tables (comment, tag, post_tag)
     
     The best way to learn halfORM is by experimenting with real data!
+
+!!! note "Need More Detail?"
+    If any concepts in this chapter need clarification, the **[Fundamentals](../fundamentals.md)** page provides comprehensive coverage of all core halfORM concepts with additional examples and details.

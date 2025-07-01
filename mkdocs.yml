@@ -104,6 +104,7 @@ extra:
 nav:
   - Home: index.md
   - Quick Start: quick-start.md
+  - Fundamentals: fundamentals.md
   - Tutorial:
     - tutorial/index.md
     - Installation: tutorial/installation.md
