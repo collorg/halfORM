@@ -26,6 +26,50 @@ pip install half_orm
     
     **Pro tip:** For automatic virtual environment management, check out [auto-venv](https://github.com/collorg/auto_venv) - it handles virtual environments seamlessly!
 
+### Verify Installation
+
+After installation, verify that halfORM works correctly:
+
+```bash
+# Test halfORM installation and database connections
+python -m half_orm
+```
+
+Expected output:
+```
+[halfORM] version 0.15.1
+⚠️  Unable to connect to template1 with peer authentication.
+
+== Checking connections for files in HALFORM_CONF_DIR=/etc/half_orm
+❌ '/etc/half_orm' does not exist.
+Change HALFORM_CONF_DIR variable
+
+Check the documentation on https://collorg.github.io/halfORM/tutorial/installation/#database-configuration-optional
+```
+
+This diagnostic command:
+- ✅ Shows halfORM version  
+- ✅ Tests default PostgreSQL connection
+- ✅ Checks your configured database connections
+
+### Quick Database Inspection
+
+If you have databases configured **and peer authentication access**, you can inspect them from the command line:
+
+```bash
+# View database structure
+python -m half_orm my_database
+
+# Inspect a specific table/view  
+python -m half_orm my_database public.users
+
+# Get help and see all options
+python -m half_orm --help
+```
+
+!!! tip "Useful for development"
+    The CLI is especially handy for quickly checking foreign key names when setting up custom relation classes.
+
 ## Step 2: Database Setup
 
 For this guide, we'll create a simple blog database. If you already have a PostgreSQL database, you can skip to [Step 3](#step-3-configuration).
