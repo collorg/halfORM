@@ -40,11 +40,10 @@ experienced_authors = Author(
     email=('not ilike', '%test%')
 )
 
-# Date ranges
-this_year_posts = Post(
-    published_at=('between', ('2024-01-01', '2024-12-31')),
-    is_published=True
-)
+# Date ranges using set operations
+this_year_posts = (Post(published_at=('>=', '2024-01-01')) & 
+                   Post(published_at=('<=', '2024-12-31')) &
+                   Post(is_published=True))
 
 # Pattern matching with exclusions
 quality_posts = Post(
@@ -537,7 +536,10 @@ def build_dynamic_post_query(filters):
         query = query & Post(view_count=('>=', filters['min_views']))
     
     if 'published_after' in filters:
-        query = query & Post(published_at=('>', filters['published_after']))
+        query = query & Post(published_at=('>=', filters['published_after']))
+    
+    if 'published_before' in filters:
+        query = query & Post(published_at=('<=', filters['published_before']))
     
     if 'title_contains' in filters:
         query = query & Post(title=('ilike', f"%{filters['title_contains']}%"))
@@ -556,6 +558,7 @@ def build_dynamic_post_query(filters):
 filters = {
     'min_views': 50,
     'published_after': '2024-01-01',
+    'published_before': '2024-12-31',
     'title_contains': 'postgresql',
     'tags': [1, 3, 5]  # Python, PostgreSQL, Performance tags
 }
@@ -631,7 +634,7 @@ analytics.clear_cache()
 
 ```python
 def search_and_filter_posts(search_term=None, author_id=None, tag_ids=None, 
-                           min_views=None, published_after=None, limit=20):
+                           min_views=None, published_after=None, published_before=None, limit=20):
     """Comprehensive search and filter function"""
     query = Post(is_published=True)
     
@@ -650,9 +653,12 @@ def search_and_filter_posts(search_term=None, author_id=None, tag_ids=None,
     if min_views:
         query = query & Post(view_count=('>=', min_views))
     
-    # Date filter
+    # Date range filters
     if published_after:
-        query = query & Post(published_at=('>', published_after))
+        query = query & Post(published_at=('>=', published_after))
+    
+    if published_before:
+        query = query & Post(published_at=('<=', published_before))
     
     # Tag filter (posts must have ALL specified tags)
     if tag_ids:
@@ -684,11 +690,10 @@ author_popular_posts = search_and_filter_posts(
 def generate_content_report(start_date, end_date):
     """Generate comprehensive content report"""
     
-    # Date range filter
-    date_filter = Post(
-        published_at=('between', (start_date, end_date)),
-        is_published=True
-    )
+    # Date range filter using set operations
+    date_filter = (Post(published_at=('>=', start_date)) & 
+                   Post(published_at=('<=', end_date)) &
+                   Post(is_published=True))
     
     # Basic stats
     total_posts = date_filter.ho_count()

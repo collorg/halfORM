@@ -139,33 +139,53 @@ halfORM supports two forms of constraints:
 #### 1. Single Value (Exact Match)
 ```python
 # These create equality constraints
-Author(name='John')           # WHERE name = 'John'
+Author(first_name='John')     # WHERE first_name = 'John'
 Author(is_active=True)        # WHERE is_active = TRUE
-Author(age=25)                # WHERE age = 25
+Post(view_count=25)           # WHERE view_count = 25
 ```
 
 #### 2. Tuple (Operator, Value)
 ```python
 # These create custom comparison constraints
-Author(age=('>', 18))         # WHERE age > 18
-Author(name=('ilike', 'j%'))  # WHERE name ILIKE 'j%'
-Author(birth_date=('between', ('1980-01-01', '1990-01-01')))  # WHERE birth_date BETWEEN ...
+Post(view_count=('>', 100))         # WHERE view_count > 100
+Author(first_name=('ilike', 'j%'))  # WHERE first_name ILIKE 'j%'
+
+# Range queries using set operations
+eighties_born = Author(birth_date=('>=', '1980-01-01')) & Author(birth_date=('<=', '1990-01-01'))
+# WHERE birth_date >= '1980-01-01' AND birth_date <= '1990-01-01'
 ```
 
 ### Common Operators
 
 | Operator | SQL Equivalent | Example | Description |
 |----------|----------------|---------|-------------|
-| `=` (default) | `=` | `Author(name='John')` | Exact equality |
-| `('>', value)` | `>` | `Author(age=('>', 18))` | Greater than |
-| `('<', value)` | `<` | `Author(age=('<', 65))` | Less than |
-| `('>=', value)` | `>=` | `Author(age=('>=', 21))` | Greater than or equal |
-| `('<=', value)` | `<=` | `Author(age=('<=', 65))` | Less than or equal |
-| `('!=', value)` | `!=` | `Author(status=('!=', 'inactive'))` | Not equal |
-| `('like', pattern)` | `LIKE` | `Author(name=('like', 'John%'))` | Case-sensitive pattern |
+| `=` (default) | `=` | `Author(first_name='John')` | Exact equality |
+| `('>', value)` | `>` | `Post(view_count=('>', 100))` | Greater than |
+| `('<', value)` | `<` | `Author(birth_date=('<', '1990-01-01'))` | Less than |
+| `('>=', value)` | `>=` | `Post(view_count=('>=', 50))` | Greater than or equal |
+| `('<=', value)` | `<=` | `Author(birth_date=('<=', '2000-01-01'))` | Less than or equal |
+| `('!=', value)` | `!=` | `Author(is_active=('!=', False))` | Not equal |
+| `('like', pattern)` | `LIKE` | `Author(first_name=('like', 'John%'))` | Case-sensitive pattern |
 | `('ilike', pattern)` | `ILIKE` | `Author(email=('ilike', '%@gmail.com'))` | Case-insensitive pattern |
 | `('in', list)` | `IN` | `Author(id=('in', [1, 2, 3]))` | Value in list |
-| `('between', (a, b))` | `BETWEEN` | `Author(age=('between', (18, 65)))` | Value between range |
+
+### Range Queries with Set Operations
+
+Since halfORM uses set operations for range queries, combine multiple conditions with `&`:
+
+```python
+# Birth date range: born in the 1980s
+eighties_born = Author(birth_date=('>=', '1980-01-01')) & Author(birth_date=('<', '1989-12-31'))
+
+# Date range: posts from 2024
+posts_2024 = Post(published_at=('>=', '2024-01-01')) & Post(published_at=('<=', '2024-12-31'))
+
+# View count range: moderate popularity
+moderate_posts = Post(view_count=('>=', 10)) & Post(view_count=('<=', 100))
+
+# ID range: specific subset of authors
+author_subset = Author(id=('>=', 10)) & Author(id=('<=', 50))
+```
 
 ## NULL vs None: A Crucial Distinction
 
