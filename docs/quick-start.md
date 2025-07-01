@@ -54,14 +54,14 @@ This diagnostic command:
 
 ### Quick Database Inspection
 
-If you have databases configured **and peer authentication access**, you can inspect them from the command line:
+If you already have a database **and peer authentication access**, you can inspect it from the command line:
 
 ```bash
 # View database structure
 python -m half_orm my_database
 
 # Inspect a specific table/view  
-python -m half_orm my_database public.users
+python -m half_orm my_database my_schema.my_table
 
 # Get help and see all options
 python -m half_orm --help

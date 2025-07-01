@@ -1,3 +1,28 @@
+# 0.15.1 (2025-07-01)
+
+* Add CLI args for database/relation inspection in __main__.py (950aebf)
+* Add documentation and project URLs to PyPI metadata (a99b2b5)
+* docs: more about NULL. (a64585b)
+* docs: note about count and very large tables + use of NULL value. (fdce8f2)
+* docs: fix typos. (2660f18)
+* feat: add relation _ho_ukeys attribute. (73d4921)
+* docs: add Fundamentals section. (42294f7)
+* Point diagnostic tool to specific database configuration help (16bd773)
+* docs: improvements. (5d84642)
+* docs: add Tutorial part Models and Relations. (ec07054)
+* docs: add Tutorial First Steps (fa44017)
+* feat: enhance database exploration with relation comments (09244aa)
+* feat: add diagnostic command python -m half_orm (0dcdc6b)
+* docs: add tutorial index (fc6fd01)
+* docs: fix PostGIS example and improve querying example (65b22e9)
+* docs: use standard emojis. (7c0edc3)
+* docs: add version indicator and enhance homepage with 0.15.0 details (db0d3ed)
+* docs: add homepage and update documentation links (3189e83)
+* ci/cd: fix missing permissions for the GITHUB_TOKEN. (b18acca)
+* ci/cd: deploy doc on collorg.github.io/halfORM (2ade9c8)
+* ci: fix permissions security alert (7ab4a47)
+* Bump urllib3 from 2.4.0 to 2.5.0 (a795cf3)
+
 # 0.15.0 (2025-06-27)
 
 ## BREAKING CHANGE
