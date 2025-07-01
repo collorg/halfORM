@@ -30,7 +30,7 @@ def check_databases_access():
     except FileNotFoundError:
         sys.stderr.write(f"❌ '{CONF_DIR}' does not exists.\nChange HALFORM_CONF_DIR variable\n")
     sys.stderr.flush()
-    print(f"\nCheck the documentation on https://collorg.github.io/halfORM")
+    print(f"\nCheck the documentation on http://collorg.github.io/halfORM/tutorial/installation/#database-configuration-optional")
 
 if __name__ == '__main__':
   print(f"[halfORM] version {half_orm.__version__}")
