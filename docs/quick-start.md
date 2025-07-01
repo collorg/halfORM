@@ -218,6 +218,28 @@ Author(name='Charlie Brown').ho_delete()
 print("✅ Author deleted!")
 ```
 
+## Important: NULL vs None
+
+halfORM makes a crucial distinction between `None` (Python) and `NULL` (SQL):
+
+```python
+from half_orm.null import NULL  # Required import
+
+# ❌ COMMON TRAP
+Author(bio=None)   # Has NO effect - ignores bio field entirely
+Author(bio=NULL)   # ✅ Filters WHERE bio IS NULL
+```
+
+**Simple rule:**
+- `field=None` → ignores the field (no filter)  
+- `field=NULL` → filters NULL values in database
+
+!!! warning "Frequent mistake"
+    `Author(bio=None)` returns ALL authors, not those without bio!
+    Use `Author(bio=NULL)` to filter NULL values.
+
+See [halfORM Fundamentals](fundamentals.md#null-vs-none-a-crucial-distinction) for complete details.
+
 ## Step 7: Working with Relationships
 
 halfORM makes working with foreign keys intuitive:

@@ -167,6 +167,187 @@ Author(birth_date=('between', ('1980-01-01', '1990-01-01')))  # WHERE birth_date
 | `('in', list)` | `IN` | `Author(id=('in', [1, 2, 3]))` | Value in list |
 | `('between', (a, b))` | `BETWEEN` | `Author(age=('between', (18, 65)))` | Value between range |
 
+## NULL vs None: A Crucial Distinction
+
+halfORM makes an important distinction between `None` (Python) and `NULL` (SQL) that can be confusing but is essential for correct usage:
+
+### Python None vs SQL NULL
+
+```python
+from half_orm.model import Model
+from half_orm.null import NULL  # ⚠️ Crucial import!
+
+blog = Model('blog_tutorial')
+Author = blog.get_relation_class('blog.author')
+
+# ❌ COMMON MISTAKE: Using None to represent NULL
+person_none = Author(bio=None)  # ✖️ Has NO EFFECT!
+print(person_none.ho_is_set())  # → False (no filter applied)
+
+# ✅ CORRECT: Using NULL for SQL NULL values  
+person_null = Author(bio=NULL)  # ✅ Filters people with bio = NULL
+print(person_null.ho_is_set())  # → True (filter applied)
+```
+
+### Different Behaviors
+
+#### 1. None disables the field
+```python
+# None = "ignore this field"
+author = Author(first_name='Alice', bio=None)
+# Equivalent to:
+author = Author(first_name='Alice')  # bio completely ignored
+```
+
+#### 2. NULL activates an SQL filter
+```python
+# NULL = "filter by NULL in SQL"
+authors_without_bio = Author(bio=NULL)
+# Generates: SELECT * FROM author WHERE bio IS NULL
+
+authors_with_bio = Author(bio=('is not', NULL))  
+# Generates: SELECT * FROM author WHERE bio IS NOT NULL
+```
+
+### Practical Examples
+
+```python
+from half_orm.null import NULL
+
+# ✅ Find authors without biography
+authors_no_bio = Author(bio=NULL)
+# SQL: WHERE bio IS NULL
+
+# ✅ Find authors with a biography
+authors_with_bio = Author(bio=('is not', NULL))
+# SQL: WHERE bio IS NOT NULL
+
+# ✅ Create an author without biography
+new_author = Author(
+    first_name='Bob',
+    last_name='Smith', 
+    email='bob@example.com',
+    bio=NULL  # Inserts NULL in database
+).ho_insert()
+
+# ❌ Incorrect attempt
+incomplete_query = Author(bio=None)  # Has no filtering effect!
+```
+
+### Comparators with NULL
+
+Only `is` and `is not` are allowed with `NULL`:
+
+```python
+# ✅ Valid comparators with NULL
+Author(bio=NULL)              # Automatically translated to ('is', NULL)
+Author(bio=('is', NULL))      # Explicit
+Author(bio=('is not', NULL))  # Negation
+
+# ❌ Invalid comparators with NULL
+Author(bio=('=', NULL))       # ✖️ ValueError!
+Author(bio=('like', NULL))    # ✖️ ValueError!
+```
+
+### Common Use Cases
+
+#### Filtering incomplete data
+```python
+# Authors with complete profiles (all fields filled)
+complete_profiles = Author(
+    bio=('is not', NULL),
+    birth_date=('is not', NULL)
+)
+
+# Posts without excerpt (need to be completed)
+posts_need_excerpt = Post(
+    excerpt=NULL,
+    is_published=True
+)
+```
+
+#### Inserting with NULL values
+```python
+# Create a draft post (some fields NULL)
+draft_post = Post(
+    title='Draft',
+    content='Work in progress...',
+    published_at=NULL,  # Not yet published
+    excerpt=NULL        # No excerpt yet
+).ho_insert()
+```
+
+#### Updating with NULL
+```python
+# Unpublish a post (set published_at to NULL)
+post = Post(id=42)
+post.ho_update(
+    is_published=False,
+    published_at=NULL  # Reset to NULL
+)
+```
+
+### Best Practices
+
+1. **Always import NULL** when working with NULL values:
+   ```python
+   from half_orm.null import NULL
+   ```
+
+2. **Use None to disable constraints**:
+   ```python
+   # Search all authors (ignore email field)
+   all_authors = Author(email=None)  # email ignored
+   ```
+
+3. **Use NULL for SQL NULL values**:
+   ```python
+   # Search authors without email
+   authors_no_email = Author(email=NULL)  # email IS NULL
+   ```
+
+4. **Understand the intent**:
+   - `field=None` → "I don't want to filter on this field"
+   - `field=NULL` → "I want to filter rows where this field is NULL"
+
+### Common Mistakes to Avoid
+
+```python
+# ❌ Error: Using None instead of NULL
+def find_incomplete_authors():
+    return Author(bio=None)  # ✖️ Returns ALL authors!
+
+# ✅ Correct: Using NULL for missing values  
+def find_incomplete_authors():
+    return Author(bio=NULL)  # ✅ Returns authors without bio
+
+# ❌ Error: Mixing None and NULL intentions
+person = Author(
+    first_name='Alice',
+    bio=None,        # ✖️ Ignored
+    email=NULL       # ✅ Filters email IS NULL
+)
+# This query searches for Alice with email NULL, ignores bio
+
+# ✅ Correct: Be consistent with intention
+person = Author(
+    first_name='Alice',
+    bio=NULL,        # ✅ bio IS NULL  
+    email=NULL       # ✅ email IS NULL
+)
+```
+
+!!! warning "Common Trap"
+    `Author(bio=None)` does NOT filter authors without biography! 
+    
+    To filter NULL values, always use `Author(bio=NULL)`.
+
+!!! tip "Memory Aid"
+    - **None** = Python = "ignore this field in the query"
+    - **NULL** = SQL = "filter NULL values in database"
+
+This distinction reflects halfORM's database-first philosophy: SQL concepts (like NULL) are preserved and distinct from Python concepts (like None).
+
 ## Relations as Python Sets
 
 ### Set Theory in halfORM
