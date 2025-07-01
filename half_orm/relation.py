@@ -263,6 +263,7 @@ class Relation:
         self._ho_fk_loop = set()
         self._ho_fields = {}
         self._ho_pkey = {}
+        self._ho_ukeys = OrderedDict()
         self._ho_fkeys = OrderedDict()
         self._ho_fkeys_attr = set()
         self._ho_join_to = {}
@@ -526,6 +527,8 @@ class Relation:
             setattr(self, field_name, field)
             if field._is_part_of_pk():
                 self._ho_pkey[field_name] = field
+            if field._is_unique():
+                self._ho_ukeys[field_name] = field
 
     def _ho_set_fkeys(self):
         """Initialisation of the foreign keys of the relation"""
@@ -726,7 +729,6 @@ Fkeys = {"""
     def __prep_query(self, query_template, *args):
         """Prepare the SQL query to be executed."""
         from half_orm.fkey import FKey
-
         self._ho_sql_values = []
         self._ho_query_type = 'select'
         what, where, values = self.__where_args(*args)
