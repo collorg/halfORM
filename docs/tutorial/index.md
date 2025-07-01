@@ -114,7 +114,7 @@ Throughout the tutorial:
 
 If you get stuck:
 
-- Check the [FAQ](../guides/index.md#faq)
+- Check the [Fundamentals](../fundamentals.md#faq) if you haven't already
 - Browse [Examples](../examples/index.md) for patterns
 - Ask in [GitHub Discussions](https://github.com/collorg/halfORM/discussions)
 

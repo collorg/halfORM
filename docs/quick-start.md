@@ -500,7 +500,6 @@ pip install --upgrade half_orm
 ```
 
 !!! question "Need Help?"
-    - Check the [FAQ](../faq.md) for common issues
     - Join [GitHub Discussions](https://github.com/collorg/halfORM/discussions) for community help
     - Report bugs via [GitHub Issues](https://github.com/collorg/halfORM/issues)
 

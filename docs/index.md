@@ -1,7 +1,7 @@
 # halfORM Documentation
 
 !!! info "Documentation Version"
-    This documentation covers halfORM **0.15.0** (latest stable release).
+    This documentation covers halfORM **0.15.x** (latest stable release).
     For older versions, see the [GitHub releases](https://github.com/collorg/halfORM/releases).
 
 [![PyPI version](https://img.shields.io/pypi/v/half_orm)](https://pypi.org/project/half-orm/)
