@@ -229,8 +229,8 @@ class Author(blog.get_relation_class('blog.author')):
         return self.posts_rfk(title=title, content=content).ho_insert()
 
 # Foreign keys now return your custom classes!
-post = Post().ho_get()
-author = post.author_fk().ho_get()  # Returns Author instance
+post = Post(id=42)
+author = post.author_fk()  # Returns Author instance
 author.create_post("Title", "Content")  # Custom method available
 ```
 

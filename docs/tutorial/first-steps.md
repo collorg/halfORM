@@ -615,7 +615,7 @@ halfORM's filtering approach is unique - the object IS the filter. To define a s
 
 - **Single value** for an exact match: `Author(name='John')`
 - **Tuple `(comp, value)`** for other comparisons, where `comp` is either a SQL
-[comparison operator](https://www.postgresql.org/docs/current/static/functions-comparison.html) or a [pattern matching operator (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html): `Author(age=('>', 18))`
+[comparison operator](https://www.postgresql.org/docs/current/static/functions-comparison.html) or a [pattern matching operator (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html): `Author(email=('like', '%@collorg.org'))`
 
 ```python title="filtering_examples.py"
 #!/usr/bin/env python3

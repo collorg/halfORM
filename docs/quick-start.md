@@ -319,6 +319,7 @@ For advanced use cases, you can override the auto-generated classes with custom 
 
 ```python title="custom_blog_classes.py"
 from half_orm.model import Model, register
+from half_orm.singleton import singleton
 
 blog = Model('halform_quickstart')
 
@@ -329,6 +330,7 @@ class Author(blog.get_relation_class('blog.author')):
         'posts_rfk': '_reverse_fkey_halform_quickstart_blog_post_author_id'
     }
     
+    @singleton
     def create_post(self, title, content, published=False):
         """Create a new post for this author."""
         return self.posts_rfk(
@@ -337,10 +339,12 @@ class Author(blog.get_relation_class('blog.author')):
             is_published=published
         ).ho_insert()
     
+    @singleton
     def get_published_posts(self):
         """Get all published posts by this author."""
         return self.posts_rfk(is_published=True).ho_select()
     
+    @singleton
     def get_stats(self):
         """Get author statistics."""
         all_posts = self.posts_rfk()
@@ -358,18 +362,18 @@ class Post(blog.get_relation_class('blog.post')):
         'author_fk': 'post_author_id_fkey'
     }
     
+    @singleton
     def publish(self):
         """Publish this post."""
         from datetime import datetime
-        self.is_published.value = True
-        self.published_at.value = datetime.now()
-        return self.ho_update()
+        return self.ho_update(is_published=True, published_at=datetime.now())
     
+    @singleton
     def unpublish(self):
         """Unpublish this post."""
-        self.is_published.value = False
-        return self.ho_update()
+        return self.ho_update(is_published=False)
     
+    @singleton
     def get_author_name(self):
         """Get the name of this post's author."""
         return self.author_fk().ho_get().name.value
@@ -377,7 +381,7 @@ class Post(blog.get_relation_class('blog.post')):
 # Test the custom classes
 if __name__ == "__main__":
     # Find Alice
-    alice = Author(name='Alice Johnson').ho_get()
+    alice = Author(name='Alice Johnson')
     
     # Create a post using custom method
     new_post = alice.create_post(
@@ -392,10 +396,14 @@ if __name__ == "__main__":
     print(f"📊 Alice's stats: {stats}")
     
     # Navigate from post to author using custom method
-    post = Post(title='Welcome to halfORM').ho_get()
+    post = Post(title='Welcome to halfORM')
     author_name = post.get_author_name()
     print(f"📝 '{post.title.value}' was written by: {author_name}")
 ```
+
+!!! tip "The `@singleton` decorator"
+    Use `@singleton` when you need to insure that the object you are operating on
+    defines a singleton in your relation.
 
 ### The Power of @register
 
@@ -407,9 +415,10 @@ post = Post(title='Welcome').ho_get()
 author = post.author_fk().ho_get()  # Generic Author class
 # author only has basic CRUD methods
 
-# After @register: your custom classes with business logic
-post = Post(title='Welcome').ho_get()  
-author = post.author_fk().ho_get()  # YOUR custom Author class!
+# After @register: your custom classes with business logic.
+# No need of ho_get as we have used @singleton
+post = Post(title='Welcome')
+author = post.author_fk()  # YOUR custom Author class!
 author.create_post("New Post", "Content")  # Custom methods available!
 stats = author.get_stats()  # Your business logic works!
 ```
