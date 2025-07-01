@@ -392,8 +392,8 @@ if len(list(Post(is_published=False))) > 0:
     print("Drafts exist")
 ```
 
-!!! tip "Count for large tables"
-    Counts can be slow in PostgreSQL with large tables
+!!! info "Counts for very large tables"
+    Counts can be slow in PostgreSQL with very large tables
 
 ## Summary
 

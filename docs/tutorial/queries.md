@@ -96,21 +96,23 @@ structured_posts = Post(
 ### Working with NULL Values
 
 ```python
+from half_orm.null import NULL
+
 # Authors with complete profiles
 complete_authors = Author(
-    bio=('is not', None),
-    birth_date=('is not', None)
+    bio=('is not', NULL),
+    birth_date=('is not', NULL)
 )
 
 # Posts without excerpts
 posts_needing_excerpts = Post(
-    excerpt=('is', None),
+    excerpt=('is', NULL),
     is_published=True
 )
 
-# NULL-safe comparisons
+# NULL comparisons
 recent_or_null = Post(
-    published_at=('>', '2024-01-01') | Post(published_at=('is', None))
+    published_at=('>', '2024-01-01') | Post(published_at=('is', NULL))
 )
 ```
 
