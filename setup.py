@@ -26,6 +26,11 @@ setup(
     author='Joël Maïzi',
     author_email='joel.maizi@collorg.org',
     url='https://github.com/collorg/halfORM',
+    project_urls={
+        "Documentation": "https://collorg.github.io/halfORM/",
+        "Source": "https://github.com/collorg/halfORM",
+        "Bug Reports": "https://github.com/collorg/halfORM/issues",
+    },
     license='GPLv3',
     packages=['half_orm'],
     install_requires=[ 'psycopg2-binary' ],
