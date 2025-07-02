@@ -136,9 +136,7 @@ nav:
     - Query Processing: architecture/query-processing.md
   - Examples:
     - examples/index.md
-    - Simple Blog: examples/blog.md
-    - E-commerce: examples/ecommerce.md
-    - Web Applications: examples/web-apps.md
+    - Database Exploration with GitLab: examples/gitlab.md
 
 extra_css:
   - assets/css/custom.css
