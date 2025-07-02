@@ -521,6 +521,24 @@ print(f"\n🎯 Found Alice: {alice.first_name} {alice.last_name}")
 !!! info "Method Reference"
     For complete details on all available methods and their usage patterns, see [Method Naming Convention in Fundamentals](../fundamentals.md#method-naming-convention).
 
+!!! tip "Query Building vs Execution"
+    Notice the pattern above:
+    
+    ```python
+    # Building phase (lazy - no SQL)
+    query = Author(email=('ilike', '%@gmail.com'))  # Just a filter
+    ordered = query.ho_order_by('last_name')        # Add ordering
+    
+    # Execution phase (eager - SQL runs)
+    for author in ordered.ho_select('name', 'email'):  # SQL executes NOW
+        print(author['name'])
+    ```
+    
+    **Key insight**: `.ho_select()` is a **generator** that executes SQL immediately. You cannot chain more operations after it!
+
+!!! note "Deep Dive"
+    This is a fundamental halfORM concept. For complete details and more examples, see [Query Execution Model in Fundamentals](../fundamentals.md#method-categories-builders-vs-executors).
+
 ### Creating Data (C)
 
 ```python title="create_operations.py"

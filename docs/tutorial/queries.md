@@ -117,6 +117,32 @@ recent_or_null = Post(
 
 ## Advanced Query Operations
 
+### Understanding Query Execution
+
+Before diving into advanced patterns, it's crucial to understand when SQL actually executes:
+
+```python
+# ❌ COMMON MISTAKE: Trying to modify after execution
+def get_sorted_authors_wrong():
+    authors = Author().ho_select('name', 'email')  # SQL executes - returns generator
+    return authors.ho_order_by('name')  # ❌ ERROR! Cannot modify generator
+
+# ✅ CORRECT: Build complete query first
+def get_sorted_authors_right():
+    authors = Author().ho_order_by('name')  # Builds query - no SQL yet
+    return authors.ho_select('name', 'email')  # SQL executes with ORDER BY
+```
+
+!!! warning "Execution vs Building"
+    **Query Builders**: `ho_order_by()`, `ho_limit()`, `ho_offset()`, `ho_where()`, set operations (`&`, `|`, `-`)
+    
+    **Query Executors**: `ho_select()`, `ho_count()`, `ho_get()`, `ho_is_empty()`, `ho_insert()`, `ho_update()`, `ho_delete()`
+    
+    Once you call an executor, you get results - not a query object!
+
+!!! info "Learn More"
+    For a complete explanation of halfORM's query execution model, see [Method Categories in Fundamentals](../fundamentals.md#method-categories-builders-vs-executors).
+
 ### Dynamic Ordering
 
 ```python

@@ -14,15 +14,20 @@ This page covers the core concepts that underpin halfORM's design and behavior. 
 
 halfORM takes a **database-first** approach where your PostgreSQL schema is the source of truth:
 
-```python
-# ✅ halfORM approach: Schema exists, code adapts
-# 1. Design schema in SQL
+```sql
+-- ✅ halfORM approach: Schema exists, code adapts
+-- 1. Design schema in SQL
+CREATE DATABASE blog_tutorial;
 CREATE TABLE blog.author (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL
 );
+```
 
+And then:
+
+```python
 # 2. Connect and use immediately
 from half_orm.model import Model
 blog = Model('blog_tutorial')
@@ -99,6 +104,53 @@ posts.ho_is_empty()     # EXISTS executed
 next(posts.ho_limit(1)) # SELECT LIMIT 1 executed
 ```
 
+### Method Categories: Builders vs Executors
+
+halfORM methods fall into two distinct categories:
+
+#### 🔧 **Query Builders** (Lazy - Return new relation objects)
+
+```python
+# These methods build query intentions without executing SQL
+authors = Author(is_active=True)           # Filter
+ordered = authors.ho_order_by('name')      # Order
+limited = ordered.ho_limit(10)             # Limit
+filtered = limited.ho_offset(5)            # Offset
+
+# Chain them together
+query = (Author(is_active=True)
+         .ho_order_by('name')
+         .ho_limit(10)
+         .ho_offset(5))  # Still no SQL executed!
+```
+
+#### ⚡ **Query Executors** (Eager - Execute SQL immediately)
+
+```python
+# These methods execute SQL and return results
+results = query.ho_select('name', 'email')  # Returns generator - SQL executes NOW
+count = query.ho_count()                    # Returns int - SQL executes NOW  
+author = query.ho_get()                     # Returns dict - SQL executes NOW
+exists = query.ho_is_empty()                # Returns bool - SQL executes NOW
+
+# ❌ IMPORTANT: Once executed, you cannot chain more builders!
+results = Author().ho_select('name')        # This is a generator
+# results.ho_order_by('name')  # ❌ ERROR! Can't modify a generator
+```
+
+#### 🔄 **The Right Pattern**
+
+```python
+# ✅ Build first, execute last
+query = (Author(is_active=True)
+         .ho_order_by('name DESC')
+         .ho_limit(10))
+
+# Then execute
+for author in query.ho_select('name', 'email'):  # SQL executes here
+    print(f"{author['name']}: {author['email']}")
+```
+
 ### The ho_get() Anti-Pattern
 
 A common halfORM anti-pattern is calling `ho_get()` too early:
@@ -168,6 +220,10 @@ eighties_born = Author(birth_date=('>=', '1980-01-01')) & Author(birth_date=('<=
 | `('like', pattern)` | `LIKE` | `Author(first_name=('like', 'John%'))` | Case-sensitive pattern |
 | `('ilike', pattern)` | `ILIKE` | `Author(email=('ilike', '%@gmail.com'))` | Case-insensitive pattern |
 | `('in', list)` | `IN` | `Author(id=('in', [1, 2, 3]))` | Value in list |
+
+!!! tip
+    See the official PostgreSQL documentation for
+    [comparison operators](https://www.postgresql.org/docs/current/static/functions-comparison.html) or [pattern matching operators (like or POSIX regular expression)](https://www.postgresql.org/docs/current/static/functions-matching.html).
 
 ### Range Queries with Set Operations
 

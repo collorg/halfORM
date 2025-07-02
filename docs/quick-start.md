@@ -379,6 +379,26 @@ query.ho_mogrify()
 list(query.ho_select())  # This will print the SQL query
 ```
 
+!!! important "Builder vs Executor Pattern"
+    Remember: halfORM uses a **builder → executor** pattern:
+    
+    ```python
+    # 🔧 BUILDERS (chain these first)
+    query = (Post(is_published=True)          # Filter
+             .ho_order_by('published_at DESC') # Order  
+             .ho_limit(5))                     # Limit
+    
+    # ⚡ EXECUTORS (call these last)
+    results = query.ho_select('title', 'published_at')  # Generator
+    count = query.ho_count()                            # int
+    first = query.ho_get()                              # dict
+    ```
+    
+    **Once you execute, you get results - not a queryable object!**
+
+!!! tip "Want to understand why?"
+    This pattern is fundamental to how halfORM works. Read more about it in [halfORM Fundamentals](../fundamentals.md#method-categories-builders-vs-executors).
+
 ## Step 9: Register Custom Classes (Optional)
 
 For advanced use cases, you can override the auto-generated classes with custom implementations that include business logic and cleaner foreign key mappings:
