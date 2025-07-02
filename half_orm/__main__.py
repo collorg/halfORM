@@ -26,7 +26,7 @@ def check_peer_authentication():
         template1 = Model('template1')
         print("✅ Connected to template1 database (default setup)")
     except Exception as exc:
-        print(f'⚠️  Unable to connect to template1 with peer authentication.')
+        print(f'⚠️  Unable to connect to template1: {exc}.')
 
 def check_databases_access():
     print(f"\n== Checking connections for files in HALFORM_CONF_DIR={CONF_DIR}")
@@ -49,8 +49,12 @@ def check_databases_access():
     sys.stderr.flush()
     print(f"\nCheck the documentation on https://collorg.github.io/halfORM/tutorial/installation/#database-configuration-optional")
 
+def show_version():
+    print(f"[halfORM] version {half_orm.__version__}")
+
 def main():
     """Main CLI entry point with proper argument handling"""
+    show_version()
     args_len = len(sys.argv)
     
     # Handle help requests
@@ -61,13 +65,15 @@ def main():
     # Handle different argument patterns
     if args_len == 1:
         # Default diagnostic mode
-        print(f"[halfORM] version {half_orm.__version__}")
         check_peer_authentication()
         check_databases_access()
         
     elif args_len == 2:
         # Show database structure
         database = sys.argv[1]
+        if database == '':
+            sys.stderr.write("❌ Empty database name\n")
+            sys.exit(1)
         try:
             model = Model(database)
             print(model)
@@ -80,6 +86,12 @@ def main():
         # Show specific relation details
         database = sys.argv[1]
         relation = sys.argv[2]
+        if database == '':
+            sys.stderr.write("❌ Empty database name\n")
+            sys.exit(1)
+        if relation == '':
+            sys.stderr.write("❌ Empty relation name\n")
+            sys.exit(1)
         try:
             model = Model(database)
             relation_class = model.get_relation_class(relation)
