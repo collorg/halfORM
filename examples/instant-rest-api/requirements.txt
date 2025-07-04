@@ -1,0 +1,10 @@
+# requirements.txt for Instant REST API
+half_orm>=0.15.0
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+pyyaml>=6.0
+
+# Optional production dependencies
+# gunicorn>=21.0.0        # Alternative ASGI server
+# python-multipart>=0.0.6 # For form data support  
+# slowapi>=0.1.9          # Rate limiting
