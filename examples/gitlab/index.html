@@ -1459,29 +1459,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#discovering-schema-issues" class="md-nav__link">
+  <a href="#discovering-gitlabs-innovative-schema-design" class="md-nav__link">
     <span class="md-ellipsis">
-      Discovering Schema Issues
+      Discovering GitLab's Innovative Schema Design
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Discovering GitLab&#39;s Innovative Schema Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-solution-gitlabs-loose-foreign-keys-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Solution: GitLab's Loose Foreign Keys Pattern
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#building-a-project-structure" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#exploring-this-pattern-with-halform" class="md-nav__link">
     <span class="md-ellipsis">
-      Building a Project Structure
+      Exploring This Pattern with halfORM
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#putting-it-all-together" class="md-nav__link">
-    <span class="md-ellipsis">
-      Putting It All Together
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1492,14 +1498,20 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
+    <nav class="md-nav" aria-label="What We Discovered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#key-takeaways" class="md-nav__link">
     <span class="md-ellipsis">
       Key Takeaways
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1609,29 +1621,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#discovering-schema-issues" class="md-nav__link">
+  <a href="#discovering-gitlabs-innovative-schema-design" class="md-nav__link">
     <span class="md-ellipsis">
-      Discovering Schema Issues
+      Discovering GitLab's Innovative Schema Design
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Discovering GitLab&#39;s Innovative Schema Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-solution-gitlabs-loose-foreign-keys-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Solution: GitLab's Loose Foreign Keys Pattern
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#building-a-project-structure" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#exploring-this-pattern-with-halform" class="md-nav__link">
     <span class="md-ellipsis">
-      Building a Project Structure
+      Exploring This Pattern with halfORM
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#putting-it-all-together" class="md-nav__link">
-    <span class="md-ellipsis">
-      Putting It All Together
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1642,14 +1660,20 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
+    <nav class="md-nav" aria-label="What We Discovered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#key-takeaways" class="md-nav__link">
     <span class="md-ellipsis">
       Key Takeaways
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1698,15 +1722,23 @@
 <li><strong>Custom tooling</strong> with halfORM (fkeys_between.py)</li>
 </ul>
 <h2 id="initial-discovery-the-scale">Initial Discovery: The Scale<a class="headerlink" href="#initial-discovery-the-scale" title="Permanent link">&para;</a></h2>
-<p>GitLab is a perfect example of a complex application. Let's explore its database model (<strong>not in production, of course</strong>).</p>
+<p>GitLab is a perfect example of a complex application. Let's explore its database model.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To realise this exercise, we have restored a snapshot of a Gitlab database locally.</p>
+</div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>gitlab
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="o">[</span>halfORM<span class="o">]</span><span class="w"> </span>version<span class="w"> </span><span class="m">0</span>.15.1
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>📋<span class="w"> </span>Available<span class="w"> </span>relations<span class="w"> </span><span class="k">for</span><span class="w"> </span>gitlab:
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>p<span class="w"> </span><span class="s2">&quot;public&quot;</span>.<span class="s2">&quot;ai_code_suggestion_events&quot;</span><span class="w">                                     </span>→<span class="w"> </span>No<span class="w"> </span>description<span class="w"> </span>available
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>p<span class="w"> </span><span class="s2">&quot;public&quot;</span>.<span class="s2">&quot;ai_duo_chat_events&quot;</span><span class="w">                                            </span>→<span class="w"> </span>No<span class="w"> </span>description<span class="w"> </span>available
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="o">[</span>...<span class="o">]</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>gitlab<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="m">888</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>gitlab<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;^r &#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="m">812</span><span class="w"> </span><span class="c1"># relations</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>gitlab<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;^v &#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="m">14</span><span class="w">  </span><span class="c1"># views</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>gitlab<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;^p &#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="m">53</span><span class="w">  </span><span class="c1"># partitioned tables</span>
 </code></pre></div>
 <p>That's quite a large model to work with! Let's see which relations have <code>users</code> in their name:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>gitlab<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>users
@@ -1730,7 +1762,7 @@
 </code></pre></div>
 <h2 id="deep-dive-users-table-structure">Deep Dive: Users Table Structure<a class="headerlink" href="#deep-dive-users-table-structure" title="Permanent link">&para;</a></h2>
 <p>Let's examine the main <code>users</code> table:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>gitlab<span class="w"> </span>public.users
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>gitlab<span class="w"> </span>public.users<span class="w"> </span><span class="p">|</span><span class="w"> </span>less
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>DATABASE:<span class="w"> </span>gitlab
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>SCHEMA:<span class="w"> </span>public
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>TABLE:<span class="w"> </span>users
@@ -1753,22 +1785,14 @@
 <a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>-<span class="w"> </span>admin:<span class="w">                                        </span><span class="o">(</span>bool<span class="o">)</span><span class="w"> </span>NOT<span class="w"> </span>NULL
 <a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="o">[</span>...<span class="o">]</span>
 </code></pre></div>
-<p>This is quite a large table with 78 columns and 170 relations pointing to it. That means we have 170 entries like these in the Fkeys dictionary:</p>
+<p>This is quite a large table: 78 columns, 170 relations pointing to it. That means we have 170 entries like these in the Fkeys dictionary:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>[...]
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>PRIMARY KEY (id)
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>FOREIGN KEYS:
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>- _reverse_fkey_gitlab_public_abuse_events_user_id: (&quot;id&quot;)
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a> ↳ &quot;gitlab&quot;:&quot;public&quot;.&quot;abuse_events&quot;(user_id)
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>- _reverse_fkey_gitlab_public_abuse_report_events_user_id: (&quot;id&quot;)
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a> ↳ &quot;gitlab&quot;:&quot;public&quot;.&quot;abuse_report_events&quot;(user_id)
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>- _reverse_fkey_gitlab_public_abuse_report_notes_author_id: (&quot;id&quot;)
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a> ↳ &quot;gitlab&quot;:&quot;public&quot;.&quot;abuse_report_notes&quot;(author_id)
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>[...]
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>Fkeys = {
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    &#39;&#39;: &#39;_reverse_fkey_gitlab_public_abuse_events_user_id&#39;,
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    &#39;&#39;: &#39;_reverse_fkey_gitlab_public_abuse_report_events_user_id&#39;,
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    &#39;&#39;: &#39;_reverse_fkey_gitlab_public_abuse_report_notes_author_id&#39;,
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>[...]
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Fkeys = {
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    &#39;&#39;: &#39;_reverse_fkey_gitlab_public_abuse_events_user_id&#39;,
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    &#39;&#39;: &#39;_reverse_fkey_gitlab_public_abuse_report_events_user_id&#39;,
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    &#39;&#39;: &#39;_reverse_fkey_gitlab_public_abuse_report_notes_author_id&#39;,
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    [...]
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>}
 </code></pre></div>
 <h2 id="first-halform-script">First halfORM Script<a class="headerlink" href="#first-halform-script" title="Permanent link">&para;</a></h2>
 <p>We have enough information to start exploring. Let's look at the administrators:</p>
@@ -1878,135 +1902,112 @@
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>Reverse<span class="w"> </span><span class="o">(</span>public.projects<span class="w"> </span>→<span class="w"> </span>public.users<span class="o">)</span>:
 <a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span>•<span class="w"> </span>fk_0a31cca0b8
 </code></pre></div>
-<h2 id="discovering-schema-issues">Discovering Schema Issues<a class="headerlink" href="#discovering-schema-issues" title="Permanent link">&para;</a></h2>
-<p>Interesting! There's only one foreign key from <code>public.projects</code> to <code>public.users</code>: <code>fk_0a31cca0b8</code>. This means there's no foreign key constraint on the <code>creator_id</code> column in the <code>public.projects</code> relation. Let's fix the schema by adding that constraint (again, <strong>we are not in production here!</strong>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">projects</span><span class="w"> </span><span class="k">ADD</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">creator_fk</span><span class="w"> </span><span class="k">FOREIGN</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="p">(</span><span class="n">creator_id</span><span class="p">)</span><span class="w"> </span><span class="k">REFERENCES</span><span class="w"> </span><span class="n">users</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
+<h2 id="discovering-gitlabs-innovative-schema-design">Discovering GitLab's Innovative Schema Design<a class="headerlink" href="#discovering-gitlabs-innovative-schema-design" title="Permanent link">&para;</a></h2>
+<p>Interesting! There's only one foreign key from <code>public.projects</code> to <code>public.users</code>: <code>fk_0a31cca0b8</code>. This means there's no foreign key constraint on the <code>creator_id</code> column in the <code>public.projects</code> relation. At first glance, this seems like a schema issue. In a traditional database, we might add:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">projects</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="k">ADD</span><span class="w"> </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">creator_fk</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="k">FOREIGN</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="p">(</span><span class="n">creator_id</span><span class="p">)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="k">REFERENCES</span><span class="w"> </span><span class="n">users</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
 </code></pre></div>
-<p>Now <code>fkeys_between.py</code> shows:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>=== RELATIONSHIPS BETWEEN public.users AND public.projects ===
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>Direct (public.users → public.projects):
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  • _reverse_fkey_gitlab_public_projects_creator_id
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>  • _reverse_fkey_gitlab_public_projects_marked_for_deletion_by_user_id
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>Reverse (public.projects → public.users):
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>  • creator_fk
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>  • fk_0a31cca0b8
+<h3 id="the-solution-gitlabs-loose-foreign-keys-pattern">The Solution: GitLab's Loose Foreign Keys Pattern<a class="headerlink" href="#the-solution-gitlabs-loose-foreign-keys-pattern" title="Permanent link">&para;</a></h3>
+<p>But wait! This isn't a bug—it's a brilliant feature! 🚀</p>
+<div class="admonition note">
+<p class="admonition-title">The mystery of the missing FOREIGN KEY</p>
+<p>This is not an issue. This is a feature!
+GitLab has a very clever way to store the deleted keys in the table <code>loose_foreign_keys_deleted_records</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">-- The loose foreign keys deletion tracking table</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">loose_foreign_keys_deleted_records</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nb">bigint</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="n">partition</span><span class="w"> </span><span class="nb">bigint</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="mi">197</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="n">primary_key_value</span><span class="w"> </span><span class="nb">bigint</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">           </span><span class="c1">-- ID of deleted record</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="nb">smallint</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">          </span><span class="c1">-- Processing status  </span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span><span class="n">created_at</span><span class="w"> </span><span class="k">timestamp</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="k">time</span><span class="w"> </span><span class="k">zone</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="n">now</span><span class="p">()</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">    </span><span class="n">fully_qualified_table_name</span><span class="w"> </span><span class="nb">text</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">   </span><span class="c1">-- Which table was affected</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">    </span><span class="n">consume_after</span><span class="w"> </span><span class="k">timestamp</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="k">time</span><span class="w"> </span><span class="k">zone</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="n">now</span><span class="p">(),</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="n">cleanup_attempts</span><span class="w"> </span><span class="nb">smallint</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">        </span><span class="c1">-- Retry counter</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span><span class="k">CONSTRAINT</span><span class="w"> </span><span class="n">check_1a541f3235</span><span class="w"> </span><span class="k">CHECK</span><span class="w"> </span><span class="p">((</span><span class="k">char_length</span><span class="p">(</span><span class="n">fully_qualified_table_name</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">150</span><span class="p">))</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="p">)</span><span class="w"> </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">LIST</span><span class="w"> </span><span class="p">(</span><span class="n">partition</span><span class="p">);</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="c1">-- Trigger function to log deletions</span>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">insert_into_loose_foreign_keys_deleted_records</span><span class="p">()</span><span class="w"> </span>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="k">RETURNS</span><span class="w"> </span><span class="k">trigger</span><span class="w"> </span><span class="k">LANGUAGE</span><span class="w"> </span><span class="n">plpgsql</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="err">$$</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="k">BEGIN</span>
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="w">    </span><span class="c1">-- Log every deleted FQTN, ID for later cleanup or undelete</span>
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="w">    </span><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">loose_foreign_keys_deleted_records</span>
+<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="w">        </span><span class="p">(</span><span class="n">fully_qualified_table_name</span><span class="p">,</span><span class="w"> </span><span class="n">primary_key_value</span><span class="p">)</span>
+<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">TG_TABLE_SCHEMA</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;.&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">TG_TABLE_NAME</span><span class="p">,</span><span class="w"> </span><span class="n">old_table</span><span class="p">.</span><span class="n">id</span><span class="w"> </span>
+<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">old_table</span><span class="p">;</span>
+<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a>
+<a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="w">    </span><span class="k">RETURN</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span><span class="w"> </span><span class="c1">-- Trigger is for logging only</span>
+<a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a><span class="k">END</span><span class="w"> </span><span class="err">$$</span><span class="p">;</span>
+<a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a>
+<a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a><span class="c1">-- Apply trigger to users table</span>
+<a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TRIGGER</span><span class="w"> </span><span class="n">users_loose_fk_trigger</span>
+<a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a><span class="w">    </span><span class="k">AFTER</span><span class="w"> </span><span class="k">DELETE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">users</span>
+<a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a><span class="w">    </span><span class="k">REFERENCING</span><span class="w"> </span><span class="k">OLD</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">old_table</span><span class="w">  </span><span class="c1">-- PostgreSQL 10+ feature</span>
+<a id="__codelineno-9-31" name="__codelineno-9-31" href="#__codelineno-9-31"></a><span class="w">    </span><span class="k">FOR</span><span class="w"> </span><span class="k">EACH</span><span class="w"> </span><span class="k">STATEMENT</span>
+<a id="__codelineno-9-32" name="__codelineno-9-32" href="#__codelineno-9-32"></a><span class="w">    </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">FUNCTION</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">insert_into_loose_foreign_keys_deleted_records</span><span class="p">();</span>
 </code></pre></div>
-<h2 id="building-a-project-structure">Building a Project Structure<a class="headerlink" href="#building-a-project-structure" title="Permanent link">&para;</a></h2>
-<p>Now that we have the new foreign key, we can use it in our halfORM scripts.</p>
-<p>First, let's create a <code>gitlab</code> directory where we'll put all our modules:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>$<span class="w"> </span>mkdir<span class="w"> </span>gitlab
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PWD</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>gitlab
+<p>This mechanism allows them to delay the actual deletion of a row in any table for which
+this function is triggered. It provides several key benefits:</p>
+<p><strong>🔄 Grace Period for Recovery</strong>: Administrators can restore accidentally deleted users and their associated data within a defined time window.</p>
+<p><strong>⚡ Performance Optimization</strong>: Deletions don't require checking foreign key constraints across hundreds of tables, making operations faster.</p>
+<p><strong>🛡️ Data Safety</strong>: Critical data (commits, issues, merge requests) remains accessible even if a user account is deleted, preventing data loss.</p>
+<p><strong>🧹 Deferred Cleanup</strong>: A background job processes the cleanup queue, distributing the workload over time instead of blocking the deletion operation.</p>
+</div>
+<h3 id="exploring-this-pattern-with-halform">Exploring This Pattern with halfORM<a class="headerlink" href="#exploring-this-pattern-with-halform" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">half_orm.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s1">&#39;gitlab&#39;</span><span class="p">)</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># Check the loose foreign keys table</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">loose_fks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s2">&quot;public.loose_foreign_keys_deleted_records&quot;</span><span class="p">)()</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pending deletions to process: </span><span class="si">{</span><span class="n">loose_fks</span><span class="o">.</span><span class="n">ho_count</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="c1"># See what tables are affected</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">loose_fks</span><span class="o">.</span><span class="n">ho_limit</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Deleted from </span><span class="si">{</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;fully_qualified_table_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: ID </span><span class="si">{</span><span class="n">record</span><span class="p">[</span><span class="s1">&#39;primary_key_value&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p>In that directory, we'll create the <code>__init__.py</code> file that will handle the model shared between all modules:</p>
-<div class="highlight"><span class="filename">__init__.py</span><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">half_orm.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s1">&#39;gitlab&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>$<span class="w"> </span>python<span class="w"> </span>check_loose_fkeys.py<span class="w"> </span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>Pending<span class="w"> </span>deletions<span class="w"> </span>to<span class="w"> </span>process:<span class="w"> </span><span class="m">2</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>Deleted<span class="w"> </span>from<span class="w"> </span>public.ci_runners:<span class="w"> </span>ID<span class="w"> </span><span class="m">186</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>Deleted<span class="w"> </span>from<span class="w"> </span>public.ci_runners:<span class="w"> </span>ID<span class="w"> </span><span class="m">185</span>
 </code></pre></div>
-<p>Let's test the <code>__init__.py</code> by reusing the script that lists the administrators:</p>
-<div class="highlight"><span class="filename">admins.py</span><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">gitlab</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">Users</span> <span class="o">=</span> <span class="n">gitlab</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;public.users&#39;</span><span class="p">)</span>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1"># List the admin names</span>
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="k">for</span> <span class="n">admin</span> <span class="ow">in</span> <span class="n">Users</span><span class="p">(</span><span class="n">admin</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">ho_select</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">):</span>
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">admin</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
-</code></pre></div>
-<p>Now let's create the modules <code>projects.py</code> and <code>users.py</code>:</p>
-<div class="highlight"><span class="filename">projects.py</span><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">gitlab</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">Projects</span><span class="p">(</span><span class="n">gitlab</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;public.projects&#39;</span><span class="p">)):</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">Fkeys</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>        <span class="s1">&#39;creator_fk&#39;</span><span class="p">:</span> <span class="s1">&#39;creator_fk&#39;</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="p">}</span>
-</code></pre></div>
-<div class="highlight"><span class="filename">users.py</span><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">gitlab</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">Users</span><span class="p">(</span><span class="n">gitlab</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;public.users&#39;</span><span class="p">)):</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="n">Fkeys</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>        <span class="s1">&#39;projects_rfk&#39;</span><span class="p">:</span> <span class="s1">&#39;_reverse_fkey_gitlab_public_projects_creator_id&#39;</span>
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    <span class="p">}</span>
-</code></pre></div>
-<h2 id="putting-it-all-together">Putting It All Together<a class="headerlink" href="#putting-it-all-together" title="Permanent link">&para;</a></h2>
-<p>Now we can use these modules in a practical script:</p>
-<div class="highlight"><span class="filename">get_projects_created_by.py</span><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="ch">#!/usr/bin/env python3</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="sd">Get all projects created by a specific user.</span>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="sd">Usage: get_projects_created_by.py &lt;username&gt;</span>
-<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">gitlab.users</span><span class="w"> </span><span class="kn">import</span> <span class="n">Users</span>
-<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
-<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Usage: get_projects_created_by.py &lt;username&gt;&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Example: get_projects_created_by.py alice&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>
-<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>    <span class="n">username</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>
-<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>        <span class="n">user</span> <span class="o">=</span> <span class="n">Users</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
-<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">ho_is_empty</span><span class="p">():</span>
-<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ User &#39;</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="s2">&#39; not found&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>
-<a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>        <span class="n">project_count</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">projects_rfk</span><span class="p">()</span><span class="o">.</span><span class="n">ho_count</span><span class="p">()</span>
-<a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a>        <span class="n">projects</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">projects_rfk</span><span class="p">()</span><span class="o">.</span><span class="n">ho_order_by</span><span class="p">(</span><span class="s1">&#39;created_at DESC&#39;</span><span class="p">)</span>
-<a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a>
-<a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a>        <span class="k">if</span> <span class="n">project_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;📭 User &#39;</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="s2">&#39; has no projects&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a>        <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;📂 Projects created by &#39;</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="s2">&#39; (</span><span class="si">{</span><span class="n">project_count</span><span class="si">}</span><span class="s2"> total):&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a>            <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">projects</span><span class="o">.</span><span class="n">ho_select</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">):</span>
-<a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">project</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (created: </span><span class="si">{</span><span class="n">project</span><span class="p">[</span><span class="s1">&#39;created_at&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a>
-<a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-<a id="__codelineno-15-34" name="__codelineno-15-34" href="#__codelineno-15-34"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-35" name="__codelineno-15-35" href="#__codelineno-15-35"></a>        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<a id="__codelineno-15-36" name="__codelineno-15-36" href="#__codelineno-15-36"></a>
-<a id="__codelineno-15-37" name="__codelineno-15-37" href="#__codelineno-15-37"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-<a id="__codelineno-15-38" name="__codelineno-15-38" href="#__codelineno-15-38"></a>    <span class="n">main</span><span class="p">()</span>
-</code></pre></div>
-<p>Example output:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>$<span class="w"> </span>python<span class="w"> </span>get_projects_created_by.py<span class="w"> </span>alice
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>📂<span class="w"> </span>Projects<span class="w"> </span>created<span class="w"> </span>by<span class="w"> </span><span class="s1">&#39;alice&#39;</span><span class="w"> </span><span class="o">(</span><span class="m">3</span><span class="w"> </span>total<span class="o">)</span>:
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span>•<span class="w"> </span>awesome-project<span class="w"> </span><span class="o">(</span>created:<span class="w"> </span><span class="m">2024</span>-01-15<span class="w"> </span><span class="m">14</span>:30:00<span class="o">)</span>
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span>•<span class="w"> </span>data-analysis-tool<span class="w"> </span><span class="o">(</span>created:<span class="w"> </span><span class="m">2024</span>-01-10<span class="w"> </span><span class="m">09</span>:15:00<span class="o">)</span><span class="w">  </span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">  </span>•<span class="w"> </span>documentation-site<span class="w"> </span><span class="o">(</span>created:<span class="w"> </span><span class="m">2024</span>-01-05<span class="w"> </span><span class="m">16</span>:45:00<span class="o">)</span>
-</code></pre></div></p>
 <h2 id="what-we-discovered">What We Discovered<a class="headerlink" href="#what-we-discovered" title="Permanent link">&para;</a></h2>
 <p>Through this exploration, we found:</p>
 <ul>
 <li><strong>888 relations</strong> in GitLab's database - a complex real-world schema</li>
 <li><strong>78 columns</strong> in the users table with <strong>170 foreign key relationships</strong></li>
-<li><strong>Missing constraint</strong>: <code>projects.creator_id</code> had no foreign key constraint!</li>
+<li><strong>Missing constraints as a feature</strong>: <code>projects.creator_id</code> deliberately has no foreign key constraint!</li>
 <li><strong>Analysis tools</strong>: halfORM makes it easy to build custom database analysis scripts</li>
 </ul>
 <p>This demonstrates how halfORM can help you:
 - 🔍 <strong>Explore</strong> unfamiliar databases quickly
 - 🔗 <strong>Analyze</strong> relationships between tables<br />
 - 🛠️ <strong>Build</strong> custom tools for database inspection
-- 🐛 <strong>Discover</strong> schema issues (like missing constraints)</p>
-<h2 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h2>
-<ul>
-<li>halfORM's CLI is perfect for <strong>database exploration</strong></li>
-<li><strong>No prior schema knowledge required</strong> - just start exploring</li>
-<li><strong>Real databases</strong> often have missing constraints (like creator_id)</li>
-<li>halfORM makes it easy to <strong>build custom analysis tools</strong></li>
-<li>You can <strong>inspect production schemas safely</strong> without touching data</li>
-</ul>
+- 💡 <strong>Discover</strong> innovative design patterns (like loose foreign keys)</p>
+<h3 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>"Missing" constraints can be intentional design decisions</strong> - GitLab's loose foreign keys provide operational flexibility</li>
+<li><strong>High-scale applications often break traditional rules</strong> for performance and recovery reasons  </li>
+<li><strong>halfORM's introspection helps understand real-world patterns</strong> - even unconventional ones</li>
+<li><strong>Database design is about trade-offs</strong> - GitLab chose operational safety and performance over strict consistency</li>
+<li><strong>Application-level integrity</strong> can replace database-level constraints when the benefits justify the complexity</li>
+<li><strong>Recovery mechanisms</strong> are crucial for production systems where accidental deletions could have catastrophic consequences</li>
+</ol>
+<p>This pattern shows why exploring real production databases is so valuable for learning! It reveals how theory meets practice in high-scale, mission-critical applications. 🎓</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <p>Try this approach with your own database:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Explore your database</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>your_database
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
-<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># Find tables with &#39;user&#39; in the name  </span>
-<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>your_database<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>user
-<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
-<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1"># Inspect a specific table</span>
-<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>your_database<span class="w"> </span>schema.table_name
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Explore your database</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>your_database
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1"># Find tables with &#39;user&#39; in the name  </span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>your_database<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>user
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="c1"># Inspect a specific table</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>your_database<span class="w"> </span>schema.table_name
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="c1"># Look for loose foreign key patterns</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>python<span class="w"> </span>-m<span class="w"> </span>half_orm<span class="w"> </span>your_database<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>loose
 </code></pre></div>
 
 
@@ -2030,7 +2031,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 2, 2025 14:09:54 UTC">July 2, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 4, 2025 11:30:35 UTC">July 4, 2025</span>
   </span>
 
     
