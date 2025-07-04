@@ -137,6 +137,7 @@ nav:
   - Examples:
     - examples/index.md
     - Database Exploration with GitLab: examples/gitlab.md
+    - Instant REST API with halfORM: examples/instant-rest-api/instant-rest-api.md
 
 extra_css:
   - assets/css/custom.css
