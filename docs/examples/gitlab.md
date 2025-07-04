@@ -18,7 +18,9 @@ Ever wondered what complex real-world databases look like? Let's explore GitLab'
 
 ## Initial Discovery: The Scale
 
-GitLab is a perfect example of a complex application. Let's explore its database model (**not in production, of course**).
+GitLab is a perfect example of a complex application. Let's explore its database model.
+!!! note
+    To realise this exercise, we have restored a snapshot of a Gitlab database locally.
 
 ```sh
 $ python -m half_orm gitlab
@@ -27,8 +29,12 @@ $ python -m half_orm gitlab
 p "public"."ai_code_suggestion_events"                                     → No description available
 p "public"."ai_duo_chat_events"                                            → No description available
 [...]
-$ python -m half_orm gitlab | wc -l
-888
+$ python -m half_orm gitlab | grep -E '^r ' | wc -l
+812 # relations
+$ python -m half_orm gitlab | grep -E '^v ' | wc -l
+14  # views
+$ python -m half_orm gitlab | grep -E '^p ' | wc -l
+53  # partitioned tables
 ```
 
 That's quite a large model to work with! Let's see which relations have `users` in their name:
@@ -59,7 +65,7 @@ r "public"."users_statistics"                                              → N
 Let's examine the main `users` table:
 
 ```sh
-$ python -m half_orm gitlab public.users
+$ python -m half_orm gitlab public.users | less
 DATABASE: gitlab
 SCHEMA: public
 TABLE: users
@@ -83,24 +89,16 @@ FIELDS:
 [...]
 ```
 
-This is quite a large table with 78 columns and 170 relations pointing to it. That means we have 170 entries like these in the Fkeys dictionary:
+This is quite a large table: 78 columns, 170 relations pointing to it. That means we have 170 entries like these in the Fkeys dictionary:
 
 ```
-[...]
-PRIMARY KEY (id)
-FOREIGN KEYS:
-- _reverse_fkey_gitlab_public_abuse_events_user_id: ("id")
- ↳ "gitlab":"public"."abuse_events"(user_id)
-- _reverse_fkey_gitlab_public_abuse_report_events_user_id: ("id")
- ↳ "gitlab":"public"."abuse_report_events"(user_id)
-- _reverse_fkey_gitlab_public_abuse_report_notes_author_id: ("id")
- ↳ "gitlab":"public"."abuse_report_notes"(author_id)
 [...]
 Fkeys = {
     '': '_reverse_fkey_gitlab_public_abuse_events_user_id',
     '': '_reverse_fkey_gitlab_public_abuse_report_events_user_id',
     '': '_reverse_fkey_gitlab_public_abuse_report_notes_author_id',
-[...]
+    [...]
+}
 ```
 
 ## First halfORM Script
@@ -227,131 +225,90 @@ Reverse (public.projects → public.users):
   • fk_0a31cca0b8
 ```
 
-## Discovering Schema Issues
+## Discovering GitLab's Innovative Schema Design
 
-Interesting! There's only one foreign key from `public.projects` to `public.users`: `fk_0a31cca0b8`. This means there's no foreign key constraint on the `creator_id` column in the `public.projects` relation. Let's fix the schema by adding that constraint (again, **we are not in production here!**):
+Interesting! There's only one foreign key from `public.projects` to `public.users`: `fk_0a31cca0b8`. This means there's no foreign key constraint on the `creator_id` column in the `public.projects` relation. At first glance, this seems like a schema issue. In a traditional database, we might add:
 
 ```sql
-ALTER TABLE projects ADD CONSTRAINT creator_fk FOREIGN KEY (creator_id) REFERENCES users(id);
+ALTER TABLE projects
+    ADD CONSTRAINT creator_fk
+    FOREIGN KEY (creator_id)
+    REFERENCES users(id);
 ```
 
-Now `fkeys_between.py` shows:
+### The Solution: GitLab's Loose Foreign Keys Pattern
+But wait! This isn't a bug—it's a brilliant feature! 🚀
 
-```
-=== RELATIONSHIPS BETWEEN public.users AND public.projects ===
+!!! note "The mystery of the missing FOREIGN KEY"
+    This is not an issue. This is a feature!
+    GitLab has a very clever way to store the deleted keys in the table `loose_foreign_keys_deleted_records`:
 
-Direct (public.users → public.projects):
-  • _reverse_fkey_gitlab_public_projects_creator_id
-  • _reverse_fkey_gitlab_public_projects_marked_for_deletion_by_user_id
+    ```sql
+    -- The loose foreign keys deletion tracking table
+    CREATE TABLE public.loose_foreign_keys_deleted_records (
+        id bigint NOT NULL,
+        partition bigint DEFAULT 197 NOT NULL,
+        primary_key_value bigint NOT NULL,           -- ID of deleted record
+        status smallint DEFAULT 1 NOT NULL,          -- Processing status  
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        fully_qualified_table_name text NOT NULL,   -- Which table was affected
+        consume_after timestamp with time zone DEFAULT now(),
+        cleanup_attempts smallint DEFAULT 0,        -- Retry counter
+        CONSTRAINT check_1a541f3235 CHECK ((char_length(fully_qualified_table_name) <= 150))
+    ) PARTITION BY LIST (partition);
 
-Reverse (public.projects → public.users):
-  • creator_fk
-  • fk_0a31cca0b8
-```
+    -- Trigger function to log deletions
+    CREATE FUNCTION public.insert_into_loose_foreign_keys_deleted_records() 
+    RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+        -- Log every deleted FQTN, ID for later cleanup or undelete
+        INSERT INTO loose_foreign_keys_deleted_records
+            (fully_qualified_table_name, primary_key_value)
+        SELECT TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME, old_table.id 
+        FROM old_table;
+        
+        RETURN NULL; -- Trigger is for logging only
+    END $$;
 
-## Building a Project Structure
+    -- Apply trigger to users table
+    CREATE TRIGGER users_loose_fk_trigger
+        AFTER DELETE ON public.users
+        REFERENCING OLD TABLE AS old_table  -- PostgreSQL 10+ feature
+        FOR EACH STATEMENT
+        EXECUTE FUNCTION public.insert_into_loose_foreign_keys_deleted_records();
+    ```
 
-Now that we have the new foreign key, we can use it in our halfORM scripts.
+    This mechanism allows them to delay the actual deletion of a row in any table for which
+    this function is triggered. It provides several key benefits:
 
-First, let's create a `gitlab` directory where we'll put all our modules:
+    **🔄 Grace Period for Recovery**: Administrators can restore accidentally deleted users and their associated data within a defined time window.
 
-```sh
-$ mkdir gitlab
-$ export PYTHONPATH=$PWD
-$ cd gitlab
-```
+    **⚡ Performance Optimization**: Deletions don't require checking foreign key constraints across hundreds of tables, making operations faster.
 
-In that directory, we'll create the `__init__.py` file that will handle the model shared between all modules:
+    **🛡️ Data Safety**: Critical data (commits, issues, merge requests) remains accessible even if a user account is deleted, preventing data loss.
 
-```python title="__init__.py"
+    **🧹 Deferred Cleanup**: A background job processes the cleanup queue, distributing the workload over time instead of blocking the deletion operation.
+
+### Exploring This Pattern with halfORM
+
+```python title=""
 from half_orm.model import Model
 
 model = Model('gitlab')
+# Check the loose foreign keys table
+loose_fks = model.get_relation_class("public.loose_foreign_keys_deleted_records")()
+print(f"Pending deletions to process: {loose_fks.ho_count()}")
+
+# See what tables are affected
+for record in loose_fks.ho_limit(5):
+    print(f"Deleted from {record['fully_qualified_table_name']}: ID {record['primary_key_value']}")
 ```
 
-Let's test the `__init__.py` by reusing the script that lists the administrators:
-
-```python title="admins.py"
-import gitlab
-
-Users = gitlab.model.get_relation_class('public.users')
-# List the admin names
-for admin in Users(admin=True).ho_select('name'):
-    print(admin['name'])
-```
-
-Now let's create the modules `projects.py` and `users.py`:
-
-```python title="projects.py"
-import gitlab
-
-class Projects(gitlab.model.get_relation_class('public.projects')):
-    Fkeys = {
-        'creator_fk': 'creator_fk'
-    }
-```
-
-```python title="users.py"
-import gitlab
-
-class Users(gitlab.model.get_relation_class('public.users')):
-    Fkeys = {
-        'projects_rfk': '_reverse_fkey_gitlab_public_projects_creator_id'
-    }
-```
-
-## Putting It All Together
-
-Now we can use these modules in a practical script:
-
-```python title="get_projects_created_by.py"
-#!/usr/bin/env python3
-"""
-Get all projects created by a specific user.
-Usage: get_projects_created_by.py <username>
-"""
-import sys
-from gitlab.users import Users
-
-def main():
-    if len(sys.argv) != 2:
-        print("Usage: get_projects_created_by.py <username>")
-        print("Example: get_projects_created_by.py alice")
-        sys.exit(1)
-
-    username = sys.argv[1]
-
-    try:
-        user = Users(username=username)
-        if user.ho_is_empty():
-            print(f"❌ User '{username}' not found")
-            sys.exit(1)
-
-        project_count = user.projects_rfk().ho_count()
-        projects = user.projects_rfk().ho_order_by('created_at DESC')
-
-        if project_count == 0:
-            print(f"📭 User '{username}' has no projects")
-        else:
-            print(f"📂 Projects created by '{username}' ({project_count} total):")
-            for project in projects.ho_select('name', 'created_at'):
-                print(f"  • {project['name']} (created: {project['created_at']})")
-
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        sys.exit(1)
-
-if __name__ == '__main__':
-    main()
-```
-
-Example output:
 ```sh
-$ python get_projects_created_by.py alice
-📂 Projects created by 'alice' (3 total):
-  • awesome-project (created: 2024-01-15 14:30:00)
-  • data-analysis-tool (created: 2024-01-10 09:15:00)  
-  • documentation-site (created: 2024-01-05 16:45:00)
+$ python check_loose_fkeys.py 
+Pending deletions to process: 2
+Deleted from public.ci_runners: ID 186
+Deleted from public.ci_runners: ID 185
 ```
 
 ## What We Discovered
@@ -360,22 +317,25 @@ Through this exploration, we found:
 
 - **888 relations** in GitLab's database - a complex real-world schema
 - **78 columns** in the users table with **170 foreign key relationships**
-- **Missing constraint**: `projects.creator_id` had no foreign key constraint!
+- **Missing constraints as a feature**: `projects.creator_id` deliberately has no foreign key constraint!
 - **Analysis tools**: halfORM makes it easy to build custom database analysis scripts
 
 This demonstrates how halfORM can help you:
 - 🔍 **Explore** unfamiliar databases quickly
 - 🔗 **Analyze** relationships between tables  
 - 🛠️ **Build** custom tools for database inspection
-- 🐛 **Discover** schema issues (like missing constraints)
+- 💡 **Discover** innovative design patterns (like loose foreign keys)
 
-## Key Takeaways
+### Key Takeaways
 
-- halfORM's CLI is perfect for **database exploration**
-- **No prior schema knowledge required** - just start exploring
-- **Real databases** often have missing constraints (like creator_id)
-- halfORM makes it easy to **build custom analysis tools**
-- You can **inspect production schemas safely** without touching data
+1. **"Missing" constraints can be intentional design decisions** - GitLab's loose foreign keys provide operational flexibility
+2. **High-scale applications often break traditional rules** for performance and recovery reasons  
+3. **halfORM's introspection helps understand real-world patterns** - even unconventional ones
+4. **Database design is about trade-offs** - GitLab chose operational safety and performance over strict consistency
+5. **Application-level integrity** can replace database-level constraints when the benefits justify the complexity
+6. **Recovery mechanisms** are crucial for production systems where accidental deletions could have catastrophic consequences
+
+This pattern shows why exploring real production databases is so valuable for learning! It reveals how theory meets practice in high-scale, mission-critical applications. 🎓
 
 ## Next Steps
 
@@ -390,4 +350,7 @@ python -m half_orm your_database | grep user
 
 # Inspect a specific table
 python -m half_orm your_database schema.table_name
+
+# Look for loose foreign key patterns
+python -m half_orm your_database | grep loose
 ```
