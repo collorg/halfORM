@@ -14,33 +14,27 @@ Welcome to your first real halfORM experience! In this chapter, you'll create a 
 
 ## Tutorial Database Setup
 
-Let's start by creating a proper database with realistic data. We'll build a blog application schema that includes authors, posts, comments, and tags - perfect for exploring relationships and real-world patterns.
+Let's create a realistic blog database with relationships and sample data.
 
 ### Step 1: Create the Tutorial Database
 
-First, let's create the database and user:
-
-```sql title="setup_tutorial_db.sql"
--- Create database and user
--- Run as PostgreSQL superuser: psql -U postgres -f setup_tutorial_db.sql
-
--- Create tutorial user
-CREATE USER tutorial_user WITH PASSWORD 'tutorial_pass';
-
--- Create tutorial database
-CREATE DATABASE blog_tutorial OWNER tutorial_user;
+```sh
+sudo su - postgresql
+psql template1
 ```
 
-```sql title="setup_tutorial_schema.sql"  
--- Run this after connecting to blog_tutorial database
--- psql -U postgres -d blog_tutorial -f setup_tutorial_schema.sql
-
--- Grant necessary privileges
+```sql
+-- Create database and user
+CREATE DATABASE blog_tutorial;
+CREATE USER tutorial_user WITH PASSWORD 'tutorial_pass'; -- change the password
 GRANT ALL PRIVILEGES ON DATABASE blog_tutorial TO tutorial_user;
-GRANT ALL PRIVILEGES ON SCHEMA public TO tutorial_user;
+```
 
--- Create blog schema
-CREATE SCHEMA blog AUTHORIZATION tutorial_user;
+Save the file `tutorial_setup.sql`.
+
+```sql title="tutorial_setup.sql"
+-- Create schema
+CREATE SCHEMA blog;
 
 -- Create tables
 CREATE TABLE blog.author (
@@ -51,44 +45,19 @@ CREATE TABLE blog.author (
     bio TEXT,
     birth_date DATE,
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW()
 );
-
--- Add table and column comments
-COMMENT ON TABLE blog.author IS 'Authors who write blog posts and comments';
-COMMENT ON COLUMN blog.author.id IS 'Unique identifier for each author';
-COMMENT ON COLUMN blog.author.first_name IS 'Author''s first name';
-COMMENT ON COLUMN blog.author.last_name IS 'Author''s last name';
-COMMENT ON COLUMN blog.author.email IS 'Author''s email address (must be unique)';
-COMMENT ON COLUMN blog.author.bio IS 'Short biography of the author';
-COMMENT ON COLUMN blog.author.birth_date IS 'Author''s date of birth';
-COMMENT ON COLUMN blog.author.is_active IS 'Whether the author account is active';
 
 CREATE TABLE blog.post (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) UNIQUE NOT NULL,
     content TEXT,
-    excerpt TEXT,
     author_id INTEGER NOT NULL REFERENCES blog.author(id) ON DELETE CASCADE,
     published_at TIMESTAMP,
     is_published BOOLEAN DEFAULT FALSE,
     view_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW()
 );
-
-COMMENT ON TABLE blog.post IS 'Blog posts with content and metadata';
-COMMENT ON COLUMN blog.post.id IS 'Unique identifier for each post';
-COMMENT ON COLUMN blog.post.title IS 'Post title displayed to readers';
-COMMENT ON COLUMN blog.post.slug IS 'URL-friendly version of the title';
-COMMENT ON COLUMN blog.post.content IS 'Full content of the blog post';
-COMMENT ON COLUMN blog.post.excerpt IS 'Short summary or preview of the post';
-COMMENT ON COLUMN blog.post.author_id IS 'Reference to the author who wrote this post';
-COMMENT ON COLUMN blog.post.published_at IS 'When the post was published (NULL for drafts)';
-COMMENT ON COLUMN blog.post.is_published IS 'Whether the post is visible to readers';
-COMMENT ON COLUMN blog.post.view_count IS 'Number of times this post has been viewed';
 
 CREATE TABLE blog.comment (
     id SERIAL PRIMARY KEY,
@@ -99,225 +68,97 @@ CREATE TABLE blog.comment (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-COMMENT ON TABLE blog.comment IS 'Comments left by readers on blog posts';
-COMMENT ON COLUMN blog.comment.id IS 'Unique identifier for each comment';
-COMMENT ON COLUMN blog.comment.content IS 'The text content of the comment';
-COMMENT ON COLUMN blog.comment.author_id IS 'Reference to the author who wrote this comment';
-COMMENT ON COLUMN blog.comment.post_id IS 'Reference to the post this comment belongs to';
-COMMENT ON COLUMN blog.comment.is_approved IS 'Whether the comment has been approved for display';
-
-CREATE TABLE blog.tag (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-COMMENT ON TABLE blog.tag IS 'Tags for categorizing and organizing blog posts';
-COMMENT ON COLUMN blog.tag.id IS 'Unique identifier for each tag';
-COMMENT ON COLUMN blog.tag.name IS 'Tag name (must be unique)';
-COMMENT ON COLUMN blog.tag.description IS 'Optional description of what this tag represents';
-
-CREATE TABLE blog.post_tag (
-    post_id INTEGER REFERENCES blog.post(id) ON DELETE CASCADE,
-    tag_id INTEGER REFERENCES blog.tag(id) ON DELETE CASCADE,
-    PRIMARY KEY (post_id, tag_id)
-);
-
-COMMENT ON TABLE blog.post_tag IS 'Many-to-many relationship linking posts with their tags';
-
--- Create indexes for performance
-CREATE INDEX idx_author_email ON blog.author(email);
-CREATE INDEX idx_author_active ON blog.author(is_active);
-CREATE INDEX idx_post_author ON blog.post(author_id);
-CREATE INDEX idx_post_published ON blog.post(is_published);
-CREATE INDEX idx_post_published_at ON blog.post(published_at);
-CREATE INDEX idx_post_slug ON blog.post(slug);
-CREATE INDEX idx_comment_post ON blog.comment(post_id);
-CREATE INDEX idx_comment_author ON blog.comment(author_id);
-CREATE INDEX idx_comment_approved ON blog.comment(is_approved);
-
--- Create useful views
-CREATE VIEW blog.published_posts AS
-SELECT 
-    p.*,
-    a.first_name || ' ' || a.last_name AS author_name,
-    a.email AS author_email
-FROM blog.post p
-JOIN blog.author a ON p.author_id = a.id
-WHERE p.is_published = TRUE
-ORDER BY p.published_at DESC;
-
-COMMENT ON VIEW blog.published_posts IS 'Published posts with author information for public display';
-
-CREATE VIEW blog.post_stats AS
-SELECT 
-    p.id,
-    p.title,
-    p.view_count,
-    COUNT(c.id) AS comment_count,
-    COUNT(CASE WHEN c.is_approved THEN 1 END) AS approved_comment_count
-FROM blog.post p
-LEFT JOIN blog.comment c ON p.id = c.post_id
-GROUP BY p.id, p.title, p.view_count;
-
-COMMENT ON VIEW blog.post_stats IS 'Post statistics including view and comment counts';
-
--- Grant permissions on new schema
-GRANT ALL PRIVILEGES ON SCHEMA blog TO tutorial_user;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA blog TO tutorial_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA blog TO tutorial_user;
-GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA blog TO tutorial_user;
-
--- Insert sample data
+-- Add sample data
 INSERT INTO blog.author (first_name, last_name, email, bio, birth_date) VALUES
-('Alice', 'Johnson', 'alice@collorg.org', 'Tech writer passionate about Python and databases.', '1985-03-15'),
-('Bob', 'Smith', 'bob@collorg.org', 'Full-stack developer and PostgreSQL enthusiast.', '1990-07-22'),
-('Carol', 'Brown', 'carol@collorg.org', 'Data scientist with a love for clear explanations.', '1988-11-08'),
-('David', 'Wilson', 'david@collorg.org', 'DevOps engineer and automation expert.', '1992-01-30');
+('Alice', 'Johnson', 'alice@example.com', 'Tech writer passionate about databases.', '1985-03-15'),
+('Bob', 'Smith', 'bob@example.com', 'Full-stack developer and PostgreSQL enthusiast.', '1990-07-22'),
+('Carol', 'Brown', 'carol@example.com', 'Data scientist with a love for clear explanations.', '1988-11-08');
 
-INSERT INTO blog.tag (name, description) VALUES
-('python', 'Python programming language'),
-('postgresql', 'PostgreSQL database'),
-('orm', 'Object-Relational Mapping'),
-('tutorial', 'Educational content'),
-('performance', 'Performance optimization'),
-('best-practices', 'Best practices and patterns');
-
-INSERT INTO blog.post (title, slug, content, excerpt, author_id, published_at, is_published, view_count) VALUES
-(
-    'Getting Started with halfORM',
-    'getting-started-halfORM',
-    'halfORM is a PostgreSQL-native ORM that takes a database-first approach...',
-    'Learn the basics of halfORM and why it''s different from other ORMs.',
-    1,
-    NOW() - INTERVAL '7 days',
-    TRUE,
-    245
-),
-(
-    'Advanced PostgreSQL Features',
-    'advanced-postgresql-features',
-    'PostgreSQL offers many advanced features that most ORMs don''t support well...',
-    'Explore PostgreSQL''s advanced features and how to use them with halfORM.',
-    2,
-    NOW() - INTERVAL '3 days',
-    TRUE,
-    189
-),
-(
-    'Database Performance Tips',
-    'database-performance-tips',
-    'Optimizing database performance requires understanding both your queries and your data...',
-    'Practical tips for improving database performance in production applications.',
-    3,
-    NOW() - INTERVAL '1 day',
-    TRUE,
-    156
-),
-(
-    'Working with Relationships',
-    'working-with-relationships',
-    'Foreign keys and relationships are at the heart of relational databases...',
-    'Master foreign key navigation and relationship patterns in halfORM.',
-    1,
-    NULL,
-    FALSE,
-    0
-);
-
--- Link posts with tags
-INSERT INTO blog.post_tag (post_id, tag_id) VALUES
-(1, 3), (1, 4),  -- halfORM post: orm, tutorial
-(2, 2), (2, 5),  -- PostgreSQL post: postgresql, performance  
-(3, 2), (3, 5), (3, 6),  -- Performance post: postgresql, performance, best-practices
-(4, 3), (4, 4);  -- Relationships post: orm, tutorial
+INSERT INTO blog.post (title, content, author_id, published_at, is_published, view_count) VALUES
+('Getting Started with halfORM', 'halfORM is a PostgreSQL-native ORM...', 1, NOW() - INTERVAL '7 days', TRUE, 245),
+('Advanced PostgreSQL Features', 'PostgreSQL offers many advanced features...', 2, NOW() - INTERVAL '3 days', TRUE, 189),
+('Database Performance Tips', 'Optimizing database performance requires...', 3, NOW() - INTERVAL '1 day', TRUE, 156),
+('Working with Relationships', 'Foreign keys and relationships are...', 1, NULL, FALSE, 0);
 
 INSERT INTO blog.comment (content, author_id, post_id, is_approved) VALUES
-('Great introduction! This really helped me understand the differences.', 2, 1, TRUE),
-('Thanks for the clear explanations. Looking forward to more posts!', 3, 1, TRUE),
-('Could you cover transactions in a future post?', 4, 1, TRUE),
-('Excellent deep dive into PostgreSQL features. Very practical!', 1, 2, TRUE),
-('The performance tips section was especially helpful.', 4, 2, TRUE),
-('This saved me hours of debugging. Thank you!', 2, 3, TRUE),
-('Would love to see examples with larger datasets.', 1, 3, FALSE);
+('Great introduction! This really helped me understand.', 2, 1, TRUE),
+('Thanks for the clear explanations.', 3, 1, TRUE),
+('Could you cover transactions in a future post?', 1, 2, TRUE),
+('Excellent deep dive into PostgreSQL features.', 3, 2, TRUE);
+
+-- Create a simple view for statistics
+CREATE VIEW blog.author_stats AS
+SELECT 
+    a.id,
+    a.first_name || ' ' || a.last_name AS full_name,
+    a.email,
+    COUNT(p.id) AS post_count,
+    COUNT(CASE WHEN p.is_published THEN 1 END) AS published_count
+FROM blog.author a
+LEFT JOIN blog.post p ON a.id = p.author_id
+GROUP BY a.id, a.first_name, a.last_name, a.email;
 ```
 
-### Step 2: Run the Setup Scripts
+Create the database:
 
-Execute the scripts to create your tutorial database:
-
-```bash
-# Create the database and user
-psql -U postgres -f setup_tutorial_db.sql
-
-# Connect to the new database and create the schema
-psql -U postgres -d blog_tutorial -f setup_tutorial_schema.sql
-
+```sh
+psql blog_tutorial -U tutorial_user -W -f tutorial_setup.sql
 # Verify the setup
-psql -U tutorial_user -d blog_tutorial -c "\dt blog.*"
+psql blog_tutorial -U tutorial_user -W -c "\dt blog.*"
 ```
 
-Expected output:
-```
-           List of relations
- Schema |   Name   | Type  |     Owner
---------+----------+-------+---------------
- blog   | author   | table | tutorial_user
- blog   | comment  | table | tutorial_user
- blog   | post     | table | tutorial_user
- blog   | post_tag | table | tutorial_user
- blog   | tag      | table | tutorial_user
-```
-
-### Step 3: Configure halfORM Connection
-
-Create a configuration file for the tutorial database:
+### Step 2: Configure halfORM Connection
 
 ```bash
-# Create config directory if it doesn't exist
+# Create config file
 mkdir -p ~/.half_orm
-export HALFORM_CONF_DIR=~/.half_orm
-```
-
-```ini title="~/.half_orm/blog_tutorial"
+cat > ~/.half_orm/blog_tutorial << EOF
 [database]
 name = blog_tutorial
 user = tutorial_user
 password = tutorial_pass
-host = localhost
 port = 5432
+EOF
 ```
 
-### Step 4: Test the Setup
+## Exploring the Database
+
+### Step 3: Explore with CLI
+
+Use the new CLI to explore your database:
 
 ```bash
-# Test the new database connection
-python -m half_orm
+# Inspect database structure
+half_orm inspect blog_tutorial
 ```
 
-You should see something like:
+Expected output:
 ```
-[halfORM] version 0.15.0
-✅ Connected to template1 database (default setup)
+📂 Schema: blog
+  📋 author
+  👁️ author_stats
+  📋 comment
+  📋 post
 
-== Checking connections for files in HALFORM_CONF_DIR=/home/user/.half_orm
-✅ blog_tutorial
+Total: 4 relations
+   📋: 3 tables
+   👁️: 1 view
 ```
 
-Perfect! Now you have a working tutorial database with sample data.
+### Step 4: Detailed Table Inspection
+
+```bash
+# Inspect specific table
+half_orm inspect blog_tutorial blog.author
+```
+
+This shows complete table structure with columns, types, constraints, and foreign keys.
 
 ## Connecting to Your Database
 
-Let's start exploring halfORM by connecting to our new database:
+### Step 5: First Connection
 
-```python title="first_connection.py"
-#!/usr/bin/env python3
-"""
-First connection to the tutorial database
-"""
-
-# Import halfORM
+```python
 from half_orm.model import Model
 
 # Connect to the tutorial database
@@ -327,460 +168,215 @@ print("🎉 Connected to blog_tutorial database!")
 print(blog)
 ```
 
-### Understanding the Model Class
-
-The `Model` class is your entry point to halfORM. It represents a connection to a specific PostgreSQL database and provides methods to:
-
-- **Get relation classes** for tables and views
-- **Execute raw SQL** when needed
-- **Manage transactions** 
-- **Access database metadata**
-
-!!! tip "Model Details"
-    For complete information about the Model class and its responsibilities, see [Model Architecture in Fundamentals](../fundamentals.md#model-class).
-
-## Exploring the Database Schema
-
-Let's explore what's in our database using halfORM:
-
-```python title="explore_database.py"
-#!/usr/bin/env python3
-"""
-Explore the tutorial database structure
-"""
-
-from half_orm.model import Model
-
-blog = Model('blog_tutorial')
-
-# halfORM automatically discovers all relations (tables and views)
-print(blog)
-```
-
 Expected output:
 ```
 📋 Available relations for blog_tutorial:
-r "blog"."author"           → Authors who write blog posts and comments
-r "blog"."comment"          → Comments left by readers on blog posts
-r "blog"."post"             → Blog posts with content and metadata
-r "blog"."post_tag"         → Many-to-many relationship linking posts with tags
-r "blog"."tag"              → Tags for categorizing and organizing blog posts
-v "blog"."post_stats"       → Post statistics including view and comment counts
-v "blog"."published_posts"  → Published posts with author information for public display
-
-📋 Relation Types:
-  r: Table
-  p: Partioned table
-  v: View
-  m: Materialized view
-  f: Foreign data
+r "blog"."author"
+r "blog"."comment"
+r "blog"."post"
+v "blog"."author_stats"
 ```
 
-## Creating Your First Relation Class
+## Creating Your First Relation Classes
 
-In halfORM, you work with **relation classes** that represent tables or views. Let's create our first one:
+### Step 6: Basic Relation Classes
 
-```python title="first_relation_class.py"
-#!/usr/bin/env python3
-"""
-Working with relation classes
-"""
-
+```python
 from half_orm.model import Model
 
 blog = Model('blog_tutorial')
 
-# Create a relation class for the author table
+# Create relation classes
 Author = blog.get_relation_class('blog.author')
+Post = blog.get_relation_class('blog.post')
+Comment = blog.get_relation_class('blog.comment')
+AuthorStats = blog.get_relation_class('blog.author_stats')
 
-print("✅ Created Author relation class")
-print(f"📝 Class: {Author}")
-print(f"🎯 Represents: blog.author table")
-
-# Explore the table structure
-print("\n🔍 Table structure:")
+# Explore table structure
+print("📋 Author table structure:")
 print(Author())
 ```
 
-When you run this, you'll see detailed information about the `blog.author` table:
-
-```
-DATABASE: blog_tutorial
-SCHEMA: blog
-TABLE: author
-DESCRIPTION:
-Authors who write blog posts and comments
-FIELDS:
-- id:         (int4) NOT NULL
-- first_name: (varchar) NOT NULL
-- last_name:  (varchar) NOT NULL
-- email:      (varchar) NOT NULL
-- bio:        (text)
-- birth_date: (date)
-- is_active:  (bool)
-- created_at: (timestamp)
-- updated_at: (timestamp)
-PRIMARY KEY (id)
-UNIQUE CONSTRAINT (email)
-FOREIGN KEYS:
-- *reverse*fkey_blog_tutorial_blog_comment_author_id: ("id")
- ↳ "blog_tutorial":"blog"."comment"(author_id)
-- *reverse*fkey_blog_tutorial_blog_post_author_id: ("id")
- ↳ "blog_tutorial":"blog"."post"(author_id)
-To use the foreign keys as direct attributes of the class, copy/paste the Fkeys below into
-your code as a class attribute and replace the empty string key(s) with the alias(es) you
-want to use. The aliases must be unique and different from any of the column names. Empty
-string keys are ignored.
-Fkeys = {
-    '': '_reverse_fkey_blog_tutorial_blog_comment_author_id',
-    '': '_reverse_fkey_blog_tutorial_blog_post_author_id',
-}
-```
-
-!!! tip "Understanding the Output"
-    halfORM shows you:
-    
-    - **Database, schema, and table information** with PostgreSQL comments
-    - **Field details** with types and constraints (NOT NULL, etc.)
-    - **Primary keys and unique constraints** clearly marked
-    - **Foreign key relationships** including reverse foreign keys (incoming references)
-    - **Ready-to-use Fkeys template** that you can copy/paste into your custom classes
-    - **Clear instructions** on how to use foreign keys as class attributes
-
-!!! important "Schema Names Are Required"
-    halfORM always requires the full `schema.table` format in `get_relation_class()`. For complete details on this requirement and the reasons behind it, see [Schema Requirements in Fundamentals](../fundamentals.md#schema-requirements).
+This displays detailed information about columns, constraints, and foreign keys.
 
 ## Your First CRUD Operations
 
-Now let's perform basic Create, Read, Update, Delete operations:
-
 ### Important: NULL vs None
 
-halfORM makes a crucial distinction between `None` (Python) and `NULL` (SQL):
-
 ```python
-from half_orm.null import NULL  # Required import
+from half_orm.null import NULL
 
 # ❌ COMMON TRAP
-Author(bio=None)   # Has NO effect - ignores bio field entirely
+Author(bio=None)   # Ignores bio field entirely
 Author(bio=NULL)   # ✅ Filters WHERE bio IS NULL
 ```
 
-**Simple rule:**
-- `field=None` → ignores the field (no filter)  
-- `field=NULL` → filters NULL values in database
+### Step 7: Reading Data
 
-!!! warning "Frequent mistake"
-    `Author(bio=None)` returns ALL authors, not those without bio!
-    Use `Author(bio=NULL)` to filter NULL values.
+```python
+# Read all authors
+print("👥 All authors:")
+for author in Author().ho_select('first_name', 'last_name', 'email'):
+    print(f"  📝 {author['first_name']} {author['last_name']} - {author['email']}")
 
-See [halfORM Fundamentals](fundamentals.md#null-vs-none-a-crucial-distinction) for complete details.
-
-### Reading Data (R)
-
-```python title="read_operations.py"
-#!/usr/bin/env python3
-"""
-Reading data with halfORM
-"""
-
-from half_orm.model import Model
-
-blog = Model('blog_tutorial')
-Author = blog.get_relation_class('blog.author')
-
-print("📖 Reading data from the database")
-print("=" * 40)
-
-# Method 1: Simple iteration - objects are iterators!
-print("\n👥 All authors (using iteration):")
-for author in Author():
-    print(f"  📝 {author['first_name']} {author['last_name']} ({author['email']})")
-
-# Method 2: Explicit ho_select() for all columns (equivalent to above)
-print("\n👥 All authors (using ho_select):")
-all_authors = Author().ho_select()
-for author in all_authors:
-    print(f"  📝 {author['first_name']} {author['last_name']} ({author['email']})")
-
-# Method 3: ho_select() with specific columns (this is where it's really needed)
-print("\n📧 Just names and emails (ho_select with column selection):")
-author_info = Author().ho_select('first_name', 'last_name', 'email')
-for author in author_info:
-    print(f"  👤 {author['first_name']} {author['last_name']} - {author['email']}")
-
-# Method 4: Count records
+# Count records
 author_count = Author().ho_count()
 print(f"\n🔢 Total authors: {author_count}")
 
-# Method 5: Get one specific author
-alice = Author(email='alice@collorg.org').ho_get()
-print(f"\n🎯 Found Alice: {alice.first_name} {alice.last_name}")
+# Get specific author
+alice = Author(email='alice@example.com').ho_get()
+print(f"\n🎯 Found: {alice.first_name} {alice.last_name}")
+
+# Work with the view
+print("\n📊 Author statistics:")
+for stats in AuthorStats().ho_select('full_name', 'post_count', 'published_count'):
+    print(f"  📈 {stats['full_name']}: {stats['post_count']} posts ({stats['published_count']} published)")
 ```
 
-!!! info "Method Reference"
-    For complete details on all available methods and their usage patterns, see [Method Naming Convention in Fundamentals](../fundamentals.md#method-naming-convention).
+### Step 8: Creating Data
 
-!!! tip "Query Building vs Execution"
-    Notice the pattern above:
-    
-    ```python
-    # Building phase (lazy - no SQL)
-    query = Author(email=('ilike', '%@gmail.com'))  # Just a filter
-    ordered = query.ho_order_by('last_name')        # Add ordering
-    
-    # Execution phase (eager - SQL runs)
-    for author in ordered.ho_select('name', 'email'):  # SQL executes NOW
-        print(author['name'])
-    ```
-    
-    **Key insight**: `.ho_select()` is a **generator** that executes SQL immediately. You cannot chain more operations after it!
-
-!!! note "Deep Dive"
-    This is a fundamental halfORM concept. For complete details and more examples, see [Query Execution Model in Fundamentals](../fundamentals.md#method-categories-builders-vs-executors).
-
-### Creating Data (C)
-
-```python title="create_operations.py"
-#!/usr/bin/env python3
-"""
-Creating new data with halfORM
-"""
-
-from half_orm.model import Model
-
-blog = Model('blog_tutorial')
-Author = blog.get_relation_class('blog.author')
-
-print("➕ Creating new data")
-print("=" * 30)
-
-# Create a new author
+```python
+# Create new author
 new_author = Author(
     first_name='Emma',
     last_name='Wilson',
-    email='emma@collorg.org',
+    email='emma@example.com',
     bio='Frontend developer passionate about user experience.',
     birth_date='1991-05-12'
 )
 
-# Check if author already exists
-if Author(email=new_author.email).ho_is_empty():
-    # Insert the new author
+# Check if author exists
+if new_author.ho_is_empty():
     result = new_author.ho_insert()
-    print(f"✅ Created new author: {result}")
-    print(f"📝 New author ID: {result['id']}")
+    print(f"✅ Created: {result}")
 else:
     print("ℹ️  Author already exists")
-
-# Verify the creation
-emma = Author(email='emma@collorg.org').ho_get()
-print(f"🎉 Verified: {emma.first_name} {emma.last_name} is in the database")
 ```
 
-### Updating Data (U)
+### Step 9: Updating Data
 
-```python title="update_operations.py"
-#!/usr/bin/env python3
-"""
-Updating data with halfORM
-"""
-
-from half_orm.model import Model
-
-blog = Model('blog_tutorial')
-Author = blog.get_relation_class('blog.author')
-
-print("📝 Updating data")
-print("=" * 25)
-
-# Find Emma and update her bio
-emma = Author(email='emma@collorg.org')
-
+```python
+# Update author bio
+emma = Author(email='emma@example.com')
 if not emma.ho_is_empty():
-    # Update the bio
-    result = emma.ho_update(
-        bio='Frontend developer and UX designer passionate about accessible web applications.'
-    )
-    print(f"✅ Updated Emma's bio")
-    
-    # Verify the update
-    updated_emma = Author(email='emma@collorg.org').ho_get()
-    print(f"📝 New bio: {updated_emma.bio}")
-else:
-    print("❌ Emma not found in database")
+    emma.ho_update(bio='Frontend developer and UX designer.')
+    print("✅ Updated Emma's bio")
 ```
 
-### Deleting Data (D)
+### Step 10: Deleting Data
 
-```python title="delete_operations.py"
-#!/usr/bin/env python3
-"""
-Deleting data with halfORM
-"""
-
-from half_orm.model import Model
-
-blog = Model('blog_tutorial')
-Author = blog.get_relation_class('blog.author')
-
-print("🗑️  Deleting data")
-print("=" * 25)
-
-# Find Emma
-emma = Author(email='emma@collorg.org')
-
-if not emma.ho_is_empty():
-    # Delete Emma
-    emma.ho_delete()
-    print("✅ Deleted Emma from database")
-    
-    # Verify deletion
-    check_emma = Author(email='emma@collorg.org')
-    if check_emma.ho_is_empty():
-        print("✅ Confirmed: Emma is no longer in database")
-else:
-    print("ℹ️  Emma not found in database")
+```python
+# Delete author
+Author(email='emma@example.com').ho_delete()
+print("✅ Deleted Emma")
 ```
 
 ## Basic Filtering and Querying
 
-!!! important "Core Concept: Object-as-Filter"
-    halfORM uses a unique **object-as-filter** pattern where the object instance represents a subset of data. For complete details on this fundamental concept, constraint syntax, and all available operators, see [Object-as-Filter Pattern in Fundamentals](../fundamentals.md#object-as-filter-pattern).
+### Step 11: Filtering Patterns
 
-Here are some practical examples of this pattern in action:
+```python
+# Exact match
+alice = Author(email='alice@example.com').ho_get()
 
-```python title="filtering_examples.py"
-#!/usr/bin/env python3
-"""
-Filtering and querying examples
-"""
+# Pattern matching
+tech_authors = Author(bio=('ilike', '%tech%'))
 
-from half_orm.model import Model
+# Date comparison
+recent_posts = Post(published_at=('>', '2024-01-01'))
 
-blog = Model('blog_tutorial')
-Author = blog.get_relation_class('blog.author')
-Post = blog.get_relation_class('blog.post')
+# Boolean filter
+published_posts = Post(is_published=True)
 
-print("🔍 Filtering and querying")
-print("=" * 35)
-
-# Example 1: Exact match (single value)
-print("\n📧 Author with specific email:")
-alice = Author(email='alice@collorg.org').ho_get()
-print(f"  📝 {alice.first_name} {alice.last_name}")
-
-# Example 2: Pattern matching with ILIKE
-print("\n📧 Authors with collorg.org addresses:")
-collorg_authors = Author(email=('ilike', '%@collorg.org'))
-for author in collorg_authors:
-    print(f"  📮 {author['first_name']} {author['last_name']}")
-
-# Example 3: Boolean filter (exact match)
-print("\n✅ Active authors:")
-active_authors = Author(is_active=True).ho_select('first_name', 'last_name')
-for author in active_authors:
-    print(f"  👤 {author['first_name']} {author['last_name']}")
-
-# Example 4: Date comparison (tuple form)
-print("\n📅 Authors born after 1988:")
-young_authors = Author(birth_date=('>', '1988-01-01')).ho_select('first_name', 'last_name', 'birth_date')
-for author in young_authors:
-    print(f"  🎂 {author['first_name']} {author['last_name']} ({author['birth_date']})")
-
-# Example 5: Published posts (exact match)
-print("\n📰 Published posts:")
-published_posts = Post(is_published=True).ho_select('title', 'view_count')
-for post in published_posts:
-    print(f"  📄 {post['title']} ({post['view_count']} views)")
-
-# Example 6: Ordering and limiting
-print("\n🔥 Most viewed posts:")
+# Ordering and limiting
 popular_posts = (Post(is_published=True)
-    .ho_order_by('view_count desc')
-    .ho_limit(3)
-    .ho_select('title', 'view_count'))
+                .ho_order_by('view_count DESC')
+                .ho_limit(3))
 
-for post in popular_posts:
-    print(f"  🌟 {post['title']} - {post['view_count']} views")
+for post in popular_posts.ho_select('title', 'view_count'):
+    print(f"🌟 {post['title']} - {post['view_count']} views")
 ```
 
-!!! tip "More Operators Available"
-    This example shows basic patterns. For the complete list of operators including regular expressions, list operations, and range queries, see [Common Operators in Fundamentals](../fundamentals.md#common-operators).
+### Step 12: Working with Relationships
+
+```python
+from half_orm.model import register
+
+# Define custom classes with foreign key aliases
+@register
+class Author(blog.get_relation_class('blog.author')):
+    Fkeys = {
+        'posts': '_reverse_fkey_blog_tutorial_blog_post_author_id',
+        'comments': '_reverse_fkey_blog_tutorial_blog_comment_author_id'
+    }
+
+@register
+class Post(blog.get_relation_class('blog.post')):
+    Fkeys = {
+        'author': 'post_author_id_fkey',
+        'comments': '_reverse_fkey_blog_tutorial_blog_comment_post_id'
+    }
+
+# Navigate relationships
+alice = Author(email='alice@example.com').ho_get()
+alice_posts = alice.posts()
+print(f"📚 Alice has {alice_posts.ho_count()} posts")
+
+# Get author from post
+post = Post(id=1)
+for author in post.author():
+    print(f"✍️ Post author: {author['first_name']} {author['last_name']}")
+```
 
 ## Understanding halfORM's Core Concepts
 
-### Declarative Programming Model
-
-halfORM follows a **declarative programming model** where you build query intentions first, then execute them when needed:
+### Builder vs Executor Pattern
 
 ```python
-# 🎯 Declaration phase - no SQL executed yet
-authors = Author(is_active=True)
-gmail_authors = Author(email=('ilike', '%@gmail.com'))
-ordered_authors = authors.ho_order_by('last_name')
+# ✅ Build query first (no SQL executed)
+query = (Post(is_published=True)
+         .ho_order_by('published_at DESC')
+         .ho_limit(5))
 
-# ⚡ Execution phase - SQL runs now
-for author in ordered_authors:  # Query executes here
-    print(author['first_name'])
+# ✅ Then execute (SQL runs now)
+for post in query.ho_select('title', 'published_at'):
+    print(f"📄 {post['title']}")
+
+# ❌ Cannot chain after execution
+# results = Post().ho_select('title')  # Returns generator
+# results.ho_order_by('title')  # ERROR!
 ```
 
-!!! info "Learn More"
-    This is a fundamental halfORM concept. For complete details on when queries execute and how to optimize the declarative flow, see [Query Execution Model in Fundamentals](../fundamentals.md#query-execution-model).
+### SQL Transparency
 
-### SQL Transparency - See What's Generated
-
-One of halfORM's key features is SQL transparency. You can see exactly what SQL query is executed:
-
-```python title="sql_transparency.py"
-#!/usr/bin/env python3
-"""
-Seeing the generated SQL
-"""
-
-from half_orm.model import Model
-
-blog = Model('blog_tutorial')
-Author = blog.get_relation_class('blog.author')
-
-print("🔍 SQL Transparency")
-print("=" * 30)
-
-# Create a query
+```python
+# See the generated SQL
 query = Author(is_active=True).ho_order_by('last_name')
+query.ho_mogrify()  # Shows SQL in console
 
-# See the SQL without executing
-print("\n📝 Generated SQL:")
-query.ho_mogrify()
-
-# Now execute and see results
-print("\n📊 Results:")
-results = query.ho_select('first_name', 'last_name')
-for result in results:
-    print(f"  👤 {result['first_name']} {result['last_name']}")
+# Then execute
+for author in query.ho_select('first_name', 'last_name'):
+    print(f"👤 {author['first_name']} {author['last_name']}")
 ```
-
-This will show you the exact SQL being generated, helping you understand what halfORM is doing and optimize your queries.
-
-!!! info "SQL Transparency Details"
-    For more information on halfORM's commitment to SQL transparency and how it benefits development, see [SQL Transparency in Fundamentals](../fundamentals.md#sql-transparency).
 
 ## What's Next?
 
 Congratulations! You've successfully:
 
-- ✅ Set up a complete tutorial database with realistic data
+- ✅ Set up a complete tutorial database with sample data
 - ✅ Connected to PostgreSQL using halfORM
-- ✅ Created your first relation classes
+- ✅ Explored database structure with the new CLI
+- ✅ Created relation classes for tables and views
 - ✅ Performed all basic CRUD operations
-- ✅ Used halfORM's filtering and querying features
-- ✅ Understood key halfORM concepts and patterns
+- ✅ Used filtering and querying features
+- ✅ Navigated relationships with custom classes
+- ✅ Understood key halfORM concepts
 
 In the next chapter, [Models & Relations](models-relations.md), you'll learn:
 
-- How to create custom relation classes with business logic
+- How to create sophisticated custom relation classes
 - Using the `@register` decorator for enhanced functionality
-- Working with more complex data types and constraints
+- Adding business logic to your data classes
 - Best practices for organizing your halfORM code
 
 ---
@@ -791,11 +387,8 @@ In the next chapter, [Models & Relations](models-relations.md), you'll learn:
     Try modifying the examples above:
     
     - Create new authors and posts
-    - Experiment with different filters (try the operators from [Fundamentals](../fundamentals.md#common-operators))
-    - Try combining multiple filter conditions
-    - Explore the other tables (comment, tag, post_tag)
+    - Experiment with different filters
+    - Try combining multiple conditions
+    - Explore the comment table
     
     The best way to learn halfORM is by experimenting with real data!
-
-!!! note "Need More Detail?"
-    If any concepts in this chapter need clarification, the **[Fundamentals](../fundamentals.md)** page provides comprehensive coverage of all core halfORM concepts with additional examples and details.
