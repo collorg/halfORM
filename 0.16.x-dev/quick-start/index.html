@@ -1819,7 +1819,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>half_orm<span class="w"> </span>version
 </code></pre></div>
 <p>Expected output:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>halfORM Core: 0.16.0-rc2
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>halfORM Core: 0.16.0
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>No extensions installed
 </code></pre></div></p>
@@ -1870,6 +1870,17 @@
 <a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="w">    </span><span class="p">(</span><span class="s1">&#39;Welcome to halfORM&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;This is our first post!&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span>
 <a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="w">    </span><span class="p">(</span><span class="s1">&#39;Database-First Development&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Schema-first approach...&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">true</span><span class="p">),</span>
 <a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="w">    </span><span class="p">(</span><span class="s1">&#39;Draft Post&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Work in progress.&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="k">false</span><span class="p">);</span>
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a><span class="c1">-- Create a simple view</span>
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">blog</span><span class="p">.</span><span class="n">author_stats</span><span class="w"> </span><span class="k">AS</span>
+<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="k">SELECT</span><span class="w"> </span>
+<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a><span class="w">    </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a><span class="w">    </span><span class="n">a</span><span class="p">.</span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a><span class="w">    </span><span class="n">a</span><span class="p">.</span><span class="n">email</span><span class="p">,</span>
+<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a><span class="w">    </span><span class="k">COUNT</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">post_count</span>
+<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a><span class="k">FROM</span><span class="w"> </span><span class="n">blog</span><span class="p">.</span><span class="n">author</span><span class="w"> </span><span class="n">a</span>
+<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">blog</span><span class="p">.</span><span class="n">post</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">author_id</span>
+<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">email</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="step-3-explore-your-database">Step 3: Explore Your Database<a class="headerlink" href="#step-3-explore-your-database" title="Permanent link">&para;</a></h2>
 <p>Use the new unified CLI to explore your database:</p>
@@ -1882,8 +1893,13 @@
 </code></pre></div>
 <p>Expected output:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>📂 Schema: blog
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  📋 author         → 2 rows
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  📋 post           → 3 rows
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  📋 author
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  👁️ author_stats
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  📋 post
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>Total: 3 relations
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>   📋: 2 tables
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>   👁️: 1 view
 </code></pre></div></p>
 <h2 id="step-4-configuration-optional">Step 4: Configuration (Optional)<a class="headerlink" href="#step-4-configuration-optional" title="Permanent link">&para;</a></h2>
 <p>For local development with peer authentication, no configuration is needed. For specific connections:</p>
@@ -1913,6 +1929,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>📋 Available relations:
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>r &quot;blog&quot;.&quot;author&quot;
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>r &quot;blog&quot;.&quot;post&quot;
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>v &quot;blog&quot;.&quot;author_stats&quot;
 </code></pre></div></p>
 <h2 id="step-6-create-your-first-classes">Step 6: Create Your First Classes<a class="headerlink" href="#step-6-create-your-first-classes" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">half_orm.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
@@ -1922,9 +1939,10 @@
 <a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1"># Create relation classes</span>
 <a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="n">Author</span> <span class="o">=</span> <span class="n">blog</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;blog.author&#39;</span><span class="p">)</span>
 <a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="n">Post</span> <span class="o">=</span> <span class="n">blog</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;blog.post&#39;</span><span class="p">)</span>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="c1"># Explore structure</span>
-<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="nb">print</span><span class="p">(</span><span class="n">Author</span><span class="p">())</span>  <span class="c1"># Shows complete table info</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="n">AuthorStats</span> <span class="o">=</span> <span class="n">blog</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;blog.author_stats&#39;</span><span class="p">)</span>  <span class="c1"># View</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="c1"># Explore structure</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="nb">print</span><span class="p">(</span><span class="n">Author</span><span class="p">())</span>  <span class="c1"># Shows complete table info</span>
 </code></pre></div>
 <p>This displays columns, types, constraints, and foreign keys.</p>
 <h2 id="step-7-basic-operations">Step 7: Basic Operations<a class="headerlink" href="#step-7-basic-operations" title="Permanent link">&para;</a></h2>
@@ -1997,6 +2015,10 @@
 <a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>
 <a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">ho_select</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;published_at&#39;</span><span class="p">):</span>
 <a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">post</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">post</span><span class="p">[</span><span class="s1">&#39;published_at&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>
+<a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="c1"># Working with views</span>
+<a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a><span class="k">for</span> <span class="n">stats</span> <span class="ow">in</span> <span class="n">AuthorStats</span><span class="p">()</span><span class="o">.</span><span class="n">ho_select</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;post_count&#39;</span><span class="p">):</span>
+<a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;post_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> posts&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="key-concepts">Key Concepts<a class="headerlink" href="#key-concepts" title="Permanent link">&para;</a></h2>
 <h3 id="null-vs-none">NULL vs None<a class="headerlink" href="#null-vs-none" title="Permanent link">&para;</a></h3>
