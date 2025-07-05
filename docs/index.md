@@ -1,7 +1,7 @@
 # halfORM Documentation
 
 !!! info "Documentation Version"
-    This documentation covers halfORM **0.15.x** (latest stable release).
+    This documentation covers halfORM **0.16.x** (latest stable release).
     For older versions, see the [GitHub releases](https://github.com/collorg/halfORM/releases).
 
 [![PyPI version](https://img.shields.io/pypi/v/half_orm)](https://pypi.org/project/half-orm/)
@@ -10,9 +10,9 @@
 [![License](https://img.shields.io/pypi/l/half_orm?color=green)](https://pypi.org/project/half-orm/)
 [![Tests](https://github.com/collorg/halfORM/actions/workflows/python-package.yml/badge.svg)](https://github.com/collorg/halfORM/actions/workflows/python-package.yml)
 
-**The PostgreSQL-native ORM that stays out of your way**
+**The PostgreSQL-native ORM with unified tooling**
 
-> halfORM lets you keep your database schema in SQL where it belongs, while giving you the comfort of Python for data manipulation. No migrations, no schema conflicts, no ORM fighting — just PostgreSQL and Python working together.
+> halfORM lets you keep your database schema in SQL where it belongs, while giving you the comfort of Python for data manipulation. With the new unified CLI, manage everything from database inspection to full-stack development through a single command.
 
 ## Overview
 
@@ -24,6 +24,61 @@ halfORM is a lightweight, database-first Object-Relational Mapper designed speci
 - **🔍 SQL Transparency**: See exactly what queries are generated
 - **⚡ Zero Setup**: Connect to existing databases instantly
 - **🚀 PostgreSQL Native**: Leverage advanced PostgreSQL features
+- **🛠️ Unified CLI**: One command for all halfORM functionality
+
+## What's New in 0.16
+
+### 🎉 **Unified Command-Line Interface**
+
+All halfORM functionality is now accessible through a single `half_orm` command:
+
+```bash
+# Core database inspection
+half_orm inspect my_database
+half_orm inspect my_database public.users
+
+# Development tools (with half-orm-dev extension)
+half_orm dev new my_project
+half_orm dev generate model
+
+# API generation (with half-orm-litestar-api extension)
+half_orm litestar generate
+half_orm litestar serve
+
+# List all available extensions
+half_orm --list-extensions
+```
+
+### 🔌 **Extensible Architecture**
+
+Extensions are automatically discovered and integrated:
+
+```bash
+# Install extensions
+pip install half-orm-dev half-orm-litestar-api
+
+# All commands become available immediately
+half_orm --help  # Shows all available commands
+```
+
+### 🔍 **Enhanced Database Inspection**
+
+```bash
+# List all database relations
+half_orm inspect blog_db
+#📂 Schema: public
+#  📋 posts
+#  📋 authors
+#  📋 comments
+#
+#📂 Schema: analytics  
+#  📋 user_stats
+#  📋 daily_reports
+
+# Detailed relation inspection
+half_orm inspect blog_db public.posts
+# Shows table structure, constraints, and relationships
+```
 
 ## Key Features
 
@@ -101,7 +156,14 @@ Get up and running in under 5 minutes:
    pip install half_orm
    ```
 
-2. **Configure connection**
+2. **Test your installation**
+   ```bash
+   half_orm version
+   # halfORM Core: 0.16.0
+   # No extensions installed
+   ```
+
+3. **Configure connection**
    ```bash
    mkdir ~/.half_orm
    echo "[database]
@@ -111,7 +173,12 @@ Get up and running in under 5 minutes:
    host = localhost" > ~/.half_orm/my_database
    ```
 
-3. **Start coding**
+4. **Explore your database**
+   ```bash
+   half_orm inspect my_database
+   ```
+
+5. **Start coding**
    ```python
    from half_orm.model import Model
    
@@ -128,6 +195,32 @@ Get up and running in under 5 minutes:
    ```
 
 **[👉 Full Quick Start Guide →](quick-start.md)**
+
+## halfORM Ecosystem
+
+### 🛠️ **Development Tools**
+```bash
+pip install half-orm-dev
+half_orm dev new my_project     # Create new project
+half_orm dev generate model     # Generate model classes
+half_orm dev serve              # Development server
+```
+
+### 🌐 **API Generation**
+```bash
+pip install half-orm-litestar-api
+half_orm litestar generate      # Generate REST API
+half_orm litestar serve         # Start API server
+```
+
+### 📊 **Admin Interface**
+```bash
+pip install half-orm-admin
+half_orm admin setup            # Setup admin interface
+half_orm admin serve            # Start admin server
+```
+
+**[🔌 Browse All Extensions →](ecosystem/index.md)**
 
 ## Documentation Sections
 
@@ -189,6 +282,14 @@ Get up and running in under 5 minutes:
 
     **[Deep Dive →](architecture/index.md)**
 
+-   🔌 **Ecosystem**
+
+    ---
+
+    Extensions, development tools, and the broader halfORM ecosystem for full-stack development.
+
+    **[Explore Ecosystem →](ecosystem/index.md)**
+
 </div>
 
 ## Why Choose halfORM?
@@ -198,8 +299,9 @@ Get up and running in under 5 minutes:
 - **PostgreSQL-centric applications** - Leverage PostgreSQL's full power
 - **Existing database projects** - Work with established schemas
 - **SQL-comfortable teams** - Keep complex logic in the database
-- **Rapid prototyping** - Get started instantly
+- **Rapid prototyping** - Get started instantly with unified tooling
 - **Microservices** - Lightweight with no framework baggage
+- **Full-stack development** - CLI extensions for complete workflows
 
 ### 🤔 Consider Alternatives If
 
@@ -214,11 +316,30 @@ Get up and running in under 5 minutes:
 - **[Discussions](https://github.com/collorg/halfORM/discussions)** - Community Q&A and ideas
 - **[PyPI Package](https://pypi.org/project/half-orm/)** - Official releases
 
-## What's New
+## Version History
+
+### Version 0.16.0 🎉
+
+!!! success "Latest Release - New CLI Architecture"
+    Major architectural update with unified command-line interface and extension system.
+
+- **🛠️ Unified CLI**: All halfORM functionality through `half_orm` command
+- **🔌 Extension System**: Automatic discovery and integration of extensions
+- **🔍 Enhanced Inspection**: Improved database exploration with `half_orm inspect`
+- **📦 Modular Architecture**: Core functionality separated from development tools
+- **🎨 Better Developer Experience**: Consistent command patterns across all extensions
+
+```bash
+# New unified interface
+half_orm inspect my_database
+half_orm dev new my_project        # Requires half-orm-dev
+half_orm litestar generate         # Requires half-orm-litestar-api
+half_orm --list-extensions         # See all available tools
+```
 
 ### Version 0.15.0 🎉
 
-!!! success "Latest Release - June 2025"
+!!! info "Previous Release - Custom Relation Classes"
     Major update with new custom relation classes and breaking changes.
 
 - **🎨 New `@register` decorator** for custom relation classes with business logic
@@ -226,35 +347,21 @@ Get up and running in under 5 minutes:
 - **📚 Complete documentation rewrite** with improved structure
 - **⚠️ Breaking change**: HOP packager moved to separate `halfORM_dev` package
 
-```python
-# New in 0.15.0: Custom relation classes
-@register
-class Author(blog.get_relation_class('blog.author')):
-    Fkeys = {'posts_rfk': '_reverse_fkey_blog_post_author_id'}
-    
-    @singleton
-    def create_post(self, title, content):
-        return self.posts_rfk(title=title, content=content).ho_insert()
+### Migration from 0.15.x
 
-# Foreign keys now return your custom classes!
-post = Post(id=42)
-author = post.author_fk()  # Returns Author instance
-author.create_post("Title", "Content")  # Custom method available
-```
+!!! tip "Easy Migration"
+    halfORM 0.16 is backward compatible with 0.15.x code. Only CLI usage changes:
 
-### Version 0.15.1 🎉
-#### 🔧 Developer Experience
-- **New diagnostic command**: `python -m half_orm` for instant installation verification
-- **Improved peer authentication**: Better error messages and timeout handling
-- **Streamlined tutorial**: Simplified installation process with built-in testing
-
-
-### Migration from 0.14.x
-
-!!! warning "HOP Users - Action Required"
-    If you were using the `hop` command, install the new package:
     ```bash
-    pip install half_orm_dev
+    # Old approach (still works)
+    python -m half_orm inspect my_database
+    
+    # New unified approach
+    half_orm inspect my_database
+    
+    # Development tools now require separate package
+    pip install half-orm-dev
+    half_orm dev new my_project  # Replaces old 'hop' command
     ```
 
 ---
