@@ -1,3 +1,20 @@
+# 0.16.0-rc (2025-07-05)
+
+* docs: upgrade docs/index.md to 0.16 release. (HEAD -> main) (0e6230d)
+* fix: force dev as default version for mike deployment (tag: v0.16.0-rc1) (fb7b8a5)
+* fix: utils.warning test. (4d3acfc)
+* fix: correct mike deployment command for dev version (0bf32c9)
+* feat: implement multi-version documentation system (f40d2b1)
+* WIP: Add unified CLI system and ecosystem foundation (ee12fd3)
+* docs: Add entry for Instant API. (cli) (9576d52)
+* docs: Add Instant Rest API Example. (af3cbf9)
+* docs: enhance GitLab example with loose foreign keys pattern analysis (59ac65e)
+* examples: add gitlab examples. (6d6fa98)
+* docs: add Method Categories: Builders vs Executors section. (bfd9ea2)
+* docs: add Database Exploration with GitLab example. (5ffe712)
+* tests: add tests for __main__.py (5c188ab)
+* docs: remove between (not implemented) from the doc. (0b4c1a1)
+
 # 0.15.1 (2025-07-01)
 
 * Add CLI args for database/relation inspection in __main__.py (950aebf)
