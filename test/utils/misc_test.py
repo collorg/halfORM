@@ -49,7 +49,7 @@ class Test(TestCase):
         f = io.StringIO()
         with contextlib.redirect_stderr(f):
             utils.warning('coucou')
-            self.assertEqual(f.getvalue(), '\x1b[1mHOP WARNING\x1b[0m: coucou')
+            self.assertEqual(f.getvalue(), '\x1b[1mhalf-orm WARNING\x1b[0m: coucou')
 
     def test_error_exit_code(self):
         with self.assertRaises(SystemExit) as cm:
