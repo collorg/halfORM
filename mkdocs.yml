@@ -37,6 +37,7 @@ theme:
     - content.code.annotate
     - content.code.copy
     - content.tabs.link
+    - navigation.footer
   icon:
     repo: fontawesome/brands/github
 
@@ -95,6 +96,7 @@ markdown_extensions:
 extra:
   version:
     provider: mike
+    default: latest
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/collorg/halfORM
@@ -113,45 +115,44 @@ nav:
     - Queries: tutorial/queries.md
     - Foreign Keys: tutorial/foreign-keys.md
     - Transactions: tutorial/transactions.md
-  - Guides:
-    - guides/index.md
-    - Configuration: guides/configuration.md
-    - Migration from other ORMs: guides/migration.md
-    - Performance Optimization: guides/performance.md
-    - Error Handling: guides/error-handling.md
-    - Testing: guides/testing.md
-  - API Reference:
-    - api/index.md
-    - Model: api/model.md
-    - Relation: api/relation.md
-    - Field: api/field.md
-    - FKey: api/fkey.md
-    - Transaction: api/transaction.md
-    - Errors: api/errors.md
-  - Architecture:
-    - architecture/index.md
-    - Overview: architecture/overview.md
-    - PostgreSQL Metadata: architecture/metadata.md
-    - Factory Pattern: architecture/factory.md
-    - Query Processing: architecture/query-processing.md
+  # - Guides:
+  #   - guides/index.md
+  #   - Configuration: guides/configuration.md
+  #   - Migration from other ORMs: guides/migration.md
+  #   - Performance Optimization: guides/performance.md
+  #   - Error Handling: guides/error-handling.md
+  #   - Testing: guides/testing.md
+  # - API Reference:
+  #   - api/index.md
+  #   - Model: api/model.md
+  #   - Relation: api/relation.md
+  #   - Field: api/field.md
+  #   - FKey: api/fkey.md
+  #   - Transaction: api/transaction.md
+  #   - Errors: api/errors.md
+  # - Architecture:
+  #   - architecture/index.md
+  #   - Overview: architecture/overview.md
+  #   - PostgreSQL Metadata: architecture/metadata.md
+  #   - Factory Pattern: architecture/factory.md
+  #   - Query Processing: architecture/query-processing.md
   - Examples:
     - examples/index.md
     - Database Exploration with GitLab: examples/gitlab.md
     - Instant REST API with halfORM: examples/instant-rest-api/instant-rest-api.md
-  - Ecosystem:
-    - ecosystem/index.md
-    - Extensions:
-      - ecosystem/extensions/index.md
-      - half-orm-dev: ecosystem/half-orm-dev.md     # ← Nouvelle entrée
-      - Litestar API: ecosystem/extensions/litestar-api.md
-      - Admin Interface: ecosystem/extensions/admin.md
-      - Monitoring: ecosystem/extensions/monitoring.md
-    - Development:
-      - Getting Started: ecosystem/development/getting-started.md
-      - Plugin API: ecosystem/development/plugin-api.md
-      - Testing: ecosystem/development/testing.md
-      - Publishing: ecosystem/development/publishing.md
-
+  # - Ecosystem:
+  #   - ecosystem/index.md
+  #   - Extensions:
+  #     - ecosystem/extensions/index.md
+  #     - half-orm-dev: ecosystem/half-orm-dev.md
+  #     - Litestar API: ecosystem/extensions/litestar-api.md
+  #     - Admin Interface: ecosystem/extensions/admin.md
+  #     - Monitoring: ecosystem/extensions/monitoring.md
+  #   - Development:
+  #     - Getting Started: ecosystem/development/getting-started.md
+  #     - Plugin API: ecosystem/development/plugin-api.md
+  #     - Testing: ecosystem/development/testing.md
+  #     - Publishing: ecosystem/development/publishing.md
 
 extra_css:
   - assets/css/custom.css

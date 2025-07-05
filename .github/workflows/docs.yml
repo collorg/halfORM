@@ -2,7 +2,8 @@ name: Documentation
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'release/*' ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
 
@@ -14,35 +15,84 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-  
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+          
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: 3.13
-      - run: pip install \
-            mkdocs-material mkdocstrings-python mkdocs-git-revision-date-localized-plugin
-      - run: mkdocs gh-deploy --config-file mkdocs.yml --force
-  deploy:
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+          
+      - name: Install dependencies
+        run: |
+          pip install \
+            mkdocs-material \
+            mkdocstrings-python \
+            mkdocs-git-revision-date-localized-plugin \
+            mike
+            
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+      - name: Get version info
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tagged release
+            VERSION="${{ github.ref_name }}"
+            VERSION_NUMBER="${VERSION#v}"
+            echo "version=${VERSION_NUMBER}" >> $GITHUB_OUTPUT
+            echo "alias=latest" >> $GITHUB_OUTPUT
+            echo "title=${VERSION_NUMBER} (latest)" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/heads/main ]]; then
+            # Main branch - development version
+            echo "version=dev" >> $GITHUB_OUTPUT
+            echo "alias=dev" >> $GITHUB_OUTPUT
+            echo "title=Development" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            # Release branch
+            BRANCH_NAME="${{ github.ref_name }}"
+            VERSION="${BRANCH_NAME#release/}"
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "alias=" >> $GITHUB_OUTPUT
+            echo "title=${VERSION} (release candidate)" >> $GITHUB_OUTPUT
+          else
+            # Other branches - skip deployment
+            echo "version=" >> $GITHUB_OUTPUT
+            echo "alias=" >> $GITHUB_OUTPUT
+            echo "title=" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Build and deploy documentation
+        if: steps.version.outputs.version != ''
+        run: |
+          # Deploy the version
+          mike deploy \
+            --push \
+            --update-aliases \
+            ${{ steps.version.outputs.version }} \
+            ${{ steps.version.outputs.alias }} \
+            --title "${{ steps.version.outputs.title }}"
+          
+          # Set default version if this is latest
+          if [[ "${{ steps.version.outputs.alias }}" == "latest" ]]; then
+            mike set-default --push latest
+          fi
+          
+      - name: Build for PR preview
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdocs build --config-file mkdocs.yml
+          
+      - name: Upload PR preview
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
         with:
-          ref: gh-pages
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          name: pr-preview
+          path: site/
