@@ -43,41 +43,34 @@ jobs:
       - name: Get version info
         id: version
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            # Tagged release
-            VERSION="${{ github.ref_name }}"
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME}"
             VERSION_NUMBER="${VERSION#v}"
             echo "version=${VERSION_NUMBER}" >> $GITHUB_OUTPUT
             echo "alias=latest" >> $GITHUB_OUTPUT
             echo "title=${VERSION_NUMBER} (latest)" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == refs/heads/main ]]; then
-            # Main branch - development version
+          elif [[ $GITHUB_REF == refs/heads/main ]]; then
             echo "version=dev" >> $GITHUB_OUTPUT
             echo "alias=" >> $GITHUB_OUTPUT
             echo "title=Development" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
-            # Release branch
-            BRANCH_NAME="${{ github.ref_name }}"
-            VERSION="${BRANCH_NAME#release/}"
+          elif [[ $GITHUB_REF == refs/heads/release/* ]]; then
+            VERSION="${GITHUB_REF_NAME#release/}"
             echo "version=${VERSION}-rc" >> $GITHUB_OUTPUT
             echo "alias=" >> $GITHUB_OUTPUT
             echo "title=${VERSION} (release candidate)" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == refs/heads/dev/* ]]; then
-            # Development branch
-            BRANCH_NAME="${{ github.ref_name }}"
-            VERSION="${BRANCH_NAME#dev/}"
+          elif [[ $GITHUB_REF == refs/heads/dev/* ]]; then
+            VERSION="${GITHUB_REF_NAME#dev/}"
             echo "version=${VERSION}-dev" >> $GITHUB_OUTPUT
             echo "alias=" >> $GITHUB_OUTPUT
             echo "title=${VERSION} (development)" >> $GITHUB_OUTPUT
           else
-            # Other branches - skip deployment
             echo "version=" >> $GITHUB_OUTPUT
             echo "alias=" >> $GITHUB_OUTPUT
             echo "title=" >> $GITHUB_OUTPUT
           fi
           
       - name: Build and deploy documentation
-        if: steps.version.outputs.version != ''
+        if: steps.version.outputs.version != '' && github.event_name == 'push'
         run: |
           # Deploy the version
           if [[ -n "${{ steps.version.outputs.alias }}" ]]; then
