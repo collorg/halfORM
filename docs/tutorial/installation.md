@@ -8,15 +8,15 @@ Before installing halfORM, ensure you have:
 
 ### System Requirements
 - **Python 3.7+** (3.9+ recommended)
-- **PostgreSQL 9.6+** (13+ recommended) with peer authentication for `$USER` on development environment
-- **psycopg2** (installed automatically with halfORM)
+- **PostgreSQL 9.6+** (13+ recommended)
+- **Basic PostgreSQL access** (peer authentication or configured user)
 
 !!! tip "Don't have PostgreSQL?"
     **Quick setup options:**
     
     - **Docker**: `docker run --name postgres-tutorial -e POSTGRES_PASSWORD=tutorial -d -p 5432:5432 postgres:13`
     - **Local install**: [PostgreSQL Downloads](https://www.postgresql.org/download/)
-    - **Cloud**: [ElephantSQL](https://www.elephantsql.com/) (free tier), [Supabase](https://supabase.com/), AWS RDS
+    - **Cloud**: [ElephantSQL](https://www.elephantsql.com/) (free tier), [Supabase](https://supabase.com/)
 
 ## Installing halfORM
 
@@ -32,7 +32,14 @@ source halfORM-tutorial/bin/activate  # Linux/Mac
 pip install half_orm
 
 # Verify installation
-python -m half_orm
+half_orm version
+```
+
+Expected output:
+```
+halfORM Core: 0.16.0
+
+No Extensions installed
 ```
 
 !!! tip "Virtual Environment Benefits"
@@ -51,83 +58,60 @@ cd halfORM
 pip install -e .
 
 # Verify installation
-python -m half_orm
+half_orm version
 ```
 
-## Quick Test with Default PostgreSQL
+## Quick Test with PostgreSQL
 
-Let's verify halfORM works with your PostgreSQL installation using the built-in diagnostic tool.
+Let's verify halfORM works with your PostgreSQL installation using the built-in diagnostic.
 
 ### One-Command Test
 
-halfORM includes a built-in diagnostic tool that tests your installation and database connections:
-
 ```bash
 # Test halfORM installation and database access
-python -m half_orm
+half_orm inspect template1
 ```
 
-Expected output:
+### Expected Results
+
+**✅ Success (peer authentication working):**
 ```
-[halfORM] version 0.15.1
-- HALFORM_CONF_DIR=/home/user/.half_orm
-✅ Connected to template1 database (default setup)
-```
-
-This tests:
-
-- ✅ halfORM installation and version
-- ✅ Configuration directory location  
-- ✅ Default peer authentication with template1
-- ✅ Any configured database connections
-
-### What the Test Does
-
-The diagnostic tool automatically:
-
-1. **Tests template1 connection** using peer authentication (no config needed)
-2. **Scans your config directory** for database connection files
-3. **Tests each configured database** and reports status
-4. **Shows helpful error messages** if something isn't working
-
-### Default PostgreSQL Configuration
-
-This works because most PostgreSQL installations include:
-
-```
-# in pg_hba.conf
-local   all             all                                     peer
+=== Database: template1 ===
+No relations found in database
 ```
 
-This allows your system user to connect to any database without a password assuming there is a role
-with the correponding name in PostgreSQL. Otherwise you will get the following result:
+**❌ Connection issue:**
+```
+Error: could not connect to server: FATAL: role "username" does not exist
+```
 
-```
-[halfORM] version 0.15.1
-- HALFORM_CONF_DIR=/etc/half_orm
-HOP WARNING: No config file '/etc/half_orm/template1'.
-	 Trying peer authentication for 'nopgaccess'.
-❌ connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "nopgaccess" does not exist
-```
+### What This Tests
+
+The diagnostic automatically:
+
+- ✅ halfORM installation and CLI
+- ✅ PostgreSQL connection
+- ✅ Database access permissions
+- ✅ Schema inspection capability
 
 ## Database Configuration (Optional)
 
-For production use or when you need to connect to specific databases, halfORM uses configuration files. This section shows you how to set them up, but **it's not required for the tutorial**.
+For production use or specific databases, halfORM uses configuration files. This section shows setup, but **it's not required for the tutorial**.
 
 ### When You Need Configuration Files
 
-- Connecting to databases other than `template1`
+- If you don't have peer authentication access
 - Using different usernames or passwords
 - Connecting to remote databases
 - Production deployments
 
 ### Basic Configuration Setup
 
-If you want to set up configuration files:
-
 ```bash
 # Create configuration directory
 mkdir ~/.half_orm
+
+# Set environment variable
 export HALFORM_CONF_DIR=~/.half_orm
 
 # Add to shell profile for persistence
@@ -153,15 +137,36 @@ db = Model('my_database')  # References ~/.half_orm/my_database
 
 ### Trusted Authentication (No Password)
 
-For local development with trusted authentication:
+For local development:
 
 ```ini title="~/.half_orm/my_local_db"
 [database]
 name = my_local_db
-# user defaults to current system user
-# no password needed with peer authentication
-host = localhost
-port = 5432
+```
+
+## Extension Testing (Optional)
+
+Test the new extension system:
+
+```bash
+# Install test extension
+pip install git+https://github.com/collorg/half-orm-test-extension
+
+# List extensions
+half_orm --list-extensions
+
+# Try extension command
+half_orm test-extension greet
+```
+
+Expected output:
+```
+Available extensions:
+  • test-extension v0.1.0
+    Simple test extension for halfORM ecosystem
+    Commands: greet, status
+
+Hello, halfORM!
 ```
 
 ## Troubleshooting
@@ -176,36 +181,64 @@ ModuleNotFoundError: No module named 'half_orm'
 **Solutions:**
 - Check virtual environment is activated
 - Install halfORM: `pip install half_orm`
-- Verify Python path: `python -c "import sys; print(sys.path)"`
+- Verify installation: `half_orm version`
 
 #### PostgreSQL Connection Failed
 ```
-psycopg2.OperationalError: could not connect to server
+could not connect to server: Connection refused
 ```
 
 **Solutions:**
 - Check PostgreSQL is running: `sudo systemctl status postgresql`
-- Check PostgreSQL is accepting connections: `psql template1`
-- Ensure your user can connect: `psql -U $(whoami) template1`
+- Test manual connection: `psql template1`
+- Verify PostgreSQL port: `sudo netstat -tlnp | grep 5432`
 
 #### Permission Denied
 ```
-psycopg2.errors.InsufficientPrivilege: permission denied
+FATAL: role "username" does not exist
 ```
 
 **Solutions:**
+- Create PostgreSQL user: `sudo -u postgres createuser $(whoami)`
+- Grant permissions: `sudo -u postgres psql -c "ALTER USER $(whoami) CREATEDB;"`
 - Check `pg_hba.conf` has peer authentication enabled
-- Ensure your system user exists in PostgreSQL: `createuser $(whoami)`
-- Try connecting manually first: `psql template1`
+
+#### half_orm Not Found
+```
+half_orm: command not found
+```
+
+**Solutions:**
+- Ensure virtual environment is activated
+- Check PATH includes pip install location
+- Reinstall: `pip install --force-reinstall half_orm`
 
 ### Getting Help
 
 If you're still having issues:
 
-1. **Check PostgreSQL is running**: `sudo systemctl status postgresql`
+1. **Check PostgreSQL status**: `sudo systemctl status postgresql`
 2. **Test manual connection**: `psql template1`
-3. **Search existing issues** on [GitHub](https://github.com/collorg/halfORM/issues)
-4. **Ask for help** in [GitHub Discussions](https://github.com/collorg/halfORM/discussions)
+3. **Verify installation**: `half_orm version`
+4. **Search existing issues**: [GitHub Issues](https://github.com/collorg/halfORM/issues)
+5. **Ask for help**: [GitHub Discussions](https://github.com/collorg/halfORM/discussions)
+
+### Debug Information
+
+For bug reports, include:
+
+```bash
+# System information
+half_orm version
+python --version
+psql --version
+
+# Connection test
+half_orm inspect template1
+
+# Extension status
+half_orm --list-extensions
+```
 
 ## What's Next?
 
@@ -214,15 +247,16 @@ Congratulations! You now have:
 - ✅ halfORM installed and working
 - ✅ Verified connection to PostgreSQL
 - ✅ Understanding of basic configuration
+- ✅ CLI commands working
 
 In the next chapter, [First Steps](first-steps.md), you'll:
 
 - Set up a complete tutorial database with sample data
-- Explore database schemas and tables
+- Explore database schemas and tables with the new CLI
 - Perform your first CRUD operations
 - Learn halfORM's core concepts and syntax
 
-The tutorial database setup has been moved to Chapter 2 to keep this installation chapter focused and simple.
+The tutorial database setup is in Chapter 2 to keep this installation chapter focused and simple.
 
 ---
 

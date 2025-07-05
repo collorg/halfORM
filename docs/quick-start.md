@@ -24,7 +24,8 @@ half_orm version
 Expected output:
 ```
 halfORM Core: 0.16.0
-Extensions: none
+
+No extensions installed
 ```
 
 !!! info "Virtual Environment Recommended"
