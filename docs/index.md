@@ -1,7 +1,7 @@
 # halfORM Documentation
 
 !!! info "Documentation Version"
-    This documentation covers halfORM **0.16.x** (latest stable release).
+    This documentation covers halfORM **0.16.x** (latest development release).
     For older versions, see the [GitHub releases](https://github.com/collorg/halfORM/releases).
 
 [![PyPI version](https://img.shields.io/pypi/v/half_orm)](https://pypi.org/project/half-orm/)
@@ -37,16 +37,12 @@ All halfORM functionality is now accessible through a single `half_orm` command:
 half_orm inspect my_database
 half_orm inspect my_database public.users
 
-# Development tools (with half-orm-dev extension)
-half_orm dev new my_project
-half_orm dev generate model
-
-# API generation (with half-orm-litestar-api extension)
-half_orm litestar generate
-half_orm litestar serve
-
-# List all available extensions
+# Extension system with auto-discovery
 half_orm --list-extensions
+
+# Test the extension architecture
+pip install git+https://github.com/collorg/half-orm-test-extension
+half_orm test-extension greet
 ```
 
 ### 🔌 **Extensible Architecture**
@@ -54,11 +50,12 @@ half_orm --list-extensions
 Extensions are automatically discovered and integrated:
 
 ```bash
-# Install extensions
-pip install half-orm-dev half-orm-litestar-api
+# Install test extension
+pip install git+https://github.com/collorg/half-orm-test-extension
 
-# All commands become available immediately
-half_orm --help  # Shows all available commands
+# Commands become available immediately
+half_orm --list-extensions  # Shows installed extensions
+half_orm test-extension greet  # Use extension commands
 ```
 
 ### 🔍 **Enhanced Database Inspection**
@@ -72,7 +69,7 @@ half_orm inspect blog_db
 #  📋 comments
 #
 #📂 Schema: analytics  
-#  📋 user_stats
+#  👁️ user_stats
 #  📋 daily_reports
 
 # Detailed relation inspection
@@ -159,7 +156,7 @@ Get up and running in under 5 minutes:
 2. **Test your installation**
    ```bash
    half_orm version
-   # halfORM Core: 0.16.0
+   # halfORM Core: 0.16.x
    # No extensions installed
    ```
 
@@ -198,29 +195,27 @@ Get up and running in under 5 minutes:
 
 ## halfORM Ecosystem
 
-### 🛠️ **Development Tools**
+### 🔌 **Current Extensions**
+
+#### half-orm-test-extension
+Demonstration extension for testing the architecture:
+
 ```bash
-pip install half-orm-dev
-half_orm dev new my_project     # Create new project
-half_orm dev generate model     # Generate model classes
-half_orm dev serve              # Development server
+pip install git+https://github.com/collorg/half-orm-test-extension
+half_orm test-extension greet     # Hello, halfORM!
+half_orm test-extension status    # Extension status
 ```
 
-### 🌐 **API Generation**
-```bash
-pip install half-orm-litestar-api
-half_orm litestar generate      # Generate REST API
-half_orm litestar serve         # Start API server
-```
+### 🚀 **Planned Extensions**
 
-### 📊 **Admin Interface**
-```bash
-pip install half-orm-admin
-half_orm admin setup            # Setup admin interface
-half_orm admin serve            # Start admin server
-```
+The following extensions are in development or planned:
 
-**[🔌 Browse All Extensions →](ecosystem/index.md)**
+- **half-orm-dev** - Development tools (based on [halfORM_dev](https://github.com/collorg/halfORM_dev))
+- **half-orm-api** - REST API generation 
+- **half-orm-admin** - Admin interface generation
+- **half-orm-monitoring** - Observability and monitoring tools
+
+**[🔌 Browse Extension Ecosystem →](ecosystem/index.md)**
 
 ## Documentation Sections
 
@@ -266,7 +261,7 @@ half_orm admin serve            # Start admin server
 
     **[View Examples →](examples/index.md)**
 
--   📖 **Guides**
+-   📖 **Guides** 🚧
 
     ---
 
@@ -274,7 +269,7 @@ half_orm admin serve            # Start admin server
 
     **[Browse Guides →](guides/index.md)**
 
--   🏗️ **Architecture**
+-   🏗️ **Architecture** 🚧
 
     ---
 
@@ -318,9 +313,9 @@ half_orm admin serve            # Start admin server
 
 ## Version History
 
-### Version 0.16.0 🎉
+### Version 0.16.x 🎉
 
-!!! success "Latest Release - New CLI Architecture"
+!!! success "Current Development - New CLI Architecture"
     Major architectural update with unified command-line interface and extension system.
 
 - **🛠️ Unified CLI**: All halfORM functionality through `half_orm` command
@@ -332,9 +327,8 @@ half_orm admin serve            # Start admin server
 ```bash
 # New unified interface
 half_orm inspect my_database
-half_orm dev new my_project        # Requires half-orm-dev
-half_orm litestar generate         # Requires half-orm-litestar-api
 half_orm --list-extensions         # See all available tools
+half_orm test-extension greet      # Use extension commands
 ```
 
 ### Version 0.15.0 🎉
@@ -359,9 +353,8 @@ half_orm --list-extensions         # See all available tools
     # New unified approach
     half_orm inspect my_database
     
-    # Development tools now require separate package
-    pip install half-orm-dev
-    half_orm dev new my_project  # Replaces old 'hop' command
+    # Development tools will require separate package
+    pip install half-orm-dev  # When available
     ```
 
 ---
