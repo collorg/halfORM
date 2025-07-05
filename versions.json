@@ -5,6 +5,11 @@
     "aliases": []
   },
   {
+    "version": "0.16.x-dev",
+    "title": "0.16.x (development)",
+    "aliases": []
+  },
+  {
     "version": "0.16.0-rc2",
     "title": "0.16.0-rc2 (latest)",
     "aliases": [
