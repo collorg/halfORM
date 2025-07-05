@@ -47,11 +47,11 @@ def write(file_, data, mode='w'):
 
 def error(msg: str, exit_code: int=None):
     "Write error message on stderr and exit if exit is not None"
-    sys.stderr.write(f'{Color.bold("HOP ERROR")}: {Color.red(msg)}')
+    sys.stderr.write(f'{Color.bold("half-orm ERROR")}: {Color.red(msg)}')
     if exit_code:
         sys.exit(exit_code)
 
-def warning(msg: str, context="HOP"):
+def warning(msg: str, context="half-orm"):
     "Write warning message on stderr"
     sys.stderr.write(f'{Color.bold(context + " WARNING")}: {msg}')
 

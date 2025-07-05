@@ -33,7 +33,11 @@ setup(
     },
     license='GPLv3',
     packages=['half_orm'],
-    install_requires=[ 'psycopg2-binary' ],
+    install_requires=[ 
+        'psycopg2-binary',
+        'click',
+        "importlib-metadata; python_version<'3.8'"
+    ],
     package_data={'half_orm': ['version.txt']},
     classifiers=[
         # How mature is this project? Common values are
@@ -61,6 +65,11 @@ setup(
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13'
     ],
+    entry_points={
+        'console_scripts': [
+            'half_orm=half_orm.cli:main',
+        ],
+    },
     long_description_content_type = "text/markdown"
 
 )

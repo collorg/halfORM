@@ -138,6 +138,20 @@ nav:
     - examples/index.md
     - Database Exploration with GitLab: examples/gitlab.md
     - Instant REST API with halfORM: examples/instant-rest-api/instant-rest-api.md
+  - Ecosystem:
+    - ecosystem/index.md
+    - Extensions:
+      - ecosystem/extensions/index.md
+      - half-orm-dev: ecosystem/half-orm-dev.md     # ← Nouvelle entrée
+      - Litestar API: ecosystem/extensions/litestar-api.md
+      - Admin Interface: ecosystem/extensions/admin.md
+      - Monitoring: ecosystem/extensions/monitoring.md
+    - Development:
+      - Getting Started: ecosystem/development/getting-started.md
+      - Plugin API: ecosystem/development/plugin-api.md
+      - Testing: ecosystem/development/testing.md
+      - Publishing: ecosystem/development/publishing.md
+
 
 extra_css:
   - assets/css/custom.css

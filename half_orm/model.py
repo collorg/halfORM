@@ -73,6 +73,7 @@ class Model:
         reserved to the __factory metaclass.
         """
         self.__dbinfo = {}
+        self.__production_mode = True
         self.__load_config(config_file)
         self._scope = scope and scope.split('.')[0]
         self.__conn = None
@@ -107,15 +108,15 @@ class Model:
         else:
             dbname = config_file
             self.__dbinfo['dbname'] = dbname
-            database = {'user': None, 'password': None, 'host': None, 'port': None}
-            if dbname != 'template1':
-                utils.warning(f"No config file '{os.path.join(CONF_DIR, dbname)}'.\n\t Trying peer authentication for '{os.environ.get('USER') or os.getlogin()}'.\n")
+            # WARNING: use peer authentication only in development environment
+            database = {'user': None, 'password': None, 'host': None, 'port': None, 'devel': True}
 
         self.__dbinfo['user'] = database.get('user')
         self.__dbinfo['password'] = database.get('password')
         self.__dbinfo['host'] = database.get('host')
         self.__dbinfo['port'] = database.get('port')
         self.__dbinfo['connect_timeout'] = database.get('timeout', 3)
+        self.__production_mode = database.get('devel', False)
 
     def __connect(self, config_file: str=None, reload: bool=False):
         """Setup a new connection to the database.
@@ -263,7 +264,7 @@ class Model:
         "Proxy to PgMeta._pkey_constraint"
         return self.__pg_meta._pkey_constraint(self.__dbname, fqrn)
 
-    def execute_query(self, query, values=(), mogrify=False):
+    def execute_query(self, query, values=None, mogrify=False):
         """Executes a raw SQL query.
 
         Warning:
@@ -282,6 +283,13 @@ class Model:
             self.ping()
             cursor = self.__conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(query, values)
+        except Exception as exc:
+            vals = ''
+            if not self.__production_mode:
+                # report values only in development mode
+                vals = f"values: {values}\n"
+            utils.error(f"Query execution failed:\nquery: {query}\n{vals}")
+            raise exc
         return cursor
 
     def execute_function(self, fct_name, *args, **kwargs) -> typing.List[tuple]:
