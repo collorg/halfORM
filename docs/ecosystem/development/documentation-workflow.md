@@ -1,44 +1,31 @@
 # Documentation Workflow Guide
 
-This guide explains how halfORM's documentation is managed with multi-version support, automated deployment, and structured release process.
+This guide explains how halfORM's documentation is managed with multi-version support, automated deployment, and coordinated with the [Development Workflow](development-workflow.md).
 
 ## Overview
 
-halfORM uses a GitFlow-inspired workflow with automated documentation deployment for different stages of development:
+halfORM uses a multi-version documentation system with automated deployment that mirrors the development workflow. Documentation is automatically built and deployed for different development stages.
 
-- **Development versions** (`dev/*`) - Work in progress, patches preparation
-- **Release candidates** (`release/*`) - Pre-release testing
-- **Stable releases** (tags `v*`) - Production-ready versions
-- **Main development** (`main`) - Latest development state
+!!! info "Development Coordination"
+    This documentation workflow is tightly coordinated with the [Development Workflow](development-workflow.md). 
+    The same branch structure and versioning strategy applies to both code and documentation.
 
-## Branch Structure
+## Branch Structure & Documentation Deployment
 
-```
-main                    # Latest stable development
-├── dev/0.16.x         # Patches in preparation for 0.16.x
-├── release/0.16.x     # Release candidate for 0.16.x
-├── feature/new-cli    # Feature development
-└── hotfix/urgent-fix  # Urgent fixes
-```
-
-## Documentation Deployment
-
-### Automatic Deployment
-
-The documentation is automatically built and deployed via GitHub Actions when pushing to specific branches or creating tags:
+The documentation deployment follows the same branch structure as code development:
 
 | Branch/Tag Pattern | Version Deployed | URL | Description |
 |-------------------|------------------|-----|-------------|
 | `main` | `dev` | `/dev/` | Latest development documentation |
-| `dev/X.Y.x` | `X.Y.x-dev` | `/X.Y.x-dev/` | Patch development for version X.Y |
+| `dev/X.Y.x` | `X.Y.x-dev` | `/X.Y.x-dev/` | Patch development documentation |
 | `release/X.Y.x` | `X.Y.x-rc` | `/X.Y.x-rc/` | Release candidate documentation |
 | `vX.Y.Z` (tags) | `X.Y.Z` | `/X.Y.Z/` + `/latest/` | Stable release (becomes default) |
 
-### URL Structure
+## URL Structure
 
 ```
 https://collorg.github.io/halfORM/
-├── /                   # → Redirects to latest stable
+├── /                   # → Redirects to latest stable version
 ├── /latest/           # → Current stable version (alias)
 ├── /0.16.0/          # → Specific stable version
 ├── /0.16.x-rc/       # → Release candidate
@@ -46,84 +33,41 @@ https://collorg.github.io/halfORM/
 └── /dev/             # → Main branch development
 ```
 
-## Development Workflow
+## Automatic Deployment
 
-### 1. Feature Development
+### GitHub Actions Integration
 
-```bash
-# Create feature branch from main
-git checkout main
-git pull origin main
-git checkout -b feature/new-feature
+Documentation is automatically deployed via GitHub Actions when:
 
-# Work on feature + documentation
-# ... make changes ...
+- **Push to `main`** → Deploys `dev` version
+- **Push to `dev/X.Y.x`** → Deploys `X.Y.x-dev` version  
+- **Push to `release/X.Y.x`** → Deploys `X.Y.x-rc` version
+- **Tag `vX.Y.Z`** → Deploys `X.Y.Z` version with `latest` alias
 
-# Push and create PR
-git push origin feature/new-feature
-# → No documentation deployment (feature branches ignored)
+### Workflow Configuration
+
+The documentation workflow is configured in `.github/workflows/docs.yml`:
+
+```yaml
+name: Documentation
+on:
+  push:
+    branches: [ main, 'release/*', 'dev/*' ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
 ```
 
-### 2. Patch Development
+### Version Resolution
+
+The workflow automatically determines the appropriate version and alias:
 
 ```bash
-# Create or switch to dev branch
-git checkout -b dev/0.16.x  # or git checkout dev/0.16.x
-git pull origin dev/0.16.x
-
-# Work on patches + documentation updates
-# ... make changes ...
-
-# Push changes
-git push origin dev/0.16.x
-# → Automatically deploys to /0.16.x-dev/
-```
-
-### 3. Release Preparation
-
-```bash
-# Create release branch
-git checkout -b release/0.16.x
-git merge dev/0.16.x  # Include patches
-
-# Final testing and documentation polish
-# ... make final changes ...
-
-# Push release candidate
-git push origin release/0.16.x
-# → Automatically deploys to /0.16.x-rc/
-```
-
-### 4. Stable Release
-
-```bash
-# Create release tag
-git tag v0.16.0 -m "release: halfORM 0.16.0 with unified CLI"
-git push origin v0.16.0
-# → Automatically deploys to /0.16.0/ and /latest/
-# → Sets /latest/ as default version
-```
-
-### 5. Hotfix Process
-
-```bash
-# Create hotfix from main
-git checkout main
-git checkout -b hotfix/urgent-fix
-
-# Fix + documentation
-# ... make changes ...
-
-# Push to main and create patch release
-git checkout main
-git merge hotfix/urgent-fix
-git push origin main
-# → Deploys to /dev/
-
-# Create patch release
-git tag v0.16.1 -m "hotfix: urgent fix"
-git push origin v0.16.1
-# → Deploys to /0.16.1/ and updates /latest/
+# Examples of automatic version resolution
+dev/0.16.x     → 0.16.x-dev
+release/0.16.x → 0.16.x-rc  
+v0.16.0        → 0.16.0 (with latest alias)
+main           → dev
 ```
 
 ## Local Development
@@ -164,7 +108,7 @@ mkdocs serve
 # Delete version
 ./scripts/deploy-docs.sh delete 0.16.0-rc1
 
-# Build documentation
+# Build documentation only
 ./scripts/deploy-docs.sh build
 ```
 
@@ -184,15 +128,15 @@ This applies to stable versions only.
 {% endif %}
 ```
 
-### Migration Information
+### Documentation Updates
 
-When creating a new major version:
+When updating documentation:
 
-1. **Update version references** in `docs/index.md`
-2. **Add migration guide** if breaking changes exist
-3. **Update CLI examples** to reflect new commands
-4. **Add new features** to relevant sections
-5. **Test all version links** and cross-references
+1. **Update relevant sections** for the changes
+2. **Test locally** with `mkdocs serve`
+3. **Include version-specific notes** if needed
+4. **Update migration guides** for breaking changes
+5. **Verify all links** work correctly
 
 ### Cross-Version Compatibility
 
@@ -201,87 +145,49 @@ When creating a new major version:
 - Document breaking changes prominently
 - Provide clear migration paths
 
-## GitHub Actions Configuration
+## Version Management
 
-The documentation workflow is configured in `.github/workflows/docs.yml`:
+### Default Version
 
-```yaml
-name: Documentation
-on:
-  push:
-    branches: [ main, 'release/*', 'dev/*' ]
-    tags: [ 'v*' ]
-  pull_request:
-    branches: [ main ]
-```
+The default version is what users see when they visit the root URL (`/`). It's automatically set when:
 
-### Permissions Required
-
-```yaml
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-```
-
-## Manual Deployment
-
-### Emergency Deployment
-
-If automatic deployment fails:
+- A tag with `latest` alias is deployed
+- Manual override using `mike set-default`
 
 ```bash
-# Local emergency deployment
-git checkout main
-mike deploy --push dev
-mike set-default --push dev
-
-# Or for stable version
-mike deploy --push --update-aliases 0.16.0 latest
+# Set default version manually
 mike set-default --push latest
 ```
 
-### Cleanup Operations
+### Version Lifecycle
 
 ```bash
-# Remove old versions
-mike delete --push 0.15.0 0.14.0
-
-# Complete reset (use with caution)
-mike delete --all --push
+# Development → Release Candidate → Stable
+dev/0.16.x → release/0.16.x → v0.16.0
+0.16.x-dev → 0.16.x-rc → 0.16.0 (latest)
 ```
 
-## Best Practices
+### Cleanup
 
-### Documentation Updates
+```bash
+# Remove old development versions
+mike delete --push 0.15.x-dev 0.14.x-dev
 
-1. **Always update documentation** with code changes
-2. **Test locally** before pushing
-3. **Use meaningful commit messages** for documentation changes
-4. **Include migration notes** for breaking changes
+# Remove old release candidates  
+mike delete --push 0.16.0-rc1 0.16.0-rc2
 
-### Version Management
-
-1. **Keep stable versions** for reference
-2. **Clean up old development versions** regularly
-3. **Document version lifecycle** in release notes
-4. **Test all deployed versions** after releases
-
-### Content Guidelines
-
-1. **Use consistent formatting** across versions
-2. **Include version compatibility** information
-3. **Provide working examples** for each version
-4. **Maintain backward compatibility** in URLs when possible
+# Keep stable versions for reference
+# 0.16.0, 0.15.0, etc. are kept for historical access
+```
 
 ## Troubleshooting
 
 ### Common Issues
 
 **Documentation not updating:**
-- Check GitHub Actions logs
-- Verify branch/tag naming conventions
-- Ensure GitHub Pages is enabled
+- Check GitHub Actions logs in the Actions tab
+- Verify push triggered the correct workflow
+- Ensure branch/tag naming follows conventions
 
 **Version conflicts:**
 ```bash
@@ -291,59 +197,124 @@ git checkout gh-pages
 git reset --hard origin/gh-pages
 ```
 
+**Site shows 404 or old version:**
+```bash
+# Set default version explicitly
+mike set-default --push latest
+
+# Or check what versions are deployed
+mike list
+```
+
 **Local mike issues:**
 ```bash
-# Clean mike cache
+# Clean local mike state
 rm -rf .git/refs/heads/gh-pages
 git branch -D gh-pages
+git fetch origin gh-pages:gh-pages
 ```
 
-### Getting Help
+### GitHub Pages Configuration
 
-- Check GitHub Actions logs for deployment issues
-- Review mike documentation for advanced usage
-- Test locally before pushing to production
-- Use issue templates for bug reports
+Ensure GitHub Pages is configured correctly:
 
-## Examples
+1. Go to **Settings** → **Pages**
+2. Set **Source** to "Deploy from a branch"
+3. Set **Branch** to `gh-pages`
+4. Set **Folder** to `/ (root)`
 
-### Complete Release Cycle
+### Manual Deployment
 
-```bash
-# 1. Development phase
-git checkout -b dev/0.16.x
-# ... work on features ...
-git push origin dev/0.16.x  # → /0.16.x-dev/
-
-# 2. Release preparation
-git checkout -b release/0.16.x
-git merge dev/0.16.x
-# ... final polish ...
-git push origin release/0.16.x  # → /0.16.x-rc/
-
-# 3. Release
-git tag v0.16.0
-git push origin v0.16.0  # → /0.16.0/ + /latest/
-
-# 4. Hotfix
-git checkout main
-git checkout -b hotfix/critical-fix
-# ... fix issue ...
-git checkout main
-git merge hotfix/critical-fix
-git tag v0.16.1
-git push origin v0.16.1  # → /0.16.1/ + /latest/
-```
-
-### Version Cleanup
+If automatic deployment fails:
 
 ```bash
-# Remove old development versions
-mike delete --push 0.15.x-dev 0.14.x-dev
+# Emergency manual deployment
+mike deploy --push --update-aliases 0.16.0 latest
+mike set-default --push latest
 
-# Keep last 3 stable versions
+# Verify deployment
 mike list
-mike delete --push 0.13.0 0.12.0  # Remove older versions
 ```
 
-This workflow ensures consistent, automated documentation deployment while maintaining flexibility for different development stages and easy rollback capabilities.
+## Best Practices
+
+### Content Guidelines
+
+1. **Keep documentation synchronized** with code changes
+2. **Use consistent formatting** across all versions
+3. **Include version compatibility** information
+4. **Provide working examples** for each version
+5. **Test all links** before publishing
+
+### Version Management
+
+1. **Clean up old versions** regularly
+2. **Keep stable versions** for historical reference
+3. **Document version changes** in release notes
+4. **Test deployed versions** after each release
+
+### Workflow Coordination
+
+1. **Update documentation** with code changes in the same branch
+2. **Follow the same branch patterns** as code development
+3. **Coordinate releases** between code and documentation
+4. **Test locally** before pushing to shared branches
+
+## Advanced Usage
+
+### Custom Version Deployment
+
+```bash
+# Deploy custom version for testing
+mike deploy --push feature-test
+mike set-default --push feature-test
+
+# Deploy with custom alias
+mike deploy --push --update-aliases 0.16.0 stable
+```
+
+### Multiple Environment Support
+
+```bash
+# Deploy to staging (using different branch)
+mike deploy --push --remote staging-origin staging
+
+# Deploy to production (using main remote)
+mike deploy --push --update-aliases 0.16.0 latest
+```
+
+### Version Archival
+
+```bash
+# Archive old versions by moving to archive alias
+mike deploy --push --update-aliases 0.14.0 archive-0.14.0
+mike delete --push 0.14.0
+```
+
+## Integration with Development Workflow
+
+This documentation workflow is designed to work seamlessly with the [Development Workflow](development-workflow.md):
+
+- **Branch synchronization**: Same branch names, same purposes
+- **Version coordination**: Documentation versions match code versions  
+- **Release coordination**: Documentation and code released together
+- **Testing integration**: Documentation tested with each code change
+
+For complete information about the development process, branch management, and release procedures, see the [Development Workflow Guide](development-workflow.md).
+
+## Scripts Reference
+
+The `scripts/deploy-docs.sh` script provides convenient commands:
+
+```bash
+# Available commands
+./scripts/deploy-docs.sh deploy VERSION [ALIAS]
+./scripts/deploy-docs.sh list
+./scripts/deploy-docs.sh serve  
+./scripts/deploy-docs.sh set-default VERSION
+./scripts/deploy-docs.sh delete VERSION
+./scripts/deploy-docs.sh build
+./scripts/deploy-docs.sh help
+```
+
+See the script file for detailed usage and options.
