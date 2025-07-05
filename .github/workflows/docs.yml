@@ -59,9 +59,16 @@ jobs:
             # Release branch
             BRANCH_NAME="${{ github.ref_name }}"
             VERSION="${BRANCH_NAME#release/}"
-            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "version=${VERSION}-rc" >> $GITHUB_OUTPUT
             echo "alias=" >> $GITHUB_OUTPUT
             echo "title=${VERSION} (release candidate)" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/heads/dev/* ]]; then
+            # Development branch
+            BRANCH_NAME="${{ github.ref_name }}"
+            VERSION="${BRANCH_NAME#dev/}"
+            echo "version=${VERSION}-dev" >> $GITHUB_OUTPUT
+            echo "alias=" >> $GITHUB_OUTPUT
+            echo "title=${VERSION} (development)" >> $GITHUB_OUTPUT
           else
             # Other branches - skip deployment
             echo "version=" >> $GITHUB_OUTPUT
@@ -92,10 +99,12 @@ jobs:
             mike set-default --push latest
           fi
           
-          # For dev version, set as default if no default exists
+          # For dev version, set as default if no other default exists
           if [[ "${{ steps.version.outputs.version }}" == "dev" ]]; then
-            # Always set dev as default for now (temporary fix)
-            mike set-default --push dev
+            # Check if any default exists
+            if ! mike list | grep -q "\[default\]"; then
+              mike set-default --push dev
+            fi
           fi
           
           # List versions for debugging
