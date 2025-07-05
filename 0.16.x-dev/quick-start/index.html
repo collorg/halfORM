@@ -606,15 +606,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-9-query-and-filter" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 9: Query and Filter
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#key-concepts" class="md-nav__link">
     <span class="md-ellipsis">
       Key Concepts
@@ -648,11 +639,26 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#extensions-coming-soon" class="md-nav__link">
+  <a href="#extensions-test-example" class="md-nav__link">
     <span class="md-ellipsis">
-      Extensions (Coming Soon)
+      Extensions (Test Example)
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Extensions (Test Example)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coming-soon" class="md-nav__link">
+    <span class="md-ellipsis">
+      Coming Soon
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1666,15 +1672,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-9-query-and-filter" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 9: Query and Filter
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#key-concepts" class="md-nav__link">
     <span class="md-ellipsis">
       Key Concepts
@@ -1708,11 +1705,26 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#extensions-coming-soon" class="md-nav__link">
+  <a href="#extensions-test-example" class="md-nav__link">
     <span class="md-ellipsis">
-      Extensions (Coming Soon)
+      Extensions (Test Example)
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Extensions (Test Example)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coming-soon" class="md-nav__link">
+    <span class="md-ellipsis">
+      Coming Soon
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1820,8 +1832,7 @@
 </code></pre></div>
 <p>Expected output:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>halfORM Core: 0.16.0
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>No extensions installed
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Extensions: none
 </code></pre></div></p>
 <div class="admonition info">
 <p class="admonition-title">Virtual Environment Recommended</p>
@@ -1977,49 +1988,58 @@
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">Author</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Charlie Brown&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ho_delete</span><span class="p">()</span>
 </code></pre></div>
 <h2 id="step-8-working-with-relationships">Step 8: Working with Relationships<a class="headerlink" href="#step-8-working-with-relationships" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Define foreign key aliases</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">Author</span><span class="p">(</span><span class="n">blog</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;blog.author&#39;</span><span class="p">)):</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">Fkeys</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>        <span class="s1">&#39;posts&#39;</span><span class="p">:</span> <span class="s1">&#39;_reverse_fkey_halfORM_quickstart_blog_post_author_id&#39;</span>
-<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    <span class="p">}</span>
-<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
-<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="p">(</span><span class="n">blog</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;blog.post&#39;</span><span class="p">)):</span>
-<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>    <span class="n">Fkeys</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>        <span class="s1">&#39;author&#39;</span><span class="p">:</span> <span class="s1">&#39;post_author_id_fkey&#39;</span>
-<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>    <span class="p">}</span>
-<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>
-<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="c1"># Navigate relationships</span>
-<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="n">alice</span> <span class="o">=</span> <span class="n">Author</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Alice Johnson&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ho_get</span><span class="p">()</span>
-<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="n">alice_posts</span> <span class="o">=</span> <span class="n">alice</span><span class="o">.</span><span class="n">posts</span><span class="p">()</span>
-<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Alice has </span><span class="si">{</span><span class="n">alice_posts</span><span class="o">.</span><span class="n">ho_count</span><span class="p">()</span><span class="si">}</span><span class="s2"> posts&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>
-<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="c1"># Get author from post</span>
-<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="n">post</span> <span class="o">=</span> <span class="n">Post</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Welcome to halfORM&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ho_get</span><span class="p">()</span>
-<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a><span class="n">author</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">author</span><span class="p">()</span><span class="o">.</span><span class="n">ho_get</span><span class="p">()</span>
-<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Author: </span><span class="si">{</span><span class="n">author</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">half_orm.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">register</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="c1"># Define custom classes with clean foreign key aliases</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="nd">@register</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">Author</span><span class="p">(</span><span class="n">blog</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;blog.author&#39;</span><span class="p">)):</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>    <span class="n">Fkeys</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>        <span class="s1">&#39;posts&#39;</span><span class="p">:</span> <span class="s1">&#39;_reverse_fkey_halfORM_quickstart_blog_post_author_id&#39;</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>    <span class="p">}</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="nd">@register</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="p">(</span><span class="n">blog</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;blog.post&#39;</span><span class="p">)):</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>    <span class="n">Fkeys</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>        <span class="s1">&#39;author&#39;</span><span class="p">:</span> <span class="s1">&#39;post_author_id_fkey&#39;</span>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>    <span class="p">}</span>
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="c1"># Navigate relationships with clean syntax</span>
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="n">alice</span> <span class="o">=</span> <span class="n">Author</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Alice Johnson&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ho_get</span><span class="p">()</span>
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="n">alice_posts</span> <span class="o">=</span> <span class="n">alice</span><span class="o">.</span><span class="n">posts</span><span class="p">()</span>
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Alice has </span><span class="si">{</span><span class="n">alice_posts</span><span class="o">.</span><span class="n">ho_count</span><span class="p">()</span><span class="si">}</span><span class="s2"> posts&quot;</span><span class="p">)</span>
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a><span class="c1"># Get author from post - work with the relation</span>
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a><span class="n">post</span> <span class="o">=</span> <span class="n">Post</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a><span class="k">for</span> <span class="n">author</span> <span class="ow">in</span> <span class="n">post</span><span class="o">.</span><span class="n">author</span><span class="p">():</span>
+<a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Author: </span><span class="si">{</span><span class="n">author</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="step-9-query-and-filter">Step 9: Query and Filter<a class="headerlink" href="#step-9-query-and-filter" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Basic filtering</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">published_posts</span> <span class="o">=</span> <span class="n">Post</span><span class="p">(</span><span class="n">is_published</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>!!! tip &quot;Why @register?&quot;
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    `@register` makes your custom classes the default everywhere. Foreign key navigation automatically returns YOUR classes with clean `Fkeys` aliases instead of long constraint names.
 <a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Pattern matching</span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">gmail_authors</span> <span class="o">=</span> <span class="n">Author</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;ilike&#39;</span><span class="p">,</span> <span class="s1">&#39;%@gmail.com&#39;</span><span class="p">))</span>
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="c1"># Comparison operators</span>
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="n">recent_posts</span> <span class="o">=</span> <span class="n">Post</span><span class="p">(</span><span class="n">published_at</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;2024-01-01&#39;</span><span class="p">))</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>## Step 9: Query and Filter
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>```python
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a># Basic filtering
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>published_posts = Post(is_published=True)
 <a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>
-<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="c1"># Chaining operations</span>
-<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="n">Post</span><span class="p">(</span><span class="n">is_published</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>         <span class="o">.</span><span class="n">ho_order_by</span><span class="p">(</span><span class="s1">&#39;published_at DESC&#39;</span><span class="p">)</span>
-<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>         <span class="o">.</span><span class="n">ho_limit</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
-<a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>
-<a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">ho_select</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;published_at&#39;</span><span class="p">):</span>
-<a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">post</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">post</span><span class="p">[</span><span class="s1">&#39;published_at&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>
-<a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="c1"># Working with views</span>
-<a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a><span class="k">for</span> <span class="n">stats</span> <span class="ow">in</span> <span class="n">AuthorStats</span><span class="p">()</span><span class="o">.</span><span class="n">ho_select</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;post_count&#39;</span><span class="p">):</span>
-<a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;post_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> posts&quot;</span><span class="p">)</span>
-</code></pre></div>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a># Pattern matching
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>gmail_authors = Author(email=(&#39;ilike&#39;, &#39;%@gmail.com&#39;))
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>
+<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a># Comparison operators
+<a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>recent_posts = Post(published_at=(&#39;&gt;&#39;, &#39;2024-01-01&#39;))
+<a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>
+<a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a># Chaining operations
+<a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>query = (Post(is_published=True)
+<a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a>         .ho_order_by(&#39;published_at DESC&#39;)
+<a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a>         .ho_limit(5))
+<a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a>
+<a id="__codelineno-16-21" name="__codelineno-16-21" href="#__codelineno-16-21"></a>for post in query.ho_select(&#39;title&#39;, &#39;published_at&#39;):
+<a id="__codelineno-16-22" name="__codelineno-16-22" href="#__codelineno-16-22"></a>    print(f&quot;{post[&#39;title&#39;]} - {post[&#39;published_at&#39;]}&quot;)
+<a id="__codelineno-16-23" name="__codelineno-16-23" href="#__codelineno-16-23"></a>
+<a id="__codelineno-16-24" name="__codelineno-16-24" href="#__codelineno-16-24"></a># Working with views
+<a id="__codelineno-16-25" name="__codelineno-16-25" href="#__codelineno-16-25"></a>for stats in AuthorStats().ho_select(&#39;name&#39;, &#39;post_count&#39;):
+<a id="__codelineno-16-26" name="__codelineno-16-26" href="#__codelineno-16-26"></a>    print(f&quot;{stats[&#39;name&#39;]}: {stats[&#39;post_count&#39;]} posts&quot;)
+</code></pre></div></p>
 <h2 id="key-concepts">Key Concepts<a class="headerlink" href="#key-concepts" title="Permanent link">&para;</a></h2>
 <h3 id="null-vs-none">NULL vs None<a class="headerlink" href="#null-vs-none" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">half_orm.null</span><span class="w"> </span><span class="kn">import</span> <span class="n">NULL</span>
@@ -2040,15 +2060,40 @@
 <a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="c1"># ❌ Cannot chain after execution</span>
 <a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="c1"># results.ho_order_by(&#39;date&#39;)  # Error!</span>
 </code></pre></div>
-<h2 id="extensions-coming-soon">Extensions (Coming Soon)<a class="headerlink" href="#extensions-coming-soon" title="Permanent link">&para;</a></h2>
-<p>halfORM 0.16 introduces an extensible architecture:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Development tools (coming soon)</span>
-<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>pip<span class="w"> </span>install<span class="w"> </span>half-orm-dev
-<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>half_orm<span class="w"> </span>dev<span class="w"> </span>new<span class="w"> </span>my_project
-<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>
-<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="c1"># API generation (coming soon)</span>
-<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>pip<span class="w"> </span>install<span class="w"> </span>half-orm-api
-<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>half_orm<span class="w"> </span>api<span class="w"> </span>generate
+<h2 id="extensions-test-example">Extensions (Test Example)<a class="headerlink" href="#extensions-test-example" title="Permanent link">&para;</a></h2>
+<p>halfORM 0.16 introduces an extensible architecture. Try it with the test extension:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Install test extension</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/collorg/half-orm-test-extension
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1"># List available extensions</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>half_orm<span class="w"> </span>--list-extensions
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="c1"># Use the test extension</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>half_orm<span class="w"> </span>test-extension<span class="w"> </span>greet
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>half_orm<span class="w"> </span>test-extension<span class="w"> </span>status
+</code></pre></div>
+<p>Expected output:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>Available extensions:
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>  • test-extension v0.1.0
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>    Simple test extension for halfORM ecosystem
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>    Commands: greet, status
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>🔍 halfORM Test Extension Status
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>===================================
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>Extension name: test-extension
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>Version: 0.1.0
+<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>Description: Simple test extension for halfORM ecosystem
+<a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>
+<a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>Hello, halfORM!
+</code></pre></div></p>
+<h3 id="coming-soon">Coming Soon<a class="headerlink" href="#coming-soon" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Development tools (in development)</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>pip<span class="w"> </span>install<span class="w"> </span>half-orm-dev
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>half_orm<span class="w"> </span>dev<span class="w"> </span>new<span class="w"> </span>my_project
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="c1"># API generation (planned)</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>pip<span class="w"> </span>install<span class="w"> </span>half-orm-litestar-api
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>half_orm<span class="w"> </span>litestar-api<span class="w"> </span>generate
 </code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <p>✅ <strong>You're ready!</strong> You can now:
@@ -2070,13 +2115,13 @@
 </ul>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="connection-issues">Connection Issues<a class="headerlink" href="#connection-issues" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Test connection</span>
-<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">half_orm.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
-<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>    <span class="n">db</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s1">&#39;your_database&#39;</span><span class="p">)</span>
-<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Connected!&quot;</span><span class="p">)</span>
-<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># Test connection</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">half_orm.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>    <span class="n">db</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s1">&#39;your_database&#39;</span><span class="p">)</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Connected!&quot;</span><span class="p">)</span>
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="common-fixes">Common Fixes<a class="headerlink" href="#common-fixes" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2116,7 +2161,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 5, 2025 09:31:40 UTC">July 5, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 5, 2025 10:08:31 UTC">July 5, 2025</span>
   </span>
 
     
