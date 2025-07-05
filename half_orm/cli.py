@@ -253,13 +253,29 @@ def inspect(database_name, relation_name):
                 schemas[schema].append((relation_type, table))
             
             # Display grouped by schema
+            count_d = {}
             for schema, tables in sorted(schemas.items()):
+                rel_type_d = {
+                    'r': ("📋", "table"),
+                    'v': ("👁️ ", "view"),
+                    'p': ("📊", "partioned table"),
+                    'm': ("🔗", "materialized view")
+                }
                 click.echo(f"\n📂 Schema: {schema}")
                 for rel_type, table in sorted(tables):
-                    type_icon = "📋" if rel_type == "table" else "- "
+                    if not rel_type in count_d:
+                        count_d[rel_type] = 0
+                    count_d[rel_type] += 1
+                    type_icon = rel_type_d.get(rel_type, ["?"])[0]
                     click.echo(f"  {type_icon} {table}")
             
             click.echo(f"\nTotal: {len(relations)} relations")
+            for rel_type in rel_type_d:
+                count = count_d.get(rel_type)
+                if count:
+                    plural = count > 1 and 's' or ''
+                    icon, name = rel_type_d[rel_type]
+                    click.echo(f"   {icon}: {count} {name}{plural}")
             click.echo("\nUse 'half_orm inspect {db} {schema.table}' for detailed information")
             
     except ImportError:
