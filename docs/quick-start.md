@@ -24,8 +24,7 @@ half_orm version
 Expected output:
 ```
 halfORM Core: 0.16.0
-
-No extensions installed
+Extensions: none
 ```
 
 !!! info "Virtual Environment Recommended"
@@ -217,27 +216,35 @@ Author(name='Charlie Brown').ho_delete()
 ## Step 8: Working with Relationships
 
 ```python
-# Define foreign key aliases
+from half_orm.model import register
+
+# Define custom classes with clean foreign key aliases
+@register
 class Author(blog.get_relation_class('blog.author')):
     Fkeys = {
         'posts': '_reverse_fkey_halfORM_quickstart_blog_post_author_id'
     }
 
+@register
 class Post(blog.get_relation_class('blog.post')):
     Fkeys = {
         'author': 'post_author_id_fkey'
     }
 
-# Navigate relationships
+# Navigate relationships with clean syntax
 alice = Author(name='Alice Johnson').ho_get()
 alice_posts = alice.posts()
 print(f"Alice has {alice_posts.ho_count()} posts")
 
-# Get author from post
-post = Post(title='Welcome to halfORM').ho_get()
-author = post.author().ho_get()
-print(f"Author: {author.name}")
+# Get author from post - work with the relation
+post = Post(id=1)
+for author in post.author():
+    print(f"Author: {author['name']}")
 ```
+```
+
+!!! tip "Why @register?"
+    `@register` makes your custom classes the default everywhere. Foreign key navigation automatically returns YOUR classes with clean `Fkeys` aliases instead of long constraint names.
 
 ## Step 9: Query and Filter
 
@@ -289,18 +296,47 @@ results = query.ho_select('title')
 # results.ho_order_by('date')  # Error!
 ```
 
-## Extensions (Coming Soon)
+## Extensions (Test Example)
 
-halfORM 0.16 introduces an extensible architecture:
+halfORM 0.16 introduces an extensible architecture. Try it with the test extension:
 
 ```bash
-# Development tools (coming soon)
+# Install test extension
+pip install git+https://github.com/collorg/half-orm-test-extension
+
+# List available extensions
+half_orm --list-extensions
+
+# Use the test extension
+half_orm test-extension greet
+half_orm test-extension status
+```
+
+Expected output:
+```
+Available extensions:
+  • test-extension v0.1.0
+    Simple test extension for halfORM ecosystem
+    Commands: greet, status
+
+🔍 halfORM Test Extension Status
+===================================
+Extension name: test-extension
+Version: 0.1.0
+Description: Simple test extension for halfORM ecosystem
+
+Hello, halfORM!
+```
+
+### Coming Soon
+```bash
+# Development tools (in development)
 pip install half-orm-dev
 half_orm dev new my_project
 
-# API generation (coming soon)
-pip install half-orm-api
-half_orm api generate
+# API generation (planned)
+pip install half-orm-litestar-api
+half_orm litestar-api generate
 ```
 
 ## Next Steps
