@@ -53,7 +53,7 @@ jobs:
           elif [[ "${{ github.ref }}" == refs/heads/main ]]; then
             # Main branch - development version
             echo "version=dev" >> $GITHUB_OUTPUT
-            echo "alias=dev" >> $GITHUB_OUTPUT
+            echo "alias=" >> $GITHUB_OUTPUT
             echo "title=Development" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
             # Release branch
@@ -73,12 +73,19 @@ jobs:
         if: steps.version.outputs.version != ''
         run: |
           # Deploy the version
-          mike deploy \
-            --push \
-            --update-aliases \
-            ${{ steps.version.outputs.version }} \
-            ${{ steps.version.outputs.alias }} \
-            --title "${{ steps.version.outputs.title }}"
+          if [[ -n "${{ steps.version.outputs.alias }}" ]]; then
+            mike deploy \
+              --push \
+              --update-aliases \
+              ${{ steps.version.outputs.version }} \
+              ${{ steps.version.outputs.alias }} \
+              --title "${{ steps.version.outputs.title }}"
+          else
+            mike deploy \
+              --push \
+              ${{ steps.version.outputs.version }} \
+              --title "${{ steps.version.outputs.title }}"
+          fi
           
           # Set default version if this is latest
           if [[ "${{ steps.version.outputs.alias }}" == "latest" ]]; then
