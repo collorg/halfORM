@@ -92,6 +92,16 @@ jobs:
             mike set-default --push latest
           fi
           
+          # For dev version, set as default if no default exists
+          if [[ "${{ steps.version.outputs.version }}" == "dev" ]]; then
+            # Always set dev as default for now (temporary fix)
+            mike set-default --push dev
+          fi
+          
+          # List versions for debugging
+          echo "=== Deployed versions ==="
+          mike list
+          
       - name: Build for PR preview
         if: github.event_name == 'pull_request'
         run: |
