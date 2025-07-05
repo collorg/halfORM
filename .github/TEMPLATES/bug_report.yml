@@ -1,0 +1,112 @@
+# .github/ISSUE_TEMPLATE/bug_report.yml
+name: 🐛 Bug Report
+description: Report a bug in halfORM
+title: "[Bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        
+        **Before submitting**, please search existing issues to avoid duplicates.
+
+  - type: checkboxes
+    id: environment
+    attributes:
+      label: Environment
+      description: Please check all that apply
+      options:
+        - label: halfORM Core
+        - label: halfORM CLI
+        - label: halfORM Extension
+        - label: Tutorial/Documentation
+
+  - type: input
+    id: version
+    attributes:
+      label: halfORM Version
+      description: Output of `half_orm version`
+      placeholder: "halfORM Core: 0.16.0, Extensions: half-orm-test-extension v0.1.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear and concise description of the bug
+      placeholder: "When I do X, Y happens instead of Z"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Minimal steps to reproduce the issue
+      placeholder: |
+        1. Create database with '...'
+        2. Run command '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Sample
+      description: Minimal code that reproduces the issue
+      render: python
+      placeholder: |
+        from half_orm.model import Model
+        
+        blog = Model('my_db')
+        # Your code here
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Messages/Logs
+      description: Any error messages or relevant logs
+      render: shell
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+
+  - type: input
+    id: python_version
+    attributes:
+      label: Python Version
+      placeholder: "3.9.7"
+    validations:
+      required: true
+
+  - type: input
+    id: postgresql_version
+    attributes:
+      label: PostgreSQL Version
+      placeholder: "13.4"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem

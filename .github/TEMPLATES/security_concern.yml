@@ -1,0 +1,60 @@
+# .github/ISSUE_TEMPLATE/security_concern.yml
+name: 🔒 Security Concern
+description: Report a security vulnerability or concern
+title: "[Security] "
+labels: ["security", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **⚠️ Important: Do NOT report security vulnerabilities publicly.**
+        
+        For serious security vulnerabilities, please email the maintainers directly.
+        This template is for security-related feature requests or general concerns.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity Level
+      description: How severe is this security concern?
+      options:
+        - Low - General security improvement
+        - Medium - Potential security issue
+        - High - Please contact maintainers privately
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: concern
+    attributes:
+      label: Security Concern
+      description: Describe the security concern or improvement
+      placeholder: "The extension system could potentially..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+      description: What could happen if this concern is not addressed?
+      placeholder: "An attacker could..."
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Solution
+      description: How could this be addressed?
+      placeholder: "We could implement..."
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      description: Please confirm
+      options:
+        - label: This is not a critical security vulnerability requiring immediate private disclosure
+          required: true
+        - label: I have searched existing issues for similar concerns
+          required: true
