@@ -145,11 +145,11 @@ nav:
     - Extensions:
       - ecosystem/extensions/index.md
     - Development:
-      - Getting Started: ecosystem/development/getting-started.md
-      - Plugin API: ecosystem/development/plugin-api.md
-      - Testing: ecosystem/development/testing.md
-      - Publishing: ecosystem/development/publishing.md
-      - Development Workflow Guide: ecosystem/development/development-workflow.md
-      - Documentation Workflow Guide: ecosystem/development/documentation-workflow.md
+      - Extension Development Guide: ecosystem/development/getting-started.md
+      # - Plugin API: ecosystem/development/plugin-api.md
+      # - Testing: ecosystem/development/testing.md
+      # - Publishing: ecosystem/development/publishing.md
+      - halfORM Development Workflow Guide: ecosystem/development/development-workflow.md
+      - halfORM Documentation Workflow Guide: ecosystem/development/documentation-workflow.md
 extra_css:
   - assets/css/custom.css

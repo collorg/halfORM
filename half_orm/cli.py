@@ -6,13 +6,17 @@ Discovers and integrates all halfORM extensions into a single CLI.
 Extensions are discovered automatically based on package naming convention.
 
 Usage:
-    half_orm --help                 # Show all available commands
-    half_orm dev new my_project     # Use half-orm-dev extension
-    half_orm litestar generate      # Use half-orm-litestar-api extension
+    half_orm --help                          # Show all available commands
+    half_orm --list-extensions               # List all extensions
+    half_orm --untrust my-extension          # Remove extension from trust
+    half_orm inspect database               # Inspect database
 """
 
 import sys
 import importlib
+import json
+from pathlib import Path
+from datetime import datetime
 from typing import Dict, Any, Optional
 import click
 
@@ -23,84 +27,202 @@ except ImportError:
     # Fallback for Python < 3.8
     from importlib_metadata import distributions, version
 
+import half_orm
+
+# Global cache for extensions
+_cached_extensions = None
+_trust_extensions = False
+
+# Liste des extensions officielles
+OFFICIAL_EXTENSIONS = {
+    'half-orm-test-extension',
+    # À ajouter au fur et à mesure
+    # 'half-orm-dev', 
+    # 'half-orm-api',
+    # 'half-orm-admin',
+}
+
+def get_config_file():
+    """Get path to project-specific halfORM CLI configuration."""
+    return Path.cwd() / '.half_orm_cli'
+
+def load_cli_config():
+    """Load project-specific CLI configuration."""
+    config_file = get_config_file()
+    if config_file.exists():
+        try:
+            with open(config_file, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            return {}
+    return {}
+
+def save_cli_config(config):
+    """Save project-specific CLI configuration."""
+    config_file = get_config_file()
+    try:
+        config['last_updated'] = datetime.now().isoformat()
+        with open(config_file, 'w') as f:
+            json.dump(config, f, indent=2)
+        return True
+    except OSError:
+        return False
+
+def check_version_compatibility(extension_version: str, core_version: str) -> bool:
+    """Check if extension version is compatible with core version (major.minor must match)."""
+    try:
+        ext_parts = extension_version.split('.')
+        core_parts = core_version.split('.')
+        
+        if len(ext_parts) < 2 or len(core_parts) < 2:
+            return False
+            
+        # Major.minor must match exactly, patch can differ
+        return ext_parts[0] == core_parts[0] and ext_parts[1] == core_parts[1]
+    except (ValueError, IndexError):
+        return False
+
+def warn_version_incompatibility(package_name: str, ext_version: str, core_version: str):
+    """Warn about version incompatibility."""
+    click.echo(f"❌ ERROR: '{package_name}' v{ext_version} is incompatible", err=True)
+    click.echo(f"   halfORM core: v{core_version}", err=True)
+    click.echo(f"   Extension must have same major.minor version", err=True)
+    click.echo(f"   Expected: {'.'.join(core_version.split('.')[:2])}.x", err=True)
+    sys.exit(1)
+
+def is_official_extension(package_name):
+    """Check if extension is official."""
+    return package_name in OFFICIAL_EXTENSIONS
+
+def is_trusted_extension(package_name, current_version=None):
+    """Check if specific version of extension is trusted."""
+    config = load_cli_config()
+    trusted_extensions = config.get('trusted_extensions', {})
+    
+    if package_name in trusted_extensions:
+        trusted_version = trusted_extensions[package_name].get('version')
+        return trusted_version == current_version
+    
+    return False
+
+def add_trusted_extension(package_name, version):
+    """Add specific version of extension to trusted list."""
+    config = load_cli_config()
+    trusted = config.get('trusted_extensions', {})
+    
+    trusted[package_name] = {
+        'version': version,
+        'trusted_at': datetime.now().isoformat()
+    }
+    
+    config['trusted_extensions'] = trusted
+    save_cli_config(config)
+
+def remove_trusted_extension(package_name):
+    """Remove extension from trusted list."""
+    config = load_cli_config()
+    trusted = config.get('trusted_extensions', {})
+    
+    if package_name in trusted:
+        del trusted[package_name]
+        config['trusted_extensions'] = trusted
+        save_cli_config(config)
+        return True
+    return False
+
+def warn_unofficial_extension(package_name, current_version):
+    """Show warning for non-official extensions."""
+    global _trust_extensions
+    
+    # Skip warning if global trust mode or already trusted
+    if (_trust_extensions or 
+        is_trusted_extension(package_name, current_version) or
+        is_official_extension(package_name)):
+        return
+    
+    click.echo(f"⚠️  WARNING: '{package_name}' v{current_version} is not official", err=True)
+    click.echo("   This extension could execute arbitrary code.", err=True)
+    click.echo()
+    
+    click.echo("Choose an option:")
+    click.echo("  [y] Continue once")
+    click.echo(f"  [t] Trust version {current_version}")
+    click.echo("  [n] Cancel (default)")
+    
+    choice = click.prompt("Your choice", type=click.Choice(['y', 't', 'n']), default='n')
+    
+    if choice == 'n':
+        click.echo("Extension loading cancelled.")
+        sys.exit(1)
+    elif choice == 't':
+        add_trusted_extension(package_name, current_version)
+        click.echo(f"✅ Trusted '{package_name}' v{current_version}")
+
+def get_extension_name_from_package(package_name: str) -> str:
+    """Extract extension name from package name."""
+    if package_name.startswith('half-orm-'):
+        return package_name.replace('half-orm-', '')
+    return package_name
 
 def get_distribution_name(dist) -> Optional[str]:
-    """
-    Get distribution name in a robust way.
-    
-    Args:
-        dist: Distribution object from importlib.metadata
-        
-    Returns:
-        Package name or None if not found
-    """
+    """Get distribution name in a robust way."""
     try:
-        # Try different methods to access the name
         if hasattr(dist, 'metadata'):
-            # Modern method
             return dist.metadata.get('Name') or dist.metadata.get('name')
         elif hasattr(dist, 'name'):
-            # Fallback
             return dist.name
         else:
             return None
     except Exception:
         return None
 
-
-def get_extension_name_from_package(package_name: str) -> str:
-    """
-    Extract extension name from package name.
-    
-    Args:
-        package_name: Package name (e.g., 'half-orm-dev')
-        
-    Returns:
-        Extension name (e.g., 'dev')
-    """
-    if package_name.startswith('half-orm-'):
-        return package_name.replace('half-orm-', '')
-    return package_name
-
-import half_orm
-
-
 def discover_extensions() -> Dict[str, Any]:
-    """
-    Discover all installed halfORM extensions.
+    """Discover all installed halfORM extensions."""
+    global _cached_extensions
     
-    Looks for packages matching 'half-orm-*' pattern and tries to import
-    their cli_extension module for CLI integration.
-    
-    Returns:
-        Dict mapping extension names to their cli_extension modules
-    """
+    # Return cached result if available
+    if _cached_extensions is not None:
+        return _cached_extensions
+
+    core_version = half_orm.__version__
     extensions = {}
     
-    # Use importlib.metadata instead of pkg_resources
     for dist in distributions():
         try:
-            # Get package name robustly
             package_name = get_distribution_name(dist)
             if not package_name or not package_name.startswith('half-orm-'):
                 continue
+
+            # Get extension version
+            try:
+                current_version = dist.version
+            except Exception:
+                current_version = version(package_name)
+
+            # Version compatibility check (applies to all extensions)
+            if not check_version_compatibility(current_version, core_version):
+                warn_version_incompatibility(package_name, current_version, core_version)
+
+            # Security check for non-official extensions
+            if not is_official_extension(package_name):
+                try:
+                    current_version = dist.version
+                except Exception:
+                    current_version = version(package_name)
                 
-            # Convert package name to module name
+                warn_unofficial_extension(package_name, current_version)
+
+            # Import extension
             module_name = package_name.replace('-', '_')
-            
-            # Try to import the CLI extension interface
             extension_module = importlib.import_module(f'{module_name}.cli_extension')
             
-            # Verify the extension has the required interface
             if hasattr(extension_module, 'add_commands'):
-                # Extract extension name (remove 'half-orm-' prefix)
                 extension_name = get_extension_name_from_package(package_name)
                 
-                # Get version robustly
                 try:
                     dist_version = dist.version
                 except Exception:
-                    dist_version = get_package_version(package_name)
+                    dist_version = version(package_name)
                 
                 extensions[extension_name] = {
                     'module': extension_module,
@@ -110,69 +232,51 @@ def discover_extensions() -> Dict[str, Any]:
                 }
                         
         except ImportError:
-            # Extension doesn't have CLI integration - skip silently
             continue
-        except Exception as e:
-            # Skip distributions that can't be processed
+        except Exception:
             continue
     
+    _cached_extensions = extensions
     return extensions
 
-
 def get_extension_info(extensions: Dict[str, Any]) -> str:
-    """
-    Generate formatted information about discovered extensions.
-    
-    Args:
-        extensions: Dictionary of discovered extensions
-        
-    Returns:
-        Formatted string with extension information
-    """
+    """Generate formatted information about discovered extensions."""
     if not extensions:
-        return "No extensions installed. Try: pip install half-orm-dev"
+        return "No extensions installed"
     
     info = ["Available extensions:"]
     
     for ext_name, ext_data in sorted(extensions.items()):
-        metadata = ext_data['metadata']
+        package_name = ext_data['package_name']
         version = ext_data['version']
-        description = metadata.get('description', 'No description available')
+        description = ext_data['metadata'].get('description', 'No description')
         
-        info.append(f"  • {ext_name} v{version}")
+        # Status
+        if is_official_extension(package_name):
+            status = "[OFFICIAL]"
+        elif is_trusted_extension(package_name, version):
+            status = "[TRUSTED]"
+        else:
+            status = "[UNOFFICIAL]"
+        
+        info.append(f"  • {ext_name} v{version} {status}")
         info.append(f"    {description}")
         
-        # Show main commands if available
-        commands = metadata.get('commands', [])
+        commands = ext_data['metadata'].get('commands', [])
         if commands:
             info.append(f"    Commands: {', '.join(commands)}")
         
-        info.append("")  # Empty line between extensions
+        info.append("")
     
     return "\n".join(info)
-
-
-def get_package_version(package_name: str) -> str:
-    """
-    Get version of a specific package using importlib.metadata.
-    
-    Args:
-        package_name: Name of the package
-        
-    Returns:
-        Version string or 'unknown' if not found
-    """
-    try:
-        return version(package_name)
-    except Exception:
-        return "unknown"
-
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']}, invoke_without_command=True)
 @click.version_option(version=half_orm.__version__, prog_name='halfORM')
 @click.option('--list-extensions', is_flag=True, help='List all installed extensions')
+@click.option('--untrust', metavar='EXTENSION', help='Remove extension from trusted list')
+@click.option('--trusted-extensions', is_flag=True, help='Skip security warnings')
 @click.pass_context
-def main(ctx, list_extensions):
+def main(ctx, list_extensions, untrust, trusted_extensions):
     """
     halfORM - PostgreSQL-native ORM and development tools
     
@@ -180,24 +284,34 @@ def main(ctx, list_extensions):
     installed extensions through a unified interface.
     
     \b
-    Core functionality:
-    • Database introspection and relation classes
-    • Query building with transparent SQL generation  
-    • Transaction management
-    • PostgreSQL-native features
+    Core CLI provides:
+    • Extension discovery and management
+    • Security (trust/untrust extensions)
+    • Version information
     
     \b
-    Extensions add additional functionality:
-    • half-orm-dev: Development framework and project management
-    • half-orm-litestar-api: REST API generation
-    • half-orm-admin: Admin interface generation
-    • And more...
-    
-    Install extensions with: pip install half-orm-{extension-name}
+    Install extensions for additional functionality:
+    • pip install half-orm-inspect    # Database inspection
+    • pip install half-orm-dev        # Development tools
+    • pip install half-orm-api        # API generation
     """
+    global _trust_extensions
+    _trust_extensions = trusted_extensions
+    
     if list_extensions:
         extensions = discover_extensions()
         click.echo(get_extension_info(extensions))
+        ctx.exit(0)
+    
+    if untrust:
+        # Validate extension name format
+        if not untrust.startswith('half-orm-'):
+            untrust = f'half-orm-{untrust}'
+        
+        if remove_trusted_extension(untrust):
+            click.echo(f"✅ Removed '{untrust}' from trusted extensions")
+        else:
+            click.echo(f"'{untrust}' was not in trusted list")
         ctx.exit(0)
     
     # If no subcommand is invoked, show help
@@ -205,130 +319,46 @@ def main(ctx, list_extensions):
         click.echo(ctx.get_help())
         ctx.exit(0)
 
-
-@main.command()
-@click.argument('database_name')
-@click.argument('relation_name', required=False)
-def inspect(database_name, relation_name):
-    """
-    Inspect database structure using halfORM introspection.
-    
-    DATABASE_NAME: Name of the database to inspect
-    RELATION_NAME: Optional specific relation to inspect (schema.table format)
-    
-    Examples:
-        half_orm inspect my_database
-        half_orm inspect my_database public.users
-    """
-    try:
-        from half_orm.model import Model
-        
-        # Connect to database
-        model = Model(database_name)
-        
-        if relation_name:
-            # Inspect specific relation
-            try:
-                relation_class = model.get_relation_class(relation_name)
-                click.echo(f"=== {relation_name} ===")
-                click.echo(str(relation_class()))
-            except Exception as e:
-                click.echo(f"❌ Error inspecting {relation_name}: {e}", err=True)
-                sys.exit(1)
-        else:
-            # List all relations
-            click.echo(f"=== Database: {database_name} ===")
-            relations = list(model._relations())
-            
-            if not relations:
-                click.echo("No relations found in database")
-                return
-            
-            # Group by schema
-            schemas = {}
-            for relation in relations:
-                relation_type, (_, schema, table) = relation
-                if schema not in schemas:
-                    schemas[schema] = []
-                schemas[schema].append((relation_type, table))
-            
-            # Display grouped by schema
-            count_d = {}
-            for schema, tables in sorted(schemas.items()):
-                rel_type_d = {
-                    'r': ("📋", "table"),
-                    'v': ("👁️ ", "view"),
-                    'p': ("📊", "partioned table"),
-                    'm': ("🔗", "materialized view")
-                }
-                click.echo(f"\n📂 Schema: {schema}")
-                for rel_type, table in sorted(tables):
-                    if not rel_type in count_d:
-                        count_d[rel_type] = 0
-                    count_d[rel_type] += 1
-                    type_icon = rel_type_d.get(rel_type, ["?"])[0]
-                    click.echo(f"  {type_icon} {table}")
-            
-            click.echo(f"\nTotal: {len(relations)} relations")
-            for rel_type in rel_type_d:
-                count = count_d.get(rel_type)
-                if count:
-                    plural = count > 1 and 's' or ''
-                    icon, name = rel_type_d[rel_type]
-                    click.echo(f"   {icon}: {count} {name}{plural}")
-            click.echo("\nUse 'half_orm inspect {db} {schema.table}' for detailed information")
-            
-    except ImportError:
-        click.echo("❌ halfORM core not properly installed", err=True)
-        sys.exit(1)
-    except Exception as e:
-        click.echo(f"❌ Error connecting to database '{database_name}': {e}", err=True)
-        click.echo("💡 Check your database configuration in HALFORM_CONF_DIR", err=True)
-        sys.exit(1)
-
-
 @main.command()
 def version():
-    """Show detailed version information for halfORM and extensions."""
+    """Show version information for halfORM and extensions."""
     click.echo(f"halfORM Core: {half_orm.__version__}")
     
     extensions = discover_extensions()
     if extensions:
         click.echo("\nInstalled Extensions:")
         for ext_name, ext_data in sorted(extensions.items()):
-            click.echo(f"  {ext_name}: {ext_data['version']}")
+            package_name = ext_data['package_name']
+            version_info = ext_data['version']
+            
+            if is_official_extension(package_name):
+                status = "[OFFICIAL]"
+            elif is_trusted_extension(package_name, version_info):
+                status = "[TRUSTED]"
+            else:
+                status = "[UNOFFICIAL]"
+            
+            click.echo(f"  {ext_name}: {version_info} {status}")
     else:
         click.echo("\nNo extensions installed")
-        click.echo("Try: pip install half-orm-dev")
-
+        click.echo("Try: pip install half-orm-inspect")
 
 def register_extensions():
-    """
-    Discover and register all halfORM extensions.
-    
-    This function is called at module level to automatically integrate
-    all discovered extensions into the main CLI.
-    """
+    """Discover and register all halfORM extensions."""
     extensions = discover_extensions()
     
     for ext_name, ext_data in extensions.items():
         try:
-            # Call the extension's add_commands function
             ext_data['module'].add_commands(main)
-            
         except Exception as e:
-            # Log registration errors but don't crash the entire CLI
-            click.echo(f"Warning: Failed to register commands for {ext_name}: {e}", err=True)
+            click.echo(f"Warning: Failed to register {ext_name}: {e}", err=True)
             continue
-
 
 # Auto-register extensions when module is imported
 try:
     register_extensions()
 except Exception as e:
-    # If extension discovery fails completely, still allow core functionality
     click.echo(f"Warning: Extension discovery failed: {e}", err=True)
-
 
 if __name__ == '__main__':
     main()
