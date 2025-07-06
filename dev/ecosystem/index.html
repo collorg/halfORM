@@ -1384,76 +1384,7 @@
   
   
   <span class="md-ellipsis">
-    Getting Started
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="development/plugin-api.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Plugin API
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="development/testing.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Testing
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="development/publishing.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Publishing
+    Extension Development Guide
     
   </span>
   
@@ -1476,7 +1407,7 @@
   
   
   <span class="md-ellipsis">
-    Development Workflow Guide
+    halfORM Development Workflow Guide
     
   </span>
   
@@ -1499,7 +1430,7 @@
   
   
   <span class="md-ellipsis">
-    Documentation Workflow Guide
+    halfORM Documentation Workflow Guide
     
   </span>
   
@@ -1922,38 +1853,46 @@
 <li>🤝 <strong>Contribute</strong>: Help shape the future of halfORM development tools</li>
 </ul>
 </div>
-<p>The halfORM ecosystem extends the core PostgreSQL-native ORM with a rich set of tools and extensions for modern development workflows. Built on a <strong>database-first philosophy</strong>, the ecosystem provides everything from development frameworks to production-ready APIs.</p>
+<p>The halfORM ecosystem extends the core PostgreSQL-native ORM with a rich set of tools and extensions for modern development workflows. Built on a <strong>database-first philosophy</strong>, the ecosystem will soon provide everything from development frameworks to production-ready APIs.</p>
 <h2 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <p>The halfORM ecosystem is designed around three complementary layers:</p>
 <h3 id="extensions-layer"><strong>🧩 Extensions Layer</strong><a class="headerlink" href="#extensions-layer" title="Permanent link">&para;</a></h3>
-<p><em>Optional and modular</em>
-- <code>half-orm-litestar-api</code> - REST API generation
-- <code>half-orm-admin</code> - Admin interfaces<br />
-- <code>half-orm-monitoring</code> - Observability tools
-- <em>...and more community extensions</em></p>
+<p><em>Optional and modular</em></p>
+<ul>
+<li><code>half-orm-litestar-api</code> - REST API generation</li>
+<li><code>half-orm-admin</code> - Admin interfaces  </li>
+<li><code>half-orm-monitoring</code> - Observability tools</li>
+<li><em>...and more community extensions</em></li>
+</ul>
 <p><strong>↕️ Extends</strong></p>
 <h3 id="halform_dev-layer"><strong>🛠️ halfORM_dev Layer</strong><a class="headerlink" href="#halform_dev-layer" title="Permanent link">&para;</a></h3>
-<p><em>Development Framework &amp; hop command</em>
-- Project management and scaffolding
-- Database patch system with versioning
-- Code generation and Git integration<br />
-- <strong>Extension point</strong> for ecosystem tools</p>
+<p><em>Development Framework &amp; hop command</em></p>
+<ul>
+<li>Project management and scaffolding</li>
+<li>Database patch system with versioning</li>
+<li>Code generation and Git integration  </li>
+<li><strong>Extension point</strong> for ecosystem tools</li>
+</ul>
 <p><strong>↕️ Built on</strong></p>
 <h3 id="halform-core-layer"><strong>🗃️ halfORM Core Layer</strong><a class="headerlink" href="#halform-core-layer" title="Permanent link">&para;</a></h3>
-<p><em>PostgreSQL-native ORM - Stable and independent</em>
-- Database introspection and relation classes
-- Query building with transparent SQL
-- Transaction management
-- <strong>Can be used standalone</strong></p>
+<p><em>PostgreSQL-native ORM - Stable and independent</em></p>
+<ul>
+<li>Database introspection and relation classes</li>
+<li>Query building with transparent SQL</li>
+<li>Transaction management</li>
+<li><strong>Can be used standalone</strong></li>
+</ul>
 <h2 id="core-components">Core Components<a class="headerlink" href="#core-components" title="Permanent link">&para;</a></h2>
 <h3 id="halform-core">🗃️ halfORM Core<a class="headerlink" href="#halform-core" title="Permanent link">&para;</a></h3>
 <p><strong>Status</strong>: Stable and mature<br />
 <strong>Purpose</strong>: PostgreSQL-native Object-Relational Mapper</p>
-<p>The foundation layer that can be used independently. Provides:
-- Database introspection and relation classes
-- Query building with transparent SQL generation
-- Transaction management
-- Advanced PostgreSQL feature support</p>
+<p>The foundation layer that can be used independently. Provides:</p>
+<ul>
+<li>Database introspection and relation classes</li>
+<li>Query building with transparent SQL generation</li>
+<li>Transaction management</li>
+<li>Advanced PostgreSQL feature support</li>
+</ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">half_orm.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Direct usage - no framework required</span>
@@ -1968,13 +1907,15 @@
 <h3 id="halform_dev">🛠️ halfORM_dev<a class="headerlink" href="#halform_dev" title="Permanent link">&para;</a></h3>
 <p><strong>Status</strong>: Early Alpha - Breaking changes expected<br />
 <strong>Purpose</strong>: Development framework with project management capabilities</p>
-<p>Vision for comprehensive development capabilities:
-- Project scaffolding and structure
-- Database patch management with semantic versioning
-- Automatic code generation synchronized with schema
-- Git workflow integration
-- Testing framework
-- Production deployment tools</p>
+<p>Vision for comprehensive development capabilities:</p>
+<ul>
+<li>Project scaffolding and structure</li>
+<li>Database patch management with semantic versioning</li>
+<li>Automatic code generation synchronized with schema</li>
+<li>Git workflow integration</li>
+<li>Testing framework</li>
+<li>Production deployment tools</li>
+</ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Planned development lifecycle</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>pip<span class="w"> </span>install<span class="w"> </span>half-orm-dev
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>hop<span class="w"> </span>new<span class="w"> </span>my_project<span class="w"> </span>--devel
@@ -2039,23 +1980,29 @@
 <a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>hop<span class="w"> </span>release
 </code></pre></div>
 <h3 id="learning-path">Learning Path<a class="headerlink" href="#learning-path" title="Permanent link">&para;</a></h3>
-<p><strong>🚀 New to halfORM?</strong>
-1. Start with <a href="../quick-start/">halfORM Quick Start</a>
-2. Learn <a href="../fundamentals/">core concepts</a>
-3. Try the <a href="../tutorial/">tutorial</a></p>
-<p><strong>🔥 Interested in development frameworks?</strong>
-1. Learn about <a href="half-orm-dev.md">halfORM_dev vision</a>
-2. Review the <a href="guidelines.md">guidelines</a>
-3. Consider <a href="development/getting-started/">contributing</a></p>
+<p><strong>🚀 New to halfORM?</strong></p>
+<ol>
+<li>Start with <a href="../quick-start/">halfORM Quick Start</a></li>
+<li>Learn <a href="../fundamentals/">core concepts</a></li>
+<li>Try the <a href="../tutorial/">tutorial</a></li>
+</ol>
+<p><strong>🔥 Interested in development frameworks?</strong></p>
+<ol>
+<li>Learn about <a href="half-orm-dev.md">halfORM_dev vision</a></li>
+<li>Review the <a href="guidelines.md">guidelines</a></li>
+<li>Consider <a href="development/getting-started/">contributing</a></li>
+</ol>
 <p><strong>⚡ Want to contribute or follow development?</strong>
 Follow progress on the <a href="extensions/">extension development</a></p>
 <h2 id="use-cases">Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h2>
 <h3 id="core-halform-only">🎯 Core halfORM Only<a class="headerlink" href="#core-halform-only" title="Permanent link">&para;</a></h3>
-<p>Perfect for:
-- <strong>Existing applications</strong> - Add powerful PostgreSQL ORM
-- <strong>Microservices</strong> - Lightweight database layer<br />
-- <strong>Data analysis</strong> - Explore and manipulate data
-- <strong>Custom integrations</strong> - Build your own tooling</p>
+<p>Perfect for:</p>
+<ul>
+<li><strong>Existing applications</strong> - Add powerful PostgreSQL ORM</li>
+<li><strong>Microservices</strong> - Lightweight database layer  </li>
+<li><strong>Data analysis</strong> - Explore and manipulate data</li>
+<li><strong>Custom integrations</strong> - Build your own tooling</li>
+</ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Clean, direct database access</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">half_orm.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
@@ -2068,11 +2015,13 @@ Follow progress on the <a href="extensions/">extension development</a></p>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>               <span class="o">.</span><span class="n">ho_select</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;count&#39;</span><span class="p">,</span> <span class="s1">&#39;revenue&#39;</span><span class="p">))</span>
 </code></pre></div>
 <h3 id="halform_dev-framework">🛠️ halfORM_dev Framework<a class="headerlink" href="#halform_dev-framework" title="Permanent link">&para;</a></h3>
-<p>Vision for:
-- <strong>New applications</strong> - Complete development lifecycle
-- <strong>Team projects</strong> - Standardized workflow and structure
-- <strong>Database evolution</strong> - Managed schema changes
-- <strong>Production deployments</strong> - Automated patch system</p>
+<p>Vision for:</p>
+<ul>
+<li><strong>New applications</strong> - Complete development lifecycle</li>
+<li><strong>Team projects</strong> - Standardized workflow and structure</li>
+<li><strong>Database evolution</strong> - Managed schema changes</li>
+<li><strong>Production deployments</strong> - Automated patch system</li>
+</ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Envisioned development workflow</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>hop<span class="w"> </span>new<span class="w"> </span>company_app<span class="w"> </span>--devel
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>hop<span class="w"> </span>prepare<span class="w"> </span>-l<span class="w"> </span>minor<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add payment system&quot;</span>
@@ -2080,11 +2029,13 @@ Follow progress on the <a href="extensions/">extension development</a></p>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>hop<span class="w"> </span>release<span class="w"> </span>--push
 </code></pre></div>
 <h3 id="extended-ecosystem">🧩 Extended Ecosystem<a class="headerlink" href="#extended-ecosystem" title="Permanent link">&para;</a></h3>
-<p>Vision for:
-- <strong>API-first applications</strong> - Automatic REST/GraphQL generation
-- <strong>Admin panels</strong> - Ready-made management interfaces
-- <strong>Monitoring</strong> - Built-in observability
-- <strong>Custom workflows</strong> - Extensible framework</p>
+<p>Vision for:</p>
+<ul>
+<li><strong>API-first applications</strong> - Automatic REST/GraphQL generation</li>
+<li><strong>Admin panels</strong> - Ready-made management interfaces</li>
+<li><strong>Monitoring</strong> - Built-in observability</li>
+<li><strong>Custom workflows</strong> - Extensible framework</li>
+</ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Envisioned rich development experience</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>pip<span class="w"> </span>install<span class="w"> </span>half-orm-litestar-api<span class="w"> </span>half-orm-admin
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>hop<span class="w"> </span>litestar-api<span class="w"> </span>generate<span class="w"> </span>--openapi
@@ -2207,7 +2158,7 @@ Follow progress on the <a href="extensions/">extension development</a></p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 5, 2025 04:59:01 UTC">July 5, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 6, 2025 06:50:06 UTC">July 6, 2025</span>
   </span>
 
     
