@@ -7,7 +7,7 @@
     - 🐛 **Report issues**: [GitHub Issues](https://github.com/collorg/halfORM/issues)
     - 🤝 **Contribute**: Help shape the future of halfORM development tools
 
-The halfORM ecosystem extends the core PostgreSQL-native ORM with a rich set of tools and extensions for modern development workflows. Built on a **database-first philosophy**, the ecosystem provides everything from development frameworks to production-ready APIs.
+The halfORM ecosystem extends the core PostgreSQL-native ORM with a rich set of tools and extensions for modern development workflows. Built on a **database-first philosophy**, the ecosystem will soon provide everything from development frameworks to production-ready APIs.
 
 ## Architecture Overview
 
@@ -15,6 +15,7 @@ The halfORM ecosystem is designed around three complementary layers:
 
 ### **🧩 Extensions Layer** 
 *Optional and modular*
+
 - `half-orm-litestar-api` - REST API generation
 - `half-orm-admin` - Admin interfaces  
 - `half-orm-monitoring` - Observability tools
@@ -24,6 +25,7 @@ The halfORM ecosystem is designed around three complementary layers:
 
 ### **🛠️ halfORM_dev Layer**
 *Development Framework & hop command*
+
 - Project management and scaffolding
 - Database patch system with versioning
 - Code generation and Git integration  
@@ -33,6 +35,7 @@ The halfORM ecosystem is designed around three complementary layers:
 
 ### **🗃️ halfORM Core Layer**
 *PostgreSQL-native ORM - Stable and independent*
+
 - Database introspection and relation classes
 - Query building with transparent SQL
 - Transaction management
@@ -45,6 +48,7 @@ The halfORM ecosystem is designed around three complementary layers:
 **Purpose**: PostgreSQL-native Object-Relational Mapper
 
 The foundation layer that can be used independently. Provides:
+
 - Database introspection and relation classes
 - Query building with transparent SQL generation
 - Transaction management
@@ -69,6 +73,7 @@ for post in Post(is_published=True).ho_order_by('created_at DESC'):
 **Purpose**: Development framework with project management capabilities
 
 Vision for comprehensive development capabilities:
+
 - Project scaffolding and structure
 - Database patch management with semantic versioning
 - Automatic code generation synchronized with schema
@@ -127,11 +132,13 @@ hop release
 ### Learning Path
 
 **🚀 New to halfORM?**
+
 1. Start with [halfORM Quick Start](../quick-start.md)
 2. Learn [core concepts](../fundamentals.md)
 3. Try the [tutorial](../tutorial/index.md)
 
 **🔥 Interested in development frameworks?**
+
 1. Learn about [halfORM_dev vision](half-orm-dev.md)
 2. Review the [guidelines](guidelines.md)
 3. Consider [contributing](development/getting-started.md)
@@ -143,6 +150,7 @@ Follow progress on the [extension development](extensions/index.md)
 
 ### 🎯 Core halfORM Only
 Perfect for:
+
 - **Existing applications** - Add powerful PostgreSQL ORM
 - **Microservices** - Lightweight database layer  
 - **Data analysis** - Explore and manipulate data
@@ -163,6 +171,7 @@ daily_stats = (Events(date=('>', '2024-01-01'))
 
 ### 🛠️ halfORM_dev Framework
 Vision for:
+
 - **New applications** - Complete development lifecycle
 - **Team projects** - Standardized workflow and structure
 - **Database evolution** - Managed schema changes
@@ -178,6 +187,7 @@ hop release --push
 
 ### 🧩 Extended Ecosystem
 Vision for:
+
 - **API-first applications** - Automatic REST/GraphQL generation
 - **Admin panels** - Ready-made management interfaces
 - **Monitoring** - Built-in observability
@@ -266,18 +276,21 @@ def add_commands(hop_main_group):
 ## Roadmap and Vision
 
 ### Current Reality
+
 - ✅ halfORM Core - Stable production release
 - 🧪 halfORM_dev - Early alpha with breaking changes expected
 - 🧪 half-orm-litestar-api - Proof of concept stage
 - 📋 Extension ecosystem - Guidelines and architecture planning
 
 ### Development Focus
+
 - 🎯 Stabilizing halfORM_dev architecture
 - 🎯 Plugin system implementation
 - 🎯 Extension development standards
 - 🎯 Community feedback and iteration
 
 ### Future Vision
+
 - 🚀 Mature development framework
 - 🚀 Rich ecosystem of community extensions
 - 🚀 Enterprise-grade tooling
@@ -288,11 +301,13 @@ def add_commands(hop_main_group):
 ## Getting Help
 
 ### Documentation Paths
+
 - **New users**: [Quick Start](../quick-start.md) → [Tutorial](../tutorial/index.md)
 - **Developers**: [halfORM_dev](half-orm-dev.md) → [Guidelines](guidelines.md)
 - **Contributors**: [Development Guide](development/getting-started.md)
 
 ### Support Channels
+
 - **Questions**: [GitHub Discussions](https://github.com/collorg/halfORM/discussions)
 - **Bug reports**: [GitHub Issues](https://github.com/collorg/halfORM/issues)
 - **Feature requests**: [Discussions](https://github.com/collorg/halfORM/discussions/categories/ideas)
