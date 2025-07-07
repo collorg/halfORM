@@ -147,35 +147,3 @@ def create_and_register_extension(main_group, module, description: Optional[str]
         return extension_group
     
     return decorator
-
-
-def register_extension_commands(main_group, commands_func, description: Optional[str] = None):
-    """
-    Alternative approach: register extension commands with a function.
-    
-    Args:
-        main_group: The main halfORM CLI group
-        commands_func: Function that defines the commands
-        description: Optional description for the extension
-        
-    Example:
-        def define_commands():
-            pass
-            
-        def add_commands(main_group):
-            ext_group = register_extension_commands(main_group, define_commands, "My extension")
-            
-            @ext_group.command()
-            def some_command():
-                pass
-    """
-    import click
-    
-    extension_name = get_calling_extension_name()
-    
-    # Create the Click group
-    extension_group = click.group(name=extension_name, help=description)(commands_func)
-    # Register it with the main group
-    main_group.add_command(extension_group)
-    # Return the group so commands can be added to it
-    return extension_group
