@@ -1,3 +1,32 @@
+# 0.16.0 (2025-07-05)
+
+## Added
+- **CLI Extension System**: Complete extensible CLI framework for halfORM
+  - Automatic discovery and loading of `half-orm-*` extension packages
+  - Security system with official/trusted/unofficial extension categories  
+  - Version compatibility checking and trust management
+  - Unified `half_orm` command that aggregates all extensions
+  - New `cli_utils` module for extension developers
+  
+  See documentation (wip) for extension development guide and usage details.
+
+* refactor: remove unused extension registration functions (64a8ce2)
+* docs(wip): refactor CLI and extension documentation (bd1c41d)
+* feat(cli): improve extension discovery and metadata handling (3bd2106)
+* feat: unified CLI with extension discovery, security, and version compatibility (bc457bd)
+* docs: upgrade docs/index.md (e1213b9)
+* Update issue templates (667338a)
+* Revert "github: Issues and PR Templates." (688d513)
+* docs: add halfORM Extensions description for 0.16.0 (6f8ffb3)
+* github: Issues and PR Templates. (964e0a1)
+* docs: update tutorial First Steps for 0.16.0 (2da2fb6)
+* docs: update tutorial installation for 0.16.0 (df200bf)
+* docs: upgrade quick-start to 0.16.0 (519503d)
+* docs: update Quick Start Guide for halfORM 0.16 CLI (517afcc)
+* ci: fix Bash Pattern Matching. (a15d23c)
+* docs: remove duplicates in documentation-workflow (41ee7b7)
+* fix: improve default version handling in documentation workflow (tag: v0.16.0-rc3, tag: latest) (4b68926)
+
 # 0.16.0-rc (2025-07-05)
 
 * docs: upgrade docs/index.md to 0.16 release. (HEAD -> main) (0e6230d)
