@@ -132,9 +132,7 @@ def remove_trusted_extension(package_name):
     return False
 
 def warn_unofficial_extension(package_name, current_version):
-    """Show warning for non-official extensions."""
-    global _trust_extensions
-    
+    """Show warning for non-official extensions."""    
     # Skip warning if global trust mode or already trusted
     if (_trust_extensions or 
         is_trusted_extension(package_name, current_version) or
