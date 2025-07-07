@@ -132,9 +132,10 @@ class TestCLICommands:
     def test_list_extensions_with_extensions(self):
         """Test list extensions with mock extensions."""
         mock_extensions = {
-            'inspect': {
+            'half-orm-inspect': {  # Utiliser le package name comme clé
                 'package_name': 'half-orm-inspect',
                 'version': '0.16.0',
+                'display_name': 'inspect',  # Ajouter display_name
                 'metadata': {
                     'description': 'Database inspection tools',
                     'commands': ['inspect']
@@ -174,11 +175,13 @@ class TestExtensionDiscovery:
     
     def test_extension_name_extraction(self):
         """Test extension name extraction from package names."""
-        from half_orm.cli import get_extension_name_from_package
+        # Cette fonction n'existe plus dans cli.py, la tester depuis cli_utils
+        from half_orm.cli_utils import get_extension_name_from_module
         
-        assert get_extension_name_from_package('half-orm-inspect') == 'inspect'
-        assert get_extension_name_from_package('half-orm-dev') == 'dev'
-        assert get_extension_name_from_package('other-package') == 'other-package'
+        assert get_extension_name_from_module('half_orm_inspect.cli_extension') == 'inspect'
+        assert get_extension_name_from_module('half_orm_dev.cli_extension') == 'dev'
+        assert get_extension_name_from_module('half_orm_test_extension.cli_extension') == 'test-extension'
+        assert get_extension_name_from_module('other_package.cli_extension') == 'other_package'
     
     @patch('half_orm.cli.distributions')
     @patch('half_orm.cli._cached_extensions', None)  # Clear cache
@@ -192,6 +195,7 @@ class TestExtensionDiscovery:
         
         # Mock the extension module
         mock_extension = Mock()
+        mock_extension.__name__ = 'half_orm_test_extension.cli_extension'
         mock_extension.add_commands = Mock()
         mock_extension.EXTENSION_INFO = {
             'description': 'Test extension',
@@ -202,13 +206,20 @@ class TestExtensionDiscovery:
             with patch('half_orm.cli.importlib.import_module', return_value=mock_extension):
                 with patch('half_orm.cli.is_official_extension', return_value=True):
                     with patch('half_orm.cli._trust_extensions', True):
-                        # Clear cached extensions
-                        import half_orm.cli
-                        half_orm.cli._cached_extensions = None
-                        
-                        extensions = discover_extensions()
-                        assert 'test-extension' in extensions
-                        assert extensions['test-extension']['version'] == '0.16.0'
+                        # Mock cli_utils functions
+                        with patch('half_orm.cli_utils.get_extension_name_from_module', return_value='test-extension'):
+                            with patch('half_orm.cli_utils.get_package_metadata', return_value={
+                                'description': 'Test extension',
+                                'commands': ['test']
+                            }):
+                                # Clear cached extensions
+                                import half_orm.cli
+                                half_orm.cli._cached_extensions = None
+                                
+                                extensions = discover_extensions()
+                                assert 'half-orm-test-extension' in extensions
+                                assert extensions['half-orm-test-extension']['version'] == '0.16.0'
+                                assert extensions['half-orm-test-extension']['display_name'] == 'test-extension'
     
     @patch('half_orm.cli.distributions')
     @patch('half_orm.cli._cached_extensions', None)  # Clear cache
@@ -322,9 +333,10 @@ class TestIntegrationTests:
         with patch('half_orm.cli.Path.cwd', return_value=Path(self.temp_dir)):
             # Mock extension discovery
             mock_extensions = {
-                'test': {
+                'half-orm-test': {  # Package name comme clé
                     'package_name': 'half-orm-test',
                     'version': '0.16.0',
+                    'display_name': 'test',  # Ajouter display_name
                     'metadata': {'description': 'Test extension'}
                 }
             }

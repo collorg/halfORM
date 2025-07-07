@@ -36,8 +36,9 @@ _trust_extensions = False
 # Liste des extensions officielles
 OFFICIAL_EXTENSIONS = {
     'half-orm-test-extension',
+    'half-orm-inspect',
+    'half-orm-dev', 
     # À ajouter au fur et à mesure
-    # 'half-orm-dev', 
     # 'half-orm-api',
     # 'half-orm-admin',
 }
@@ -158,11 +159,7 @@ def warn_unofficial_extension(package_name, current_version):
         add_trusted_extension(package_name, current_version)
         click.echo(f"✅ Trusted '{package_name}' v{current_version}")
 
-def get_extension_name_from_package(package_name: str) -> str:
-    """Extract extension name from package name."""
-    if package_name.startswith('half-orm-'):
-        return package_name.replace('half-orm-', '')
-    return package_name
+# Extension name logic moved to cli_utils to avoid duplication
 
 def get_distribution_name(dist) -> Optional[str]:
     """Get distribution name in a robust way."""
@@ -217,23 +214,36 @@ def discover_extensions() -> Dict[str, Any]:
             extension_module = importlib.import_module(f'{module_name}.cli_extension')
             
             if hasattr(extension_module, 'add_commands'):
-                extension_name = get_extension_name_from_package(package_name)
+                # Use package name as key instead of derived name to avoid conflicts
+                extension_key = package_name
                 
                 try:
                     dist_version = dist.version
                 except Exception:
                     dist_version = version(package_name)
                 
-                extensions[extension_name] = {
+                # Import the utility functions for consistent metadata extraction
+                from .cli_utils import get_extension_name_from_module, get_package_metadata
+                display_name = get_extension_name_from_module(module_name)
+                pkg_metadata = get_package_metadata(extension_module)
+                
+                extensions[extension_key] = {
                     'module': extension_module,
                     'package_name': package_name,
                     'version': dist_version,
-                    'metadata': getattr(extension_module, 'EXTENSION_INFO', {})
+                    'metadata': pkg_metadata,  # Use auto-discovered metadata
+                    'display_name': display_name
                 }
                         
-        except ImportError:
+        except ImportError as exc:
+            # Only show import errors if in debug mode or for official extensions
+            if is_official_extension(package_name):
+                click.echo(f"Warning: Could not load official extension {package_name}: {exc}", err=True)
             continue
-        except Exception:
+        except Exception as exc:
+            # Only show other errors if in debug mode or for official extensions  
+            if is_official_extension(package_name):
+                click.echo(f"Warning: Error loading official extension {package_name}: {exc}", err=True)
             continue
     
     _cached_extensions = extensions
@@ -246,9 +256,10 @@ def get_extension_info(extensions: Dict[str, Any]) -> str:
     
     info = ["Available extensions:"]
     
-    for ext_name, ext_data in sorted(extensions.items()):
+    for ext_key, ext_data in sorted(extensions.items()):
         package_name = ext_data['package_name']
         version = ext_data['version']
+        display_name = ext_data['display_name']
         description = ext_data['metadata'].get('description', 'No description')
         
         # Status
@@ -259,7 +270,7 @@ def get_extension_info(extensions: Dict[str, Any]) -> str:
         else:
             status = "[UNOFFICIAL]"
         
-        info.append(f"  • {ext_name} v{version} {status}")
+        info.append(f"  • {display_name} v{version} {status}")
         info.append(f"    {description}")
         
         commands = ext_data['metadata'].get('commands', [])
@@ -327,9 +338,10 @@ def version():
     extensions = discover_extensions()
     if extensions:
         click.echo("\nInstalled Extensions:")
-        for ext_name, ext_data in sorted(extensions.items()):
+        for ext_key, ext_data in sorted(extensions.items()):
             package_name = ext_data['package_name']
             version_info = ext_data['version']
+            display_name = ext_data['display_name']
             
             if is_official_extension(package_name):
                 status = "[OFFICIAL]"
@@ -338,7 +350,7 @@ def version():
             else:
                 status = "[UNOFFICIAL]"
             
-            click.echo(f"  {ext_name}: {version_info} {status}")
+            click.echo(f"  {display_name}: {version_info} {status}")
     else:
         click.echo("\nNo extensions installed")
         click.echo("Try: pip install half-orm-inspect")
@@ -347,11 +359,12 @@ def register_extensions():
     """Discover and register all halfORM extensions."""
     extensions = discover_extensions()
     
-    for ext_name, ext_data in extensions.items():
+    for ext_key, ext_data in extensions.items():
         try:
             ext_data['module'].add_commands(main)
         except Exception as e:
-            click.echo(f"Warning: Failed to register {ext_name}: {e}", err=True)
+            display_name = ext_data['display_name']
+            click.echo(f"Warning: Failed to register {display_name}: {e}", err=True)
             continue
 
 # Auto-register extensions when module is imported
