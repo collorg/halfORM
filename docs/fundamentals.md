@@ -35,6 +35,7 @@ Author = blog.get_relation_class('blog.author')  # Adapts to your schema
 ```
 
 **Benefits:**
+
 - No schema migrations to manage
 - Leverage full PostgreSQL feature set
 - Easy integration with existing databases
@@ -56,6 +57,7 @@ results = list(query)
 ```
 
 **Benefits:**
+
 - No hidden query magic
 - Learning opportunity
 
@@ -542,6 +544,7 @@ class Author(blog.get_relation_class('blog.author')):
 ```
 
 **Benefits:**
+
 - No conflicts with method names
 - Clear distinction between halfORM operations and business logic
 - Consistent API across all relation classes

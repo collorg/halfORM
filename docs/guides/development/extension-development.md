@@ -88,16 +88,12 @@ A simple example extension demonstrating the halfORM ecosystem integration.
 
 ## Installation
 
-```bash
-pip install half-orm-example
-```
+`pip install half-orm-example`
 
 ## Usage
 
-```bash
-half_orm example greet --name "World"
-half_orm example status
-```
+`half_orm example greet --name "World"`
+`half_orm example status`
 
 This extension provides basic commands to demonstrate the halfORM CLI integration system.
     """,
@@ -129,7 +125,7 @@ This extension provides basic commands to demonstrate the halfORM CLI integratio
     python_requires='>=3.7',
 )
 ```
-```
+
 
 ## Core Extension Implementation
 
