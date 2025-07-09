@@ -2142,11 +2142,13 @@
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">blog</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="s1">&#39;blog_tutorial&#39;</span><span class="p">)</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">Author</span> <span class="o">=</span> <span class="n">blog</span><span class="o">.</span><span class="n">get_relation_class</span><span class="p">(</span><span class="s1">&#39;blog.author&#39;</span><span class="p">)</span>  <span class="c1"># Adapts to your schema</span>
 </code></pre></div>
-<p><strong>Benefits:</strong>
-- No schema migrations to manage
-- Leverage full PostgreSQL feature set
-- Easy integration with existing databases
-- Database evolution independent of code</p>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>No schema migrations to manage</li>
+<li>Leverage full PostgreSQL feature set</li>
+<li>Easy integration with existing databases</li>
+<li>Database evolution independent of code</li>
+</ul>
 <h3 id="sql-transparency">SQL Transparency<a class="headerlink" href="#sql-transparency" title="Permanent link">&para;</a></h3>
 <p>halfORM generates SQL that you can inspect and understand:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">query</span> <span class="o">=</span> <span class="n">Author</span><span class="p">(</span><span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">ho_order_by</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
@@ -2158,9 +2160,11 @@
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1"># Output: SELECT * FROM &quot;blog&quot;.&quot;author&quot; WHERE &quot;is_active&quot; = TRUE ORDER BY &quot;name&quot;</span>
 </code></pre></div>
-<p><strong>Benefits:</strong>
-- No hidden query magic
-- Learning opportunity</p>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>No hidden query magic</li>
+<li>Learning opportunity</li>
+</ul>
 <h2 id="query-execution-model">Query Execution Model<a class="headerlink" href="#query-execution-model" title="Permanent link">&para;</a></h2>
 <h3 id="declarative-programming">Declarative Programming<a class="headerlink" href="#declarative-programming" title="Permanent link">&para;</a></h3>
 <p>halfORM follows a <strong>declarative programming model</strong> where you build query intentions first, then execute them when needed:</p>
@@ -2609,10 +2613,12 @@
 <a id="__codelineno-30-16" name="__codelineno-30-16" href="#__codelineno-30-16"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-30-17" name="__codelineno-30-17" href="#__codelineno-30-17"></a>        <span class="c1"># ...</span>
 </code></pre></div>
-<p><strong>Benefits:</strong>
-- No conflicts with method names
-- Clear distinction between halfORM operations and business logic
-- Consistent API across all relation classes</p>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>No conflicts with method names</li>
+<li>Clear distinction between halfORM operations and business logic</li>
+<li>Consistent API across all relation classes</li>
+</ul>
 <h2 id="database-first-strategy">Database-First Strategy<a class="headerlink" href="#database-first-strategy" title="Permanent link">&para;</a></h2>
 <h3 id="when-to-use-sql-views">When to Use SQL Views<a class="headerlink" href="#when-to-use-sql-views" title="Permanent link">&para;</a></h3>
 <p>When halfORM queries become too complex, consider creating database views:</p>
@@ -2738,7 +2744,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 2, 2025 14:17:46 UTC">July 2, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 9, 2025 07:12:22 UTC">July 9, 2025</span>
   </span>
 
     
