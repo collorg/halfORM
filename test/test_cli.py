@@ -235,25 +235,21 @@ class TestExtensionDiscovery:
                             assert extensions['half-orm-test-extension']['version'] == real_version
                             assert extensions['half-orm-test-extension']['display_name'] == 'test-extension'
 
-    @pytest.mark.skip('need fix')
     @patch('half_orm.cli.distributions')
     def test_discover_extensions_version_incompatible(self, mock_distributions):
         """Test extension discovery with version incompatibility."""
         # Get real version and create an incompatible one
         import half_orm
-        import importlib
-        print(f"importlib: {importlib}")
-        print(f"importlib.import_module: {importlib.import_module}")
-        print(f"type: {type(importlib.import_module)}")
         core_version = half_orm.__version__
         
         # Create incompatible version (different major.minor)
-        major, minor, patch = core_version.split('.')
-        if int(minor) > 0:
-            incompatible_version = f"{major}.{int(minor)-1}.0"
+        # Use different variable names to avoid shadowing 'patch' function
+        major_version, minor_version, patch_version = core_version.split('.')
+        if int(minor_version) > 0:
+            incompatible_version = f"{major_version}.{int(minor_version)-1}.0"
         else:
-            # If minor is 0, change major
-            incompatible_version = f"{max(0, int(major)-1)}.99.0"
+            # If minor is 0, change major_version
+            incompatible_version = f"{max(0, int(major_version)-1)}.99.0"
         
         mock_dist = Mock()
         mock_dist.metadata = {'Name': 'half-orm-test-extension'}
@@ -275,8 +271,8 @@ class TestExtensionDiscovery:
                 mock_warn.assert_called_once_with('half-orm-test-extension', incompatible_version, core_version)
                 
                 # The extension should not be in the returned extensions
-                # because warn_version_incompatibility calls sys.exit
                 assert 'half-orm-test-extension' not in extensions
+
 class TestSecurityWarnings:
     """Test security warning functionality."""
     
